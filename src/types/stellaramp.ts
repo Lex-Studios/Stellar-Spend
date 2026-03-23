@@ -1,10 +1,10 @@
-export type WalletFlowState = "pre_connect" | "connecting" | "connected";
+export type WalletFlowState = 'pre_connect' | 'connecting' | 'connected';
 
 export interface RecentOfframpRow {
   readonly txHash: string;
   readonly usdc: string;
   readonly naira: string;
-  readonly status: "SETTLING" | "COMPLETE";
+  readonly status: 'SETTLING' | 'COMPLETE';
 }
 
 export interface ProgressStep {
@@ -21,9 +21,9 @@ export interface StateVariant {
   readonly formTitle: string;
   readonly formDescription: string;
   readonly walletStatus: string;
-  readonly walletStatusTone: "muted" | "accent";
+  readonly walletStatusTone: 'muted' | 'accent';
   readonly cta: string;
-  readonly ctaTone: "accent" | "disabled" | "light";
+  readonly ctaTone: 'accent' | 'disabled' | 'light';
   readonly heroLabel: string;
   readonly heroValue: string;
   readonly heroMeta: string;

@@ -1,18 +1,18 @@
 /**
  * Centralized environment configuration module
- * 
+ *
  * IMPORTANT: Never import server-side variables in client components!
  * Server-side vars are only available during SSR/API routes.
  * Client-side vars must be prefixed with NEXT_PUBLIC_
- * 
+ *
  * Usage Examples:
- * 
+ *
  * ✅ In API routes (server-side):
  * import { PAYCREST_API_KEY, BASE_PRIVATE_KEY } from '@/lib/env';
- * 
+ *
  * ✅ In client components (browser):
  * import { NEXT_PUBLIC_BASE_RETURN_ADDRESS } from '@/lib/env';
- * 
+ *
  * ❌ Never do this in client components:
  * import { PAYCREST_API_KEY } from '@/lib/env'; // Will cause build errors!
  */
@@ -23,7 +23,7 @@ function getRequiredServerEnv(key: string): string {
   if (!value) {
     throw new Error(
       `Missing required server environment variable: ${key}. ` +
-      `Please check your .env file and ensure ${key} is set.`
+        `Please check your .env file and ensure ${key} is set.`
     );
   }
   return value;
@@ -39,7 +39,7 @@ function getRequiredPublicEnv(key: string): string {
   if (!value) {
     throw new Error(
       `Missing required public environment variable: ${key}. ` +
-      `Please check your .env file and ensure ${key} is set with NEXT_PUBLIC_ prefix.`
+        `Please check your .env file and ensure ${key} is set with NEXT_PUBLIC_ prefix.`
     );
   }
   return value;
@@ -56,8 +56,12 @@ export const STELLAR_SOROBAN_RPC_URL = getRequiredServerEnv('STELLAR_SOROBAN_RPC
 export const STELLAR_HORIZON_URL = getRequiredServerEnv('STELLAR_HORIZON_URL');
 
 // Public constants (safe for client-side use)
-export const NEXT_PUBLIC_BASE_RETURN_ADDRESS = getRequiredPublicEnv('NEXT_PUBLIC_BASE_RETURN_ADDRESS');
-export const NEXT_PUBLIC_STELLAR_USDC_ISSUER = getRequiredPublicEnv('NEXT_PUBLIC_STELLAR_USDC_ISSUER');
+export const NEXT_PUBLIC_BASE_RETURN_ADDRESS = getRequiredPublicEnv(
+  'NEXT_PUBLIC_BASE_RETURN_ADDRESS'
+);
+export const NEXT_PUBLIC_STELLAR_USDC_ISSUER = getRequiredPublicEnv(
+  'NEXT_PUBLIC_STELLAR_USDC_ISSUER'
+);
 
 // Environment validation - runs at module load time
 if (typeof window === 'undefined') {
@@ -68,10 +72,10 @@ if (typeof window === 'undefined') {
   console.log('✅ Public environment variables validated successfully');
 }
 
-/**
+/*
  * ESLint Rule Suggestion:
  * To enforce proper usage, add this rule to your ESLint config:
- * 
+ *
  * {
  *   "rules": {
  *     "no-restricted-imports": [
@@ -79,10 +83,10 @@ if (typeof window === 'undefined') {
  *       {
  *         "patterns": [
  *           {
- *             "group": ["**/env"],
+ *             "group": ["** /env"],
  *             "importNames": [
  *               "PAYCREST_API_KEY",
- *               "PAYCREST_WEBHOOK_SECRET", 
+ *               "PAYCREST_WEBHOOK_SECRET",
  *               "BASE_PRIVATE_KEY",
  *               "BASE_RETURN_ADDRESS",
  *               "BASE_RPC_URL",

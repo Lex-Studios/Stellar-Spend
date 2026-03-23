@@ -41,17 +41,17 @@
 
 ## API Routes
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| POST | `/api/offramp/quote` | Get conversion quote |
-| GET | `/api/offramp/currencies` | Supported fiat currencies |
-| GET | `/api/offramp/institutions/[currency]` | Banks for currency |
-| POST | `/api/offramp/verify-account` | Verify beneficiary |
-| POST | `/api/offramp/execute-payout` | Execute payout |
-| GET | `/api/offramp/status/[orderId]` | Poll payout status |
-| POST | `/api/offramp/bridge/build-tx` | Build bridge XDR |
-| GET | `/api/offramp/bridge/status/[txHash]` | Poll bridge status |
-| POST | `/api/webhooks/paycrest` | Paycrest webhook |
+| Method | Route                                  | Description               |
+| ------ | -------------------------------------- | ------------------------- |
+| POST   | `/api/offramp/quote`                   | Get conversion quote      |
+| GET    | `/api/offramp/currencies`              | Supported fiat currencies |
+| GET    | `/api/offramp/institutions/[currency]` | Banks for currency        |
+| POST   | `/api/offramp/verify-account`          | Verify beneficiary        |
+| POST   | `/api/offramp/execute-payout`          | Execute payout            |
+| GET    | `/api/offramp/status/[orderId]`        | Poll payout status        |
+| POST   | `/api/offramp/bridge/build-tx`         | Build bridge XDR          |
+| GET    | `/api/offramp/bridge/status/[txHash]`  | Poll bridge status        |
+| POST   | `/api/webhooks/paycrest`               | Paycrest webhook          |
 
 ## Getting Started
 
@@ -89,6 +89,7 @@ Open `http://localhost:3000`.
 ## Storage
 
 Transaction history is stored in browser `localStorage` (no database required).
+
 - Key: `stellar_spend_transactions`
 - Max records: 50
 - Scoped by connected wallet address

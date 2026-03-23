@@ -13,7 +13,7 @@ declare namespace NodeJS {
     BASE_RPC_URL: string;
     STELLAR_SOROBAN_RPC_URL: string;
     STELLAR_HORIZON_URL: string;
-    
+
     // Public variables (available in browser)
     NEXT_PUBLIC_BASE_RETURN_ADDRESS: string;
     NEXT_PUBLIC_STELLAR_USDC_ISSUER: string;
