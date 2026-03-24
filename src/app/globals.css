@@ -63,6 +63,23 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   animation: var(--animate-scale-in);
 }
 
+
+@keyframes scale-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.animate-scale-in { animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.65; }
+}
+
+.skeleton {
+  background: var(--line);
+  border-radius: 3px;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+  display: inline-block;
+  pointer-events: none;
+  user-select: none;
+
 @utility dot-bounce {
   animation: dot-bounce 1.2s ease-in-out infinite;
 }
@@ -76,4 +93,5 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 @utility racing-border-content {
   background: color-mix(in srgb, var(--color-panel) 88%, black);
+
 }
