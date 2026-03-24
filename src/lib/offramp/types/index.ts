@@ -1,10 +1,17 @@
 export type TradeState =
-  | "draft" | "quoted" | "source_tx_submitted" | "bridge_pending"
-  | "bridge_completed" | "payout_order_created" | "destination_tx_submitted"
-  | "payout_pending" | "completed" | "failed";
+  | 'draft'
+  | 'quoted'
+  | 'source_tx_submitted'
+  | 'bridge_pending'
+  | 'bridge_completed'
+  | 'payout_order_created'
+  | 'destination_tx_submitted'
+  | 'payout_pending'
+  | 'completed'
+  | 'failed';
 
-export type BridgeStatus = "pending" | "processing" | "completed" | "failed" | "expired";
-export type PayoutStatus = "pending" | "validated" | "settled" | "refunded" | "expired";
+export type BridgeStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'expired';
+export type PayoutStatus = 'pending' | 'validated' | 'settled' | 'refunded' | 'expired';
 
 export interface TokenInfo {
   symbol: string;

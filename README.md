@@ -1,5 +1,7 @@
 # Stellar-Spend
 
+[![CI](https://github.com/whiteghost0001/Stellar-Spend/workflows/CI/badge.svg)](https://github.com/whiteghost0001/Stellar-Spend/actions)
+
 <h4>Convert your Stellar stablecoins to fiat currencies seamlessly</h4>
 
 🚀 A modern off-ramp solution that enables users to convert Stellar stablecoins (USDC, USDT) directly to fiat currencies through Allbridge and Paycrest integrations.
@@ -41,17 +43,17 @@
 
 ## API Routes
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| POST | `/api/offramp/quote` | Get conversion quote |
-| GET | `/api/offramp/currencies` | Supported fiat currencies |
-| GET | `/api/offramp/institutions/[currency]` | Banks for currency |
-| POST | `/api/offramp/verify-account` | Verify beneficiary |
-| POST | `/api/offramp/execute-payout` | Execute payout |
-| GET | `/api/offramp/status/[orderId]` | Poll payout status |
-| POST | `/api/offramp/bridge/build-tx` | Build bridge XDR |
-| GET | `/api/offramp/bridge/status/[txHash]` | Poll bridge status |
-| POST | `/api/webhooks/paycrest` | Paycrest webhook |
+| Method | Route                                  | Description               |
+| ------ | -------------------------------------- | ------------------------- |
+| POST   | `/api/offramp/quote`                   | Get conversion quote      |
+| GET    | `/api/offramp/currencies`              | Supported fiat currencies |
+| GET    | `/api/offramp/institutions/[currency]` | Banks for currency        |
+| POST   | `/api/offramp/verify-account`          | Verify beneficiary        |
+| POST   | `/api/offramp/execute-payout`          | Execute payout            |
+| GET    | `/api/offramp/status/[orderId]`        | Poll payout status        |
+| POST   | `/api/offramp/bridge/build-tx`         | Build bridge XDR          |
+| GET    | `/api/offramp/bridge/status/[txHash]`  | Poll bridge status        |
+| POST   | `/api/webhooks/paycrest`               | Paycrest webhook          |
 
 ## Getting Started
 
@@ -102,6 +104,7 @@ Open `http://localhost:3001`.
 ## Storage
 
 Transaction history is stored in browser `localStorage` (no database required).
+
 - Key: `stellar_spend_transactions`
 - Max records: 50
 - Scoped by connected wallet address

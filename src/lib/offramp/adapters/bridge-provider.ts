@@ -1,4 +1,4 @@
-import type { TokenInfo, BridgeTransferRequest, BridgeStatus } from "../types";
+import type { TokenInfo, BridgeTransferRequest, BridgeStatus } from '../types';
 
 export interface BridgeProviderAdapter {
   getQuote(request: BridgeTransferRequest): Promise<{

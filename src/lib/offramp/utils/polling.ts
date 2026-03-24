@@ -18,10 +18,10 @@ export async function pollWithTimeout<T>(
     onProgress?.(attempt);
     const result = await pollFn();
     if (checkCondition(result)) return result;
-    await new Promise((resolve) => setTimeout(resolve, interval));
+    await new Promise(resolve => setTimeout(resolve, interval));
   }
 
-  throw new Error("Polling timeout exceeded");
+  throw new Error('Polling timeout exceeded');
 }
 
 export async function pollBridgeStatus(
@@ -29,7 +29,7 @@ export async function pollBridgeStatus(
   terminalStates: string[],
   options: PollOptions = {}
 ): Promise<{ status: string }> {
-  return pollWithTimeout(getStatus, (r) => terminalStates.includes(r.status), {
+  return pollWithTimeout(getStatus, r => terminalStates.includes(r.status), {
     interval: 5000,
     timeout: 600000,
     ...options,
@@ -41,7 +41,7 @@ export async function pollPayoutStatus(
   terminalStates: string[],
   options: PollOptions = {}
 ): Promise<{ status: string }> {
-  return pollWithTimeout(getStatus, (r) => terminalStates.includes(r.status), {
+  return pollWithTimeout(getStatus, r => terminalStates.includes(r.status), {
     interval: 10000,
     timeout: 600000,
     ...options,

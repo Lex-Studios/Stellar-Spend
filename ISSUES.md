@@ -23,6 +23,7 @@ The project currently has a `package.json` and `tsconfig.json` scaffolded but `n
 - Confirm Tailwind CSS v4 is working by checking `globals.css` is imported in `layout.tsx`
 
 **Acceptance Criteria:**
+
 - `npm run dev` starts cleanly
 - `npm run build` completes without TypeScript errors
 - `npm run lint` passes with zero errors
@@ -41,6 +42,7 @@ The `.env.example` file exists but needs to be fully documented and validated at
 - Ensure `BASE_PRIVATE_KEY` and `PAYCREST_API_KEY` are never prefixed with `NEXT_PUBLIC_`
 
 **Acceptance Criteria:**
+
 - Missing env vars produce a clear error message at startup, not a cryptic runtime crash
 - `.env.example` is fully commented
 
@@ -57,6 +59,7 @@ The current `next.config.ts` only sets `reactStrictMode: true`. Harden it:
 - Set `output: 'standalone'` for Docker-friendly builds
 
 **Acceptance Criteria:**
+
 - Security headers are present on all responses (verify with curl)
 - Allbridge SDK initializes without module resolution errors in production build
 
@@ -73,6 +76,7 @@ The `globals.css` defines CSS custom properties (`--bg`, `--accent`, etc.) but T
 - Ensure all custom CSS classes used in components are either Tailwind utilities or defined in `globals.css`
 
 **Acceptance Criteria:**
+
 - No inline style hacks needed for design tokens
 - All animations work correctly in the browser
 
@@ -89,6 +93,7 @@ Create a typed environment config module that centralizes all env var access:
 - Never import server-side vars in client components (enforce with a lint rule or comment)
 
 **Acceptance Criteria:**
+
 - All API routes import env vars from this module, not directly from `process.env`
 - Missing vars fail fast with a clear message
 
@@ -105,6 +110,7 @@ Add developer experience configuration:
 - Add `.prettierignore`
 
 **Acceptance Criteria:**
+
 - Code is auto-formatted on save in VS Code
 - `npx prettier --check .` passes
 
@@ -120,6 +126,7 @@ Add project governance files:
 - `CODE_OF_CONDUCT.md`: standard Contributor Covenant
 
 **Acceptance Criteria:**
+
 - Files are present and accurate
 
 ---
@@ -137,6 +144,7 @@ Add a `.github/workflows/ci.yml` that runs on every push and PR to `main`:
 - Add a badge to `README.md`
 
 **Acceptance Criteria:**
+
 - CI passes on a clean push to `main`
 - Build failures block PR merges
 
@@ -161,6 +169,7 @@ Create `src/components/Header.tsx` matching the reference implementation:
 - Fully responsive: stacks vertically on mobile (`max-[720px]`)
 
 **Props interface:**
+
 ```ts
 interface HeaderProps {
   subtitle: string;
@@ -176,6 +185,7 @@ interface HeaderProps {
 ```
 
 **Acceptance Criteria:**
+
 - Renders correctly in all three wallet states
 - Balance lines only appear when connected
 
@@ -187,6 +197,7 @@ interface HeaderProps {
 Create `src/components/FormCard.tsx` — the main offramp form. This is the most complex UI component:
 
 **Fields:**
+
 - USDC amount input (number, min 0.7, step 0.000001) with live quote suffix
 - Gas fee selector: two buttons (USDC / XLM), shows fee amount from API, warning text
 - Currency selector (dropdown, populated from Paycrest API)
@@ -195,6 +206,7 @@ Create `src/components/FormCard.tsx` — the main offramp form. This is the most
 - Account name (read-only, auto-resolved via verify-account API)
 
 **Behavior:**
+
 - Debounced quote fetch (500ms) on amount/currency/fee method change
 - Auto-verify account when account number is 10 digits and bank is selected
 - Reset all fields when `resetKey` prop increments
@@ -205,6 +217,7 @@ Create `src/components/FormCard.tsx` — the main offramp form. This is the most
 **Sub-components:** `InputField`, `SelectField`, `Field` (read-only display)
 
 **Acceptance Criteria:**
+
 - All fields validate correctly
 - Quote updates on debounce
 - Account name resolves automatically
@@ -229,6 +242,7 @@ Create `src/components/RightPanel.tsx`:
 - Currency-aware formatting: NGN uses `₦` prefix + `Intl.NumberFormat`, others use `Intl.NumberFormat` with currency style
 
 **Props:**
+
 ```ts
 interface RightPanelProps {
   isConnected: boolean;
@@ -242,6 +256,7 @@ interface RightPanelProps {
 ```
 
 **Acceptance Criteria:**
+
 - Payout total updates live as user types amount
 - Correct currency formatting for all supported currencies
 
@@ -260,6 +275,7 @@ Create `src/components/ProgressSteps.tsx`:
 - Each card shows: step number (large bold), title, description
 
 **Acceptance Criteria:**
+
 - Correct step highlights for each wallet state
 - Responsive grid collapses to single column on mobile
 
@@ -279,6 +295,7 @@ Create `src/components/RecentOfframpsTable.tsx`:
 - Eventually should show real user transactions from `TransactionStorage`
 
 **Acceptance Criteria:**
+
 - Table renders with mock data
 - Status badges styled correctly
 - Mobile scroll works
@@ -293,6 +310,7 @@ Create `src/components/TransactionProgressModal.tsx` — a full-screen modal ove
 **Steps:** initiating → awaiting-signature → submitting → processing → settling → success/error
 
 **Features:**
+
 - Backdrop blur overlay (click to close only when done)
 - Racing border animation on modal container (CSS `conic-gradient` + `@property`)
 - Step list: past steps show gold checkmark, current step shows spinning indicator + bouncing dots, future steps are dimmed
@@ -301,11 +319,21 @@ Create `src/components/TransactionProgressModal.tsx` — a full-screen modal ove
 - Close/Done button only appears in terminal states
 
 **Type:**
+
 ```ts
-export type OfframpStep = "idle" | "initiating" | "awaiting-signature" | "submitting" | "processing" | "settling" | "success" | "error";
+export type OfframpStep =
+  | 'idle'
+  | 'initiating'
+  | 'awaiting-signature'
+  | 'submitting'
+  | 'processing'
+  | 'settling'
+  | 'success'
+  | 'error';
 ```
 
 **Acceptance Criteria:**
+
 - All step transitions animate correctly
 - Modal cannot be dismissed mid-transaction
 - Error message displays full text without overflow
@@ -328,6 +356,7 @@ Create `src/components/StellarSpendDashboard.tsx` — the top-level client compo
 - Pre-flight balance checks before initiating trade
 
 **Acceptance Criteria:**
+
 - All child components receive correct props
 - Trade execution flow progresses through all modal steps
 - Errors are caught and displayed in modal
@@ -340,7 +369,7 @@ Create `src/components/StellarSpendDashboard.tsx` — the top-level client compo
 Replace the placeholder `page.tsx` with the real dashboard:
 
 ```tsx
-import { StellarSpendDashboard } from "@/components/StellarSpendDashboard";
+import { StellarSpendDashboard } from '@/components/StellarSpendDashboard';
 
 export default function Page() {
   return <StellarSpendDashboard />;
@@ -348,11 +377,13 @@ export default function Page() {
 ```
 
 Also update `layout.tsx` metadata:
+
 - Title: "Stellar-Spend — Convert Stablecoins to Fiat"
 - Description: accurate project description
 - Add Open Graph tags for social sharing
 
 **Acceptance Criteria:**
+
 - Dashboard renders at `http://localhost:3000`
 - Page title is correct in browser tab
 
@@ -369,6 +400,7 @@ Create `src/components/StateSwitcher.tsx` for development/demo purposes:
 - Only render in development mode or behind a feature flag
 
 **Acceptance Criteria:**
+
 - Switching tabs updates the displayed wallet state in the dashboard
 - Accessible via keyboard
 
@@ -384,12 +416,14 @@ Extract the reusable form primitives from `FormCard` into `src/components/ui/`:
 - `Field`: label + read-only display value with tone (muted/accent)
 
 All components:
+
 - Use `var(--line)` border, `var(--muted)` label color
 - 46px height
 - IBM Plex Mono font
 - Disabled state with reduced opacity
 
 **Acceptance Criteria:**
+
 - Components are reusable across the app
 - All props are typed with TypeScript interfaces
 
@@ -406,6 +440,7 @@ The dashboard uses a two-column grid layout that collapses on smaller screens:
 - Inner padding: `px-[2.6rem] py-8`, collapses to `p-4` on mobile
 
 **Acceptance Criteria:**
+
 - Layout matches reference at all breakpoints
 - No horizontal overflow on mobile
 
@@ -426,6 +461,7 @@ Add skeleton loading states for:
 Use CSS animation (`opacity` pulse) rather than a library. Keep it minimal.
 
 **Acceptance Criteria:**
+
 - No layout shift when data loads
 - Loading states are visually distinct from empty states
 
@@ -447,6 +483,7 @@ Complete the Freighter wallet connection in `src/lib/stellar/wallet-adapter.ts`:
 - Throw descriptive errors for each failure case
 
 **Acceptance Criteria:**
+
 - Freighter connects successfully on mainnet
 - Correct public key is returned
 - Error messages are user-friendly
@@ -464,6 +501,7 @@ Complete the Lobstr wallet connection:
 - Store wallet type and public key
 
 **Acceptance Criteria:**
+
 - Lobstr connects when extension is installed
 - Clear error when Lobstr is not found
 
@@ -481,6 +519,7 @@ Complete the auto-detect and `signTransaction` methods:
 - Return signed XDR string
 
 **Acceptance Criteria:**
+
 - Signing works with both wallet types
 - Network passphrase is always mainnet
 
@@ -499,6 +538,7 @@ Complete `src/hooks/useStellarWallet.ts`:
 - Return all state and handlers
 
 **Acceptance Criteria:**
+
 - Hook correctly reflects wallet state
 - Errors are surfaced without crashing the app
 
@@ -515,6 +555,7 @@ Complete `src/hooks/useWalletFlow.ts`:
 - `steps` is memoized with `useMemo`
 
 **Acceptance Criteria:**
+
 - State transitions update variant and steps correctly
 - No unnecessary re-renders
 
@@ -534,6 +575,7 @@ In `StellarSpendDashboard`, implement balance fetching:
 - Set `isLoadingBalance` during fetch
 
 **Acceptance Criteria:**
+
 - Correct USDC and XLM balances shown after connect
 - Loading state shown during fetch
 
@@ -550,6 +592,7 @@ Before initiating a trade in `handleExecuteTrade()`:
 - If XLM insufficient: throw descriptive error suggesting to switch to USDC fee payment
 
 **Acceptance Criteria:**
+
 - Trade is blocked with clear error before any API calls are made
 - Error message includes actual and required balances
 
@@ -567,6 +610,7 @@ When user disconnects:
 - Ensure no stale wallet state persists across page refreshes (adapter is a singleton but not persisted)
 
 **Acceptance Criteria:**
+
 - After disconnect, UI returns to pre-connect state
 - No stale data shown
 
@@ -582,6 +626,7 @@ Show which wallet type is connected (Freighter or Lobstr) in the Header:
 - Pass `walletType` prop to Header from dashboard
 
 **Acceptance Criteria:**
+
 - Wallet type is visible when connected
 - Does not break layout
 
@@ -597,6 +642,7 @@ If the user has Freighter set to testnet but the app is mainnet:
 - Block the connect flow until resolved
 
 **Acceptance Criteria:**
+
 - Network mismatch is caught before any transaction is built
 - Error message is actionable
 
@@ -630,6 +676,7 @@ Implement the complete trade execution flow in `StellarSpendDashboard`:
 17. On any error: set step to `"error"`, update transaction to `"failed"`
 
 **Acceptance Criteria:**
+
 - Full flow completes end-to-end on mainnet
 - Each step updates the modal correctly
 - Errors at any step are caught and displayed
@@ -650,6 +697,7 @@ Implement bridge status polling in `StellarSpendDashboard`:
 - Bridge polling is best-effort — failure should not block payout polling
 
 **Acceptance Criteria:**
+
 - Bridge status updates in modal during processing
 - Consecutive errors don't crash the app
 
@@ -669,6 +717,7 @@ Implement payout status polling in `StellarSpendDashboard`:
 - Throw `"Payout polling timeout"` after max attempts
 
 **Acceptance Criteria:**
+
 - Payout status drives the modal to success state
 - Refunded/expired orders show appropriate error
 
@@ -684,6 +733,7 @@ Add `withTimeout<T>(promise, ms, label)` utility in `src/lib/offramp/utils/timeo
 - Used for: SDK init (15s), bridge quote (15s), Paycrest order (20s), build-tx (30s), submit (15s)
 
 **Acceptance Criteria:**
+
 - Timeout fires correctly
 - Timer is always cleared (no memory leaks)
 
@@ -704,6 +754,7 @@ Complete `src/lib/transaction-storage.ts`:
 - All methods guard against `typeof window === "undefined"` (SSR safety)
 
 **Acceptance Criteria:**
+
 - Transactions persist across page refreshes
 - Max 50 records enforced
 - SSR-safe (no window access during server render)
@@ -723,6 +774,7 @@ Update `RecentOfframpsTable` to show real user transactions from `TransactionSto
 - "VIEW ALL" button: show all 50 records (expand or navigate to a detail view)
 
 **Acceptance Criteria:**
+
 - Real transactions appear after a successful offramp
 - Empty state is shown for new users
 
@@ -743,6 +795,7 @@ In `FormCard`, implement the quote fetch logic:
 - Call `onPricingUpdate` callback with new quote
 
 **Acceptance Criteria:**
+
 - Quote updates within 1 second of typing
 - Invalid quotes (NaN, negative) are rejected
 - Loading state shown during fetch
@@ -762,6 +815,7 @@ In `FormCard`, fetch gas fee options on mount:
 - Re-fetch if SDK initialization fails (retry once)
 
 **Acceptance Criteria:**
+
 - Fee amounts shown in UI within 3 seconds of page load
 - Warning/info text updates when fee method changes
 
@@ -779,6 +833,7 @@ In `FormCard`:
 - Handle loading and error states for both fetches
 
 **Acceptance Criteria:**
+
 - Currencies load on mount
 - Banks update when currency changes
 - Errors don't crash the form
@@ -797,6 +852,7 @@ In `FormCard`, auto-verify account when account number is 10 digits and bank is 
 - `canInitiateOfframp` requires `accountName` to be non-empty
 
 **Acceptance Criteria:**
+
 - Account name resolves automatically for valid Nigerian accounts
 - Invalid accounts show empty account name (not an error toast)
 
@@ -814,6 +870,7 @@ Add error decoding utilities in `src/lib/offramp/utils/errors.ts`:
 These are used in `StellarSpendDashboard` to format Horizon/Soroban errors.
 
 **Acceptance Criteria:**
+
 - BigInt values serialize without throwing
 - XDR error codes decode correctly
 
@@ -832,6 +889,7 @@ After submitting to `/api/offramp/bridge/submit-soroban`:
 - On timeout: throw `"Transaction was not confirmed within 90s. It may have expired."`
 
 **Acceptance Criteria:**
+
 - PENDING transactions are confirmed before proceeding
 - Timeout error is clear and actionable
 
@@ -848,6 +906,7 @@ After a successful offramp:
 - Reload user transactions from `TransactionStorage`
 
 **Acceptance Criteria:**
+
 - Form is blank after successful transaction
 - User can immediately start a new offramp
 
@@ -863,6 +922,7 @@ Before executing a trade:
 - Validate it's a valid EVM address format (`0x` + 40 hex chars)
 
 **Acceptance Criteria:**
+
 - Missing env var fails fast with clear error
 - Invalid format is caught before Paycrest order creation
 
@@ -879,6 +939,7 @@ Add `isValidQuote(data: unknown): data is Quote` in `FormCard` or a shared util:
 - Return `false` for any invalid shape
 
 **Acceptance Criteria:**
+
 - Invalid API responses don't set a broken quote in state
 - Type guard narrows correctly in TypeScript
 
@@ -904,6 +965,7 @@ Implement the bridge transaction builder route:
 - Parse common simulation errors into user-friendly messages (e.g. insufficient XLM reserve)
 
 **Acceptance Criteria:**
+
 - Returns valid XDR for a real Stellar address and amount
 - Returns 400 for invalid inputs
 - Returns 500 with user-friendly message for simulation failures
@@ -923,6 +985,7 @@ Implement the Soroban transaction submission route:
 - Set `export const maxDuration = 15`
 
 **Acceptance Criteria:**
+
 - PENDING transactions return immediately with hash
 - ERROR status returns decoded error message
 - No SDK re-serialization of the signed XDR
@@ -941,6 +1004,7 @@ Implement the lightweight transaction status polling route:
 - Set `export const maxDuration = 10`
 
 **Acceptance Criteria:**
+
 - Returns correct status for known transaction hashes
 - Returns `"NOT_FOUND"` for unknown hashes (not a 404)
 
@@ -959,6 +1023,7 @@ Implement the Allbridge bridge transfer status route:
 - Handle 404 from Allbridge gracefully (return `"pending"`)
 
 **Acceptance Criteria:**
+
 - Returns bridge status for a submitted transaction
 - Allbridge 404s don't crash the route
 
@@ -975,6 +1040,7 @@ Implement the gas fee options route:
 - Cache the result for 60 seconds (use `next: { revalidate: 60 }` or in-memory cache)
 
 **Acceptance Criteria:**
+
 - Returns fee options within 5 seconds
 - Cached response served on subsequent calls
 
@@ -994,6 +1060,7 @@ Implement the Paycrest order creation route:
 - Return appropriate HTTP status from `PaycrestHttpError.status`
 
 **Acceptance Criteria:**
+
 - Creates real Paycrest order on mainnet
 - Returns `receiveAddress` for bridge destination
 - Validation errors return 400 with details
@@ -1012,6 +1079,7 @@ Implement the Paycrest order status polling route:
 - Return 404 if order not found
 
 **Acceptance Criteria:**
+
 - Returns current order status
 - Handles Paycrest API errors gracefully
 
@@ -1028,6 +1096,7 @@ Implement the currencies list route:
 - Cache for 5 minutes
 
 **Acceptance Criteria:**
+
 - Returns list of supported fiat currencies
 - Includes `code`, `name`, `symbol` for each
 
@@ -1045,6 +1114,7 @@ Implement the institutions list route:
 - Return 400 for unsupported currency
 
 **Acceptance Criteria:**
+
 - Returns banks for NGN
 - Returns appropriate error for unsupported currencies
 
@@ -1062,6 +1132,7 @@ Implement the account verification route:
 - Return 400 for missing fields
 
 **Acceptance Criteria:**
+
 - Returns account name for valid Nigerian bank accounts
 - Returns 400 for missing institution or account number
 
@@ -1080,6 +1151,7 @@ Implement the server-side quote route (alternative to client-side quoting):
 - Return full quote object with `quoteId`, `sourceAmount`, `destinationAmount`, `rate`, `estimatedTimeMs`
 
 **Acceptance Criteria:**
+
 - Returns valid quote for 1 USDC → NGN
 - Handles Allbridge and Paycrest errors
 
@@ -1098,6 +1170,7 @@ Implement the Paycrest webhook handler:
 - Return 401 for invalid signatures
 
 **Acceptance Criteria:**
+
 - Invalid signatures return 401
 - Valid events are logged with order ID and status
 - Returns 200 within 1 second
@@ -1115,6 +1188,7 @@ All API routes that call external services should have explicit timeouts:
 - Return 504 Gateway Timeout with clear message when timeout fires
 
 **Acceptance Criteria:**
+
 - No API route hangs indefinitely
 - Timeout errors return 504 with descriptive message
 
@@ -1135,6 +1209,7 @@ Standardize error response format across all API routes:
 - Never expose stack traces in production
 
 **Acceptance Criteria:**
+
 - All error responses follow the standard format
 - Stack traces are hidden in production
 
@@ -1151,6 +1226,7 @@ The Allbridge SDK takes 3-5 seconds to initialize. Cache the initialized SDK:
 - Invalidate cache on error
 
 **Acceptance Criteria:**
+
 - Second SDK call returns cached instance immediately
 - Cache invalidates after 5 minutes
 
@@ -1166,6 +1242,7 @@ Configure CORS for API routes that may be called from different origins:
 - Restrict to known origins in production
 
 **Acceptance Criteria:**
+
 - API routes respond correctly to CORS preflight
 - No CORS errors in browser console
 
@@ -1182,6 +1259,7 @@ Add basic rate limiting to prevent abuse:
 - Use in-memory store (or Vercel KV if available)
 
 **Acceptance Criteria:**
+
 - Excessive requests return 429
 - Legitimate requests are not blocked
 
@@ -1198,6 +1276,7 @@ Add structured request logging to all API routes:
 - Mask sensitive fields (API keys, private keys)
 
 **Acceptance Criteria:**
+
 - All API requests are logged
 - Sensitive data is never logged
 
@@ -1215,6 +1294,7 @@ Complete the tx-status route using direct Soroban JSON-RPC:
 - Set `maxDuration = 10`
 
 **Acceptance Criteria:**
+
 - Returns correct status for a known transaction hash
 - Does not import `@stellar/stellar-sdk` (raw JSON-RPC only)
 
@@ -1232,6 +1312,7 @@ Vercel serverless functions have a default 10s timeout. Add `export const maxDur
 - All other routes: 10s (default)
 
 **Acceptance Criteria:**
+
 - No Vercel timeout errors on production
 - `maxDuration` is set correctly on each route file
 
@@ -1255,6 +1336,7 @@ Complete `initializeAllbridgeSdk()` in `allbridge-adapter.ts`:
 **Critical:** `SRB` must point to Soroban RPC (not Horizon). Pointing `SRB` to Horizon causes 405 errors during `rawTxBuilder.send()`.
 
 **Acceptance Criteria:**
+
 - SDK initializes without errors
 - Correct RPC URLs are used for each chain key
 
@@ -1272,6 +1354,7 @@ Complete `getAllbridgeTokens(sdk)`:
 - Throw if either USDC token is not found
 
 **Acceptance Criteria:**
+
 - Returns valid token objects for both chains
 - Token objects include `tokenAddress`, `bridgeAddress`, `decimals`, `allbridgeChainId`
 
@@ -1288,6 +1371,7 @@ Complete `getAllbridgeQuote(sdk, sourceToken, destinationToken, amount)`:
 - Return `{ receiveAmount, fee, estimatedTime }`
 
 **Acceptance Criteria:**
+
 - Returns valid receive amount for 1 USDC
 - Fee is non-negative
 - Estimated time is in milliseconds
@@ -1314,6 +1398,7 @@ Implement the core Soroban transaction builder in `soroban-tx-builder.ts`:
 - Return base64 XDR
 
 **Acceptance Criteria:**
+
 - Returns valid XDR that Freighter can sign
 - Simulation succeeds for valid inputs
 - Auth expiration is extended
@@ -1331,6 +1416,7 @@ Implement `getAllbridgeGasFee(sdk, sourceToken, destinationToken)`:
 - Return `{ gasAmount: string, feeTokenAmount: string }` where unused fee is `"0"`
 
 **Acceptance Criteria:**
+
 - Returns stablecoin fee when available
 - Falls back to native fee correctly
 
@@ -1347,6 +1433,7 @@ Implement `getAllbridgeGasFeeOptions(sdk, sourceToken, destinationToken)`:
 - Default to `"0"` if a fee option is unavailable
 
 **Acceptance Criteria:**
+
 - Returns both fee options with int and float representations
 - UI can display human-readable fee amounts
 
@@ -1361,6 +1448,7 @@ Implement `getBridgeFeeForMethod(feeOptions, method)`:
 - If `method === "native"`: return `{ gasAmount: feeOptions.native.int, feeTokenAmount: "0" }`
 
 **Acceptance Criteria:**
+
 - Returns correct fee params for each method
 - Unused fee is always `"0"`
 
@@ -1382,6 +1470,7 @@ Implement `getAllbridgeTransferStatus(sdk, chainSymbol, txHash)`:
 - On error: return `{ status: "pending", txHash }` (don't throw)
 
 **Acceptance Criteria:**
+
 - Status is correctly mapped for all Allbridge status strings
 - Errors return pending status (not throw)
 
@@ -1397,6 +1486,7 @@ In `build-tx` route, parse common simulation error messages:
 - Generic simulation error → include raw error message
 
 **Acceptance Criteria:**
+
 - Users see actionable error messages for common failures
 - Raw error is still logged server-side
 
@@ -1416,6 +1506,7 @@ Implement `floatToInt(amount: string, decimals: number): string` in `soroban-tx-
 Example: `floatToInt("10.5", 7)` → `"105000000"`
 
 **Acceptance Criteria:**
+
 - Correct conversion for amounts with 0-7 decimal places
 - No floating point precision errors
 
@@ -1431,6 +1522,7 @@ Implement `getNonceBigInt()` in `soroban-tx-builder.ts`:
 - Return absolute value (negate if negative)
 
 **Acceptance Criteria:**
+
 - Returns a positive BigInt
 - Different value on each call
 
@@ -1449,6 +1541,7 @@ In `buildSwapAndBridgeTx`, after simulation:
 - Pass modified auth entries to `assembleTransaction`
 
 **Acceptance Criteria:**
+
 - Auth entries have extended expiration after build
 - Users have ~40 minutes to sign without expiry
 
@@ -1467,6 +1560,7 @@ In `buildSwapAndBridgeTx`, compute and apply bumped fee:
 - Log all fee values
 
 **Acceptance Criteria:**
+
 - Final transaction fee is approximately 1.5x the minimum required
 - Transaction is not rejected for insufficient fee
 
@@ -1492,6 +1586,7 @@ Complete `PaycrestAdapter` in `paycrest-adapter.ts`:
   - Return `data.data || data` from response
 
 **Acceptance Criteria:**
+
 - All Paycrest API calls use this method
 - Errors include HTTP status code for correct response mapping
 
@@ -1508,6 +1603,7 @@ Implement `createOrder(request: PayoutOrderRequest)`:
 - Return `PayoutOrderResponse` with `id`, `receiveAddress`, `amount`, `senderFee`, `transactionFee`, `validUntil`, `status`
 
 **Acceptance Criteria:**
+
 - Creates a real order on Paycrest mainnet
 - Returns `receiveAddress` (Base USDC address for bridge destination)
 
@@ -1523,6 +1619,7 @@ Implement `getOrderStatus(orderId)`:
 - Map response status to `PayoutStatus` type
 
 **Acceptance Criteria:**
+
 - Returns current order status
 - Status is one of the defined `PayoutStatus` values
 
@@ -1539,6 +1636,7 @@ Implement `getRate(token, amount, currency, options?)`:
 - Throw if rate is not finite
 
 **Acceptance Criteria:**
+
 - Returns valid NGN/USDC rate
 - Throws on invalid response
 
@@ -1553,6 +1651,7 @@ Implement:
 - `getInstitutions(currency)`: GET `/institutions/{currency}`, return array of `{ code, name }`
 
 **Acceptance Criteria:**
+
 - Returns NGN in currencies list
 - Returns Nigerian banks for NGN
 
@@ -1568,6 +1667,7 @@ Implement `verifyAccount(institution, accountIdentifier)`:
 - Return account name string
 
 **Acceptance Criteria:**
+
 - Returns account name for valid GTBank account
 - Returns empty string for invalid account
 
@@ -1586,6 +1686,7 @@ Implement `mapPaycrestStatus(webhookStatus: string): PayoutStatus`:
 - default → `"pending"`
 
 **Acceptance Criteria:**
+
 - All Paycrest webhook event types are mapped correctly
 
 ---
@@ -1602,6 +1703,7 @@ In `/api/webhooks/paycrest/route.ts`:
 - Parse event body and log `{ eventType, orderId, status }`
 
 **Acceptance Criteria:**
+
 - Invalid signatures return 401
 - Valid signatures are processed
 - Timing-safe comparison used
@@ -1619,6 +1721,7 @@ Before creating a Paycrest order, normalize the amount:
 - Log normalized values
 
 **Acceptance Criteria:**
+
 - Normalized amount is always ≤ bridge receive amount
 - No Paycrest order failures due to amount mismatch
 
@@ -1641,6 +1744,7 @@ class PaycrestHttpError extends Error {
 - API routes check `error.status` to return correct HTTP status code
 
 **Acceptance Criteria:**
+
 - All Paycrest errors are instances of `PaycrestHttpError`
 - HTTP status is preserved through the error chain
 
@@ -1662,6 +1766,7 @@ Configure the testing infrastructure:
 - Configure module name mapper for `@/*` path alias
 
 **Acceptance Criteria:**
+
 - `npm test` runs without errors
 - A simple smoke test passes
 
@@ -1682,6 +1787,7 @@ Write unit tests for all `TransactionStorage` methods:
 - Mock `localStorage` using `jest-localstorage-mock` or manual mock
 
 **Acceptance Criteria:**
+
 - All methods have at least one passing test
 - Edge cases covered (empty storage, missing id)
 
@@ -1698,6 +1804,7 @@ Write unit tests for all validation utilities:
 - `validateToken`: USDC, USDT, lowercase, invalid token
 
 **Acceptance Criteria:**
+
 - All edge cases covered
 - 100% branch coverage for validation functions
 
@@ -1715,6 +1822,7 @@ Write unit tests for `pollWithTimeout`:
 - Uses fake timers (`jest.useFakeTimers()`)
 
 **Acceptance Criteria:**
+
 - Timeout behavior is tested without real delays
 - Progress callback is called correct number of times
 
@@ -1732,6 +1840,7 @@ Write unit tests for Soroban utility functions:
 - `getNonceBigInt()`: returns positive BigInt, different values on each call
 
 **Acceptance Criteria:**
+
 - All conversion cases pass
 - Nonce is always positive
 
@@ -1746,6 +1855,7 @@ Write unit tests for `mapPaycrestStatus`:
 - Unknown event type maps to `"pending"`
 
 **Acceptance Criteria:**
+
 - All 5 known statuses tested
 - Default case tested
 
@@ -1762,6 +1872,7 @@ Write unit tests for the `cn` class name utility:
 - Handles single string
 
 **Acceptance Criteria:**
+
 - All cases pass
 
 ---
@@ -1780,6 +1891,7 @@ Write React Testing Library tests for `Header`:
 - Button is disabled when `isConnecting`
 
 **Acceptance Criteria:**
+
 - All interaction tests pass
 - No accessibility violations
 
@@ -1797,6 +1909,7 @@ Write tests for `ProgressSteps`:
 - All 3 steps always render
 
 **Acceptance Criteria:**
+
 - All state combinations tested
 
 ---
@@ -1816,6 +1929,7 @@ Write tests for `TransactionProgressModal`:
 - `onClose` called when close button clicked
 
 **Acceptance Criteria:**
+
 - All step states tested
 - Modal accessibility (role="dialog") verified
 
@@ -1835,6 +1949,7 @@ Write integration tests for the build-tx route using `jest` and mocked dependenc
 - Test: SDK error returns 500 with user-friendly message
 
 **Acceptance Criteria:**
+
 - All test cases pass with mocked dependencies
 
 ---
@@ -1852,6 +1967,7 @@ Write integration tests for the Paycrest order route:
 - Test: missing `PAYCREST_API_KEY` returns 500
 
 **Acceptance Criteria:**
+
 - All validation cases tested
 - Error propagation from adapter tested
 
@@ -1868,6 +1984,7 @@ Write tests for the webhook handler:
 - Test: valid `payment_order.settled` event is logged correctly
 
 **Acceptance Criteria:**
+
 - Signature verification logic is tested
 - All event types handled
 
@@ -1884,6 +2001,7 @@ Set up Playwright for end-to-end testing:
 - Add `"test:e2e": "playwright test"` script
 
 **Acceptance Criteria:**
+
 - Playwright installs and runs
 - Smoke test passes against dev server
 
@@ -1901,6 +2019,7 @@ Write a Playwright test that simulates the wallet connect flow:
 - Verify USDC balance is fetched (mock Horizon API)
 
 **Acceptance Criteria:**
+
 - Connect flow works end-to-end in browser
 - No real wallet extension required
 
@@ -1923,6 +2042,7 @@ Set up Vercel deployment for the project:
 - Add deployment preview for PRs
 
 **Acceptance Criteria:**
+
 - App deploys successfully to Vercel
 - All API routes work in production
 - Environment variables are set correctly
@@ -1941,6 +2061,7 @@ Add Docker configuration for self-hosted deployments:
 - Document Docker deployment in README
 
 **Acceptance Criteria:**
+
 - `docker build` succeeds
 - `docker run` starts the app on port 3000
 - Environment variables are passed via `--env-file`
@@ -1958,6 +2079,7 @@ Add `.github/workflows/deploy.yml`:
 - Send deployment notification (optional)
 
 **Acceptance Criteria:**
+
 - Successful CI triggers deployment
 - Failed CI blocks deployment
 
@@ -1974,6 +2096,7 @@ Add `.github/dependabot.yml`:
 - Ignore major version bumps for `@stellar/stellar-sdk` and `@allbridge/bridge-core-sdk` (breaking changes)
 
 **Acceptance Criteria:**
+
 - Dependabot PRs are created weekly
 - Major version bumps require manual review
 
@@ -1990,6 +2113,7 @@ Add bundle size monitoring:
 - Add CI check that fails if bundle size increases by >10%
 
 **Acceptance Criteria:**
+
 - Bundle analysis report generated on build
 - Large dependencies identified and documented
 
@@ -2008,6 +2132,7 @@ Add Sentry error monitoring:
 - Add source maps upload in CI
 
 **Acceptance Criteria:**
+
 - Errors appear in Sentry dashboard
 - Source maps are uploaded for readable stack traces
 
@@ -2024,6 +2149,7 @@ Add `GET /api/health` route:
 - Return 200 if healthy, 503 if degraded
 
 **Acceptance Criteria:**
+
 - Returns 200 with status object
 - Used by Vercel/Docker health checks
 
@@ -2045,6 +2171,7 @@ Extend the offramp to support currencies beyond NGN:
 - Update `validateCurrency` to accept all Paycrest-supported currencies
 
 **Acceptance Criteria:**
+
 - Switching currency updates all UI elements
 - Payout amount formatted correctly for each currency
 
@@ -2063,6 +2190,7 @@ Create a transaction history page at `/history`:
 - Link from "VIEW ALL" button in `RecentOfframpsTable`
 
 **Acceptance Criteria:**
+
 - All user transactions are listed
 - Stellar Explorer links work
 - History persists across page refreshes
@@ -2080,6 +2208,7 @@ Make transaction hashes clickable throughout the UI:
 - Open in new tab with `rel="noopener noreferrer"`
 
 **Acceptance Criteria:**
+
 - All tx hashes are clickable links
 - Links open correct Stellar Explorer page
 
@@ -2096,6 +2225,7 @@ Add copy functionality:
 - Use `navigator.clipboard.writeText()` with fallback
 
 **Acceptance Criteria:**
+
 - Copy works in modern browsers
 - Visual feedback shown after copy
 
@@ -2114,6 +2244,7 @@ Add theme switching:
 - Update `globals.css` with light mode overrides via `[data-theme="light"]`
 
 **Acceptance Criteria:**
+
 - Theme persists across page refreshes
 - All components look correct in both themes
 
@@ -2131,6 +2262,7 @@ Add a lightweight toast notification system:
 - Accessible: `role="alert"`, `aria-live="polite"`
 
 **Acceptance Criteria:**
+
 - Toasts appear and auto-dismiss
 - Multiple toasts stack correctly
 - Accessible to screen readers
@@ -2151,6 +2283,7 @@ Audit and fix accessibility issues:
 - Run `axe-core` audit and fix all violations
 
 **Acceptance Criteria:**
+
 - Zero axe-core violations
 - Full keyboard navigation works
 
@@ -2168,6 +2301,7 @@ Make the app installable as a PWA:
 - Add Apple touch icon
 
 **Acceptance Criteria:**
+
 - App is installable on mobile
 - Lighthouse PWA score ≥ 80
 
@@ -2185,6 +2319,7 @@ Add a live FX rate display in the Header:
 - Stop polling when tab is not visible (`document.visibilityState`)
 
 **Acceptance Criteria:**
+
 - Rate updates every 30 seconds
 - No polling when tab is hidden
 - Smooth update animation
@@ -2208,6 +2343,7 @@ Rewrite `README.md` to be production-quality:
 - License badge
 
 **Acceptance Criteria:**
+
 - README is comprehensive and accurate
 - Architecture diagram is included
 - All API routes are documented
@@ -2216,20 +2352,20 @@ Rewrite `README.md` to be production-quality:
 
 ## Summary
 
-| Area | Issues | Count |
-|------|--------|-------|
-| Project Setup | 1–8 | 8 |
-| Frontend UI | 9–20 | 12 |
-| Wallet & Auth | 21–30 | 10 |
-| Offramp Flow | 31–45 | 15 |
-| Backend API | 46–65 | 20 |
-| Bridge (Allbridge) | 66–78 | 13 |
-| Paycrest Integration | 79–88 | 10 |
-| Testing | 89–103 | 15 |
-| DevOps | 104–110 | 7 |
-| Enhancements | 111–120 | 10 |
-| **Total** | | **120** |
+| Area                 | Issues  | Count   |
+| -------------------- | ------- | ------- |
+| Project Setup        | 1–8     | 8       |
+| Frontend UI          | 9–20    | 12      |
+| Wallet & Auth        | 21–30   | 10      |
+| Offramp Flow         | 31–45   | 15      |
+| Backend API          | 46–65   | 20      |
+| Bridge (Allbridge)   | 66–78   | 13      |
+| Paycrest Integration | 79–88   | 10      |
+| Testing              | 89–103  | 15      |
+| DevOps               | 104–110 | 7       |
+| Enhancements         | 111–120 | 10      |
+| **Total**            |         | **120** |
 
 ---
 
-*Need clarification or have questions? Reach out on Telegram: [t.me/Xoulomon](https://t.me/Xoulomon)*
+_Need clarification or have questions? Reach out on Telegram: [t.me/Xoulomon](https://t.me/Xoulomon)_

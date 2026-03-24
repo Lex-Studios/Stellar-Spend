@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { buildProgressSteps, STATE_VARIANTS } from "@/data/stellaramp";
-import type { WalletFlowState } from "@/types/stellaramp";
+import { useMemo, useState } from 'react';
+import { buildProgressSteps, STATE_VARIANTS } from '@/data/stellaramp';
+import type { WalletFlowState } from '@/types/stellaramp';
 
 export function useWalletFlow(initialState: WalletFlowState) {
   const [state, setState] = useState<WalletFlowState>(initialState);
