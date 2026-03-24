@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { getStellarWalletAdapter, type StellarWallet, type WalletType } from "@/lib/stellar/wallet-adapter";
 
 export function useStellarWallet() {
@@ -8,12 +8,12 @@ export function useStellarWallet() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const adapter = getStellarWalletAdapter();
+  const adapter = useMemo(() => getStellarWalletAdapter(), []);
 
   useEffect(() => {
     const existing = adapter.getWallet();
     if (existing) setWallet(existing);
-  }, []);
+  }, [adapter]);
 
   const connect = useCallback(async (walletType?: WalletType) => {
     setIsConnecting(true);
@@ -31,13 +31,13 @@ export function useStellarWallet() {
     } finally {
       setIsConnecting(false);
     }
-  }, []);
+  }, [adapter]);
 
   const disconnect = useCallback(() => {
     adapter.disconnect();
     setWallet(null);
     setError(null);
-  }, []);
+  }, [adapter]);
 
   const signTransaction = useCallback(async (xdr: string): Promise<string> => {
     if (!wallet) throw new Error("No wallet connected");
@@ -47,7 +47,7 @@ export function useStellarWallet() {
       setError(err.message || "Failed to sign transaction");
       throw err;
     }
-  }, [wallet]);
+  }, [adapter, wallet]);
 
   return { wallet, isConnected: !!wallet, isConnecting, error, connect, disconnect, signTransaction };
 }

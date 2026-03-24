@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "node ./scripts/run-next.cjs dev --hostname localhost --port 3001",
+    "build": "node ./scripts/run-next.cjs build",
+    "start": "node ./scripts/run-next.cjs start",
+    "lint": "npx -y -p eslint@9.39.4 -p @typescript-eslint/parser@8.46.1 -p eslint-plugin-react@7.37.5 -p eslint-plugin-react-hooks@5.2.0 -p @next/eslint-plugin-next@15.2.0 eslint . --max-warnings 0",
+    "test": "vitest --run"
   },
   "dependencies": {
     "@allbridge/bridge-core-sdk": "^3.20.0",
@@ -20,12 +21,17 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "22.13.5",
     "@types/react": "19.0.8",
     "@types/react-dom": "19.0.3",
+    "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^9.39.3",
     "eslint-config-next": "15.2.0",
+    "jsdom": "^29.0.1",
     "tailwindcss": "^4.2.1",
-    "typescript": "5.7.3"
+    "typescript": "5.7.3",
+    "vitest": "^4.1.1"
   }
 }

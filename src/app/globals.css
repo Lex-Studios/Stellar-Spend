@@ -9,6 +9,21 @@
   --text: #ffffff;
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-line: var(--line);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-text: var(--text);
+
+  --font-space-grotesk: var(--font-space-grotesk-source), "Space Grotesk", "IBM Plex Sans", sans-serif;
+  --font-ibm-plex-mono: var(--font-ibm-plex-mono-source), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --animate-spin-slow: spin-slow 2s linear infinite;
+  --animate-scale-in: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -16,14 +31,10 @@ html, body {
   padding: 0;
   background: radial-gradient(circle at top right, #1a1a1a 0%, var(--bg) 45%);
   color: var(--text);
-  font-family: var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-ibm-plex-mono-source), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
-
-.font-space-grotesk {
-  font-family: var(--font-space-grotesk), "Space Grotesk", "IBM Plex Sans", sans-serif;
-}
 
 @keyframes pulse {
   0%, 100% { transform: scale(1); filter: brightness(1); }
@@ -36,26 +47,33 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   inherits: false;
 }
 
+@keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes scale-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes racing-border { to { --border-angle: 360deg; } }
-
-.racing-border-wrapper {
-  --border-size: 2px;
-  padding: var(--border-size);
-  background: conic-gradient(from var(--border-angle), transparent 40%, #c9a962 50%, #f4e1ad 55%, #c9a962 60%, transparent 70%);
-  animation: racing-border 2.5s linear infinite;
-}
-
-.racing-border-content { background: #0c0c0c; }
-
 @keyframes dot-bounce {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
   30% { transform: translateY(-4px); opacity: 1; }
 }
 
-.dot-bounce { animation: dot-bounce 1.2s ease-in-out infinite; }
+@utility animate-spin-slow {
+  animation: var(--animate-spin-slow);
+}
 
-@keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.animate-spin-slow { animation: spin-slow 2s linear infinite; }
+@utility animate-scale-in {
+  animation: var(--animate-scale-in);
+}
 
-@keyframes scale-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.animate-scale-in { animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+@utility dot-bounce {
+  animation: dot-bounce 1.2s ease-in-out infinite;
+}
+
+@utility racing-border-wrapper {
+  --border-size: 2px;
+  padding: var(--border-size);
+  background: conic-gradient(from var(--border-angle), transparent 40%, var(--color-accent) 50%, #f4e1ad 55%, var(--color-accent) 60%, transparent 70%);
+  animation: racing-border 2.5s linear infinite;
+}
+
+@utility racing-border-content {
+  background: color-mix(in srgb, var(--color-panel) 88%, black);
+}

@@ -1,0 +1,98 @@
+Request timed out after 3000ms
+
+Retrying 1/3...
+Request timed out after 3000ms
+
+Retrying 1/3...
+ ⨯ [Error: Cannot find module 'C:\Users\USER PC\Stellar-Spend\.next\server\middleware-manifest.json'
+Require stack:
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\next-server.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\dev\next-dev-server.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\next.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\lib\start-server.js] {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\USER PC\Stellar-Spend\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\USER PC\\Stellar-Spend\\.next\\routes-manifest.json'
+}
+[Error: Cannot find module 'C:\Users\USER PC\Stellar-Spend\.next\server\middleware-manifest.json'
+Require stack:
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\next-server.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\dev\next-dev-server.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\next.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\lib\start-server.js] {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array]
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\USER PC\Stellar-Spend\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\USER PC\\Stellar-Spend\\.next\\routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open 'C:\Users\USER PC\Stellar-Spend\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\USER PC\\Stellar-Spend\\.next\\routes-manifest.json'
+}
+ ⨯ Error: Cannot find module './331.js'
+Require stack:
+- C:\Users\USER PC\Stellar-Spend\.next\server\webpack-runtime.js
+- C:\Users\USER PC\Stellar-Spend\.next\server\pages\_document.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\require.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\load-components.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\build\utils.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\build\swc\options.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\build\swc\index.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\build\next-config-ts\transpile-config.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\config.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\next.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\lib\start-server.js
+    at <unknown> (C:\Users\USER PC\Stellar-Spend\.next\server\app\page.js:2:7916)
+    at Object.<anonymous> (C:\Users\USER PC\Stellar-Spend\.next\server\app\page.js:2:7965) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\USER PC\Stellar-Spend\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\USER PC\\Stellar-Spend\\.next\\routes-manifest.json'
+}
+Error: Cannot find module './331.js'
+Require stack:
+- C:\Users\USER PC\Stellar-Spend\.next\server\webpack-runtime.js
+- C:\Users\USER PC\Stellar-Spend\.next\server\pages\_document.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\require.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\load-components.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\build\utils.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\build\swc\options.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\build\swc\index.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\build\next-config-ts\transpile-config.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\config.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\next.js
+- C:\Users\USER PC\Stellar-Spend\node_modules\next\dist\server\lib\start-server.js
+    at <unknown> (C:\Users\USER PC\Stellar-Spend\.next\server\app\page.js:2:7916)
+    at Object.<anonymous> (C:\Users\USER PC\Stellar-Spend\.next\server\app\page.js:2:7965) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [Array],
+  page: '/'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\USER PC\Stellar-Spend\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\USER PC\\Stellar-Spend\\.next\\routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open 'C:\Users\USER PC\Stellar-Spend\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\USER PC\\Stellar-Spend\\.next\\routes-manifest.json'
+}

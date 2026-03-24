@@ -1,0 +1,18 @@
+
+> stellar-spend@0.1.0 dev
+> node ./scripts/run-next.cjs dev --hostname localhost --port 3001
+
+   ▲ Next.js 15.5.14
+   - Local:        http://localhost:3001
+   - Network:      http://localhost:3001
+
+ ✓ Starting...
+ ✓ Ready in 19.5s
+ ○ Compiling / ...
+ ✓ Compiled / in 40.7s (562 modules)
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 15.7s (890 modules)
+ HEAD / 500 in 94806ms
+ HEAD / 500 in 2630ms
+ GET / 500 in 2161ms
+ GET / 500 in 872ms
