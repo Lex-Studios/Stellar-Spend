@@ -21,3 +21,20 @@ export function sanitizeInput(input: string): string {
 export function validateToken(token: string): boolean {
   return ['USDC', 'USDT'].includes(token.toUpperCase());
 }
+
+export function isValidQuote(quote: unknown): boolean {
+  if (!quote || typeof quote !== 'object') return false;
+  
+  const q = quote as Record<string, unknown>;
+  const destAmount = parseFloat(String(q.destinationAmount ?? ''));
+  const rate = typeof q.rate === 'number' ? q.rate : 0;
+  
+  return (
+    !isNaN(destAmount) &&
+    isFinite(destAmount) &&
+    destAmount > 0 &&
+    !isNaN(rate) &&
+    isFinite(rate) &&
+    rate > 0
+  );
+}
