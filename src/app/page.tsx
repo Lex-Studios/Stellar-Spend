@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import FormCard, { type OfframpPayload, type QuoteResult } from "@/components/FormCard";
 import RightPanel from "@/components/RightPanel";
 import RecentOfframpsTable from "@/components/RecentOfframpsTable";
 import ProgressSteps from "@/components/ProgressSteps";
 import { TransactionProgressModal } from "@/components/TransactionProgressModal";
+import { Header } from "@/components/Header";
 import { OfframpStep } from "@/types/stellaramp";
+import { TransactionStorage, type Transaction } from "@/lib/transaction-storage";
 
 export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
@@ -14,9 +16,24 @@ export default function Home() {
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("");
   const [quote, setQuote] = useState<QuoteResult | null>(null);
+  const [userTransactions, setUserTransactions] = useState<Transaction[]>([]);
   
   // Test state for modal
   const [modalStep, setModalStep] = useState<OfframpStep>("idle");
+
+  // Load transactions on mount and when connected
+  useEffect(() => {
+    const loadTransactions = () => {
+      const allTransactions = TransactionStorage.getAll();
+      setUserTransactions(allTransactions);
+    };
+
+    loadTransactions();
+    
+    // Reload transactions every 2 seconds to reflect updates
+    const interval = setInterval(loadTransactions, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleConnect = useCallback(() => {
     setIsConnecting(true);
@@ -87,7 +104,7 @@ export default function Home() {
             />
           </div>
           <div>
-            <RecentOfframpsTable />
+            <RecentOfframpsTable userTransactions={userTransactions} />
           </div>
           <div className="col-span-1 min-[1101px]:col-span-2 mt-4 max-[1100px]:block">
             <ProgressSteps isConnected={isConnected} isConnecting={isConnecting} />
