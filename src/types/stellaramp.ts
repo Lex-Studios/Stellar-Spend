@@ -33,3 +33,13 @@ export interface StateVariant {
   readonly stepOneDescription: string;
   readonly pulse?: boolean;
 }
+
+export type OfframpStep =
+  | "idle"
+  | "initiating"
+  | "awaiting-signature"
+  | "submitting"
+  | "processing"
+  | "settling"
+  | "success"
+  | "error";

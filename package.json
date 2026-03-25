@@ -3,20 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "test": "vitest --run",
-    "test:watch": "vitest"
-
     "dev": "node ./scripts/run-next.cjs dev --hostname localhost --port 3001",
     "build": "node ./scripts/run-next.cjs build",
     "start": "node ./scripts/run-next.cjs start",
     "lint": "npx -y -p eslint@9.39.4 -p @typescript-eslint/parser@8.46.1 -p eslint-plugin-react@7.37.5 -p eslint-plugin-react-hooks@5.2.0 -p @next/eslint-plugin-next@15.2.0 eslint . --max-warnings 0",
-    "test": "vitest --run"
-
+    "test": "vitest --run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@allbridge/bridge-core-sdk": "^3.20.0",
