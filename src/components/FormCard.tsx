@@ -8,7 +8,8 @@ import {
   type ChangeEvent,
 } from "react";
 import { cn } from "@/lib/cn";
-import { validateAmount, validateAccountNumber } from "@/lib/offramp/utils/validation";
+import { validateAmount, validateAccountNumber, isValidQuote } from "@/lib/offramp/utils/validation";
+import { buildQuote, calculateBridgeAmount } from "@/lib/offramp/utils/quote-fetcher";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -466,8 +467,10 @@ export default function FormCard({
 
   const fetchQuote = useCallback(
     (amt: string, cur: string, fee: FeeMethod) => {
+      // Clear any pending debounce
       if (quoteDebounceRef.current) clearTimeout(quoteDebounceRef.current);
 
+      // Validate minimum inputs
       const num = parseFloat(amt);
       if (!amt || isNaN(num) || num < 0.7 || !cur) {
         setQuote(null);
@@ -475,18 +478,40 @@ export default function FormCard({
         return;
       }
 
+      // Debounce 500ms before fetching
       quoteDebounceRef.current = setTimeout(async () => {
         setIsQuoteLoading(true);
         setQuoteError("");
         try {
+          // Call quote API endpoint
           const res = await fetch("/api/offramp/quote", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: amt, currency: cur, feeMethod: fee }),
+            body: JSON.stringify({ 
+              amount: amt, 
+              currency: cur, 
+              feeMethod: fee 
+            }),
           });
+
           const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Quote failed");
-          const result: QuoteResult = { ...data, currency: cur };
+          
+          if (!res.ok) {
+            throw new Error(data.error || "Failed to fetch quote");
+          }
+
+          // Validate quote object - reject NaN or negative values
+          if (!isValidQuote(data)) {
+            throw new Error("Invalid quote received: NaN or negative values");
+          }
+
+          // Build quote result with currency
+          const result: QuoteResult = { 
+            ...data, 
+            currency: cur 
+          };
+
+          // Update state and notify parent
           setQuote(result);
           onQuoteChange?.(result);
         } catch (err: unknown) {
@@ -526,7 +551,7 @@ export default function FormCard({
           setAccountName(data.accountName ?? "");
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : "Could not verify account";
-          if (!msg.includes("Not implemented")) setVerifyError(msg);
+          setVerifyError(msg);
         } finally {
           setIsVerifyingAccount(false);
         }
