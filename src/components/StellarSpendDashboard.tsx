@@ -357,6 +357,7 @@ export default function StellarSpendDashboard() {
         isConnected={isConnected}
         isConnecting={isConnecting}
         walletAddress={wallet?.publicKey}
+        walletType={wallet?.type === "freighter" ? "Freighter" : wallet?.type === "lobstr" ? "Lobstr" : null}
         stellarUsdcBalance={usdcBalance}
         stellarXlmBalance={xlmBalance}
         isBalanceLoading={isBalanceLoading}
