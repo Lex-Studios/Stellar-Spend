@@ -1,17 +1,31 @@
 "use client";
 
+import { useState, useCallback, useRef } from "react";
+import FormCard, { type OfframpPayload } from "@/components/FormCard";
 import { useState, useCallback, useEffect } from "react";
 import FormCard, { type OfframpPayload, type QuoteResult } from "@/components/FormCard";
 import RightPanel from "@/components/RightPanel";
 import RecentOfframpsTable from "@/components/RecentOfframpsTable";
 import ProgressSteps from "@/components/ProgressSteps";
-import { TransactionProgressModal } from "@/components/TransactionProgressModal";
 import Header from "@/components/Header";
+import { TransactionProgressModal } from "@/components/TransactionProgressModal";
+import { useStellarWallet } from "@/hooks/useStellarWallet";
+import { usePollBridgeStatus } from "@/hooks/usePollBridgeStatus";
+import { usePollPayoutStatus } from "@/hooks/usePollPayoutStatus";
+import { TransactionStorage } from "@/lib/transaction-storage";
+import { withTimeout } from "@/lib/offramp/utils/timeout";
+import type { OfframpStep } from "@/types/stellaramp";
+import type { QuoteResult } from "@/components/FormCard";
+
+export default function Home() {
+  const { wallet, isConnected, isConnecting, connect, disconnect, signTransaction } =
+    useStellarWallet();
+import { Header } from "@/components/Header";
 import { useStellarWallet } from "@/hooks/useStellarWallet";
 import { useWalletFlow } from "@/hooks/useWalletFlow";
 import { OfframpStep } from "@/types/stellaramp";
 import { usePollPayoutStatus } from "@/hooks/usePollPayoutStatus";
-import { TransactionStorage, type Transaction } from "@/lib/transaction-storage";
+import { TransactionStorage } from "@/lib/transaction-storage";
 
 export default function Home() {
   const { wallet, isConnected, isConnecting: isWalletConnecting, error, connect, disconnect } = useStellarWallet();
@@ -24,32 +38,222 @@ export default function Home() {
   const [modalError, setModalError] = useState<string | undefined>(undefined);
   const [currentPayload, setCurrentPayload] = useState<OfframpPayload | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
+  const [formResetKey, setFormResetKey] = useState(0);
 
-  // Sync wallet flow state with wallet connection state
-  useEffect(() => {
-    if (isWalletConnecting) {
-      setConnecting();
-    } else if (isConnected) {
-      setConnected();
-    } else {
-      setPreConnect();
-    }
-  }, [isWalletConnecting, isConnected, setConnecting, setConnected, setPreConnect]);
+  // Keep a ref to the current txId so polling callbacks can access it
+  const txIdRef = useRef<string | null>(null);
+
+  const { pollBridgeStatus } = usePollBridgeStatus();
+  const { pollPayoutStatus } = usePollPayoutStatus();
+
+  // ---------------------------------------------------------------------------
+  // handleExecuteTrade — full offramp orchestration
+  // ---------------------------------------------------------------------------
+  const handleExecuteTrade = useCallback(
+    async (payload: OfframpPayload) => {
+      // 1. Validate wallet connected and quote available
+      if (!isConnected || !wallet) {
+        setModalError("Please connect your wallet before initiating a trade.");
+        setModalStep("error");
+        return;
+      }
+      if (!payload.quote) {
+        setModalError("No quote available. Please refresh and try again.");
+        setModalStep("error");
+        return;
+      }
+
+      // 2. Generate txId and save initial transaction record
+      const txId = TransactionStorage.generateId();
+      txIdRef.current = txId;
+
+      TransactionStorage.save({
+        id: txId,
+        timestamp: Date.now(),
+        userAddress: wallet.publicKey,
+        amount: payload.amount,
+        currency: payload.currency,
+        beneficiary: {
+          institution: payload.institution,
+          accountIdentifier: payload.accountIdentifier,
+          accountName: payload.accountName,
+          currency: payload.currency,
+        },
+        status: "pending",
+      });
+
+      setModalError(undefined);
+      setModalStep("initiating");
+
+      try {
+        // 3. Initialize Allbridge SDK and fetch tokens (15s timeout)
+        const { sdk, tokens } = await withTimeout(
+          (async () => {
+            const mod = await import("@allbridge/bridge-core-sdk");
+            const sdkInstance = new mod.AllbridgeCoreSdk(mod.mainnet);
+            const tokenList = await sdkInstance.tokens();
+            return { sdk: sdkInstance, tokens: tokenList };
+          })(),
+          15_000,
+          "Allbridge SDK init"
+        );
+
+        // Find Stellar USDC token
+        const stellarUsdc = tokens.find(
+          (t: { symbol: string; chainSymbol: string }) =>
+            t.symbol === "USDC" && t.chainSymbol === "STELLAR"
+        );
+        if (!stellarUsdc) throw new Error("Stellar USDC token not found in Allbridge SDK");
+
+        // 4. Get bridge quote to compute paycrestOrderAmount (15s timeout)
+        const bridgeQuote = await withTimeout(
+          sdk.getAmountToBeReceived(payload.amount, stellarUsdc, stellarUsdc),
+          15_000,
+          "Bridge quote"
+        );
+
+        // 5. Floor paycrestOrderAmount to 6 decimals (avoid rounding up)
+        const rawAmount = parseFloat(String(bridgeQuote));
+        const paycrestOrderAmount = Math.floor(rawAmount * 1_000_000) / 1_000_000;
+
+        // 6. POST to /api/offramp/paycrest/order (20s timeout)
+        const paycrestRes = await withTimeout(
+          fetch("/api/offramp/paycrest/order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: paycrestOrderAmount,
+              currency: payload.currency,
+              institution: payload.institution,
+              accountIdentifier: payload.accountIdentifier,
+              accountName: payload.accountName,
+              returnAddress: wallet.publicKey,
+            }),
+          }).then((r) => r.json()),
+          20_000,
+          "Paycrest order creation"
+        );
+
+        if (paycrestRes.error) throw new Error(paycrestRes.error);
+
+        const { payoutOrderId, settlementAddress } = paycrestRes as {
+          payoutOrderId: string;
+          settlementAddress: string;
+        };
+
+        TransactionStorage.update(txId, { payoutOrderId });
+
+        // 7. POST to /api/offramp/bridge/build-tx (30s timeout)
+        const buildTxRes = await withTimeout(
+          fetch("/api/offramp/bridge/build-tx", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: payload.amount,
+              fromAddress: wallet.publicKey,
+              toAddress: settlementAddress,
+              currency: payload.currency,
+              feeMethod: payload.feeMethod,
+            }),
+          }).then((r) => r.json()),
+          30_000,
+          "Bridge build-tx"
+        );
+
+        if (buildTxRes.error) throw new Error(buildTxRes.error);
+        const { xdr } = buildTxRes as { xdr: string };
+
+        // 8. Sign transaction — update modal to awaiting-signature
+        setModalStep("awaiting-signature");
+        const signedXdr = await signTransaction(xdr);
+
+        // 9. Submit signed XDR to /api/offramp/bridge/submit-soroban (15s timeout)
+        setModalStep("submitting");
+        const submitRes = await withTimeout(
+          fetch("/api/offramp/bridge/submit-soroban", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ signedXdr }),
+          }).then((r) => r.json()),
+          15_000,
+          "Bridge submit"
+        );
 
   const { pollPayoutStatus } = usePollPayoutStatus();
 
+        if (submitRes.error) throw new Error(submitRes.error);
+
+        let txHash: string = submitRes.hash;
+
+        // 10. If PENDING, poll tx-status until SUCCESS or FAILED
+        if (submitRes.status === "PENDING" && txHash) {
+          setModalStep("processing");
+          let pollAttempts = 0;
+          const maxPollAttempts = 30;
+
+          while (pollAttempts < maxPollAttempts) {
+            pollAttempts++;
+            await new Promise<void>((r) => setTimeout(r, 3_000));
+
+            const statusRes = await fetch(`/api/offramp/bridge/tx-status/${txHash}`, {
+              cache: "no-store",
+            }).then((r) => r.json());
+
+            if (statusRes.status === "SUCCESS") break;
+            if (statusRes.status === "FAILED") {
+              throw new Error("Stellar transaction failed on-chain. Please try again.");
+            }
+          }
+        }
+
+        TransactionStorage.update(txId, { stellarTxHash: txHash });
+
+        // 11. Start parallel polling: bridge (best-effort) + payout (critical path)
+        setModalStep("processing");
+
+        const bridgePolling = pollBridgeStatus(txHash, {
+          transactionId: txId,
+          onBridgeComplete: () => setModalStep("settling"),
+        }).catch(() => {
+          // Bridge polling is best-effort — swallow errors
+        });
+
+        const payoutPolling = pollPayoutStatus(payoutOrderId, {
+          transactionId: txId,
+          onStepChange: setModalStep,
+        });
+
+        await Promise.all([bridgePolling, payoutPolling]);
+
+        // 12. Success
+        setModalStep("success");
+        TransactionStorage.update(txId, { status: "completed" });
+        setFormResetKey((k) => k + 1);
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : "An unexpected error occurred. Please try again.";
+        setModalError(message);
+        setModalStep("error");
+        if (txIdRef.current) {
+          TransactionStorage.update(txIdRef.current, { status: "failed", error: message });
+        }
+      }
+    },
+    [isConnected, wallet, signTransaction, pollBridgeStatus, pollPayoutStatus]
+  );
+
+  // ---------------------------------------------------------------------------
+  // Wallet handlers
+  // ---------------------------------------------------------------------------
   const handleConnect = useCallback(async () => {
-    setConnecting();
-    const result = await connect();
-    if (result) {
-      setConnected();
-    } else {
-      setPreConnect();
+    try {
+      await connect();
+    } catch {
+      // error is surfaced via useStellarWallet's error state
     }
-  }, [connect, setConnecting, setConnected, setPreConnect]);
+  }, [connect]);
 
   const handleDisconnect = useCallback(() => {
-    // useStellarWallet.disconnect() calls adapter.disconnect() + TransactionStorage.clear()
     disconnect();
     setAmount("");
     setCurrency("");
@@ -76,14 +280,40 @@ export default function Home() {
       status: "pending",
     });
 
+  const { pollPayoutStatus } = usePollPayoutStatus();
+
+  const handleSubmit = useCallback(async (payload: OfframpPayload) => {
+    setModalStep("initiating");
+
+    // Create a local transaction record
+    const txId = TransactionStorage.generateId();
+    TransactionStorage.save({
+      id: txId,
+      timestamp: Date.now(),
+      userAddress: "unknown", // replaced once wallet is wired
+      amount: payload.amount,
+      currency: payload.currency,
+      beneficiary: {
+        institution: payload.institution,
+        accountIdentifier: payload.accountIdentifier,
+        accountName: payload.accountName,
+        currency: payload.currency,
+      },
+      status: "pending",
+    });
+
     try {
+      // Step: awaiting-signature → submitting → processing
+      // These steps will be driven by the real bridge/payout flow once those
+      // routes are implemented. For now we advance through them and then poll.
       setModalStep("awaiting-signature");
-      await new Promise((r) => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 800));
       setModalStep("submitting");
-      await new Promise((r) => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 800));
       setModalStep("processing");
 
       // TODO: replace with real orderId from execute-payout once implemented
+      // For now we read it from the payload if available, or skip polling.
       const orderId: string | undefined = (payload as OfframpPayload & { orderId?: string }).orderId;
 
       if (orderId) {
@@ -99,7 +329,7 @@ export default function Home() {
       } else {
         // No orderId yet — simulate settling for UI demo until execute-payout is wired
         setModalStep("settling");
-        await new Promise((r) => setTimeout(r, 1200));
+        await new Promise(r => setTimeout(r, 1200));
         setModalStep("success");
       }
     } catch (err: unknown) {
@@ -108,15 +338,11 @@ export default function Home() {
       setModalStep("error");
       setModalError(message);
     }
-  }, [pollPayoutStatus, wallet?.publicKey]);
-
-  const userTransactions = wallet?.publicKey
-    ? TransactionStorage.getByUser(wallet.publicKey)
-    : [];
+  }, [pollPayoutStatus]);
 
   return (
     <main className="min-h-screen p-4 bg-[#0a0a0a]">
-      <TransactionProgressModal
+      <TransactionProgressModal 
         step={modalStep}
         errorMessage={modalError}
         onClose={() => { setModalStep("idle"); setModalError(undefined); }}
@@ -125,7 +351,7 @@ export default function Home() {
       <Header
         subtitle={variant.subtitle}
         isConnected={isConnected}
-        isConnecting={isWalletConnecting}
+        isConnecting={isConnecting}
         walletAddress={wallet?.publicKey}
         onConnect={handleConnect}
         onDisconnect={handleDisconnect}
@@ -154,9 +380,10 @@ export default function Home() {
           <div data-testid="FormCard">
             <FormCard
               isConnected={isConnected}
-              isConnecting={isWalletConnecting}
+              isConnecting={isConnecting}
+              resetKey={formResetKey}
               onConnect={handleConnect}
-              onSubmit={handleSubmit}
+              onSubmit={handleExecuteTrade}
               onQuoteChange={setQuote}
               onAmountChange={setAmount}
               onCurrencyChange={setCurrency}

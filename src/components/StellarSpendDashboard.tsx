@@ -148,14 +148,30 @@ export default function StellarSpendDashboard() {
   // ---------------------------------------------------------------------------
   // Pre-flight balance check
   // ---------------------------------------------------------------------------
+  const MIN_XLM_RESERVE = 3;
+  const ESTIMATED_GAS = 2.5;
+
+  function parseBalance(raw: string | null): number {
+    if (!raw) return 0;
+    return Number(raw.replace(/,/g, ""));
+  }
+
   function checkBalance(payload: OfframpPayload): string | null {
-    if (!usdcBalance) return null; // can't check — allow through
-    const needed = parseFloat(payload.amount);
-    const available = parseFloat(usdcBalance);
-    if (isNaN(needed) || isNaN(available)) return null;
-    if (needed > available) {
-      return `Insufficient USDC balance. You have ${usdcBalance} USDC but need ${payload.amount} USDC.`;
+    const usdc = parseBalance(usdcBalance);
+    const needed = Number(payload.amount);
+
+    if (!isNaN(needed) && needed > usdc) {
+      return `Insufficient USDC balance. You have ${usdcBalance ?? "0"} USDC but are trying to send ${payload.amount} USDC.`;
     }
+
+    if (payload.feeMethod === "XLM") {
+      const xlm = parseBalance(xlmBalance);
+      const required = MIN_XLM_RESERVE + ESTIMATED_GAS;
+      if (xlm < required) {
+        return `Insufficient XLM for gas. You need at least ${required} XLM (Reserve + Gas) but have ${xlmBalance ?? "0"} XLM. Try switching to USDC fee payment.`;
+      }
+    }
+
     return null;
   }
 
@@ -328,7 +344,7 @@ export default function StellarSpendDashboard() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [wallet?.publicKey, usdcBalance, signTransaction]
+    [wallet?.publicKey, usdcBalance, xlmBalance, signTransaction]
   );
 
   // Cleanup polling on unmount
@@ -357,6 +373,7 @@ export default function StellarSpendDashboard() {
         isConnected={isConnected}
         isConnecting={isConnecting}
         walletAddress={wallet?.publicKey}
+        walletType={wallet?.type === "freighter" ? "Freighter" : wallet?.type === "lobstr" ? "Lobstr" : null}
         stellarUsdcBalance={usdcBalance}
         stellarXlmBalance={xlmBalance}
         isBalanceLoading={isBalanceLoading}

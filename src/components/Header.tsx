@@ -7,6 +7,7 @@ export interface HeaderProps {
   isConnected: boolean;
   isConnecting: boolean;
   walletAddress?: string;
+  walletType?: "Freighter" | "Lobstr" | null;
   stellarUsdcBalance?: string | null;
   stellarXlmBalance?: string | null;
   isBalanceLoading?: boolean;
@@ -23,9 +24,10 @@ function WalletButton({
   isConnected,
   isConnecting,
   walletAddress,
+  walletType,
   onConnect,
   onDisconnect,
-}: Pick<HeaderProps, "isConnected" | "isConnecting" | "walletAddress" | "onConnect" | "onDisconnect">) {
+}: Pick<HeaderProps, "isConnected" | "isConnecting" | "walletAddress" | "walletType" | "onConnect" | "onDisconnect">) {
   const label = isConnecting
     ? "CONNECTING..."
     : isConnected && walletAddress
@@ -35,20 +37,25 @@ function WalletButton({
   const disabled = isConnecting;
 
   return (
-    <button
-      onClick={isConnected ? onDisconnect : onConnect}
-      disabled={disabled}
-      aria-label={isConnected ? "Disconnect wallet" : "Connect wallet"}
-      className={cn(
-        "px-4 py-2 text-xs tracking-widest border transition-colors duration-150",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a962] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]",
-        "border-[#c9a962] bg-[#0a0a0a] text-[#c9a962]",
-        !disabled && "hover:bg-[#c9a962] hover:text-[#0a0a0a]",
-        disabled && "opacity-60 cursor-not-allowed"
+    <div className="flex items-center gap-2">
+      {isConnected && walletType && (
+        <span className="text-xs text-slate-500 tracking-widest">{walletType.toUpperCase()}</span>
       )}
-    >
-      {label}
-    </button>
+      <button
+        onClick={isConnected ? onDisconnect : onConnect}
+        disabled={disabled}
+        aria-label={isConnected ? "Disconnect wallet" : "Connect wallet"}
+        className={cn(
+          "px-4 py-2 text-xs tracking-widest border transition-colors duration-150",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a962] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]",
+          "border-[#c9a962] bg-[#0a0a0a] text-[#c9a962]",
+          !disabled && "hover:bg-[#c9a962] hover:text-[#0a0a0a]",
+          disabled && "opacity-60 cursor-not-allowed"
+        )}
+      >
+        {label}
+      </button>
+    </div>
   );
 }
 
@@ -57,6 +64,7 @@ export function Header({
   isConnected,
   isConnecting,
   walletAddress,
+  walletType,
   stellarUsdcBalance,
   stellarXlmBalance,
   isBalanceLoading,
@@ -82,6 +90,7 @@ export function Header({
           isConnected={isConnected}
           isConnecting={isConnecting}
           walletAddress={walletAddress}
+          walletType={walletType}
           onConnect={onConnect}
           onDisconnect={onDisconnect}
         />

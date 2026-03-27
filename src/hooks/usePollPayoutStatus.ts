@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import type { PayoutStatus } from '@/lib/offramp/types';
 import { TransactionStorage } from '@/lib/transaction-storage';
+import type { OfframpStep } from '@/types/stellaramp';
 
 const POLL_INTERVAL_MS = 10_000;
 const MAX_ATTEMPTS = 60;
@@ -11,6 +12,7 @@ const TERMINAL_STATES: PayoutStatus[] = ['validated', 'settled', 'refunded', 'ex
 
 interface PollPayoutStatusOptions {
   transactionId: string;
+  onStepChange: (step: OfframpStep) => void;
   onSettling?: () => void;
 }
 
