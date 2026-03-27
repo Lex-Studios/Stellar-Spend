@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import type { PayoutStatus } from '@/lib/offramp/types';
 import { TransactionStorage } from '@/lib/transaction-storage';
+import type { OfframpStep } from '@/types/stellaramp';
 
 const POLL_INTERVAL_MS = 10_000;
 const MAX_ATTEMPTS = 60;
@@ -11,6 +12,7 @@ const TERMINAL_STATES: PayoutStatus[] = ['validated', 'settled', 'refunded', 'ex
 
 interface PollPayoutStatusOptions {
   transactionId: string;
+  onStepChange: (step: OfframpStep) => void;
   onSettling?: () => void;
 }
 
@@ -29,32 +31,36 @@ export function usePollPayoutStatus() {
       while (attempts < MAX_ATTEMPTS) {
         attempts++;
 
-        const res = await fetch(`/api/offramp/status/${orderId}`, { cache: 'no-store' });
-        const data: { status?: PayoutStatus; error?: string } = await res.json();
+        try {
+          const res = await fetch(`/api/offramp/status/${orderId}`, { cache: 'no-store' });
+          const data: { status?: PayoutStatus; error?: string } = await res.json();
 
-        if (!res.ok) {
-          throw new Error(data.error ?? 'Failed to fetch payout status');
-        }
+          if (res.ok && data.status) {
+            TransactionStorage.update(transactionId, { payoutStatus: data.status });
 
-        const status = data.status;
+            if (data.status === 'validated' || data.status === 'settled') {
+              onStepChange('settling');
+              return;
+            }
 
-        // Persist each poll result
-        TransactionStorage.update(transactionId, { payoutStatus: status });
+            if (data.status === 'refunded') {
+              throw new Error('Payout was refunded. Please contact support.');
+            }
 
-        if (status && TERMINAL_STATES.includes(status)) {
-          if (status === 'validated' || status === 'settled') {
-            onSettling?.();
-            return;
+            if (data.status === 'expired') {
+              throw new Error('Payout order expired. Please try again.');
+            }
           }
-          // refunded or expired
-          throw new Error(
-            status === 'refunded'
-              ? 'Payout was refunded. Please contact support.'
-              : 'Payout order expired. Please try again.'
-          );
+        } catch (err: unknown) {
+          // Re-throw terminal errors; swallow transient HTTP errors
+          if (err instanceof Error && TERMINAL_STATES.some((s) => err.message.includes(s))) {
+            throw err;
+          }
+          if (err instanceof Error && (err.message.includes('refunded') || err.message.includes('expired'))) {
+            throw err;
+          }
         }
 
-        // Not terminal — wait before next attempt
         if (attempts < MAX_ATTEMPTS) {
           await new Promise<void>((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
         }
