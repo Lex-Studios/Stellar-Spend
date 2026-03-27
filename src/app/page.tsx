@@ -10,6 +10,8 @@ import { Header } from "@/components/Header";
 import { useStellarWallet } from "@/hooks/useStellarWallet";
 import { useWalletFlow } from "@/hooks/useWalletFlow";
 import { OfframpStep } from "@/types/stellaramp";
+import { usePollPayoutStatus } from "@/hooks/usePollPayoutStatus";
+import { TransactionStorage } from "@/lib/transaction-storage";
 
 export default function Home() {
   const { wallet, isConnected, isConnecting: isWalletConnecting, error, connect, disconnect } = useStellarWallet();
@@ -19,6 +21,7 @@ export default function Home() {
   const [currency, setCurrency] = useState("");
   const [quote, setQuote] = useState<QuoteResult | null>(null);
   const [modalStep, setModalStep] = useState<OfframpStep>("idle");
+  const [modalError, setModalError] = useState<string | undefined>();
 
   // Sync wallet flow state with wallet connection state
   useEffect(() => {
@@ -50,26 +53,72 @@ export default function Home() {
     setQuote(null);
   }, [disconnect, setPreConnect]);
 
-  const handleSubmit = useCallback(async (_payload: OfframpPayload) => {
+  const { pollPayoutStatus } = usePollPayoutStatus();
+
+  const handleSubmit = useCallback(async (payload: OfframpPayload) => {
+    setModalStep("initiating");
+
+    // Create a local transaction record
+    const txId = TransactionStorage.generateId();
+    TransactionStorage.save({
+      id: txId,
+      timestamp: Date.now(),
+      userAddress: "unknown", // replaced once wallet is wired
+      amount: payload.amount,
+      currency: payload.currency,
+      beneficiary: {
+        institution: payload.institution,
+        accountIdentifier: payload.accountIdentifier,
+        accountName: payload.accountName,
+        currency: payload.currency,
+      },
+      status: "pending",
+    });
+
     try {
-      setModalStep("initiating");
-      const flow: OfframpStep[] = ["awaiting-signature", "submitting", "processing", "settling", "success"];
-      for (const step of flow) {
-        await new Promise(r => setTimeout(r, 1500));
-        setModalStep(step);
+      // Step: awaiting-signature → submitting → processing
+      // These steps will be driven by the real bridge/payout flow once those
+      // routes are implemented. For now we advance through them and then poll.
+      setModalStep("awaiting-signature");
+      await new Promise(r => setTimeout(r, 800));
+      setModalStep("submitting");
+      await new Promise(r => setTimeout(r, 800));
+      setModalStep("processing");
+
+      // TODO: replace with real orderId from execute-payout once implemented
+      // For now we read it from the payload if available, or skip polling.
+      const orderId: string | undefined = (payload as OfframpPayload & { orderId?: string }).orderId;
+
+      if (orderId) {
+        TransactionStorage.update(txId, { payoutOrderId: orderId });
+
+        await pollPayoutStatus(orderId, {
+          transactionId: txId,
+          onSettling: () => setModalStep("settling"),
+        });
+
+        TransactionStorage.update(txId, { status: "completed", payoutStatus: "settled" });
+        setModalStep("success");
+      } else {
+        // No orderId yet — simulate settling for UI demo until execute-payout is wired
+        setModalStep("settling");
+        await new Promise(r => setTimeout(r, 1200));
+        setModalStep("success");
       }
-    } catch (err) {
-      console.error("Transaction failed:", err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Transaction failed";
+      TransactionStorage.update(txId, { status: "failed", error: message });
       setModalStep("error");
+      setModalError(message);
     }
-  }, []);
+  }, [pollPayoutStatus]);
 
   return (
     <main className="min-h-screen p-4 bg-[#0a0a0a]">
-      <TransactionProgressModal
+      <TransactionProgressModal 
         step={modalStep}
-        errorMessage={error || undefined}
-        onClose={() => setModalStep("idle")}
+        errorMessage={modalError}
+        onClose={() => { setModalStep("idle"); setModalError(undefined); }}
       />
 
       <Header
