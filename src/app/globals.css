@@ -79,6 +79,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   display: inline-block;
   pointer-events: none;
   user-select: none;
+}
 
 @utility dot-bounce {
   animation: dot-bounce 1.2s ease-in-out infinite;

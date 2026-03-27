@@ -29,13 +29,15 @@ import { TransactionStorage } from "@/lib/transaction-storage";
 
 export default function Home() {
   const { wallet, isConnected, isConnecting: isWalletConnecting, error, connect, disconnect } = useStellarWallet();
-  const { variant, steps, setConnecting, setConnected, setPreConnect } = useWalletFlow();
+  const { state, variant, steps, setConnecting, setConnected, setPreConnect } = useWalletFlow();
 
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("");
   const [quote, setQuote] = useState<QuoteResult | null>(null);
   const [modalStep, setModalStep] = useState<OfframpStep>("idle");
   const [modalError, setModalError] = useState<string | undefined>(undefined);
+  const [currentPayload, setCurrentPayload] = useState<OfframpPayload | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
   const [formResetKey, setFormResetKey] = useState(0);
 
   // Keep a ref to the current txId so polling callbacks can access it
@@ -177,6 +179,8 @@ export default function Home() {
           "Bridge submit"
         );
 
+  const { pollPayoutStatus } = usePollPayoutStatus();
+
         if (submitRes.error) throw new Error(submitRes.error);
 
         let txHash: string = submitRes.hash;
@@ -254,7 +258,27 @@ export default function Home() {
     setAmount("");
     setCurrency("");
     setQuote(null);
-  }, [disconnect, setPreConnect]);
+  }, [disconnect]);
+
+  const handleSubmit = useCallback(async (payload: OfframpPayload) => {
+    setModalStep("initiating");
+
+    // Create a local transaction record
+    const txId = TransactionStorage.generateId();
+    TransactionStorage.save({
+      id: txId,
+      timestamp: Date.now(),
+      userAddress: wallet?.publicKey ?? "unknown",
+      amount: payload.amount,
+      currency: payload.currency,
+      beneficiary: {
+        institution: payload.institution,
+        accountIdentifier: payload.accountIdentifier,
+        accountName: payload.accountName,
+        currency: payload.currency,
+      },
+      status: "pending",
+    });
 
   const { pollPayoutStatus } = usePollPayoutStatus();
 
@@ -332,6 +356,24 @@ export default function Home() {
         onConnect={handleConnect}
         onDisconnect={handleDisconnect}
       />
+
+      {error && (
+        <div
+          role="alert"
+          style={{
+            margin: "12px 0",
+            padding: "12px 16px",
+            background: "rgba(239,68,68,0.1)",
+            border: "1px solid rgba(239,68,68,0.4)",
+            borderRadius: 8,
+            color: "#f87171",
+            fontSize: 13,
+            letterSpacing: "0.02em",
+          }}
+        >
+          {error}
+        </div>
+      )}
 
       <section className="border border-[#333333] px-[2.6rem] py-8 max-[1100px]:p-4 overflow-hidden mt-6">
         <div className="grid grid-cols-[1fr_370px] gap-6 max-[1100px]:grid-cols-1 overflow-hidden w-full">

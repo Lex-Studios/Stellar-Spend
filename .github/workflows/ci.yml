@@ -45,6 +45,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Create env file
+        run: |
+          cp .env.example .env.local
+          sed -i 's|=your_paycrest_api_key_here|=dummy_value|' .env.local
+          sed -i 's|=your_paycrest_webhook_secret_here|=dummy_value|' .env.local
+          sed -i 's|=0xyour_base_private_key_here|=0x0000000000000000000000000000000000000000000000000000000000000001|' .env.local
+          sed -i 's|=0xyour_base_return_address_here|=0x0000000000000000000000000000000000000001|g' .env.local
+          sed -i 's|=your_stellar_usdc_issuer_here|=GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5|' .env.local
       - name: Run linting
         run: npm run lint
 

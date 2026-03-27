@@ -20,11 +20,6 @@ interface GasFeeOptions {
   stablecoin: { int: string; float: string } | null;
 }
 
-export interface FeeOption {
-  label: string;
-  amount: string;
-  method: "USDC" | "XLM";
-}
 
 export interface FeeOption {
   label: string;
