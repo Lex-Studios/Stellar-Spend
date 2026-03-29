@@ -60,6 +60,8 @@ export function TransactionProgressModal({
 
       {/* Modal Container */}
       <div 
+        role="dialog"
+        aria-modal="true"
         className={cn(
           "relative w-full max-w-md bg-[#0a0a0a] border border-[#333333] transition-all duration-500 overflow-hidden",
           "shadow-[0_0_50px_rgba(201,169,98,0.15)]"

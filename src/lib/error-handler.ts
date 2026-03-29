@@ -9,6 +9,7 @@ import {
   hasMessage
 } from './error-types';
 import { TimeoutError } from './offramp/utils/timeout';
+import { PaycrestHttpError } from './offramp/adapters/paycrest-adapter';
 
 /**
  * Centralized error handler for standardized API error responses
@@ -21,6 +22,19 @@ export class ErrorHandler {
     // Handle timeout errors specifically
     if (error instanceof TimeoutError) {
       return this.timeout(error);
+    }
+
+    // Preserve HTTP status from Paycrest errors
+    if (error instanceof PaycrestHttpError) {
+      const context: ErrorContext = {
+        originalError: error,
+        statusCode: error.status,
+        errorType: this.classifyError(error, error.status),
+        message: error.message,
+        details: error.details as Record<string, unknown> | undefined,
+      };
+      const response = this.formatResponse(context);
+      return NextResponse.json(response, { status: error.status });
     }
 
     const context = this.createErrorContext(error, statusCode);
