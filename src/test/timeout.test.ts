@@ -1,270 +1,137 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { withTimeout } from '@/lib/offramp/utils/timeout';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { 
+  TimeoutError, 
+  withAllbridgeTimeout, 
+  withPaycrestTimeout, 
+  withSorobanTimeout,
+  TIMEOUT_CONFIG 
+} from '@/lib/offramp/utils/timeout';
 
-describe('withTimeout', () => {
+describe('Timeout Utilities', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
-  describe('timeout fires correctly', () => {
-    it('rejects with correct error message when promise times out', async () => {
-      const promise = new Promise(() => {
-        // Never resolves
-      });
-
-      const timeoutPromise = withTimeout(promise, 5000, 'Test operation');
-
-      vi.advanceTimersByTime(5000);
-
-      await expect(timeoutPromise).rejects.toThrow('Test operation timed out after 5s');
+  describe('TimeoutError', () => {
+    it('should create timeout error with correct message', () => {
+      const error = new TimeoutError('Test Service', 5000, 'test_operation');
+      
+      expect(error.name).toBe('TimeoutError');
+      expect(error.serviceName).toBe('Test Service');
+      expect(error.duration).toBe(5000);
+      expect(error.operation).toBe('test_operation');
+      expect(error.message).toBe('Test Service timeout after 5s (test_operation)');
     });
 
-    it('formats timeout message with correct duration in seconds', async () => {
-      const promise = new Promise(() => {});
-      const timeoutPromise = withTimeout(promise, 15000, 'SDK init');
-
-      vi.advanceTimersByTime(15000);
-
-      await expect(timeoutPromise).rejects.toThrow('SDK init timed out after 15s');
-    });
-
-    it('handles millisecond durations correctly', async () => {
-      const promise = new Promise(() => {});
-      const timeoutPromise = withTimeout(promise, 20000, 'Bridge quote');
-
-      vi.advanceTimersByTime(20000);
-
-      await expect(timeoutPromise).rejects.toThrow('Bridge quote timed out after 20s');
-    });
-
-    it('rejects with custom label in error message', async () => {
-      const promise = new Promise(() => {});
-      const timeoutPromise = withTimeout(promise, 30000, 'Build transaction');
-
-      vi.advanceTimersByTime(30000);
-
-      await expect(timeoutPromise).rejects.toThrow('Build transaction timed out after 30s');
+    it('should create timeout error without operation', () => {
+      const error = new TimeoutError('Test Service', 3000);
+      
+      expect(error.message).toBe('Test Service timeout after 3s');
     });
   });
 
-  describe('timer is always cleared', () => {
-    it('clears timer when promise resolves before timeout', async () => {
-      const clearTimeoutSpy = vi.spyOn((global as any), 'clearTimeout');
-      let resolvePromise: (value: string) => void;
-
-      const promise = new Promise<string>((resolve) => {
-        resolvePromise = resolve;
-      });
-
-      const timeoutPromise = withTimeout(promise, 5000, 'Test');
-
-      vi.advanceTimersByTime(1000);
-      resolvePromise!('success');
-
-      await expect(timeoutPromise).resolves.toBe('success');
-      expect(clearTimeoutSpy).toHaveBeenCalled();
+  describe('withAllbridgeTimeout', () => {
+    it('should resolve when promise completes within timeout', async () => {
+      const mockPromise = Promise.resolve('success');
+      
+      const result = await withAllbridgeTimeout(mockPromise, 'test_op');
+      
+      expect(result).toBe('success');
     });
 
-    it('clears timer when promise rejects before timeout', async () => {
-      const clearTimeoutSpy = vi.spyOn((global as any), 'clearTimeout');
-      let rejectPromise: (reason: Error) => void;
-
-      const promise = new Promise<string>((_, reject) => {
-        rejectPromise = reject;
+    it('should reject with TimeoutError when promise exceeds timeout', async () => {
+      const slowPromise = new Promise((resolve) => {
+        setTimeout(() => resolve('too slow'), 35000);
       });
-
-      const timeoutPromise = withTimeout(promise, 5000, 'Test');
-
-      vi.advanceTimersByTime(1000);
-      rejectPromise!(new Error('Original error'));
-
-      await expect(timeoutPromise).rejects.toThrow('Original error');
-      expect(clearTimeoutSpy).toHaveBeenCalled();
+      
+      const timeoutPromise = withAllbridgeTimeout(slowPromise, 'slow_op');
+      
+      // Fast forward past the timeout
+      vi.advanceTimersByTime(31000);
+      
+      await expect(timeoutPromise).rejects.toThrow(TimeoutError);
+      await expect(timeoutPromise).rejects.toThrow('Bridge service timeout after 30s (slow_op)');
     });
 
-    it('clears timer when timeout fires', async () => {
-      const clearTimeoutSpy = vi.spyOn((global as any), 'clearTimeout');
-      const promise = new Promise(() => {});
-
-      const timeoutPromise = withTimeout(promise, 5000, 'Test');
-
-      vi.advanceTimersByTime(5000);
-
-      await expect(timeoutPromise).rejects.toThrow();
-      expect(clearTimeoutSpy).toHaveBeenCalled();
-    });
-
-    it('prevents memory leaks by clearing timeout in finally block', async () => {
-      const clearTimeoutSpy = vi.spyOn((global as any), 'clearTimeout');
-      let resolvePromise: (value: string) => void;
-
-      const promise = new Promise<string>((resolve) => {
-        resolvePromise = resolve;
-      });
-
-      const timeoutPromise = withTimeout(promise, 10000, 'Test');
-
-      // Resolve before timeout
-      vi.advanceTimersByTime(2000);
-      resolvePromise!('done');
-
-      await timeoutPromise;
-
-      // Verify clearTimeout was called exactly once
-      expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not throw when clearing already-cleared timer', async () => {
-      const promise = new Promise<string>((resolve) => {
-        setTimeout(() => resolve('success'), 1000);
-      });
-
-      const timeoutPromise = withTimeout(promise, 5000, 'Test');
-
-      vi.advanceTimersByTime(1000);
-
-      // Should not throw
-      await expect(timeoutPromise).resolves.toBe('success');
+    it('should use correct timeout duration for Allbridge SDK', () => {
+      expect(TIMEOUT_CONFIG.ALLBRIDGE_SDK.duration).toBe(30000);
+      expect(TIMEOUT_CONFIG.ALLBRIDGE_SDK.serviceName).toBe('Bridge service');
     });
   });
 
-  describe('resolves successfully when promise settles before timeout', () => {
-    it('resolves with promise value', async () => {
-      const promise = Promise.resolve('success');
-      const timeoutPromise = withTimeout(promise, 5000, 'Test');
-
-      vi.advanceTimersByTime(1000);
-
-      await expect(timeoutPromise).resolves.toBe('success');
+  describe('withPaycrestTimeout', () => {
+    it('should resolve when promise completes within timeout', async () => {
+      const mockPromise = Promise.resolve({ rate: 1500 });
+      
+      const result = await withPaycrestTimeout(mockPromise, 'rate_quote');
+      
+      expect(result).toEqual({ rate: 1500 });
     });
 
-    it('resolves with complex object', async () => {
-      const data = { id: 123, name: 'test', nested: { value: true } };
-      const promise = Promise.resolve(data);
-      const timeoutPromise = withTimeout(promise, 5000, 'Test');
-
-      vi.advanceTimersByTime(1000);
-
-      await expect(timeoutPromise).resolves.toEqual(data);
-    });
-
-    it('rejects with original error if promise rejects before timeout', async () => {
-      const originalError = new Error('Original error');
-      const promise = Promise.reject(originalError);
-      const timeoutPromise = withTimeout(promise, 5000, 'Test');
-
-      vi.advanceTimersByTime(1000);
-
-      await expect(timeoutPromise).rejects.toThrow('Original error');
-    });
-  });
-
-  describe('use cases from acceptance criteria', () => {
-    it('handles SDK init timeout (15s)', async () => {
-      const promise = new Promise(() => {});
-      const timeoutPromise = withTimeout(promise, 15000, 'SDK init');
-
-      vi.advanceTimersByTime(15000);
-
-      await expect(timeoutPromise).rejects.toThrow('SDK init timed out after 15s');
-    });
-
-    it('handles bridge quote timeout (15s)', async () => {
-      const promise = new Promise(() => {});
-      const timeoutPromise = withTimeout(promise, 15000, 'Bridge quote');
-
-      vi.advanceTimersByTime(15000);
-
-      await expect(timeoutPromise).rejects.toThrow('Bridge quote timed out after 15s');
-    });
-
-    it('handles Paycrest order timeout (20s)', async () => {
-      const promise = new Promise(() => {});
-      const timeoutPromise = withTimeout(promise, 20000, 'Paycrest order');
-
-      vi.advanceTimersByTime(20000);
-
-      await expect(timeoutPromise).rejects.toThrow('Paycrest order timed out after 20s');
-    });
-
-    it('handles build-tx timeout (30s)', async () => {
-      const promise = new Promise(() => {});
-      const timeoutPromise = withTimeout(promise, 30000, 'Build transaction');
-
-      vi.advanceTimersByTime(30000);
-
-      await expect(timeoutPromise).rejects.toThrow('Build transaction timed out after 30s');
-    });
-
-    it('handles submit timeout (15s)', async () => {
-      const promise = new Promise(() => {});
-      const timeoutPromise = withTimeout(promise, 15000, 'Submit transaction');
-
-      vi.advanceTimersByTime(15000);
-
-      await expect(timeoutPromise).rejects.toThrow('Submit transaction timed out after 15s');
-    });
-  });
-
-  describe('edge cases', () => {
-    it('handles zero timeout', async () => {
-      const promise = new Promise(() => {});
-      const timeoutPromise = withTimeout(promise, 0, 'Zero timeout');
-
-      vi.advanceTimersByTime(0);
-
-      await expect(timeoutPromise).rejects.toThrow('Zero timeout timed out after 0s');
-    });
-
-    it('handles very large timeout values', async () => {
-      const promise = new Promise(() => {});
-      const timeoutPromise = withTimeout(promise, 3600000, 'Long operation');
-
-      vi.advanceTimersByTime(3600000);
-
-      await expect(timeoutPromise).rejects.toThrow('Long operation timed out after 3600s');
-    });
-
-    it('handles promise that resolves exactly at timeout', async () => {
-      let resolvePromise: (value: string) => void;
-      const promise = new Promise<string>((resolve) => {
-        resolvePromise = resolve;
+    it('should reject with TimeoutError when promise exceeds timeout', async () => {
+      const slowPromise = new Promise((resolve) => {
+        setTimeout(() => resolve('too slow'), 20000);
       });
-
-      const timeoutPromise = withTimeout(promise, 5000, 'Test');
-
-      vi.advanceTimersByTime(5000);
-      resolvePromise!('success');
-
-      // Race condition: both timeout and resolve fire at same time
-      // Promise.race should resolve with whichever settles first
-      const result = await Promise.race([
-        timeoutPromise,
-        Promise.resolve('success'),
-      ]);
-
-      expect(result).toBeDefined();
+      
+      const timeoutPromise = withPaycrestTimeout(slowPromise, 'slow_api');
+      
+      // Fast forward past the timeout
+      vi.advanceTimersByTime(16000);
+      
+      await expect(timeoutPromise).rejects.toThrow(TimeoutError);
+      await expect(timeoutPromise).rejects.toThrow('Payment service timeout after 15s (slow_api)');
     });
 
-    it('preserves promise type information', async () => {
-      interface TestData {
-        id: number;
-        name: string;
-      }
+    it('should use correct timeout duration for Paycrest API', () => {
+      expect(TIMEOUT_CONFIG.PAYCREST_API.duration).toBe(15000);
+      expect(TIMEOUT_CONFIG.PAYCREST_API.serviceName).toBe('Payment service');
+    });
+  });
 
-      const data: TestData = { id: 1, name: 'test' };
-      const promise = Promise.resolve(data);
-      const timeoutPromise = withTimeout(promise, 5000, 'Test');
+  describe('withSorobanTimeout', () => {
+    it('should resolve when promise completes within timeout', async () => {
+      const mockPromise = Promise.resolve({ txHash: '0x123' });
+      
+      const result = await withSorobanTimeout(mockPromise, 'submit_tx');
+      
+      expect(result).toEqual({ txHash: '0x123' });
+    });
 
-      vi.advanceTimersByTime(1000);
+    it('should reject with TimeoutError when promise exceeds timeout', async () => {
+      const slowPromise = new Promise((resolve) => {
+        setTimeout(() => resolve('too slow'), 20000);
+      });
+      
+      const timeoutPromise = withSorobanTimeout(slowPromise, 'slow_rpc');
+      
+      // Fast forward past the timeout
+      vi.advanceTimersByTime(16000);
+      
+      await expect(timeoutPromise).rejects.toThrow(TimeoutError);
+      await expect(timeoutPromise).rejects.toThrow('Blockchain service timeout after 15s (slow_rpc)');
+    });
 
-      const result = await timeoutPromise;
-      expect(result.id).toBe(1);
-      expect(result.name).toBe('test');
+    it('should use correct timeout duration for Soroban RPC', () => {
+      expect(TIMEOUT_CONFIG.SOROBAN_RPC.duration).toBe(15000);
+      expect(TIMEOUT_CONFIG.SOROBAN_RPC.serviceName).toBe('Blockchain service');
+    });
+  });
+
+  describe('timeout configuration', () => {
+    it('should have different timeout durations for different services', () => {
+      expect(TIMEOUT_CONFIG.ALLBRIDGE_SDK.duration).toBe(30000); // 30s
+      expect(TIMEOUT_CONFIG.PAYCREST_API.duration).toBe(15000);  // 15s
+      expect(TIMEOUT_CONFIG.SOROBAN_RPC.duration).toBe(15000);   // 15s
+    });
+
+    it('should have descriptive service names', () => {
+      expect(TIMEOUT_CONFIG.ALLBRIDGE_SDK.serviceName).toBe('Bridge service');
+      expect(TIMEOUT_CONFIG.PAYCREST_API.serviceName).toBe('Payment service');
+      expect(TIMEOUT_CONFIG.SOROBAN_RPC.serviceName).toBe('Blockchain service');
     });
   });
 });

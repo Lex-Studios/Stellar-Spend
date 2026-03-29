@@ -8,6 +8,7 @@ import {
   isError,
   hasMessage
 } from './error-types';
+import { TimeoutError } from './offramp/utils/timeout';
 
 /**
  * Centralized error handler for standardized API error responses
@@ -17,6 +18,11 @@ export class ErrorHandler {
    * Main error handling method that processes any error and returns a standardized response
    */
   static handle(error: unknown, statusCode?: number): NextResponse<StandardErrorResponse> {
+    // Handle timeout errors specifically
+    if (error instanceof TimeoutError) {
+      return this.timeout(error);
+    }
+
     const context = this.createErrorContext(error, statusCode);
     const response = this.formatResponse(context);
     
@@ -72,8 +78,19 @@ export class ErrorHandler {
   }
 
   /**
-   * Handle server errors with production-safe messaging
+   * Handle timeout errors with 504 Gateway Timeout
    */
+  static timeout(error: TimeoutError): NextResponse<StandardErrorResponse> {
+    const context: ErrorContext = {
+      originalError: error,
+      statusCode: 504,
+      errorType: ErrorType.SERVER_ERROR,
+      message: error.message
+    };
+
+    const response = this.formatResponse(context);
+    return NextResponse.json(response, { status: 504 });
+  }
   static serverError(error?: unknown): NextResponse<StandardErrorResponse> {
     const config = getEnvironmentConfig();
     const message = config.isProduction 

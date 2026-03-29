@@ -1,4 +1,5 @@
 import { isValidQuote } from './validation';
+import { withPaycrestTimeout } from './timeout';
 
 export interface QuoteParams {
   amount: string;
@@ -42,7 +43,10 @@ export async function fetchPaycrestQuote(
   url.pathname = `/v1/rates/USDC/${receiveAmount}/${currency}`;
   url.searchParams.set('network', 'base');
 
-  const response = await fetch(url.toString());
+  const response = await withPaycrestTimeout(
+    fetch(url.toString()),
+    'rate_quote'
+  );
   if (!response.ok) {
     throw new Error(`Paycrest API error: ${response.statusText}`);
   }

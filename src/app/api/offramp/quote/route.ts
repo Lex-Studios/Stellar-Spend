@@ -3,6 +3,7 @@ import { env } from '@/lib/env';
 import { validateAmount } from '@/lib/offramp/utils/validation';
 import { fetchPaycrestQuote, buildQuote, calculateBridgeAmount } from '@/lib/offramp/utils/quote-fetcher';
 import { ErrorHandler } from '@/lib/error-handler';
+import { withAllbridgeTimeout } from '@/lib/offramp/utils/timeout';
 
 // Stablecoin fee in USDC (example: 0.5 USDC)
 const STABLECOIN_FEE = '0.5';
@@ -75,7 +76,10 @@ export async function POST(request: NextRequest) {
     });
 
     // Get chain details to find USDC tokens
-    const chainDetails = await sdk.chainDetailsMap();
+    const chainDetails = await withAllbridgeTimeout(
+      sdk.chainDetailsMap(),
+      'chainDetailsMap'
+    );
     
     // Find Stellar and Base chains
     let stellarChain: any = null;
@@ -105,10 +109,9 @@ export async function POST(request: NextRequest) {
 
     // Get quote from Allbridge for bridge transfer
     // This returns the amount received on the destination chain (Base)
-    const receiveAmount = await sdk.getAmountToBeReceived(
-      stellarUsdc,
-      baseUsdc,
-      bridgeAmount
+    const receiveAmount = await withAllbridgeTimeout(
+      sdk.getAmountToBeReceived(stellarUsdc, baseUsdc, bridgeAmount),
+      'getAmountToBeReceived'
     );
 
     // Fetch Paycrest rate and calculate destination amount

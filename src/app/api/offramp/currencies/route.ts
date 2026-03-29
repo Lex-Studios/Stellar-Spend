@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { env } from '@/lib/env';
 import { ErrorHandler } from '@/lib/error-handler';
+import { withPaycrestTimeout } from '@/lib/offramp/utils/timeout';
 
 interface Currency {
   code: string;
@@ -17,12 +18,15 @@ class PaycrestAdapter {
   }
 
   async getCurrencies(): Promise<Currency[]> {
-    const response = await fetch(`${this.apiUrl}/currencies`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'API-Key': this.apiKey,
-      },
-    });
+    const response = await withPaycrestTimeout(
+      fetch(`${this.apiUrl}/currencies`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'API-Key': this.apiKey,
+        },
+      }),
+      'get_currencies'
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch currencies: ${response.status}`);

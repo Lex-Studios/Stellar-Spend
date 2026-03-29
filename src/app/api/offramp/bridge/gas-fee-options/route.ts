@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { env } from '@/lib/env';
+import { withAllbridgeTimeout } from '@/lib/offramp/utils/timeout';
+import { ErrorHandler } from '@/lib/error-handler';
 
 export interface GasFeeOptions {
   feeOptions: {
@@ -45,7 +47,10 @@ export async function GET(): Promise<NextResponse<GasFeeOptions | { error: strin
     });
 
     // Get chain details to find USDC tokens
-    const chainDetails = await sdk.chainDetailsMap();
+    const chainDetails = await withAllbridgeTimeout(
+      sdk.chainDetailsMap(),
+      'chainDetailsMap'
+    );
 
     let stellarChain: any = null;
     let baseChain: any = null;
@@ -73,7 +78,10 @@ export async function GET(): Promise<NextResponse<GasFeeOptions | { error: strin
     }
 
     // Get gas fee options from Allbridge SDK
-    const gasFeeOptions = await sdk.getAllbridgeGasFeeOptions(stellarUsdc, baseUsdc);
+    const gasFeeOptions = await withAllbridgeTimeout(
+      sdk.getAllbridgeGasFeeOptions(stellarUsdc, baseUsdc),
+      'getAllbridgeGasFeeOptions'
+    );
 
     const result: GasFeeOptions = {
       feeOptions: {
@@ -97,9 +105,6 @@ export async function GET(): Promise<NextResponse<GasFeeOptions | { error: strin
     });
   } catch (error) {
     console.error('Error fetching gas fee options:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch gas fee options' },
-      { status: 500 }
-    );
+    return ErrorHandler.handle(error);
   }
 }
