@@ -125,13 +125,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Normalize amount: floor to 6 decimal places to guarantee
+    // the order amount never exceeds what the bridge actually delivers.
+    // toFixed(6) is intentionally avoided — it rounds UP, which would
+    // cause Paycrest to reject the order when the deposit is short.
+    const normalizedAmount = Math.floor(amount * 1e6) / 1e6;
+
+    // Normalize rate to 6 decimal places (rounding here is safe — it only
+    // affects the fiat destination amount, not the USDC deposit requirement).
+    const normalizedRate = Number(rate.toFixed(6));
+
+    console.log('[paycrest/order] amount normalization', {
+      raw: { amount, rate },
+      normalized: { amount: normalizedAmount, rate: normalizedRate },
+    });
+
     // Instantiate PaycrestAdapter
     const paycrest = new PaycrestAdapter(env.server.PAYCREST_API_KEY);
 
     // Create order
     const order = await paycrest.createOrder({
-      amount,
-      rate,
+      amount: normalizedAmount,
+      rate: normalizedRate,
       token,
       network,
       reference,
