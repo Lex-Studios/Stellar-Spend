@@ -121,15 +121,17 @@ export class PaycrestAdapter implements PayoutProviderAdapter {
     currency: string,
     options?: { network?: string; providerId?: string }
   ): Promise<number> {
-    const queryParams = new URLSearchParams({
-      token,
-      amount,
-      currency,
-      ...(options?.network && { network: options.network }),
-      ...(options?.providerId && { providerId: options.providerId }),
-    });
-    
-    const response = await this.fetch(`/sender/rate?${queryParams}`);
-    return response.rate;
+    const queryParams = new URLSearchParams();
+    if (options?.network) queryParams.set('network', options.network);
+    if (options?.providerId) queryParams.set('provider_id', options.providerId);
+
+    const qs = queryParams.toString();
+    const response = await this.fetch(
+      `/rates/${encodeURIComponent(token)}/${encodeURIComponent(amount)}/${encodeURIComponent(currency)}${qs ? `?${qs}` : ''}`
+    );
+
+    const rate = parseFloat(String(response?.data ?? response));
+    if (!isFinite(rate)) throw new Error(`Invalid rate received: ${JSON.stringify(response)}`);
+    return rate;
   }
 }
