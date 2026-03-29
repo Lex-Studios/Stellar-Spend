@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { env } from '@/lib/env';
+import { ErrorHandler } from '@/lib/error-handler';
 
 export const maxDuration = 10;
 
@@ -91,9 +92,6 @@ export async function GET() {
     );
   } catch (error) {
     console.error('Error fetching currencies from Paycrest:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch currencies' },
-      { status: 500 }
-    );
+    return ErrorHandler.handle(error);
   }
 }
