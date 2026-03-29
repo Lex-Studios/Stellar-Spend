@@ -146,12 +146,11 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     console.error('Error creating Paycrest order:', err);
 
-    if (err instanceof Error && 'status' in err) {
-      const httpError = err as PaycrestHttpError;
-      logger.logError(httpError.status, err.message);
+    if (err instanceof PaycrestHttpError) {
+      logger.logError(err.status, err.message);
       return NextResponse.json(
         { error: err.message },
-        { status: httpError.status, headers: { 'X-Request-Id': requestId } }
+        { status: err.status, headers: { 'X-Request-Id': requestId } }
       );
     }
 
