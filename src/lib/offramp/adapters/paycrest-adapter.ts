@@ -5,14 +5,29 @@ import type {
 } from '../types';
 import { PayoutProviderAdapter } from './payout-provider';
 
+const PAYCREST_STATUS_MAP: Record<string, PayoutStatus> = {
+  'payment_order.pending':   'pending',
+  'payment_order.validated': 'validated',
+  'payment_order.settled':   'settled',
+  'payment_order.refunded':  'refunded',
+  'payment_order.expired':   'expired',
+};
+
+export function mapPaycrestStatus(webhookStatus: string): PayoutStatus {
+  return PAYCREST_STATUS_MAP[webhookStatus] ?? 'pending';
+}
+
 export class PaycrestHttpError extends Error {
-  constructor(
-    public message: string,
-    public status: number,
-    public details?: any
-  ) {
+  status: number;
+  details: unknown;
+
+  constructor(message: string, status: number, details?: unknown) {
     super(message);
     this.name = 'PaycrestHttpError';
+    this.status = status;
+    this.details = details;
+    // Restore correct prototype chain for instanceof checks across transpilation boundaries
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
@@ -108,11 +123,15 @@ export class PaycrestAdapter implements PayoutProviderAdapter {
   }
 
   async verifyAccount(institution: string, accountIdentifier: string): Promise<string> {
-    const response = await this.fetch('/sender/verify-account', {
-      method: 'POST',
-      body: JSON.stringify({ institution, accountIdentifier }),
-    });
-    return response.accountName;
+    try {
+      const response = await this.fetch('/sender/verify-account', {
+        method: 'POST',
+        body: JSON.stringify({ institution, accountIdentifier }),
+      });
+      return response?.accountName || response?.data || '';
+    } catch {
+      return '';
+    }
   }
 
   async getRate(
@@ -121,15 +140,17 @@ export class PaycrestAdapter implements PayoutProviderAdapter {
     currency: string,
     options?: { network?: string; providerId?: string }
   ): Promise<number> {
-    const queryParams = new URLSearchParams({
-      token,
-      amount,
-      currency,
-      ...(options?.network && { network: options.network }),
-      ...(options?.providerId && { providerId: options.providerId }),
-    });
-    
-    const response = await this.fetch(`/sender/rate?${queryParams}`);
-    return response.rate;
+    const queryParams = new URLSearchParams();
+    if (options?.network) queryParams.set('network', options.network);
+    if (options?.providerId) queryParams.set('provider_id', options.providerId);
+
+    const qs = queryParams.toString();
+    const response = await this.fetch(
+      `/rates/${encodeURIComponent(token)}/${encodeURIComponent(amount)}/${encodeURIComponent(currency)}${qs ? `?${qs}` : ''}`
+    );
+
+    const rate = parseFloat(String(response?.data ?? response));
+    if (!isFinite(rate)) throw new Error(`Invalid rate received: ${JSON.stringify(response)}`);
+    return rate;
   }
 }

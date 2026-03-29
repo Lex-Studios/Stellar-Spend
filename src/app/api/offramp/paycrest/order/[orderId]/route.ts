@@ -51,9 +51,8 @@ export async function GET(
   } catch (err: unknown) {
     console.error('Error fetching Paycrest order status:', err);
 
-    if (err instanceof Error && 'status' in err) {
-      const httpError = err as PaycrestHttpError;
-      if (httpError.status === 404) {
+    if (err instanceof PaycrestHttpError) {
+      if (err.status === 404) {
         return NextResponse.json(
           { error: 'Order not found' },
           { status: 404 }
@@ -61,7 +60,7 @@ export async function GET(
       }
       return NextResponse.json(
         { error: err.message },
-        { status: httpError.status }
+        { status: err.status }
       );
     }
 

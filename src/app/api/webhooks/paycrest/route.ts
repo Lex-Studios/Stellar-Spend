@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { env } from '@/lib/env';
+import { ErrorHandler } from '@/lib/error-handler';
+import { generateRequestId, createRequestLogger } from '@/lib/offramp/utils/logger';
 import type { PayoutStatus } from '@/lib/offramp/types';
 import { mapPaycrestStatus } from '@/lib/offramp/utils/mapPaycrestStatus';
 
@@ -26,28 +29,30 @@ async function verifySignature(rawBody: string, signature: string, secret: strin
 }
 
 export async function POST(request: Request) {
+  const requestId = generateRequestId();
+  const logger = createRequestLogger(requestId, 'POST', '/api/webhooks/paycrest');
+
+  // Read raw body first — must happen before any JSON parsing
   const rawBody = await request.text();
   const signature = request.headers.get('X-Paycrest-Signature') ?? '';
 
-  const valid = await verifySignature(rawBody, signature, env.server.PAYCREST_WEBHOOK_SECRET);
-  if (!valid) {
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+  if (!verifySignature(rawBody, signature, env.server.PAYCREST_WEBHOOK_SECRET)) {
+    logger.logError(401, 'Invalid webhook signature');
+    return ErrorHandler.unauthorized('Invalid signature');
   }
 
   try {
     const payload = JSON.parse(rawBody);
-    const { event, data } = payload;
-    const payoutOrderId: string = data?.id ?? data?.orderId ?? '';
-    const status = mapPaycrestStatus(event);
+    const eventType: string = payload?.event ?? '';
+    const orderId: string = payload?.data?.id ?? payload?.data?.orderId ?? '';
+    const status = mapPaycrestStatus(eventType);
 
-    if (status && payoutOrderId) {
-      console.log(`Order ${payoutOrderId} status → ${status}`);
-    } else {
-      console.warn(`Paycrest webhook: unhandled event "${event}" for order "${payoutOrderId}"`);
-    }
+    console.log(JSON.stringify({ requestId, eventType, orderId, status }));
+
+    logger.logSuccess(200);
+    return NextResponse.json({ received: true });
   } catch {
-    console.warn('Paycrest webhook: failed to parse payload');
+    logger.logError(400, 'Failed to parse webhook payload');
+    return ErrorHandler.validation('Malformed JSON payload');
   }
-
-  return NextResponse.json({ received: true });
 }
