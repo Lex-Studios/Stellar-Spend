@@ -49,7 +49,7 @@ describe('Validation Utilities', () => {
   describe('validateAddress', () => {
     describe('Stellar mode', () => {
       it('should return true for valid G-key addresses (56 chars, starts with G)', () => {
-        const validAddress = 'GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDE';
+        const validAddress = 'GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEF';
         expect(validateAddress(validAddress, 'stellar')).toBe(true);
       });
 

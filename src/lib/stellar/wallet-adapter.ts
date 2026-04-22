@@ -27,7 +27,6 @@ function friendlyError(raw: unknown, fallback: string): Error {
       );
     if (/timeout/i.test(msg))
       return new Error("The wallet did not respond in time. Please try again.");
-    if (msg) return new Error(msg);
   }
   return new Error(fallback);
 }
@@ -84,9 +83,7 @@ export class StellarWalletAdapter {
    * Returns true when a valid Lobstr provider is present on the window object.
    */
   isLobstrAvailable(): boolean {
-    if (typeof window === 'undefined') return false;
-    const w = window as any;
-    return !!(w.lobstr || w.stellar?.isLobstr);
+    return resolveLobstrProvider() !== null;
   }
 
   // ── Connection methods ─────────────────────────────────────────────────────

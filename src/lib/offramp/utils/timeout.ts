@@ -175,18 +175,21 @@ function logTimeoutEvent(entry: TimeoutLogEntry): void {
 }
 
 /**
- * Generic timeout wrapper for any promise
+ * Generic timeout wrapper for any promise.
+ * Accepts either a TimeoutConfig object or (durationMs, operationName) shorthand.
  */
 export async function withTimeout<T>(
   promise: Promise<T>,
-  config: TimeoutConfig
+  configOrDuration: TimeoutConfig | number,
+  operation?: string
 ): Promise<T> {
+  const config: TimeoutConfig =
+    typeof configOrDuration === 'number'
+      ? { duration: configOrDuration, serviceName: operation ?? 'Operation', operation }
+      : configOrDuration;
+
   return createAbortablePromise(
-    async (signal) => {
-      // If the promise supports AbortSignal, we need to handle it differently
-      // For now, we'll just race the promise with the timeout
-      return promise;
-    },
+    async (_signal) => promise,
     config.duration,
     config.serviceName,
     config.operation

@@ -6,7 +6,7 @@ import type { QuoteResult } from "@/components/FormCard";
 import RightPanel from "@/components/RightPanel";
 import RecentOfframpsTable from "@/components/RecentOfframpsTable";
 import ProgressSteps from "@/components/ProgressSteps";
-import Header from "@/components/Header";
+import { Header } from "@/components/Header";
 import { TransactionProgressModal } from "@/components/TransactionProgressModal";
 import { useStellarWallet } from "@/hooks/useStellarWallet";
 import { usePollBridgeStatus } from "@/hooks/usePollBridgeStatus";
@@ -79,7 +79,7 @@ export default function Home() {
         const { sdk, tokens } = await withTimeout(
           (async () => {
             const mod = await import("@allbridge/bridge-core-sdk");
-            const sdkInstance = new mod.AllbridgeCoreSdk(mod.mainnet);
+            const sdkInstance = new mod.AllbridgeCoreSdk(mod.nodeRpcUrlsDefault);
             const tokenList = await sdkInstance.tokens();
             return { sdk: sdkInstance, tokens: tokenList };
           })(),

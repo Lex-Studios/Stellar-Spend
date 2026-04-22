@@ -11,6 +11,7 @@ vi.mock("@stellar/freighter-api", () => ({
   getAddress: vi.fn().mockResolvedValue({ address: "" }),
   requestAccess: vi.fn().mockResolvedValue({ address: "" }),
   signTransaction: vi.fn().mockResolvedValue({ signedTxXdr: "", signerAddress: "" }),
+  getNetworkDetails: vi.fn().mockResolvedValue({ networkPassphrase: "Public Global Stellar Network ; September 2015" }),
 }));
 
 const VALID_KEY = "GBLOBSTR1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD";

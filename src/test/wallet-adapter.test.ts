@@ -8,6 +8,7 @@ vi.mock("@stellar/freighter-api", () => ({
   getAddress: vi.fn(),
   requestAccess: vi.fn(),
   signTransaction: vi.fn(),
+  getNetworkDetails: vi.fn().mockResolvedValue({ networkPassphrase: "Public Global Stellar Network ; September 2015" }),
 }));
 
 import * as freighterApi from "@stellar/freighter-api";

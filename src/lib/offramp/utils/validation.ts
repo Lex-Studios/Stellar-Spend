@@ -1,4 +1,5 @@
 export function validateAmount(amount: string): boolean {
+  if (!/^\d*\.?\d*$/.test(amount.trim()) || amount.trim() === '' || amount.trim() === '.') return false;
   const num = parseFloat(amount);
   return !isNaN(num) && num > 0 && isFinite(num);
 }

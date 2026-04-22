@@ -27,21 +27,12 @@ export async function GET(
     // Initialize Allbridge SDK
     const { AllbridgeCoreSdk, nodeRpcUrlsDefault } = await import('@allbridge/bridge-core-sdk');
 
-    const sdk = new AllbridgeCoreSdk({
-      ...nodeRpcUrlsDefault,
-      sorobanNetworkPassphrase: 'Public Global Stellar Network ; September 2015',
-      ...(env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL && {
-        sorobanRpc: env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL,
-      }),
-      ...(env.server.BASE_RPC_URL && {
-        ETH: env.server.BASE_RPC_URL,
-      }),
-    });
+    const sdk = new AllbridgeCoreSdk({ ...nodeRpcUrlsDefault });
 
     // Get transfer status from Allbridge
     let transferStatus: any;
     try {
-      transferStatus = await sdk.getAllbridgeTransferStatus('SRB', txHash);
+      transferStatus = await sdk.getTransferStatus('SRB', txHash);
     } catch (error) {
       // Handle 404 gracefully - return pending status
       const message = extractErrorMessage(error);
