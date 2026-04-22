@@ -8,6 +8,22 @@
 
 ⚙️ Built using Next.js 15, Stellar SDK, Freighter/Lobstr Wallet, Viem, Allbridge Core SDK, and Paycrest API.
 
+## Architecture
+
+![Stellar-Spend Architecture](./public/architecture.svg)
+
+> Full-resolution SVG: [`public/architecture.svg`](./public/architecture.svg)
+
+The diagram shows the complete data flow:
+
+1. **User** signs a Soroban XDR in their Stellar wallet (Freighter / Lobstr)
+2. **Next.js API** builds the bridge transaction and submits it to Stellar
+3. **Allbridge** detects the Stellar deposit and releases USDC on Base
+4. **Server** creates a Paycrest payout order and sends Base USDC to the settlement address
+5. **Paycrest** converts USDC → fiat and initiates the bank transfer
+6. **Beneficiary** receives local currency (NGN, KES, GHS, …)
+
+
 ## Key Features
 
 - ✅ **Multi-Currency Support**: Convert to various fiat currencies

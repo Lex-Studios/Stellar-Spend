@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" width="900" height="560" font-family="monospace, sans-serif">
+  <!-- Background -->
+  <rect width="900" height="560" fill="#0a0a0a"/>
+
+  <!-- Title -->
+  <text x="450" y="36" text-anchor="middle" fill="#c9a962" font-size="15" font-weight="bold" letter-spacing="3">STELLAR-SPEND — SYSTEM ARCHITECTURE</text>
+
+  <!-- ── Nodes ─────────────────────────────────────────────────────────────── -->
+
+  <!-- 1. User / Wallet -->
+  <rect x="30" y="70" width="140" height="64" rx="4" fill="#111" stroke="#c9a962" stroke-width="1.5"/>
+  <text x="100" y="97" text-anchor="middle" fill="#c9a962" font-size="11" font-weight="bold">USER WALLET</text>
+  <text x="100" y="114" text-anchor="middle" fill="#777" font-size="9">Freighter / Lobstr</text>
+  <text x="100" y="127" text-anchor="middle" fill="#555" font-size="9">Stellar Mainnet</text>
+
+  <!-- 2. Browser App -->
+  <rect x="30" y="200" width="140" height="64" rx="4" fill="#111" stroke="#c9a962" stroke-width="1.5"/>
+  <text x="100" y="227" text-anchor="middle" fill="#c9a962" font-size="11" font-weight="bold">BROWSER APP</text>
+  <text x="100" y="244" text-anchor="middle" fill="#777" font-size="9">Next.js 15 / React 19</text>
+  <text x="100" y="257" text-anchor="middle" fill="#555" font-size="9">Tailwind CSS v4</text>
+
+  <!-- 3. Next.js API (server) -->
+  <rect x="360" y="130" width="180" height="200" rx="4" fill="#0f0f0f" stroke="#444" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="450" y="152" text-anchor="middle" fill="#888" font-size="9" letter-spacing="2">NEXT.JS API ROUTES</text>
+  <!-- route pills -->
+  <rect x="375" y="160" width="150" height="20" rx="3" fill="#1a1a1a" stroke="#333"/>
+  <text x="450" y="174" text-anchor="middle" fill="#aaa" font-size="9">POST /offramp/quote</text>
+  <rect x="375" y="186" width="150" height="20" rx="3" fill="#1a1a1a" stroke="#333"/>
+  <text x="450" y="200" text-anchor="middle" fill="#aaa" font-size="9">POST /bridge/build-tx</text>
+  <rect x="375" y="212" width="150" height="20" rx="3" fill="#1a1a1a" stroke="#333"/>
+  <text x="450" y="226" text-anchor="middle" fill="#aaa" font-size="9">POST /bridge/submit-soroban</text>
+  <rect x="375" y="238" width="150" height="20" rx="3" fill="#1a1a1a" stroke="#333"/>
+  <text x="450" y="252" text-anchor="middle" fill="#aaa" font-size="9">GET  /bridge/status/:hash</text>
+  <rect x="375" y="264" width="150" height="20" rx="3" fill="#1a1a1a" stroke="#333"/>
+  <text x="450" y="278" text-anchor="middle" fill="#aaa" font-size="9">POST /paycrest/order</text>
+  <rect x="375" y="290" width="150" height="20" rx="3" fill="#1a1a1a" stroke="#333"/>
+  <text x="450" y="304" text-anchor="middle" fill="#aaa" font-size="9">GET  /status/:orderId</text>
+
+  <!-- 4. Stellar Network -->
+  <rect x="220" y="390" width="140" height="64" rx="4" fill="#111" stroke="#5b8dee" stroke-width="1.5"/>
+  <text x="290" y="417" text-anchor="middle" fill="#5b8dee" font-size="11" font-weight="bold">STELLAR</text>
+  <text x="290" y="434" text-anchor="middle" fill="#777" font-size="9">Soroban Contract</text>
+  <text x="290" y="447" text-anchor="middle" fill="#555" font-size="9">Bridge Invocation</text>
+
+  <!-- 5. Allbridge -->
+  <rect x="390" y="390" width="140" height="64" rx="4" fill="#111" stroke="#9b59b6" stroke-width="1.5"/>
+  <text x="460" y="417" text-anchor="middle" fill="#9b59b6" font-size="11" font-weight="bold">ALLBRIDGE</text>
+  <text x="460" y="434" text-anchor="middle" fill="#777" font-size="9">Cross-chain Bridge</text>
+  <text x="460" y="447" text-anchor="middle" fill="#555" font-size="9">Stellar → Base</text>
+
+  <!-- 6. Base Chain -->
+  <rect x="560" y="390" width="140" height="64" rx="4" fill="#111" stroke="#2ecc71" stroke-width="1.5"/>
+  <text x="630" y="417" text-anchor="middle" fill="#2ecc71" font-size="11" font-weight="bold">BASE CHAIN</text>
+  <text x="630" y="434" text-anchor="middle" fill="#777" font-size="9">USDC Transfer</text>
+  <text x="630" y="447" text-anchor="middle" fill="#555" font-size="9">viem / EVM</text>
+
+  <!-- 7. Paycrest -->
+  <rect x="700" y="200" width="160" height="64" rx="4" fill="#111" stroke="#e67e22" stroke-width="1.5"/>
+  <text x="780" y="227" text-anchor="middle" fill="#e67e22" font-size="11" font-weight="bold">PAYCREST API</text>
+  <text x="780" y="244" text-anchor="middle" fill="#777" font-size="9">FX Rate + Payout Order</text>
+  <text x="780" y="257" text-anchor="middle" fill="#555" font-size="9">api.paycrest.io</text>
+
+  <!-- 8. Bank -->
+  <rect x="720" y="390" width="140" height="64" rx="4" fill="#111" stroke="#c9a962" stroke-width="1.5"/>
+  <text x="790" y="417" text-anchor="middle" fill="#c9a962" font-size="11" font-weight="bold">BANK ACCOUNT</text>
+  <text x="790" y="434" text-anchor="middle" fill="#777" font-size="9">Fiat Settlement</text>
+  <text x="790" y="447" text-anchor="middle" fill="#555" font-size="9">NGN / KES / GHS…</text>
+
+  <!-- ── Arrows ──────────────────────────────────────────────────────────────── -->
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#555"/>
+    </marker>
+    <marker id="arr-gold" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#c9a962"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#5b8dee"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#9b59b6"/>
+    </marker>
+    <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2ecc71"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#e67e22"/>
+    </marker>
+  </defs>
+
+  <!-- User ↔ Browser: sign XDR -->
+  <line x1="100" y1="134" x2="100" y2="198" stroke="#c9a962" stroke-width="1.2" marker-end="url(#arr-gold)"/>
+  <text x="108" y="172" fill="#c9a962" font-size="8">sign XDR</text>
+
+  <!-- Browser → API: quote / build / submit -->
+  <line x1="170" y1="232" x2="358" y2="232" stroke="#555" stroke-width="1.2" marker-end="url(#arr)"/>
+  <text x="220" y="225" fill="#888" font-size="8">① quote / build / submit</text>
+
+  <!-- API → Stellar: submit signed tx -->
+  <line x1="450" y1="330" x2="340" y2="388" stroke="#5b8dee" stroke-width="1.2" marker-end="url(#arr-blue)"/>
+  <text x="360" y="368" fill="#5b8dee" font-size="8">② submit tx</text>
+
+  <!-- Stellar → Allbridge: bridge event -->
+  <line x1="360" y1="422" x2="388" y2="422" stroke="#9b59b6" stroke-width="1.2" marker-end="url(#arr-purple)"/>
+  <text x="362" y="415" fill="#9b59b6" font-size="8">③ bridge</text>
+
+  <!-- Allbridge → Base: USDC released -->
+  <line x1="530" y1="422" x2="558" y2="422" stroke="#2ecc71" stroke-width="1.2" marker-end="url(#arr-green)"/>
+  <text x="532" y="415" fill="#2ecc71" font-size="8">④ USDC</text>
+
+  <!-- API → Paycrest: create order -->
+  <line x1="540" y1="210" x2="698" y2="225" stroke="#e67e22" stroke-width="1.2" marker-end="url(#arr-orange)"/>
+  <text x="580" y="208" fill="#e67e22" font-size="8">⑤ create order</text>
+
+  <!-- Base → Paycrest: server sends USDC -->
+  <line x1="700" y1="422" x2="780" y2="390" stroke="#e67e22" stroke-width="1.2" stroke-dasharray="4,2" marker-end="url(#arr-orange)"/>
+
+  <!-- Paycrest → Bank: fiat settlement -->
+  <line x1="780" y1="264" x2="790" y2="388" stroke="#c9a962" stroke-width="1.2" marker-end="url(#arr-gold)"/>
+  <text x="796" y="330" fill="#c9a962" font-size="8">⑥ fiat</text>
+
+  <!-- API poll bridge status -->
+  <path d="M450,330 Q450,360 460,390" fill="none" stroke="#5b8dee" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr-blue)"/>
+  <text x="462" y="358" fill="#5b8dee" font-size="7">poll status</text>
+
+  <!-- ── Legend ─────────────────────────────────────────────────────────────── -->
+  <rect x="30" y="490" width="840" height="55" rx="4" fill="#0f0f0f" stroke="#222"/>
+  <text x="50" y="508" fill="#555" font-size="8" letter-spacing="1">LEGEND</text>
+
+  <line x1="50" y1="525" x2="80" y2="525" stroke="#c9a962" stroke-width="1.5"/>
+  <text x="85" y="529" fill="#888" font-size="8">User / Wallet interaction</text>
+
+  <line x1="200" y1="525" x2="230" y2="525" stroke="#5b8dee" stroke-width="1.5"/>
+  <text x="235" y="529" fill="#888" font-size="8">Stellar on-chain</text>
+
+  <line x1="340" y1="525" x2="370" y2="525" stroke="#9b59b6" stroke-width="1.5"/>
+  <text x="375" y="529" fill="#888" font-size="8">Allbridge bridge</text>
+
+  <line x1="470" y1="525" x2="500" y2="525" stroke="#2ecc71" stroke-width="1.5"/>
+  <text x="505" y="529" fill="#888" font-size="8">Base chain (USDC)</text>
+
+  <line x1="610" y1="525" x2="640" y2="525" stroke="#e67e22" stroke-width="1.5"/>
+  <text x="645" y="529" fill="#888" font-size="8">Paycrest / fiat payout</text>
+
+  <line x1="760" y1="525" x2="790" y2="525" stroke="#555" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="795" y="529" fill="#888" font-size="8">Server-side</text>
+</svg>
