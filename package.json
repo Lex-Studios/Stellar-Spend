@@ -17,7 +17,7 @@
     "@sentry/nextjs": "^10.46.0",
     "@stellar/freighter-api": "^6.0.1",
     "@stellar/stellar-sdk": "^14.6.1",
-    "next": "^15.5.14",
+    "next": "^16.2.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "viem": "^2.47.0"
