@@ -14,9 +14,10 @@ import { usePollPayoutStatus } from "@/hooks/usePollPayoutStatus";
 import { TransactionStorage } from "@/lib/transaction-storage";
 import { withTimeout } from "@/lib/offramp/utils/timeout";
 import type { OfframpStep } from "@/types/stellaramp";
+import type { WalletType } from "@/lib/stellar/wallet-adapter";
 
 export default function Home() {
-  const { wallet, isConnected, isConnecting, connect, disconnect, signTransaction } =
+  const { wallet, isConnected, isConnecting, error: walletError, connect, disconnect, signTransaction } =
     useStellarWallet();
 
   const [amount, setAmount] = useState("");
@@ -233,9 +234,17 @@ export default function Home() {
   // ---------------------------------------------------------------------------
   // Wallet handlers
   // ---------------------------------------------------------------------------
-  const handleConnect = useCallback(async () => {
+  // openWalletModal is stored in a ref so FormCard can trigger it without re-renders
+  const openWalletModalRef = useRef<(() => void) | null>(null);
+
+  const handleConnect = useCallback(async (walletType?: WalletType) => {
+    // If no wallet type specified and modal opener is available, open the modal
+    if (!walletType && openWalletModalRef.current) {
+      openWalletModalRef.current();
+      return;
+    }
     try {
-      await connect();
+      await connect(walletType);
     } catch {
       // error is surfaced via useStellarWallet's error state
     }
@@ -269,8 +278,10 @@ export default function Home() {
         isConnected={isConnected}
         isConnecting={isConnecting}
         walletAddress={wallet?.publicKey}
+        walletError={walletError}
         onConnect={handleConnect}
         onDisconnect={handleDisconnect}
+        onModalRef={(openModal) => { openWalletModalRef.current = openModal; }}
       />
 
       <section id="main-content" className="border border-[#333333] px-[2.6rem] py-8 max-[1100px]:p-4 overflow-hidden mt-6">

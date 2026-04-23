@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { TransactionStorage, type Transaction } from "@/lib/transaction-storage";
 import { useStellarWallet } from "@/hooks/useStellarWallet";
 import { Header } from "@/components/Header";
+import { CopyButton } from "@/components/CopyButton";
 import { cn } from "@/lib/cn";
+import { getCurrencyFlag } from "@/lib/currency-flags";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -172,7 +174,7 @@ export default function HistoryPage() {
         isConnected={isConnected}
         isConnecting={isConnecting}
         walletAddress={wallet?.publicKey}
-        onConnect={connect}
+        onConnect={(walletType) => connect(walletType)}
         onDisconnect={disconnect}
       />
 
@@ -411,14 +413,17 @@ export default function HistoryPage() {
                         </td>
                         <td className="px-5 py-3 text-xs text-[#777777] font-mono whitespace-nowrap">
                           {tx.stellarTxHash ? (
-                            <a
-                              href={`https://stellar.expert/explorer/public/tx/${tx.stellarTxHash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:text-[#c9a962] transition-colors duration-150 underline decoration-dotted"
-                            >
-                              {truncateTxHash(tx.stellarTxHash)}
-                            </a>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={`https://stellar.expert/explorer/public/tx/${tx.stellarTxHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-[#c9a962] transition-colors duration-150 underline decoration-dotted"
+                              >
+                                {truncateTxHash(tx.stellarTxHash)}
+                              </a>
+                              <CopyButton text={tx.stellarTxHash} label="" className="text-[10px]" />
+                            </div>
                           ) : (
                             <span className="text-[#555555]">Pending</span>
                           )}
@@ -427,7 +432,14 @@ export default function HistoryPage() {
                           {tx.amount} USDC
                         </td>
                         <td className="px-5 py-3 text-xs text-white whitespace-nowrap">
-                          {getCurrencySymbol(tx.currency)} {tx.currency}
+                          <span className="flex items-center gap-1.5">
+                            {getCurrencyFlag(tx.currency) && (
+                              <span aria-hidden="true" className="text-base leading-none">
+                                {getCurrencyFlag(tx.currency)}
+                              </span>
+                            )}
+                            {getCurrencySymbol(tx.currency)} {tx.currency}
+                          </span>
                         </td>
                         <td className="px-5 py-3 text-xs text-[#aaaaaa] whitespace-nowrap">
                           {tx.beneficiary.institution}

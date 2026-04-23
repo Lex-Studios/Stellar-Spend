@@ -10,6 +10,7 @@ import {
 import { cn } from "@/lib/cn";
 import { validateAmount, validateAccountNumber, isValidQuote, validateEvmAddress } from "@/lib/offramp/utils/validation";
 import { buildQuote, calculateBridgeAmount } from "@/lib/offramp/utils/quote-fetcher";
+import { getCurrencyFlag } from "@/lib/currency-flags";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -83,6 +84,7 @@ interface InputFieldProps {
   id: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: () => void;
   type?: string;
   placeholder?: string;
   min?: string;
@@ -91,6 +93,8 @@ interface InputFieldProps {
   disabled?: boolean;
   suffix?: string;
   error?: string;
+  success?: string;
+  touched?: boolean;
   inputMode?: "numeric" | "decimal" | "text";
 }
 
@@ -99,6 +103,7 @@ function InputField({
   id,
   value,
   onChange,
+  onBlur,
   type = "text",
   placeholder,
   min,
@@ -107,8 +112,13 @@ function InputField({
   disabled,
   suffix,
   error,
+  success,
+  touched,
   inputMode,
 }: InputFieldProps) {
+  const showError = touched && error;
+  const showSuccess = touched && !error && success && value;
+
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
@@ -120,29 +130,68 @@ function InputField({
           type={type}
           value={value}
           onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+          onBlur={onBlur}
           placeholder={placeholder}
           min={min}
           step={step}
           maxLength={maxLength}
           disabled={disabled}
           inputMode={inputMode}
+          aria-invalid={showError ? "true" : undefined}
+          aria-describedby={showError ? `${id}-error` : showSuccess ? `${id}-success` : undefined}
           className={cn(
             "w-full bg-[#0a0a0a] border px-3 py-2.5 text-sm text-white placeholder-[#444444]",
             "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
             "disabled:opacity-40 disabled:cursor-not-allowed",
             "transition-colors duration-150",
-            error ? "border-red-500/60" : "border-[#333333] focus:border-[#c9a962]",
+            showError
+              ? "border-red-500/60 focus:border-red-500/80"
+              : showSuccess
+              ? "border-green-500/50 focus:border-green-500/70"
+              : "border-[#333333] focus:border-[#c9a962]",
             suffix && "pr-20"
           )}
         />
-        {suffix && (
+        {/* Validation state icon */}
+        {!disabled && value && (
+          <span className="absolute right-3 pointer-events-none select-none flex items-center">
+            {suffix && !showError && !showSuccess && (
+              <span className="text-xs text-[#777777]">{suffix}</span>
+            )}
+            {showError && (
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-red-400" aria-hidden="true">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M8 4.5V8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="8" cy="11" r="0.75" fill="currentColor" />
+              </svg>
+            )}
+            {showSuccess && (
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-green-400" aria-hidden="true">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M5 8L7 10L11 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+            {!showError && !showSuccess && suffix && value && (
+              <span className="sr-only">{suffix}</span>
+            )}
+          </span>
+        )}
+        {/* Suffix when no value or no validation state */}
+        {suffix && !value && (
           <span className="absolute right-3 text-xs text-[#777777] pointer-events-none select-none">
             {suffix}
           </span>
         )}
       </div>
-      {error && (
-        <span className="text-[10px] text-red-400 tracking-wide">{error}</span>
+      {showError && (
+        <span id={`${id}-error`} role="alert" className="flex items-center gap-1 text-[10px] text-red-400 tracking-wide">
+          {error}
+        </span>
+      )}
+      {showSuccess && (
+        <span id={`${id}-success`} className="text-[10px] text-green-400 tracking-wide">
+          {success}
+        </span>
       )}
     </div>
   );
@@ -153,10 +202,13 @@ interface SelectFieldProps {
   id: string;
   value: string;
   onChange: (v: string) => void;
+  onBlur?: () => void;
   options: Array<{ value: string; label: string }>;
   placeholder?: string;
   disabled?: boolean;
   loading?: boolean;
+  error?: string;
+  touched?: boolean;
 }
 
 function SelectField({
@@ -164,11 +216,16 @@ function SelectField({
   id,
   value,
   onChange,
+  onBlur,
   options,
   placeholder = "Select...",
   disabled,
   loading,
+  error,
+  touched,
 }: SelectFieldProps) {
+  const showError = touched && error && !value;
+
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
@@ -179,12 +236,16 @@ function SelectField({
           id={id}
           value={value}
           onChange={(e: ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}
+          onBlur={onBlur}
           disabled={disabled || loading}
+          aria-invalid={showError ? "true" : undefined}
+          aria-describedby={showError ? `${id}-error` : undefined}
           className={cn(
-            "w-full appearance-none bg-[#0a0a0a] border border-[#333333] px-3 py-2.5 text-sm",
+            "w-full appearance-none bg-[#0a0a0a] border px-3 py-2.5 text-sm",
             "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962] focus:border-[#c9a962]",
             "disabled:opacity-40 disabled:cursor-not-allowed",
             "transition-colors duration-150",
+            showError ? "border-red-500/60" : value ? "border-[#c9a962]/40" : "border-[#333333]",
             value ? "text-white" : "text-[#444444]"
           )}
         >
@@ -202,6 +263,11 @@ function SelectField({
           ▾
         </span>
       </div>
+      {showError && (
+        <span id={`${id}-error`} role="alert" className="text-[10px] text-red-400 tracking-wide">
+          {error}
+        </span>
+      )}
     </div>
   );
 }
@@ -211,19 +277,31 @@ interface FieldProps {
   value: string;
   loading?: boolean;
   placeholder?: string;
+  success?: boolean;
 }
 
-function Field({ label, value, loading, placeholder = "—" }: FieldProps) {
+function Field({ label, value, loading, placeholder = "—", success }: FieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">{label}</span>
-      <div className="bg-[#0a0a0a] border border-[#333333] px-3 py-2.5 text-sm min-h-[42px] flex items-center">
-        {loading ? (
-          <span className="text-[#777777] text-xs tracking-wider">Resolving...</span>
-        ) : value ? (
-          <span className="text-[#c9a962]">{value}</span>
-        ) : (
-          <span className="text-[#444444]">{placeholder}</span>
+      <div className={cn(
+        "bg-[#0a0a0a] border px-3 py-2.5 text-sm min-h-[42px] flex items-center justify-between",
+        success && value ? "border-green-500/40" : "border-[#333333]"
+      )}>
+        <span>
+          {loading ? (
+            <span className="text-[#777777] text-xs tracking-wider">Resolving...</span>
+          ) : value ? (
+            <span className="text-[#c9a962]">{value}</span>
+          ) : (
+            <span className="text-[#444444]">{placeholder}</span>
+          )}
+        </span>
+        {success && value && !loading && (
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-green-400 shrink-0" aria-hidden="true">
+            <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M5 8L7 10L11 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         )}
       </div>
     </div>
@@ -384,6 +462,12 @@ export default function FormCard({
   const [quoteError, setQuoteError] = useState("");
   const [verifyError, setVerifyError] = useState("");
 
+  // Track which fields have been touched (blurred) for validation UX
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+
+  const touchField = (field: string) =>
+    setTouchedFields((prev) => ({ ...prev, [field]: true }));
+
   const quoteDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const verifyDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -400,6 +484,7 @@ export default function FormCard({
     setAccountError("");
     setQuoteError("");
     setVerifyError("");
+    setTouchedFields({});
   }, [resetKey]);
 
   // ---------------------------------------------------------------------------
@@ -673,10 +758,13 @@ export default function FormCard({
           id="amount"
           value={amount}
           onChange={handleAmountChange}
+          onBlur={() => touchField("amount")}
           type="number"
           placeholder="0.00"
           suffix={isQuoteLoading ? "..." : "USDC"}
           error={amountError || quoteError}
+          success={validateAmount(amount) && parseFloat(amount) >= 0.7 ? "Valid amount" : undefined}
+          touched={touchedFields["amount"]}
           disabled={!isConnected || isSubmitting}
         />
 
@@ -693,10 +781,16 @@ export default function FormCard({
             label="Currency"
             id="currency"
             value={currency}
-            options={currencies.map((c) => ({ value: c.code, label: `${c.name} (${c.code})` }))}
+            options={currencies.map((c) => {
+              const flag = getCurrencyFlag(c.code);
+              return { value: c.code, label: flag ? `${flag} ${c.name} (${c.code})` : `${c.name} (${c.code})` };
+            })}
             onChange={handleCurrencyChange}
+            onBlur={() => touchField("currency")}
             loading={isCurrenciesLoading}
             disabled={!isConnected || isSubmitting}
+            error="Please select a currency"
+            touched={touchedFields["currency"]}
           />
           <SelectField
             label="Bank / Institution"
@@ -704,9 +798,12 @@ export default function FormCard({
             value={institution}
             options={institutions.map((i) => ({ value: i.code, label: i.name }))}
             onChange={handleInstitutionChange}
+            onBlur={() => touchField("institution")}
             loading={isInstitutionsLoading}
             disabled={!currency || !isConnected || isSubmitting}
             placeholder={currency ? "Select bank..." : "Select currency first"}
+            error="Please select a bank"
+            touched={touchedFields["institution"]}
           />
         </div>
 
@@ -715,13 +812,16 @@ export default function FormCard({
           id="accountNumber"
           value={accountNumber}
           onChange={handleAccountNumberChange}
+          onBlur={() => touchField("accountNumber")}
           inputMode="numeric"
           placeholder="0000000000"
           error={accountError || verifyError}
+          success={validateAccountNumber(accountNumber) ? "Account number valid" : undefined}
+          touched={touchedFields["accountNumber"]}
           disabled={!institution || !isConnected || isSubmitting}
         />
 
-        <Field label="Account Name" value={accountName} loading={isVerifyingAccount} />
+        <Field label="Account Name" value={accountName} loading={isVerifyingAccount} success={!!accountName} />
 
         {quote && <PayoutBox quote={quote} currency={currency} />}
 
