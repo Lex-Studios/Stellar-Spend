@@ -33,7 +33,7 @@
   --animate-scale-in: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-* { box-sizing: border-box; }
+* { box-sizing: border-box; transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
 
 html, body {
   margin: 0;
@@ -44,8 +44,8 @@ html, body {
   transition: background 0.3s ease, color 0.3s ease;
 }
 
-[data-theme="light"] html,
-[data-theme="light"] body {
+html[data-theme="light"],
+html[data-theme="light"] body {
   background: radial-gradient(circle at top right, #e8e8e8 0%, var(--bg) 45%);
 }
 
