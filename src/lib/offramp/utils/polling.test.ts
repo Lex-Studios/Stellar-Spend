@@ -81,11 +81,12 @@ describe('Polling Utility', () => {
       const checkCondition = (result: { status: string }) => result.status === 'success';
 
       const promise = pollWithTimeout(mockPollFn, checkCondition, { interval: 1000, timeout: 3000 });
-
-      // Advance timers past the timeout
+      // Attach rejection handler immediately to prevent unhandled rejection
+      const caught = promise.catch((e) => e);
       await vi.runAllTimersAsync();
-
-      await expect(promise).rejects.toThrow('Polling timeout exceeded');
+      const err = await caught;
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('Polling timeout exceeded');
     });
 
     it('should timeout at the correct time boundary', async () => {
@@ -95,17 +96,15 @@ describe('Polling Utility', () => {
       const timeout = 5000;
       const interval = 1000;
       const promise = pollWithTimeout(mockPollFn, checkCondition, { interval, timeout });
+      const caught = promise.catch((e) => e);
 
-      // Advance timers to just before timeout
       await vi.advanceTimersByTimeAsync(timeout - 100);
-      
-      // Should still be polling
       expect(mockPollFn).toHaveBeenCalled();
 
-      // Advance past timeout
       await vi.runAllTimersAsync();
-
-      await expect(promise).rejects.toThrow('Polling timeout exceeded');
+      const err = await caught;
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('Polling timeout exceeded');
     });
 
     it('should invoke onProgress callback on each attempt', async () => {

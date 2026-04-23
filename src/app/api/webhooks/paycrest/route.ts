@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   const rawBody = await request.text();
   const signature = request.headers.get('X-Paycrest-Signature') ?? '';
 
-  if (!verifySignature(rawBody, signature, env.server.PAYCREST_WEBHOOK_SECRET)) {
+  if (!await verifySignature(rawBody, signature, env.server.PAYCREST_WEBHOOK_SECRET)) {
     logger.logError(401, 'Invalid webhook signature');
     return ErrorHandler.unauthorized('Invalid signature');
   }
@@ -48,6 +48,10 @@ export async function POST(request: Request) {
     const status = mapPaycrestStatus(eventType);
 
     console.log(JSON.stringify({ requestId, eventType, orderId, status }));
+
+    if (eventType !== 'payment_order.settled' && eventType !== 'payment_order.pending') {
+      console.warn(`unhandled event type: ${eventType}`);
+    }
 
     logger.logSuccess(200);
     return NextResponse.json({ received: true });

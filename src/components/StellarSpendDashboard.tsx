@@ -7,7 +7,7 @@ import RightPanel from "@/components/RightPanel";
 import RecentOfframpsTable from "@/components/RecentOfframpsTable";
 import ProgressSteps from "@/components/ProgressSteps";
 import { TransactionProgressModal } from "@/components/TransactionProgressModal";
-import Header from "@/components/Header";
+import { Header } from "@/components/Header";
 import { TransactionStorage, type Transaction } from "@/lib/transaction-storage";
 import { pollBridgeStatus, pollPayoutStatus } from "@/lib/offramp/utils/polling";
 import type { OfframpStep } from "@/types/stellaramp";
