@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
       if (!stellarUsdc || !baseUsdc) throw new Error('USDC token not found');
 
-      receiveAmount = await sdk.getAmountToBeReceived(stellarUsdc, baseUsdc, bridgeAmount);
+      receiveAmount = await sdk.getAmountToBeReceived(bridgeAmount, stellarUsdc, baseUsdc);
     } catch {
       return NextResponse.json({ error: 'Bridge quote unavailable' }, { status: 502 });
     }

@@ -3,6 +3,7 @@
 import { cn } from "@/lib/cn";
 import { ThemeToggle } from "./ThemeToggle";
 import { CopyButton } from "./CopyButton";
+import { useFxRate } from "@/hooks/useFxRate";
 
 export interface HeaderProps {
   subtitle: string;
@@ -76,9 +77,11 @@ export function Header({
   onConnect,
   onDisconnect,
 }: HeaderProps) {
+  const { rate, flash } = useFxRate();
+
   return (
     <header className="w-full px-6 py-5 flex items-start justify-between gap-6 max-[720px]:flex-col max-[720px]:items-start" role="banner">
-      {/* Left: title + subtitle */}
+      {/* Left: title + subtitle + FX chip */}
       <div className="flex flex-col gap-1">
         <h1
           className="font-space-grotesk font-bold text-white leading-none tracking-tight"
@@ -87,6 +90,18 @@ export function Header({
           STELLAR-SPEND
         </h1>
         <p className="text-xs text-[#777777] tracking-widest uppercase">{subtitle}</p>
+        <span
+          aria-live="polite"
+          aria-label="Live FX rate"
+          className={cn(
+            "mt-1 inline-block self-start px-2 py-0.5 text-[10px] tracking-widest uppercase border border-[#c9a962]/40 text-[#c9a962] transition-colors duration-300",
+            flash && "bg-[#c9a962]/20"
+          )}
+        >
+          {rate != null
+            ? `LIVE RATE: ₦${Math.round(rate).toLocaleString()} / USDC`
+            : "LIVE RATE: —"}
+        </span>
       </div>
 
       {/* Right: wallet button + balances */}

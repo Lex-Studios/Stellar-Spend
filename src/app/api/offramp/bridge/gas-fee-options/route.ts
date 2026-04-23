@@ -35,16 +35,12 @@ export async function GET(): Promise<NextResponse<GasFeeOptions | { error: strin
     }
 
     // Initialize Allbridge SDK
-    const { AllbridgeCoreSdk, nodeRpcUrlsDefault } = await import('@allbridge/bridge-core-sdk');
+    const { AllbridgeCoreSdk, nodeRpcUrlsDefault, Messenger, FeePaymentMethod } = await import('@allbridge/bridge-core-sdk');
 
     const sdk = new AllbridgeCoreSdk({
       ...nodeRpcUrlsDefault,
-      sorobanNetworkPassphrase: 'Public Global Stellar Network ; September 2015',
       ...(env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL && {
-        sorobanRpc: env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL,
-      }),
-      ...(env.server.BASE_RPC_URL && {
-        ETH: env.server.BASE_RPC_URL,
+        SRB: env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL,
       }),
     });
 
@@ -81,19 +77,23 @@ export async function GET(): Promise<NextResponse<GasFeeOptions | { error: strin
 
     // Get gas fee options from Allbridge SDK
     const gasFeeOptions = await withAllbridgeTimeout(
-      sdk.getAllbridgeGasFeeOptions(stellarUsdc, baseUsdc),
-      'getAllbridgeGasFeeOptions'
+      sdk.getGasFeeOptions(stellarUsdc, baseUsdc, Messenger.ALLBRIDGE),
+      'getGasFeeOptions'
     );
+
+    // Normalize fee options — SDK returns keyed by FeePaymentMethod enum values
+    const nativeFee = (gasFeeOptions as any)[FeePaymentMethod.WITH_NATIVE_CURRENCY] ?? (gasFeeOptions as any).native;
+    const stablecoinFee = (gasFeeOptions as any)[FeePaymentMethod.WITH_STABLECOIN] ?? (gasFeeOptions as any).stablecoin;
 
     const result: GasFeeOptions = {
       feeOptions: {
         native: {
-          int: gasFeeOptions.native.int.toString(),
-          float: gasFeeOptions.native.float.toString(),
+          int: String(nativeFee?.int ?? '0'),
+          float: String(nativeFee?.float ?? '0'),
         },
         stablecoin: {
-          int: gasFeeOptions.stablecoin.int.toString(),
-          float: gasFeeOptions.stablecoin.float.toString(),
+          int: String(stablecoinFee?.int ?? '0'),
+          float: String(stablecoinFee?.float ?? '0'),
         },
       },
     };

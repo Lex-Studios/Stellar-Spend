@@ -34,8 +34,8 @@ vi.mock('@/lib/offramp/utils/validation', () => ({
 }));
 
 // ── Allbridge SDK mock ────────────────────────────────────────────────────────
-const mockBuildSwapAndBridgeTx = vi.fn();
-const mockGetAllbridgeGasFeeOptions = vi.fn();
+const mockSend = vi.fn();
+const mockGetGasFeeOptions = vi.fn();
 const mockChainDetailsMap = vi.fn();
 
 const FAKE_SOURCE_TOKEN = { symbol: 'USDC', decimals: 6, contract: '0xsrc', chain: 'STELLAR' };
@@ -44,11 +44,12 @@ const FAKE_DEST_TOKEN = { symbol: 'USDC', decimals: 6, contract: '0xdst', chain:
 vi.mock('@allbridge/bridge-core-sdk', () => ({
   AllbridgeCoreSdk: class {
     chainDetailsMap = mockChainDetailsMap;
-    getAllbridgeGasFeeOptions = mockGetAllbridgeGasFeeOptions;
-    buildSwapAndBridgeTx = mockBuildSwapAndBridgeTx;
+    getGasFeeOptions = mockGetGasFeeOptions;
+    bridge = { rawTxBuilder: { send: mockSend } };
   },
   nodeRpcUrlsDefault: {},
-  ChainSymbol: {},
+  Messenger: { ALLBRIDGE: 'ALLBRIDGE' },
+  FeePaymentMethod: { WITH_STABLECOIN: 'WITH_STABLECOIN', WITH_NATIVE_CURRENCY: 'WITH_NATIVE_CURRENCY' },
 }));
 
 import { POST } from '@/app/api/offramp/bridge/build-tx/route';
@@ -74,11 +75,11 @@ function setupSdkSuccess() {
     stellar: { name: 'Stellar', tokens: [FAKE_SOURCE_TOKEN] },
     base: { name: 'Base', tokens: [FAKE_DEST_TOKEN] },
   });
-  mockGetAllbridgeGasFeeOptions.mockResolvedValue({
-    native: { fee: '0.001' },
-    stablecoin: { fee: '0.5' },
+  mockGetGasFeeOptions.mockResolvedValue({
+    WITH_STABLECOIN: { float: '0.5' },
+    WITH_NATIVE_CURRENCY: { float: '0.001' },
   });
-  mockBuildSwapAndBridgeTx.mockResolvedValue('FAKE_XDR_STRING');
+  mockSend.mockResolvedValue('FAKE_XDR_STRING');
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -128,7 +129,7 @@ describe('POST /api/offramp/bridge/build-tx', () => {
 
   it('returns 500 with user-friendly message on SDK error', async () => {
     setupSdkSuccess();
-    mockBuildSwapAndBridgeTx.mockRejectedValue(new Error('SDK internal failure'));
+    mockSend.mockRejectedValue(new Error('SDK internal failure'));
 
     const res = await POST(makeReq({ amount: '10', fromAddress: VALID_STELLAR, toAddress: VALID_BASE }));
     expect(res.status).toBe(500);

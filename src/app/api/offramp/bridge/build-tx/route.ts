@@ -86,16 +86,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Initialize Allbridge SDK
-    const { AllbridgeCoreSdk, nodeRpcUrlsDefault, ChainSymbol } = await import('@allbridge/bridge-core-sdk');
+    const { AllbridgeCoreSdk, nodeRpcUrlsDefault, Messenger, FeePaymentMethod } = await import('@allbridge/bridge-core-sdk');
 
     const sdk = new AllbridgeCoreSdk({
       ...nodeRpcUrlsDefault,
-      sorobanNetworkPassphrase: 'Public Global Stellar Network ; September 2015',
       ...(env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL && {
-        sorobanRpc: env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL,
-      }),
-      ...(env.server.BASE_RPC_URL && {
-        ETH: env.server.BASE_RPC_URL,
+        SRB: env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL,
       }),
     });
 
@@ -136,20 +132,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Get fee options
-    const feeOptions = await sdk.getAllbridgeGasFeeOptions(sourceToken, destinationToken);
+    const feeOptions = await sdk.getGasFeeOptions(sourceToken, destinationToken, Messenger.ALLBRIDGE);
 
     // Select fee based on payment method
-    const selectedFee = feePaymentMethod === 'native' ? feeOptions.native : feeOptions.stablecoin;
+    const gasFeePaymentMethod = feePaymentMethod === 'native'
+      ? FeePaymentMethod.WITH_NATIVE_CURRENCY
+      : FeePaymentMethod.WITH_STABLECOIN;
+    const selectedFee = feePaymentMethod === 'native'
+      ? (feeOptions as any).native?.float ?? (feeOptions as any)[FeePaymentMethod.WITH_NATIVE_CURRENCY]?.float
+      : (feeOptions as any).stablecoin?.float ?? (feeOptions as any)[FeePaymentMethod.WITH_STABLECOIN]?.float;
 
-    // Build XDR transaction
-    const xdr = await sdk.buildSwapAndBridgeTx(
+    // Build raw transaction
+    const rawTx = await sdk.bridge.rawTxBuilder.send({
+      amount,
+      fromAccountAddress: fromAddress,
+      toAccountAddress: toAddress,
       sourceToken,
       destinationToken,
-      fromAddress,
-      toAddress,
-      amount,
-      selectedFee
-    );
+      messenger: Messenger.ALLBRIDGE,
+      fee: selectedFee ? String(selectedFee) : undefined,
+      gasFeePaymentMethod,
+    });
+
+    // rawTx for Stellar/Soroban is an XDR string
+    const xdr = typeof rawTx === 'string' ? rawTx : (rawTx as any).toXDR?.() ?? JSON.stringify(rawTx);
 
     const response = NextResponse.json({
       xdr,

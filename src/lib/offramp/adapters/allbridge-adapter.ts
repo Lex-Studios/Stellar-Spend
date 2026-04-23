@@ -184,7 +184,7 @@ export async function getAllbridgeQuote(
       Messenger.ALLBRIDGE
     );
 
-    return { receiveAmount: amountToBeReceived, fee, estimatedTime };
+    return { receiveAmount: amountToBeReceived, fee, estimatedTime: estimatedTime ?? 0 };
   } catch (error) {
     invalidateSdkCache();
     throw error;

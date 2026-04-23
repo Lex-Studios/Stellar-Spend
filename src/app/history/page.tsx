@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { TransactionStorage, type Transaction } from "@/lib/transaction-storage";
 import { useStellarWallet } from "@/hooks/useStellarWallet";
-import Header from "@/components/Header";
+import { Header } from "@/components/Header";
 import { cn } from "@/lib/cn";
 
 function formatDate(timestamp: number): string {
@@ -107,7 +107,7 @@ export default function HistoryPage() {
               Please connect your wallet to view transaction history
             </p>
             <button
-              onClick={connect}
+              onClick={() => connect()}
               className={cn(
                 "px-6 py-3 text-xs tracking-widest border border-[#c9a962]",
                 "text-[#c9a962] bg-transparent transition-colors duration-150",
