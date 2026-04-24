@@ -1,0 +1,158 @@
+import { env } from './env';
+
+export interface FeeBreakdown {
+  bridgeFee: string;
+  networkFee: string;
+  paycrestFee: string;
+  totalFee: string;
+  amount: string;
+  amountAfterFees: string;
+  currency: string;
+}
+
+export interface FeeCalculationParams {
+  amount: string;
+  currency: string;
+  feeMethod: 'stablecoin' | 'native';
+  bridgeAmount?: string;
+  receiveAmount?: string;
+}
+
+const STABLECOIN_FEE_PERCENTAGE = 0.5; // 0.5%
+const PAYCREST_FEE_PERCENTAGE = 1.0; // 1.0%
+const NETWORK_FEE_XLM = '0.00001'; // Base Stellar network fee
+
+export function calculateBridgeFee(amount: string, feeMethod: 'stablecoin' | 'native'): string {
+  if (feeMethod === 'native') {
+    return '0';
+  }
+
+  const amountNum = parseFloat(amount);
+  if (isNaN(amountNum) || amountNum <= 0) {
+    throw new Error('Invalid amount for fee calculation');
+  }
+
+  const fee = (amountNum * STABLECOIN_FEE_PERCENTAGE) / 100;
+  return fee.toFixed(6);
+}
+
+export function calculateNetworkFee(feeMethod: 'stablecoin' | 'native'): string {
+  if (feeMethod === 'stablecoin') {
+    return '0';
+  }
+  return NETWORK_FEE_XLM;
+}
+
+export function calculatePaycrestFee(receiveAmount: string): string {
+  const amountNum = parseFloat(receiveAmount);
+  if (isNaN(amountNum) || amountNum <= 0) {
+    return '0';
+  }
+
+  const fee = (amountNum * PAYCREST_FEE_PERCENTAGE) / 100;
+  return fee.toFixed(2);
+}
+
+export function calculateTotalFees(
+  bridgeFee: string,
+  networkFee: string,
+  paycrestFee: string,
+  currency: string
+): string {
+  const bridge = parseFloat(bridgeFee) || 0;
+  const network = parseFloat(networkFee) || 0;
+  const paycrest = parseFloat(paycrestFee) || 0;
+
+  // Convert XLM network fee to USDC equivalent if needed
+  // For simplicity, we'll keep them separate in the breakdown
+  const total = bridge + network + paycrest;
+  return total.toFixed(6);
+}
+
+export function calculateAmountAfterFees(amount: string, totalFee: string): string {
+  const amountNum = parseFloat(amount);
+  const feeNum = parseFloat(totalFee);
+
+  if (isNaN(amountNum) || isNaN(feeNum)) {
+    throw new Error('Invalid amounts for calculation');
+  }
+
+  const result = amountNum - feeNum;
+  return result > 0 ? result.toFixed(6) : '0';
+}
+
+export async function calculateAllFees(params: FeeCalculationParams): Promise<FeeBreakdown> {
+  const { amount, currency, feeMethod, receiveAmount } = params;
+
+  // Calculate individual fees
+  const bridgeFee = calculateBridgeFee(amount, feeMethod);
+  const networkFee = calculateNetworkFee(feeMethod);
+  const paycrestFee = receiveAmount ? calculatePaycrestFee(receiveAmount) : '0';
+
+  // Calculate total
+  const totalFee = calculateTotalFees(bridgeFee, networkFee, paycrestFee, currency);
+
+  // Calculate amount after fees
+  const amountAfterFees = calculateAmountAfterFees(amount, bridgeFee);
+
+  return {
+    bridgeFee,
+    networkFee,
+    paycrestFee,
+    totalFee,
+    amount,
+    amountAfterFees,
+    currency,
+  };
+}
+
+export interface DetailedFeeBreakdown extends FeeBreakdown {
+  breakdown: {
+    bridge: {
+      fee: string;
+      percentage: string;
+      description: string;
+    };
+    network: {
+      fee: string;
+      description: string;
+    };
+    paycrest: {
+      fee: string;
+      percentage: string;
+      description: string;
+    };
+  };
+}
+
+export async function getDetailedFeeBreakdown(
+  params: FeeCalculationParams
+): Promise<DetailedFeeBreakdown> {
+  const basicFees = await calculateAllFees(params);
+
+  return {
+    ...basicFees,
+    breakdown: {
+      bridge: {
+        fee: basicFees.bridgeFee,
+        percentage: params.feeMethod === 'stablecoin' ? `${STABLECOIN_FEE_PERCENTAGE}%` : '0%',
+        description:
+          params.feeMethod === 'stablecoin'
+            ? 'Bridge fee for USDC transactions'
+            : 'No bridge fee for XLM transactions',
+      },
+      network: {
+        fee: basicFees.networkFee,
+        description:
+          params.feeMethod === 'native'
+            ? 'Stellar network transaction fee'
+            : 'No network fee (paid in USDC)',
+      },
+      paycrest: {
+        fee: basicFees.paycrestFee,
+        percentage: `${PAYCREST_FEE_PERCENTAGE}%`,
+        description: 'Paycrest processing fee',
+      },
+    },
+  };
+}
