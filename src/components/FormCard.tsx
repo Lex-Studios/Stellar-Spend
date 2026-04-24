@@ -6,6 +6,7 @@ import { buildQuote, calculateBridgeAmount } from "@/lib/offramp/utils/quote-fet
 import { getCurrencyFlag } from "@/lib/currency-flags";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { FormCardSkeleton } from "@/components/skeletons";
+import { BankAccountInput, type BankMode } from "@/components/BankAccountInput";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -434,6 +435,9 @@ export function FormCard({
   const [feeMethod, setFeeMethod] = useState<FeeMethod>("USDC");
   const [currency, setCurrency] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
+  const [bankMode, setBankMode] = useState<BankMode>("local");
+  const [routingNumber, setRoutingNumber] = useState("");
+  const [iban, setIban] = useState("");
   const [institution, setInstitution] = useState("");
   const [accountName, setAccountName] = useState("");
 
@@ -792,23 +796,20 @@ export function FormCard({
       </div>
 
       {/* Account number */}
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="accountNumber">Account Number</Label>
-        <input
-          id="accountNumber"
-          value={accountNumber}
-          onChange={handleAccountNumberChange}
-          onBlur={() => touchField("accountNumber")}
-          inputMode="numeric"
-          value={accountNumber}
-          onChange={(e) => onAccountNumberChange(e.target.value.replace(/\D/g, "").slice(0, 10))}
-          placeholder="0000000000"
-          error={accountError || verifyError}
-          success={validateAccountNumber(accountNumber) ? "Account number valid" : undefined}
-          touched={touchedFields["accountNumber"]}
-          disabled={!institution || !isConnected || isSubmitting}
-        />
-      </div>
+      <BankAccountInput
+        mode={bankMode}
+        onModeChange={setBankMode}
+        accountNumber={accountNumber}
+        onAccountNumberChange={(v) => {
+          setAccountNumber(v);
+          verifyAccount(v, institution, currency);
+        }}
+        routingNumber={routingNumber}
+        onRoutingNumberChange={setRoutingNumber}
+        iban={iban}
+        onIbanChange={setIban}
+        disabled={!institution || !isConnected || isSubmitting}
+      />
 
         <Field label="Account Name" value={accountName} loading={isVerifyingAccount} success={!!accountName} />
 
