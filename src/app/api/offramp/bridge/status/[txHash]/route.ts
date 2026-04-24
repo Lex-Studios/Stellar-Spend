@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { env } from '@/lib/env';
 import { extractErrorMessage } from '@/lib/offramp/utils/errors';
+import { get, set, isFresh } from '@/lib/polling/status-cache';
 import type { BridgeStatus } from '@/lib/offramp/types';
+
+const BRIDGE_TERMINAL_STATES: BridgeStatus[] = ['completed', 'failed', 'expired'];
 
 /**
  * GET /api/offramp/bridge/status/[txHash]
- * 
+ *
  * Polls the Allbridge bridge transfer status.
- * 
+ * Checks server-side cache before calling Allbridge; returns stale cache + upstreamError on failure.
+ *
  * Response:
  * {
  *   data: {
  *     status: BridgeStatus
  *     txHash: string
  *     receiveAmount?: string
+ *     cachedAt?: number
+ *     upstreamError?: string
  *   }
  * }
  */
@@ -22,6 +28,20 @@ export async function GET(
   { params }: { params: Promise<{ txHash: string }> }
 ) {
   const { txHash } = await params;
+
+  // Check cache first
+  const cached = get(txHash);
+  if (cached && isFresh(cached)) {
+    const raw = cached.raw as { receiveAmount?: string };
+    return NextResponse.json({
+      data: {
+        status: cached.status as BridgeStatus,
+        txHash,
+        receiveAmount: raw?.receiveAmount,
+        cachedAt: cached.cachedAt,
+      },
+    });
+  }
 
   try {
     // Initialize Allbridge SDK
@@ -37,13 +57,33 @@ export async function GET(
       // Handle 404 gracefully - return pending status
       const message = extractErrorMessage(error);
       if (message.includes('404') || message.includes('not found')) {
+        const status: BridgeStatus = 'pending';
+        const entry = {
+          status,
+          raw: { receiveAmount: undefined },
+          cachedAt: Date.now(),
+          isTerminal: false,
+        };
+        set(txHash, entry);
+        return NextResponse.json({
+          data: { status, txHash },
+        });
+      }
+
+      // Upstream error — return stale cache if available
+      if (cached) {
+        const raw = cached.raw as { receiveAmount?: string };
         return NextResponse.json({
           data: {
-            status: 'pending' as BridgeStatus,
+            status: cached.status as BridgeStatus,
             txHash,
+            receiveAmount: raw?.receiveAmount,
+            cachedAt: cached.cachedAt,
+            upstreamError: message || 'Failed to fetch bridge status',
           },
         });
       }
+
       throw error;
     }
 
@@ -62,6 +102,17 @@ export async function GET(
       }
     }
 
+    const isTerminal = BRIDGE_TERMINAL_STATES.includes(status);
+    const raw = { receiveAmount: transferStatus?.receiveAmount };
+
+    // Populate cache
+    set(txHash, {
+      status,
+      raw,
+      cachedAt: Date.now(),
+      isTerminal,
+    });
+
     return NextResponse.json({
       data: {
         status,
@@ -72,6 +123,21 @@ export async function GET(
   } catch (error) {
     console.error('Bridge status error:', error);
     const message = extractErrorMessage(error);
+
+    // Return stale cache entry with upstreamError if available
+    if (cached) {
+      const raw = cached.raw as { receiveAmount?: string };
+      return NextResponse.json({
+        data: {
+          status: cached.status as BridgeStatus,
+          txHash,
+          receiveAmount: raw?.receiveAmount,
+          cachedAt: cached.cachedAt,
+          upstreamError: message || 'Failed to fetch bridge status',
+        },
+      });
+    }
+
     return NextResponse.json(
       { error: message || 'Failed to fetch bridge status' },
       { status: 500 }

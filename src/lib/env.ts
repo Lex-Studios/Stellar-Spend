@@ -6,6 +6,7 @@ const requiredServerEnvKeys = [
   "BASE_RPC_URL",
   "STELLAR_SOROBAN_RPC_URL",
   "STELLAR_HORIZON_URL",
+  "DATABASE_URL",
 ] as const;
 
 const requiredPublicEnvKeys = [

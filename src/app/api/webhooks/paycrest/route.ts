@@ -5,6 +5,18 @@ import { ErrorHandler } from '@/lib/error-handler';
 import { generateRequestId, createRequestLogger } from '@/lib/offramp/utils/logger';
 import type { PayoutStatus } from '@/lib/offramp/types';
 import { mapPaycrestStatus } from '@/lib/offramp/utils/mapPaycrestStatus';
+import { dal, DatabaseError } from '@/lib/db/dal';
+import { enqueue } from '@/lib/webhook/dispatcher';
+
+const SENSITIVE_HEADERS = new Set(['authorization', 'x-paycrest-signature']);
+
+function redactHeaders(headers: Headers): Record<string, string> {
+  const result: Record<string, string> = {};
+  headers.forEach((value, key) => {
+    result[key] = SENSITIVE_HEADERS.has(key.toLowerCase()) ? '[REDACTED]' : value;
+  });
+  return result;
+}
 
 export const maxDuration = 10;
 
@@ -41,6 +53,18 @@ export async function POST(request: Request) {
     return ErrorHandler.unauthorized('Invalid signature');
   }
 
+  // Enqueue for retry tracking — fire-and-forget, does not block the response
+  enqueue(
+    {
+      headers: redactHeaders(request.headers),
+      body: rawBody,
+      source: 'paycrest',
+    },
+    '/api/webhooks/paycrest/process',
+  ).catch((err) => {
+    console.error(JSON.stringify({ requestId, event: 'webhook.enqueue_failed', error: err instanceof Error ? err.message : String(err) }));
+  });
+
   try {
     const payload = JSON.parse(rawBody);
     const eventType: string = payload?.event ?? '';
@@ -49,13 +73,28 @@ export async function POST(request: Request) {
 
     console.log(JSON.stringify({ requestId, eventType, orderId, status }));
 
-    if (eventType !== 'payment_order.settled' && eventType !== 'payment_order.pending') {
+    const transaction = await dal.getByPayoutOrderId(orderId);
+    if (!transaction) {
+      console.warn(JSON.stringify({ requestId, message: 'No transaction found for orderId', orderId }));
+      logger.logSuccess(200);
+      return NextResponse.json({ received: true });
+    }
+
+    if (eventType === 'payment_order.settled') {
+      await dal.update(transaction.id, { status: 'completed', payoutStatus: 'settled' });
+    } else if (eventType === 'payment_order.pending') {
+      await dal.update(transaction.id, { payoutStatus: 'pending' });
+    } else {
       console.warn(`unhandled event type: ${eventType}`);
     }
 
     logger.logSuccess(200);
     return NextResponse.json({ received: true });
-  } catch {
+  } catch (err) {
+    if (err instanceof DatabaseError) {
+      logger.logError(500, err.message);
+      return ErrorHandler.serverError(err);
+    }
     logger.logError(400, 'Failed to parse webhook payload');
     return ErrorHandler.validation('Malformed JSON payload');
   }

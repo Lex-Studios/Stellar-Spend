@@ -4,9 +4,9 @@ import { useCallback } from 'react';
 import type { PayoutStatus } from '@/lib/offramp/types';
 import { TransactionStorage } from '@/lib/transaction-storage';
 import type { OfframpStep } from '@/types/stellaramp';
-
-const POLL_INTERVAL_MS = 10_000;
-const MAX_ATTEMPTS = 60;
+import { usePollingManager, DurationExceededError, ConsecutiveErrorsExceededError } from '@/lib/polling/polling-manager';
+import type { StatusResponse } from '@/lib/polling/polling-manager';
+import { PAYOUT_CONFIG } from '@/lib/polling/backoff';
 
 const TERMINAL_STATES: PayoutStatus[] = ['validated', 'settled', 'refunded', 'expired'];
 
@@ -17,54 +17,68 @@ interface PollPayoutStatusOptions {
 }
 
 /**
- * Polls GET /api/offramp/status/{orderId} every 10 s, up to 60 attempts (10 min).
+ * Polls GET /api/offramp/status/{orderId} using exponential backoff, up to 10 min.
  * - "validated" | "settled"  → calls onSettling(), resolves
  * - "refunded" | "expired"   → rejects with descriptive error
+ * - 5 consecutive HTTP errors → rejects with descriptive connectivity error
  * - Timeout                  → rejects with "Payout polling timeout"
  * Updates TransactionStorage on every poll.
  */
 export function usePollPayoutStatus() {
+  const { start } = usePollingManager(PAYOUT_CONFIG);
+
   const pollPayoutStatus = useCallback(
     async (orderId: string, { transactionId, onSettling }: PollPayoutStatusOptions): Promise<void> => {
-      let attempts = 0;
+      const fetchFn = async (id: string, signal: AbortSignal): Promise<StatusResponse> => {
+        const res = await fetch(`/api/offramp/status/${id}`, {
+          cache: 'no-store',
+          signal,
+        });
 
-      while (attempts < MAX_ATTEMPTS) {
-        attempts++;
-
-        const res = await fetch(`/api/offramp/status/${orderId}`, { cache: 'no-store' });
         const data: { status?: PayoutStatus; error?: string } = await res.json();
 
         if (!res.ok) {
           throw new Error(data.error ?? 'Failed to fetch payout status');
         }
 
-        const status = data.status;
+        const status: PayoutStatus = (data.status ?? 'pending') as PayoutStatus;
 
         // Persist each poll result
         TransactionStorage.update(transactionId, { payoutStatus: status });
 
-        if (status && TERMINAL_STATES.includes(status)) {
-          if (status === 'validated' || status === 'settled') {
-            onSettling?.();
-            return;
-          }
-          // refunded or expired
+        const isTerminal = TERMINAL_STATES.includes(status);
+
+        return { status, id, isTerminal };
+      };
+
+      try {
+        const result = await start(orderId, fetchFn, () => { });
+
+        const status = result.status as PayoutStatus;
+
+        if (status === 'validated' || status === 'settled') {
+          onSettling?.();
+          return;
+        }
+
+        if (status === 'refunded' || status === 'expired') {
           throw new Error(
             status === 'refunded'
               ? 'Payout was refunded. Please contact support.'
               : 'Payout order expired. Please try again.'
           );
         }
-
-        // Not terminal — wait before next attempt
-        if (attempts < MAX_ATTEMPTS) {
-          await new Promise<void>((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+      } catch (err) {
+        if (err instanceof DurationExceededError) {
+          throw new Error('Payout polling timeout');
         }
+        if (err instanceof ConsecutiveErrorsExceededError) {
+          throw new Error('Payout polling failed: too many consecutive network errors. Please check your connection.');
+        }
+        throw err;
       }
-
-      throw new Error('Payout polling timeout');
     },
-    []
+    [start]
   );
 
   return { pollPayoutStatus };

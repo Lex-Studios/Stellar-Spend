@@ -3,10 +3,11 @@
 import { useCallback } from 'react';
 import type { BridgeStatus } from '@/lib/offramp/types';
 import { TransactionStorage } from '@/lib/transaction-storage';
+import { usePollingManager, DurationExceededError, ConsecutiveErrorsExceededError } from '@/lib/polling/polling-manager';
+import type { StatusResponse } from '@/lib/polling/polling-manager';
+import { BRIDGE_CONFIG } from '@/lib/polling/backoff';
 
-const POLL_INTERVAL_MS = 5_000;
-const MAX_ATTEMPTS = 60;
-const MAX_CONSECUTIVE_ERRORS = 10;
+const BRIDGE_TERMINAL_STATES: BridgeStatus[] = ['completed', 'failed', 'expired'];
 
 interface PollBridgeStatusOptions {
   transactionId: string;
@@ -14,7 +15,7 @@ interface PollBridgeStatusOptions {
 }
 
 /**
- * Polls GET /api/offramp/bridge/status/{txHash} every 5 s, up to 60 attempts (5 min).
+ * Polls GET /api/offramp/bridge/status/{txHash} using exponential backoff, up to 5 min.
  * - "completed"  → calls onBridgeComplete(), resolves
  * - "failed"     → rejects with descriptive error
  * - 10 consecutive HTTP errors → soft exit (resolves without throwing)
@@ -22,46 +23,34 @@ interface PollBridgeStatusOptions {
  * Updates TransactionStorage on every successful poll.
  */
 export function usePollBridgeStatus() {
+  const { start } = usePollingManager(BRIDGE_CONFIG);
+
   const pollBridgeStatus = useCallback(
     async (txHash: string, { transactionId, onBridgeComplete }: PollBridgeStatusOptions): Promise<void> => {
-      let attempts = 0;
-      let consecutiveErrors = 0;
+      const fetchFn = async (id: string, signal: AbortSignal): Promise<StatusResponse> => {
+        const res = await fetch(`/api/offramp/bridge/status/${id}`, {
+          cache: 'no-store',
+          signal,
+        });
 
-      while (attempts < MAX_ATTEMPTS) {
-        attempts++;
+        const data: { data?: { status?: BridgeStatus }; status?: BridgeStatus; error?: string } = await res.json();
 
-        let data: { status?: BridgeStatus; error?: string };
-
-        try {
-          const res = await fetch(`/api/offramp/bridge/status/${txHash}`, { cache: 'no-store' });
-          data = await res.json();
-
-          if (!res.ok) {
-            consecutiveErrors++;
-            if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-              // Soft exit — don't block payout polling
-              return;
-            }
-            await new Promise<void>((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-            continue;
-          }
-        } catch {
-          consecutiveErrors++;
-          if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-            return;
-          }
-          await new Promise<void>((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-          continue;
-        }
-
-        // Reset on successful HTTP response
-        consecutiveErrors = 0;
-
-        const status = data.status;
+        // Support both wrapped { data: { status } } and flat { status } response shapes
+        const status: BridgeStatus = (data.data?.status ?? data.status ?? 'pending') as BridgeStatus;
 
         if (status) {
           TransactionStorage.update(transactionId, { bridgeStatus: status });
         }
+
+        const isTerminal = BRIDGE_TERMINAL_STATES.includes(status);
+
+        return { status, id, isTerminal };
+      };
+
+      try {
+        const result = await start(txHash, fetchFn, () => { });
+
+        const status = result.status as BridgeStatus;
 
         if (status === 'completed') {
           onBridgeComplete?.();
@@ -75,15 +64,15 @@ export function usePollBridgeStatus() {
               : 'Bridge transfer expired. Please try again.'
           );
         }
-
-        if (attempts < MAX_ATTEMPTS) {
-          await new Promise<void>((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+      } catch (err) {
+        // Total timeout or 10 consecutive errors → resolve silently (best-effort)
+        if (err instanceof DurationExceededError || err instanceof ConsecutiveErrorsExceededError) {
+          return;
         }
+        throw err;
       }
-
-      // Timeout — best-effort, resolve silently
     },
-    []
+    [start]
   );
 
   return { pollBridgeStatus };
