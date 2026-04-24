@@ -9,6 +9,8 @@ import ProgressSteps from "@/components/ProgressSteps";
 import { Header } from "@/components/Header";
 import { TransactionProgressModal } from "@/components/TransactionProgressModal";
 import { Tutorial, useTutorial } from "@/components/Tutorial";
+import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
+import { useKeyboardShortcuts, type Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { useStellarWallet } from "@/hooks/useStellarWallet";
 import { usePollBridgeStatus } from "@/hooks/usePollBridgeStatus";
 import { usePollPayoutStatus } from "@/hooks/usePollPayoutStatus";
@@ -22,6 +24,7 @@ export default function Home() {
     useStellarWallet();
 
   const { open: tutorialOpen, openTutorial, closeTutorial } = useTutorial();
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("");
@@ -260,9 +263,50 @@ export default function Home() {
     setQuote(null);
   }, [disconnect]);
 
+  // ---------------------------------------------------------------------------
+  // Keyboard shortcuts
+  // ---------------------------------------------------------------------------
+  const shortcuts: Shortcut[] = [
+    {
+      key: "w",
+      ctrl: true,
+      description: "Connect / disconnect wallet",
+      action: () => (isConnected ? handleDisconnect() : handleConnect()),
+    },
+    {
+      key: "h",
+      description: "Show keyboard shortcuts",
+      action: () => setShortcutsOpen(true),
+    },
+    {
+      key: "?",
+      description: "Open tutorial",
+      action: openTutorial,
+    },
+    {
+      key: "Escape",
+      description: "Close modal / dialog",
+      action: () => {
+        setShortcutsOpen(false);
+        if (modalStep !== "idle") {
+          setModalStep("idle");
+          setModalError(undefined);
+          setModalTxHash(undefined);
+        }
+      },
+    },
+  ];
+
+  useKeyboardShortcuts(shortcuts);
+
   return (
     <main className="min-h-screen p-4 bg-[#0a0a0a]">
       <Tutorial forceOpen={tutorialOpen} onClose={closeTutorial} />
+      <KeyboardShortcutsModal
+        open={shortcutsOpen}
+        shortcuts={shortcuts}
+        onClose={() => setShortcutsOpen(false)}
+      />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-accent focus:text-bg focus:border focus:border-accent"
