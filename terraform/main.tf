@@ -188,6 +188,19 @@ resource "aws_iam_role" "task" {
   assume_role_policy = data.aws_iam_policy_document.ecs_assume.json
 }
 
+resource "aws_iam_role_policy" "task_logs_search" {
+  name = "${local.name_prefix}-task-logs-search"
+  role = aws_iam_role.task.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["logs:StartQuery", "logs:GetQueryResults", "logs:StopQuery"]
+      Resource = [aws_cloudwatch_log_group.app.arn]
+    }]
+  })
+}
+
 # ── CloudWatch Logs ───────────────────────────────────────────────────────────
 
 resource "aws_cloudwatch_log_group" "app" {

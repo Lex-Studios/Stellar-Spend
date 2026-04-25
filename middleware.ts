@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { registry } from "./src/lib/api-versioning/registry";
 import { recordApiTiming } from "./src/lib/performance";
+import { logger } from "./src/lib/logger";
 
 // Matches /api/v{n}/... and captures the version segment
 const VERSIONED_PATH_RE = /^\/api\/(v\d+)(\/.*)?$/;
@@ -53,13 +54,19 @@ export function middleware(request: NextRequest): NextResponse {
     const { pathname } = request.nextUrl;
 
     function respond(response: NextResponse): NextResponse {
+        const durationMs = Date.now() - start;
         recordApiTiming({
             route: pathname.replace(/\/[0-9a-f-]{8,}/gi, '/:id'), // normalise IDs
             method: request.method,
-            durationMs: Date.now() - start,
+            durationMs,
             statusCode: response.status,
             timestamp: start,
         });
+        const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
+        const log = logger.withContext({ requestId });
+        const level = response.status >= 500 ? 'error' : response.status >= 400 ? 'warn' : 'info';
+        log[level]('http.request', { method: request.method, path: pathname, status: response.status, durationMs });
+        response.headers.set('X-Request-Id', requestId);
         return response;
     }
 
