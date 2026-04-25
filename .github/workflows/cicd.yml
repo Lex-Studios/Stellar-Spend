@@ -1,0 +1,257 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── 1. Lint & Type-check ──────────────────────────────────────────────────
+  lint:
+    name: Lint & Type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Create env file
+        run: |
+          cp .env.example .env.local
+          sed -i 's|=your_paycrest_api_key_here|=dummy_value|' .env.local
+          sed -i 's|=your_paycrest_webhook_secret_here|=dummy_value|' .env.local
+          sed -i 's|=0xyour_base_private_key_here|=0x0000000000000000000000000000000000000000000000000000000000000001|' .env.local
+          sed -i 's|=0xyour_base_return_address_here|=0x0000000000000000000000000000000000000001|g' .env.local
+          sed -i 's|=your_stellar_usdc_issuer_here|=GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5|' .env.local
+          sed -i 's|=your_sentry_dsn_here|=|g' .env.local
+          sed -i 's|=your_sentry_org_slug|=dummy|' .env.local
+          sed -i 's|=your_sentry_project_slug|=dummy|' .env.local
+          sed -i 's|=your_sentry_auth_token_here|=|' .env.local
+
+      - run: npm run lint
+
+      - run: npx tsc --noEmit
+
+  # ── 2. Unit Tests ─────────────────────────────────────────────────────────
+  test:
+    name: Unit Tests (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ['18.x', '20.x']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Create env file
+        run: |
+          cp .env.example .env.local
+          sed -i 's|=your_paycrest_api_key_here|=dummy_value|' .env.local
+          sed -i 's|=your_paycrest_webhook_secret_here|=dummy_value|' .env.local
+          sed -i 's|=0xyour_base_private_key_here|=0x0000000000000000000000000000000000000000000000000000000000000001|' .env.local
+          sed -i 's|=0xyour_base_return_address_here|=0x0000000000000000000000000000000000000001|g' .env.local
+          sed -i 's|=your_stellar_usdc_issuer_here|=GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5|' .env.local
+          sed -i 's|=your_sentry_dsn_here|=|g' .env.local
+          sed -i 's|=your_sentry_org_slug|=dummy|' .env.local
+          sed -i 's|=your_sentry_project_slug|=dummy|' .env.local
+          sed -i 's|=your_sentry_auth_token_here|=|' .env.local
+
+      - name: Run unit tests with coverage
+        run: npm test -- --coverage
+
+      - name: Upload coverage
+        if: matrix.node-version == '20.x'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  # ── 3. Build & Bundle Check ───────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
+          restore-keys: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+
+      - run: npm ci
+
+      - name: Create env file
+        run: |
+          cp .env.example .env.local
+          sed -i 's|=your_paycrest_api_key_here|=dummy_value|' .env.local
+          sed -i 's|=your_paycrest_webhook_secret_here|=dummy_value|' .env.local
+          sed -i 's|=0xyour_base_private_key_here|=0x0000000000000000000000000000000000000000000000000000000000000001|' .env.local
+          sed -i 's|=0xyour_base_return_address_here|=0x0000000000000000000000000000000000000001|g' .env.local
+          sed -i 's|=your_stellar_usdc_issuer_here|=GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5|' .env.local
+          sed -i 's|=your_sentry_dsn_here|=|g' .env.local
+          sed -i 's|=your_sentry_org_slug|=dummy|' .env.local
+          sed -i 's|=your_sentry_project_slug|=dummy|' .env.local
+          sed -i 's|=your_sentry_auth_token_here|=|' .env.local
+
+      - name: Build
+        run: npm run build
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+      - name: Check bundle size (≤ 150 MB)
+        run: |
+          BUILD_SIZE=$(du -sb .next | cut -f1)
+          echo "Build size: $BUILD_SIZE bytes"
+          MAX_SIZE=157286400
+          if [ "$BUILD_SIZE" -gt "$MAX_SIZE" ]; then
+            echo "::error::Bundle size ${BUILD_SIZE} exceeds limit ${MAX_SIZE}"
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ github.sha }}
+          path: .next/
+          retention-days: 3
+
+  # ── 4. E2E Tests (staging only) ───────────────────────────────────────────
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/staging' || github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Create env file
+        run: |
+          cp .env.example .env.local
+          sed -i 's|=your_paycrest_api_key_here|=dummy_value|' .env.local
+          sed -i 's|=your_paycrest_webhook_secret_here|=dummy_value|' .env.local
+          sed -i 's|=0xyour_base_private_key_here|=0x0000000000000000000000000000000000000000000000000000000000000001|' .env.local
+          sed -i 's|=0xyour_base_return_address_here|=0x0000000000000000000000000000000000000001|g' .env.local
+          sed -i 's|=your_stellar_usdc_issuer_here|=GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5|' .env.local
+          sed -i 's|=your_sentry_dsn_here|=|g' .env.local
+          sed -i 's|=your_sentry_org_slug|=dummy|' .env.local
+          sed -i 's|=your_sentry_project_slug|=dummy|' .env.local
+          sed -i 's|=your_sentry_auth_token_here|=|' .env.local
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ github.sha }}
+          path: .next/
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3001
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ── 5. Deploy to Staging ──────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy → Staging
+    runs-on: ubuntu-latest
+    needs: [build, e2e]
+    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: ${{ vars.STAGING_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ github.sha }}
+          path: .next/
+
+      - name: Deploy to Vercel (staging)
+        run: |
+          npx vercel --token "${{ secrets.VERCEL_TOKEN }}" \
+            --scope "${{ secrets.VERCEL_ORG_ID }}" \
+            --yes \
+            --env NEXT_PUBLIC_ENV=staging
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+
+  # ── 6. Deploy to Production ───────────────────────────────────────────────
+  deploy-production:
+    name: Deploy → Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-${{ github.sha }}
+          path: .next/
+
+      - name: Deploy to Vercel (production)
+        run: |
+          npx vercel --token "${{ secrets.VERCEL_TOKEN }}" \
+            --scope "${{ secrets.VERCEL_ORG_ID }}" \
+            --prod \
+            --yes
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Create Sentry release
+        if: env.SENTRY_AUTH_TOKEN != ''
+        run: |
+          npx @sentry/cli releases new "${{ github.sha }}"
+          npx @sentry/cli releases set-commits "${{ github.sha }}" --auto
+          npx @sentry/cli releases finalize "${{ github.sha }}"
+          npx @sentry/cli releases deploys "${{ github.sha }}" new -e production
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
