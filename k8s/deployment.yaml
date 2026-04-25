@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stellar-spend
+  labels:
+    app: stellar-spend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: stellar-spend
+  template:
+    metadata:
+      labels:
+        app: stellar-spend
+    spec:
+      containers:
+        - name: stellar-spend
+          image: stellar-spend:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: stellar-spend-secrets
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stellar-spend
+spec:
+  selector:
+    app: stellar-spend
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: ClusterIP

@@ -244,3 +244,57 @@ curl https://app.your-domain.com/api/health
 ```
 
 Check Sentry for a drop in error rate within a few minutes of the rollback completing.
+
+---
+
+## Container Deployment
+
+### Docker (Single Container)
+
+Build and run the app as a Docker container:
+
+```bash
+# Build the image
+docker build -t stellar-spend:latest .
+
+# Run with env file
+docker run -p 3000:3000 --env-file .env.local stellar-spend:latest
+```
+
+The container exposes port 3000 and includes a built-in health check that polls `/api/health` every 30 seconds.
+
+### Docker Compose
+
+For local development or single-host production:
+
+```bash
+# Start
+docker compose up -d
+
+# View logs
+docker compose logs -f app
+
+# Stop
+docker compose down
+```
+
+The `docker-compose.yml` mounts `.env.local` automatically and configures health checks and memory limits.
+
+### Kubernetes
+
+Manifests are in `k8s/deployment.yaml`. They create a `Deployment` (2 replicas) and a `ClusterIP` `Service`.
+
+**Prerequisites:** a `stellar-spend-secrets` Kubernetes Secret containing all required env vars (see [Environment Variables](#environment-variables)).
+
+```bash
+# Create the secret from your .env.local
+kubectl create secret generic stellar-spend-secrets --from-env-file=.env.local
+
+# Apply manifests
+kubectl apply -f k8s/deployment.yaml
+
+# Check rollout
+kubectl rollout status deployment/stellar-spend
+```
+
+The deployment uses liveness and readiness probes on `/api/health` so Kubernetes only routes traffic to healthy pods.
