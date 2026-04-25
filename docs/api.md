@@ -23,6 +23,57 @@ Rate-limited responses return `429` with a `Retry-After` header (seconds) and `X
 
 ---
 
+## Idempotency
+
+The following mutating endpoints support the `Idempotency-Key` header:
+
+| Endpoint | Behavior |
+|---|---|
+| `POST /api/offramp/paycrest/order` | Replays the original order response for safe retries |
+| `POST /api/offramp/execute-payout` | Replays the original transaction creation result |
+| `POST /api/transactions` | Replays the original transaction write response |
+| `PATCH /api/transactions/[id]` | Replays the original transaction update response |
+
+### How it works
+
+- Send a unique `Idempotency-Key` header with the first request.
+- Retrying the exact same request with the same key returns the stored response instead of re-running the operation.
+- Reusing the same key with a different request body returns `409 Conflict`.
+- Reusing the same key while the first request is still in progress also returns `409 Conflict`.
+- Completed entries are kept for `IDEMPOTENCY_TTL_MS` milliseconds. In-progress locks use `IDEMPOTENCY_LOCK_TTL_MS`.
+- Server responses with `5xx` status are not cached, so clients can safely retry transient failures.
+
+### Example
+
+```bash
+curl -X POST http://localhost:3001/api/offramp/paycrest/order \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: order-create-9d9f2b9d-1" \
+  -d '{
+    "amount": 100,
+    "rate": 1600,
+    "token": "USDC",
+    "network": "stellar",
+    "reference": "ref-001",
+    "returnAddress": "0xreturnAddress",
+    "recipient": {
+      "institution": "ACCESS",
+      "accountIdentifier": "1234567890",
+      "accountName": "John Doe",
+      "currency": "NGN"
+    }
+  }'
+```
+
+Responses include:
+
+- `Idempotency-Key`: the key used for the request
+- `Idempotency-Status: created` for the first successful processing
+- `Idempotency-Status: replayed` for a cached replay
+- `Idempotency-Status: conflict` for mismatched or in-progress reuse
+
+---
+
 ## Error Format
 
 All error responses follow this shape:

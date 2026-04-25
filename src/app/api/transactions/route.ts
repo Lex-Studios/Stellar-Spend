@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { dal, DatabaseError } from '@/lib/db/dal';
 import { ErrorHandler } from '@/lib/error-handler';
 import type { Transaction } from '@/lib/transaction-storage';
+import { withIdempotency } from '@/lib/idempotency';
 
 const REQUIRED_FIELDS: (keyof Transaction)[] = [
     'id',
@@ -39,39 +40,41 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-    let body: Record<string, unknown>;
-    try {
-        body = await request.json();
-    } catch {
-        return ErrorHandler.validation('Invalid JSON body');
-    }
-
-    for (const field of REQUIRED_FIELDS) {
-        if (body[field] === undefined || body[field] === null) {
-            return ErrorHandler.validation(`Missing required field: ${field}`);
+    return withIdempotency(request, async () => {
+        let body: Record<string, unknown>;
+        try {
+            body = await request.json();
+        } catch {
+            return ErrorHandler.validation('Invalid JSON body');
         }
-    }
 
-    const beneficiary = body.beneficiary as Record<string, unknown> | undefined;
-    if (!beneficiary || typeof beneficiary !== 'object') {
-        return ErrorHandler.validation('Missing required field: beneficiary');
-    }
-
-    for (const field of REQUIRED_BENEFICIARY_FIELDS) {
-        if (!beneficiary[field]) {
-            return ErrorHandler.validation(`Missing required beneficiary field: ${field}`);
+        for (const field of REQUIRED_FIELDS) {
+            if (body[field] === undefined || body[field] === null) {
+                return ErrorHandler.validation(`Missing required field: ${field}`);
+            }
         }
-    }
 
-    const transaction = body as unknown as Transaction;
+        const beneficiary = body.beneficiary as Record<string, unknown> | undefined;
+        if (!beneficiary || typeof beneficiary !== 'object') {
+            return ErrorHandler.validation('Missing required field: beneficiary');
+        }
 
-    try {
-        await dal.save(transaction);
-        return NextResponse.json(transaction, { status: 201 });
-    } catch (err) {
-        if (err instanceof DatabaseError) {
+        for (const field of REQUIRED_BENEFICIARY_FIELDS) {
+            if (!beneficiary[field]) {
+                return ErrorHandler.validation(`Missing required beneficiary field: ${field}`);
+            }
+        }
+
+        const transaction = body as unknown as Transaction;
+
+        try {
+            await dal.save(transaction);
+            return NextResponse.json(transaction, { status: 201 });
+        } catch (err) {
+            if (err instanceof DatabaseError) {
+                return ErrorHandler.serverError(err);
+            }
             return ErrorHandler.serverError(err);
         }
-        return ErrorHandler.serverError(err);
-    }
+    });
 }

@@ -27,6 +27,10 @@ vi.mock('@/lib/offramp/utils/rate-limiter', () => ({
   getClientIp: () => '127.0.0.1',
 }));
 
+vi.mock('@/lib/idempotency', () => ({
+  withIdempotency: async (_request: NextRequest, handler: () => Promise<Response>) => handler(),
+}));
+
 // ── PaycrestAdapter mock ──────────────────────────────────────────────────────
 const mockCreateOrder = vi.fn();
 
