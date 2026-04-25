@@ -24,9 +24,15 @@ function rowToTransaction(row: Record<string, unknown>): Transaction {
     return {
         id: row.id as string,
         timestamp: Number(row.timestamp),
+        finalizedAt: row.finalized_at ? Number(row.finalized_at) : undefined,
         userAddress: row.user_address as string,
         amount: row.amount as string,
         currency: row.currency as string,
+        feeMethod: (row.fee_method as Transaction["feeMethod"] | null) ?? undefined,
+        bridgeFee: (row.bridge_fee as string | null) ?? undefined,
+        networkFee: (row.network_fee as string | null) ?? undefined,
+        paycrestFee: (row.paycrest_fee as string | null) ?? undefined,
+        totalFee: (row.total_fee as string | null) ?? undefined,
         stellarTxHash: (row.stellar_tx_hash as string | null) ?? undefined,
         bridgeStatus: (row.bridge_status as string | null) ?? undefined,
         payoutOrderId: (row.payout_order_id as string | null) ?? undefined,
@@ -44,26 +50,39 @@ function rowToTransaction(row: Record<string, unknown>): Transaction {
 
 export const dal: DAL = {
     async save(transaction: Transaction): Promise<void> {
+        const finalizedAt =
+            transaction.finalizedAt ??
+            (transaction.status === "completed" || transaction.status === "failed"
+                ? Date.now()
+                : null);
         const sql = `
       INSERT INTO transactions (
-        id, timestamp, user_address, amount, currency,
+        id, timestamp, finalized_at, user_address, amount, currency,
+        fee_method, bridge_fee, network_fee, paycrest_fee, total_fee,
         stellar_tx_hash, bridge_status, payout_order_id, payout_status,
         beneficiary_institution, beneficiary_account_identifier,
         beneficiary_account_name, beneficiary_currency,
         status, error
       ) VALUES (
-        $1, $2, $3, $4, $5,
-        $6, $7, $8, $9,
-        $10, $11, $12, $13,
-        $14, $15
+        $1, $2, $3, $4, $5, $6,
+        $7, $8, $9, $10, $11,
+        $12, $13, $14, $15,
+        $16, $17, $18, $19,
+        $20, $21
       )
     `;
         const values = [
             transaction.id,
             transaction.timestamp,
+            finalizedAt,
             transaction.userAddress,
             transaction.amount,
             transaction.currency,
+            transaction.feeMethod ?? null,
+            transaction.bridgeFee ?? null,
+            transaction.networkFee ?? null,
+            transaction.paycrestFee ?? null,
+            transaction.totalFee ?? null,
             transaction.stellarTxHash ?? null,
             transaction.bridgeStatus ?? null,
             transaction.payoutOrderId ?? null,
@@ -86,12 +105,28 @@ export const dal: DAL = {
     },
 
     async update(id: string, updates: Partial<Transaction>): Promise<void> {
+        const normalizedUpdates = { ...updates };
+        const shouldAutoFinalize =
+            normalizedUpdates.status !== undefined &&
+            (normalizedUpdates.status === "completed" || normalizedUpdates.status === "failed") &&
+            normalizedUpdates.finalizedAt === undefined;
+
+        if (shouldAutoFinalize) {
+            normalizedUpdates.finalizedAt = Date.now();
+        }
+
         // Build a dynamic SET clause from the updates, mapping camelCase to snake_case
         const columnMap: Record<string, string> = {
             timestamp: "timestamp",
+            finalizedAt: "finalized_at",
             userAddress: "user_address",
             amount: "amount",
             currency: "currency",
+            feeMethod: "fee_method",
+            bridgeFee: "bridge_fee",
+            networkFee: "network_fee",
+            paycrestFee: "paycrest_fee",
+            totalFee: "total_fee",
             stellarTxHash: "stellar_tx_hash",
             bridgeStatus: "bridge_status",
             payoutOrderId: "payout_order_id",
@@ -104,7 +139,7 @@ export const dal: DAL = {
         const values: unknown[] = [];
         let paramIndex = 1;
 
-        for (const [key, value] of Object.entries(updates)) {
+        for (const [key, value] of Object.entries(normalizedUpdates)) {
             if (key === "beneficiary" && value && typeof value === "object") {
                 const b = value as Transaction["beneficiary"];
                 if (b.institution !== undefined) {
@@ -124,7 +159,11 @@ export const dal: DAL = {
                     values.push(b.currency);
                 }
             } else if (key in columnMap) {
-                setClauses.push(`${columnMap[key]} = $${paramIndex++}`);
+                if (key === "finalizedAt" && shouldAutoFinalize) {
+                    setClauses.push(`finalized_at = COALESCE(finalized_at, $${paramIndex++})`);
+                } else {
+                    setClauses.push(`${columnMap[key]} = $${paramIndex++}`);
+                }
                 values.push(value ?? null);
             }
         }

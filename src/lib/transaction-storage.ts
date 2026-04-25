@@ -1,9 +1,15 @@
 export interface Transaction {
   id: string;
   timestamp: number;
+  finalizedAt?: number;
   userAddress: string;
   amount: string;
   currency: string;
+  feeMethod?: 'native' | 'stablecoin';
+  bridgeFee?: string;
+  networkFee?: string;
+  paycrestFee?: string;
+  totalFee?: string;
   stellarTxHash?: string;
   bridgeStatus?: string;
   payoutOrderId?: string;

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDashboardMetrics, recordUptimeCheck } from '@/lib/monitoring';
 import { getTransactionQueue } from '@/lib/priority-queue';
+import { getTransactionAnalytics } from '@/lib/transaction-analytics';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,10 +22,12 @@ export async function GET() {
 
   const monitoring = getDashboardMetrics();
   const queueMetrics = getTransactionQueue().getMetrics();
+  const transactionAnalytics = await getTransactionAnalytics();
 
   return NextResponse.json({
     ok: true,
     monitoring,
     queue: queueMetrics,
+    transactions: transactionAnalytics,
   });
 }
