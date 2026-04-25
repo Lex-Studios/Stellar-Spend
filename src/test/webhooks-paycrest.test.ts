@@ -1,5 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+vi.mock('@/lib/db/dal', () => ({
+  dal: {
+    getByPayoutOrderId: vi.fn().mockResolvedValue(null),
+    update: vi.fn(),
+    getById: vi.fn(),
+  },
+  DatabaseError: class DatabaseError extends Error {},
+}));
+
+vi.mock('@/lib/webhook/dispatcher', () => ({
+  enqueue: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/lib/notifications/service', () => ({
+  notifyTransactionStatusUpdate: vi.fn().mockResolvedValue(undefined),
+}));
+
 // ── Env mock ──────────────────────────────────────────────────────────────────
 vi.mock('@/lib/env', () => ({
   env: {

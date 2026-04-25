@@ -3,6 +3,7 @@
  */
 import { dal, DatabaseError } from '@/lib/db/dal';
 import type { Transaction } from '@/lib/transaction-storage';
+import { notifyTransactionStatusUpdate } from '@/lib/notifications/service';
 
 export type RefundReason = 'payment_failed' | 'timeout' | 'expired' | 'manual';
 
@@ -86,6 +87,16 @@ export async function processRefund(
   } catch (err) {
     const msg = err instanceof DatabaseError ? err.message : String(err);
     return { transactionId, success: false, refundAmount, reason, error: msg, timestamp };
+  }
+
+  const updated = await dal.getById(transactionId);
+  if (updated) {
+    await notifyTransactionStatusUpdate({
+      transaction: updated,
+      previousStatus: tx.status,
+      previousPayoutStatus: tx.payoutStatus,
+      source: 'refund',
+    });
   }
 
   const notification: RefundNotification = {

@@ -7,6 +7,7 @@
 import { dal } from '@/lib/db/dal';
 import type { Transaction } from '@/lib/transaction-storage';
 import { processRefund } from '@/lib/refund/refund-service';
+import { notifyTransactionStatusUpdate } from '@/lib/notifications/service';
 
 /** Transactions pending longer than this are considered timed out (30 minutes) */
 export const TRANSACTION_TIMEOUT_MS = 30 * 60 * 1000;
@@ -58,6 +59,15 @@ export async function cancelTimedOutTransaction(
   // Mark as failed/cancelled
   try {
     await dal.update(transactionId, { status: 'failed', error: 'Transaction timed out' });
+    const updated = await dal.getById(transactionId);
+    if (updated) {
+      await notifyTransactionStatusUpdate({
+        transaction: updated,
+        previousStatus: tx.status,
+        previousPayoutStatus: tx.payoutStatus,
+        source: 'timeout',
+      });
+    }
   } catch (err) {
     return { transactionId, timedOut: true, ageMs, cancelled: false, refundTriggered: false, error: String(err) };
   }

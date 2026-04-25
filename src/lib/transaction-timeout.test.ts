@@ -15,6 +15,10 @@ vi.mock('@/lib/refund/refund-service', () => ({
   processRefund: vi.fn().mockResolvedValue({ success: true, refundAmount: '100', reason: 'timeout', timestamp: new Date().toISOString() }),
 }));
 
+vi.mock('@/lib/notifications/service', () => ({
+  notifyTransactionStatusUpdate: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { dal } from '@/lib/db/dal';
 
 const now = Date.now();

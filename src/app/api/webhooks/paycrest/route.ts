@@ -7,6 +7,7 @@ import { mapPaycrestStatus } from '@/lib/offramp/utils/mapPaycrestStatus';
 import { dal, DatabaseError } from '@/lib/db/dal';
 import { enqueue } from '@/lib/webhook/dispatcher';
 import { verifyWebhookSignature } from '@/lib/webhook/security';
+import { notifyTransactionStatusUpdate } from '@/lib/notifications/service';
 
 const SENSITIVE_HEADERS = new Set(['authorization', 'x-paycrest-signature']);
 
@@ -70,18 +71,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
+    let updates: Record<string, unknown> | null = null;
     if (eventType === 'payment_order.settled') {
-      await dal.update(transaction.id, { status: 'completed', payoutStatus: 'settled' });
+      updates = { status: 'completed', payoutStatus: 'settled' };
     } else if (eventType === 'payment_order.pending') {
-      await dal.update(transaction.id, { payoutStatus: 'pending' });
+      updates = { payoutStatus: 'pending' };
     } else if (eventType === 'payment_order.refunded') {
-      await dal.update(transaction.id, { status: 'failed', payoutStatus: 'refunded', error: 'Refunded by Paycrest' });
+      updates = { status: 'failed', payoutStatus: 'refunded', error: 'Refunded by Paycrest' };
       console.log(JSON.stringify({ requestId, event: 'refund.received', orderId, transactionId: transaction.id }));
     } else if (eventType === 'payment_order.expired') {
-      await dal.update(transaction.id, { status: 'failed', payoutStatus: 'expired', error: 'Order expired' });
+      updates = { status: 'failed', payoutStatus: 'expired', error: 'Order expired' };
       console.log(JSON.stringify({ requestId, event: 'order.expired', orderId, transactionId: transaction.id }));
     } else {
       console.warn(`unhandled event type: ${eventType}`);
+    }
+
+    if (updates) {
+      await dal.update(transaction.id, updates);
+      const updated = await dal.getById(transaction.id);
+      if (updated) {
+        await notifyTransactionStatusUpdate({
+          transaction: updated,
+          previousStatus: transaction.status,
+          previousPayoutStatus: transaction.payoutStatus,
+          source: 'webhook',
+        });
+      }
     }
 
     logger.logSuccess(200);

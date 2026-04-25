@@ -117,6 +117,94 @@ curl http://localhost:3001/api/health
 
 ---
 
+### GET /api/notifications/preferences
+
+Returns stored notification preferences for a wallet address.
+
+**Query Parameters**
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `userAddress` | string | ✅ | Wallet address tied to the transaction owner |
+
+**Response `200`**
+```json
+{
+  "data": {
+    "userAddress": "GABC...",
+    "email": "user@example.com",
+    "phoneNumber": "+2348000000000",
+    "emailEnabled": true,
+    "smsEnabled": false,
+    "notifyOnPending": true,
+    "notifyOnCompleted": true,
+    "notifyOnFailed": true
+  }
+}
+```
+
+If no preferences exist yet, the route returns `{ "data": null }`.
+
+---
+
+### PUT /api/notifications/preferences
+
+Creates or updates notification preferences for a wallet address.
+
+**Request Body**
+```json
+{
+  "userAddress": "GABC...",
+  "email": "user@example.com",
+  "phoneNumber": "+2348000000000",
+  "emailEnabled": true,
+  "smsEnabled": false,
+  "notifyOnPending": true,
+  "notifyOnCompleted": true,
+  "notifyOnFailed": true
+}
+```
+
+**Response `200`**
+```json
+{
+  "data": {
+    "userAddress": "GABC...",
+    "email": "user@example.com",
+    "phoneNumber": "+2348000000000",
+    "emailEnabled": true,
+    "smsEnabled": false,
+    "notifyOnPending": true,
+    "notifyOnCompleted": true,
+    "notifyOnFailed": true
+  }
+}
+```
+
+---
+
+### GET /api/transactions/[id]/notifications
+
+Returns notification delivery tracking records for a single transaction.
+
+**Response `200`**
+```json
+{
+  "data": [
+    {
+      "id": "delivery-uuid",
+      "transactionId": "tx_123",
+      "channel": "email",
+      "status": "sent",
+      "templateId": "transaction-completed-v1",
+      "destination": "user@example.com"
+    }
+  ]
+}
+```
+
+---
+
 ### GET /api/offramp/currencies
 
 Returns supported fiat currencies. Cached for 5 minutes.

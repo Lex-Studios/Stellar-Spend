@@ -218,6 +218,78 @@ Sentry project slug. Used alongside `SENTRY_ORG` for source map uploads during C
 | | |
 |---|---|
 | Required | No (required for source map uploads) |
+
+---
+
+### `EMAIL_NOTIFICATION_ENDPOINT`
+
+| | |
+|---|---|
+| Required | No |
+| Exposed to browser | No |
+| Default | _(disabled)_ |
+
+HTTP endpoint used by the transaction notification service to send email notifications for transaction status changes. The service sends JSON with `from`, `to`, `subject`, and `text`.
+
+---
+
+### `EMAIL_NOTIFICATION_AUTH_TOKEN`
+
+| | |
+|---|---|
+| Required | No |
+| Exposed to browser | No |
+| Default | _(unset)_ |
+
+Optional bearer token attached to requests sent to `EMAIL_NOTIFICATION_ENDPOINT`.
+
+---
+
+### `EMAIL_NOTIFICATION_FROM`
+
+| | |
+|---|---|
+| Required | No |
+| Exposed to browser | No |
+| Default in `.env.example` | `noreply@stellar-spend.local` |
+
+Default sender address used in outbound email notifications.
+
+---
+
+### `SMS_NOTIFICATION_ENABLED`
+
+| | |
+|---|---|
+| Required | No |
+| Exposed to browser | No |
+| Default in `.env.example` | `false` |
+
+Enables optional SMS delivery for transaction notifications. SMS deliveries are skipped unless this is set to `true` and `SMS_NOTIFICATION_ENDPOINT` is configured.
+
+---
+
+### `SMS_NOTIFICATION_ENDPOINT`
+
+| | |
+|---|---|
+| Required | No |
+| Exposed to browser | No |
+| Default | _(disabled)_ |
+
+HTTP endpoint used by the transaction notification service to send SMS payloads with `to` and `message`.
+
+---
+
+### `SMS_NOTIFICATION_AUTH_TOKEN`
+
+| | |
+|---|---|
+| Required | No |
+| Exposed to browser | No |
+| Default | _(unset)_ |
+
+Optional bearer token attached to requests sent to `SMS_NOTIFICATION_ENDPOINT`.
 | Exposed to browser | No |
 
 Sentry auth token used by the webpack plugin to authenticate source map uploads. Generate at [sentry.io/settings/account/api/auth-tokens](https://sentry.io/settings/account/api/auth-tokens/).

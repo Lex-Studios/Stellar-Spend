@@ -10,6 +10,10 @@ vi.mock('@/lib/db/dal', () => ({
   DatabaseError: class DatabaseError extends Error {},
 }));
 
+vi.mock('@/lib/notifications/service', () => ({
+  notifyTransactionStatusUpdate: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { dal } from '@/lib/db/dal';
 
 const baseTx: Transaction = {
