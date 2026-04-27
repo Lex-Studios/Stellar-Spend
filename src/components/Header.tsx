@@ -20,6 +20,7 @@ export interface HeaderProps {
   walletError?: string | null;
   onConnect: (walletType?: WalletType) => void;
   onDisconnect: () => void;
+  onHelpOpen?: () => void;
   /** Called with the openModal function so parent can trigger the modal */
   onModalRef?: (openModal: () => void) => void;
 }
@@ -90,6 +91,7 @@ export function Header({
   walletError,
   onConnect,
   onDisconnect,
+  onHelpOpen,
   onModalRef,
 }: HeaderProps) {
   const { rate, flash } = useFxRate();
@@ -152,6 +154,28 @@ export function Header({
         {/* Right: wallet button + balances */}
         <div className="flex flex-col items-end gap-2 max-[720px]:items-start">
           <div className="flex items-center gap-2">
+            <button
+              onClick={onHelpOpen}
+              aria-label="Open help"
+              className={cn(
+                "p-2 text-[#777777] hover:text-[#c9a962] transition-colors",
+                "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]"
+              )}
+              title="Help & Documentation (Shift + ?)"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 16v-4"></path>
+                <path d="M12 8h.01"></path>
+              </svg>
+            </button>
             <ThemeToggle />
             <WalletButton
               isConnected={isConnected}
