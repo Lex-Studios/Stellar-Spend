@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { QuoteDisplaySkeleton } from "./skeletons";
 import { useFxRate } from "@/hooks/useFxRate";
+import { CollapsibleSection } from "./CollapsibleSection";
 
 export interface RightPanelProps {
   isConnected: boolean;
@@ -275,6 +276,32 @@ export default function RightPanel(props: RightPanelProps) {
           </span>
         </div>
       </div>
+
+      {/* Advanced options */}
+      <CollapsibleSection
+        id="advanced-options"
+        title="Advanced Options"
+        description="Additional settings for power users"
+        defaultOpen={false}
+      >
+        <div className="flex flex-col gap-3">
+          <BreakdownRow
+            label="Bridge Protocol"
+            value="Allbridge"
+            muted
+          />
+          <BreakdownRow
+            label="Settlement Chain"
+            value="Base"
+            muted
+          />
+          <BreakdownRow
+            label="Payout Provider"
+            value="Paycrest"
+            muted
+          />
+        </div>
+      </CollapsibleSection>
     </div>
   );
 }
