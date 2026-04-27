@@ -53,11 +53,39 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
   },
   serverExternalPackages: [...externalServerPackages],
+  assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || "",
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [...securityHeaders],
+      },
+      {
+        source: "/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/public/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400",
+          },
+        ],
       },
     ];
   },
