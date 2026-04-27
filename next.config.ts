@@ -43,6 +43,7 @@ const securityHeaders = [
 const externalServerPackages = [
   "@allbridge/bridge-core-sdk",
   "@stellar/stellar-sdk",
+  "pg",
 ] as const;
 
 const nextConfig: NextConfig = {
@@ -51,8 +52,38 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: __dirname,
   images: {
     remotePatterns: [],
+    formats: ["image/avif", "image/webp"],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year
   },
   serverExternalPackages: [...externalServerPackages],
+  webpack: (config, { isServer }) => {
+    config.optimization.splitChunks = {
+      chunks: "all",
+      cacheGroups: {
+        default: false,
+        vendors: false,
+        // Vendor chunk
+        vendor: {
+          filename: "chunks/vendor-[contenthash].js",
+          test: /node_modules/,
+          name: "vendor",
+          priority: 10,
+          reuseExistingChunk: true,
+          enforce: true,
+        },
+        // Common chunk
+        common: {
+          minChunks: 2,
+          priority: 5,
+          reuseExistingChunk: true,
+          filename: "chunks/common-[contenthash].js",
+        },
+      },
+    };
+    return config;
+  },
   async headers() {
     return [
       {
