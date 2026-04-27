@@ -1,5 +1,6 @@
 "use client";
 
+import { ChangeEvent } from "react";
 import { cn } from "@/lib/cn";
 import { validateAmount, validateAccountNumber, isValidQuote, validateEvmAddress } from "@/lib/offramp/utils/validation";
 import { buildQuote, calculateBridgeAmount } from "@/lib/offramp/utils/quote-fetcher";
@@ -926,7 +927,9 @@ export function FormCard({
               : "bg-[#222222] text-[#555555] cursor-not-allowed border border-[#333333]",
             (ctaState === "connecting" || ctaState === "submitting") && "animate-pulse"
           )}
-        </div>
+        >
+          {getCtaLabel(ctaState)}
+        </button>
       </div>
 
       {/* CTA */}
