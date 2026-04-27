@@ -58,37 +58,39 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year
   },
   serverExternalPackages: [...externalServerPackages],
-  webpack: (config, { isServer }) => {
-    config.optimization.splitChunks = {
-      chunks: "all",
-      cacheGroups: {
-        default: false,
-        vendors: false,
-        // Vendor chunk
-        vendor: {
-          filename: "chunks/vendor-[contenthash].js",
-          test: /node_modules/,
-          name: "vendor",
-          priority: 10,
-          reuseExistingChunk: true,
-          enforce: true,
-        },
-        // Common chunk
-        common: {
-          minChunks: 2,
-          priority: 5,
-          reuseExistingChunk: true,
-          filename: "chunks/common-[contenthash].js",
-        },
-      },
-    };
-    return config;
-  },
+  assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || "",
   async headers() {
     return [
       {
         source: "/:path*",
         headers: [...securityHeaders],
+      },
+      {
+        source: "/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/public/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400",
+          },
+        ],
       },
     ];
   },

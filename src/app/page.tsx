@@ -10,12 +10,14 @@ import { Header } from "@/components/Header";
 import { TransactionProgressModal } from "@/components/TransactionProgressModal";
 import { Tutorial, useTutorial } from "@/components/Tutorial";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
+import { HelpModal } from "@/components/HelpModal";
 import { useKeyboardShortcuts, type Shortcut } from "@/hooks/useKeyboardShortcuts";
 import { useStellarWallet } from "@/hooks/useStellarWallet";
 import { usePollBridgeStatus } from "@/hooks/usePollBridgeStatus";
 import { usePollPayoutStatus } from "@/hooks/usePollPayoutStatus";
 import { TransactionStorage } from "@/lib/transaction-storage";
 import { withTimeout } from "@/lib/offramp/utils/timeout";
+import { HELP_TOPICS } from "@/lib/help-topics";
 import type { OfframpStep } from "@/types/stellaramp";
 import type { WalletType } from "@/lib/stellar/wallet-adapter";
 
@@ -25,6 +27,7 @@ export default function Home() {
 
   const { open: tutorialOpen, openTutorial, closeTutorial } = useTutorial();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("");
@@ -284,10 +287,16 @@ export default function Home() {
       action: openTutorial,
     },
     {
+      key: "Shift+?",
+      description: "Open help & documentation",
+      action: () => setHelpOpen(true),
+    },
+    {
       key: "Escape",
       description: "Close modal / dialog",
       action: () => {
         setShortcutsOpen(false);
+        setHelpOpen(false);
         if (modalStep !== "idle") {
           setModalStep("idle");
           setModalError(undefined);
@@ -306,6 +315,11 @@ export default function Home() {
         open={shortcutsOpen}
         shortcuts={shortcuts}
         onClose={() => setShortcutsOpen(false)}
+      />
+      <HelpModal
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        topics={HELP_TOPICS}
       />
       <a
         href="#main-content"
@@ -329,6 +343,7 @@ export default function Home() {
         walletError={walletError}
         onConnect={handleConnect}
         onDisconnect={handleDisconnect}
+        onHelpOpen={() => setHelpOpen(true)}
         onModalRef={(openModal) => { openWalletModalRef.current = openModal; }}
       />
 

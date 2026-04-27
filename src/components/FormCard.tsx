@@ -1,5 +1,6 @@
 "use client";
 
+import { ChangeEvent } from "react";
 import { cn } from "@/lib/cn";
 import { validateAmount, validateAccountNumber, isValidQuote, validateEvmAddress } from "@/lib/offramp/utils/validation";
 import { buildQuote, calculateBridgeAmount } from "@/lib/offramp/utils/quote-fetcher";
@@ -8,6 +9,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { FormCardSkeleton } from "@/components/skeletons";
 import { BankAccountInput, type BankMode } from "@/components/BankAccountInput";
 import { QuoteComparison, type ProviderQuote } from "@/components/QuoteComparison";
+import { Tooltip } from "@/components/Tooltip";
 import { useFxRate } from "@/hooks/useFxRate";
 
 // ---------------------------------------------------------------------------
@@ -75,6 +77,7 @@ interface InputFieldProps {
   success?: string;
   touched?: boolean;
   inputMode?: "numeric" | "decimal" | "text";
+  help?: string;
 }
 
 function InputField({
@@ -94,15 +97,35 @@ function InputField({
   success,
   touched,
   inputMode,
+  help,
 }: InputFieldProps) {
   const showError = touched && error;
   const showSuccess = touched && !error && success && value;
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
-        {label}
-      </label>
+      <div className="flex items-center gap-2">
+        <label htmlFor={id} className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
+          {label}
+        </label>
+        {help && (
+          <Tooltip content={help} position="top">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="text-[#777777] hover:text-[#c9a962] cursor-help transition-colors"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 16v-4"></path>
+              <path d="M12 8h.01"></path>
+            </svg>
+          </Tooltip>
+        )}
+      </div>
       <div className="relative flex items-center">
         <input
           id={id}
@@ -904,7 +927,9 @@ export function FormCard({
               : "bg-[#222222] text-[#555555] cursor-not-allowed border border-[#333333]",
             (ctaState === "connecting" || ctaState === "submitting") && "animate-pulse"
           )}
-        </div>
+        >
+          {getCtaLabel(ctaState)}
+        </button>
       </div>
 
       {/* CTA */}
