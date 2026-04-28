@@ -188,6 +188,29 @@ export function getVitalsMetrics(): VitalsMetrics {
   };
 }
 
+// ── Funnel event store ────────────────────────────────────────────────────────
+
+export interface FunnelEvent {
+  action: string;
+  sessionId?: string;
+  timestamp: number;
+}
+
+const funnelEvents = new CircularBuffer<FunnelEvent>(2000);
+
+export function recordFunnelEvent(event: FunnelEvent): void {
+  funnelEvents.push(event);
+}
+
+/** Returns a count of each funnel step recorded since the process started. */
+export function getFunnelCounts(): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const e of funnelEvents.all()) {
+    counts[e.action] = (counts[e.action] ?? 0) + 1;
+  }
+  return counts;
+}
+
 // ── Threshold alerts ──────────────────────────────────────────────────────────
 
 export const PERF_THRESHOLDS = {

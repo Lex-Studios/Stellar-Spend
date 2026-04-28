@@ -11,6 +11,7 @@ import { Header } from "@/components/Header";
 import { TransactionStorage, type Transaction } from "@/lib/transaction-storage";
 import { pollBridgeStatus, pollPayoutStatus } from "@/lib/offramp/utils/polling";
 import type { OfframpStep } from "@/types/stellaramp";
+import { useFunnelTracking } from "@/hooks/useFunnelTracking";
 
 // ---------------------------------------------------------------------------
 // Horizon balance helpers
@@ -68,6 +69,7 @@ async function fetchStellarBalances(
 
 export default function StellarSpendDashboard() {
   const { wallet, isConnected, isConnecting, connect, disconnect, signTransaction } = useStellarWallet();
+  const { trackStep } = useFunnelTracking();
 
   // Balances
   const [usdcBalance, setUsdcBalance] = useState<string | null>(null);
@@ -132,10 +134,11 @@ export default function StellarSpendDashboard() {
   const handleConnect = useCallback(async () => {
     try {
       await connect();
+      trackStep("wallet_connect");
     } catch {
       // error surfaced via useStellarWallet.error
     }
-  }, [connect]);
+  }, [connect, trackStep]);
 
   const handleDisconnect = useCallback(() => {
     disconnect();
@@ -279,6 +282,7 @@ export default function StellarSpendDashboard() {
       abortRef.current = false;
       setModalError(undefined);
       setModalStep("initiating");
+      trackStep("form_fill", { amount: payload.amount, currency: payload.currency });
 
       // Create a pending transaction record
       const txId = TransactionStorage.generateId();
@@ -317,6 +321,8 @@ export default function StellarSpendDashboard() {
         const { xdr, toAddress } = buildData as { xdr: string; toAddress: string };
 
         // Step 2 — sign transaction (wallet prompt)
+        trackStep("quote_received");
+        trackStep("signature_requested");
         const signedXdr = await signTransaction(xdr);
 
         // Step 3 — submit to network
@@ -331,6 +337,7 @@ export default function StellarSpendDashboard() {
 
         const { status: submitStatus, hash: txHash } = submitData as { status: string; hash: string };
         TransactionStorage.update(txId, { stellarTxHash: txHash });
+        trackStep("tx_submitted", { txHash });
 
         // If PENDING, poll until SUCCESS/FAILED
         if (submitStatus === "PENDING") {
@@ -339,6 +346,7 @@ export default function StellarSpendDashboard() {
 
         // Step 4 — poll bridge status
         setModalStep("processing");
+        trackStep("bridge_processing");
         await pollBridge(txHash, txId);
 
         // Step 5 — execute payout
@@ -368,10 +376,12 @@ export default function StellarSpendDashboard() {
         TransactionStorage.update(txId, { payoutOrderId: orderId });
 
         // Step 6 — poll payout status
+        trackStep("payout_settling", { orderId });
         await pollPayout(orderId, txId);
 
         // Success
         setModalStep("success");
+        trackStep("completed", { amount: payload.amount, currency: payload.currency });
         setFormResetKey((k: number) => k + 1);
 
         // Refresh balances and history
@@ -389,7 +399,7 @@ export default function StellarSpendDashboard() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [wallet?.publicKey, usdcBalance, xlmBalance, signTransaction]
+    [wallet?.publicKey, usdcBalance, xlmBalance, signTransaction, trackStep]
   );
 
   // Cleanup polling on unmount

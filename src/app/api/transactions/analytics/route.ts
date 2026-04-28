@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyticsService } from '@/lib/services/analytics-service';
+import { getFunnelCounts } from '@/lib/performance';
+import { buildFunnelData } from '@/lib/funnel';
+import type { FunnelStep } from '@/lib/funnel';
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,8 +22,9 @@ export async function GET(req: NextRequest) {
     }
 
     const analytics = await analyticsService.getAnalytics(userAddress, startDate, endDate);
+    const funnel = buildFunnelData(getFunnelCounts() as Partial<Record<FunnelStep, number>>);
 
-    return NextResponse.json(analytics);
+    return NextResponse.json({ ...analytics, funnel });
   } catch (error) {
     console.error('Error fetching analytics:', error);
     return NextResponse.json(
