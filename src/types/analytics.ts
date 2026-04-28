@@ -35,6 +35,8 @@ export interface AnalyticsPeriod {
   currencyBreakdown: CurrencyBreakdown[];
   feeAnalysis: FeeAnalysis;
   spendingPatterns: SpendingPattern[];
+  /** Conversion funnel data (#399) */
+  funnel?: import("@/lib/funnel").FunnelData;
 }
 
 export interface AnalyticsReport {

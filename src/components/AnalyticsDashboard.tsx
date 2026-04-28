@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { AnalyticsPeriod } from '@/types/analytics';
+import { FunnelChart } from '@/components/FunnelChart';
 
 interface AnalyticsDashboardProps {
   userAddress: string;
@@ -47,7 +48,7 @@ export function AnalyticsDashboard({ userAddress }: AnalyticsDashboardProps) {
   if (error) return <div className="text-red-600 py-8">{error}</div>;
   if (!analytics) return <div className="text-center py-8">No data available</div>;
 
-  const { analytics: stats, currencyBreakdown, feeAnalysis, spendingPatterns } = analytics;
+  const { analytics: stats, currencyBreakdown, feeAnalysis, spendingPatterns, funnel } = analytics;
 
   return (
     <div className="space-y-6">
@@ -78,6 +79,19 @@ export function AnalyticsDashboard({ userAddress }: AnalyticsDashboardProps) {
         <MetricCard label="Average Amount" value={`$${stats.averageAmount}`} />
         <MetricCard label="Success Rate" value={`${stats.successRate.toFixed(1)}%`} />
       </div>
+
+      {/* Conversion Funnel */}
+      {funnel && (
+        <div className="bg-gray-900 p-6 rounded-lg border border-gray-700">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-white">Conversion Funnel</h3>
+            <span className="text-sm text-gray-400">
+              {funnel.totalSessions.toLocaleString()} sessions
+            </span>
+          </div>
+          <FunnelChart data={funnel} />
+        </div>
+      )}
 
       {/* Currency Breakdown */}
       <div className="bg-white p-6 rounded-lg border">
