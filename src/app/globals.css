@@ -51,6 +51,20 @@ html[data-theme="light"] body {
 
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 
+/* Global focus styles for keyboard navigation accessibility (#396) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
