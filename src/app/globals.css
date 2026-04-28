@@ -18,6 +18,15 @@
   --text: #0a0a0a;
 }
 
+[data-theme="high-contrast"] {
+  --bg: #000000;
+  --panel: #000000;
+  --line: #ffffff;
+  --muted: #ffff00;
+  --accent: #ffff00;
+  --text: #ffffff;
+}
+
 @theme inline {
   --color-bg: var(--bg);
   --color-panel: var(--panel);
@@ -50,6 +59,33 @@ html[data-theme="light"] body {
 }
 
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+/* Global focus styles for accessibility (#396) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* High contrast mode focus enhancement */
+[data-theme="high-contrast"] a:focus-visible,
+[data-theme="high-contrast"] button:focus-visible,
+[data-theme="high-contrast"] input:focus-visible,
+[data-theme="high-contrast"] textarea:focus-visible,
+[data-theme="high-contrast"] select:focus-visible,
+[data-theme="high-contrast"] [role="button"]:focus-visible,
+[data-theme="high-contrast"] [role="link"]:focus-visible,
+[data-theme="high-contrast"] [tabindex]:not([tabindex="-1"]):focus-visible {
+  outline-width: 3px;
+  outline-offset: 3px;
+}
 
 .sr-only {
   position: absolute;
