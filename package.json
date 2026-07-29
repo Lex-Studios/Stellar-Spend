@@ -26,7 +26,8 @@
     "license:check": "node scripts/check-licenses.js",
     "license:report": "node scripts/check-licenses.js --report",
     "type:coverage": "type-coverage",
-    "type:coverage:detail": "type-coverage --detail"
+    "type:coverage:detail": "type-coverage --detail",
+    "validate:openapi": "node scripts/validate-openapi-contract.mjs"
   },
   "dependencies": {
     "@allbridge/bridge-core-sdk": "^3.29.1",

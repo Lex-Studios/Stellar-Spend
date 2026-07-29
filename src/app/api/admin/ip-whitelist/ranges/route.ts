@@ -3,8 +3,12 @@ import { ipWhitelistService } from '@/lib/ip-whitelist';
 import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
+import { requireAdmin } from '@/lib/auth/require-admin';
 
 export async function POST(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const userAddress = request.headers.get('x-user-address');
     if (!userAddress) {

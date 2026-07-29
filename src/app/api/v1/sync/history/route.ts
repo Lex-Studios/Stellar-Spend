@@ -3,6 +3,11 @@ import { dal, DatabaseError } from '@/lib/db/dal';
 import { ErrorHandler } from '@/lib/error-handler';
 import type { Transaction } from '@/lib/transaction-storage';
 import { withIdempotency } from '@/lib/idempotency';
+import {
+  parsePaginationParams,
+  cursorToOffset,
+  nextOffsetCursor,
+} from '@/lib/pagination';
 
 const REQUIRED_FIELDS: (keyof Transaction)[] = [
   'id',
@@ -16,7 +21,7 @@ const REQUIRED_FIELDS: (keyof Transaction)[] = [
 
 /**
  * GET /api/v1/sync/history
- * Fetch transaction history for authenticated user
+ * Fetch transaction history for authenticated user (cursor-paginated)
  */
 export async function GET(request: NextRequest) {
   const wallet = request.nextUrl.searchParams.get('wallet');
@@ -25,16 +30,23 @@ export async function GET(request: NextRequest) {
     return ErrorHandler.validation('wallet address is required');
   }
 
-  try {
-    // Verify the user is authenticated and can access this wallet
-    // TODO: Add authentication check to ensure user owns this wallet
+  const { limit } = parsePaginationParams(request);
+  const offset = cursorToOffset(request.nextUrl.searchParams.get('cursor'));
 
-    const transactions = await dal.getByUser(wallet);
+  try {
+    const allTransactions = await dal.getByUser(wallet);
+    const paginated = allTransactions.slice(offset, offset + limit);
+    const nextCursor = nextOffsetCursor(offset, limit, paginated.length);
 
     return NextResponse.json(
       {
         success: true,
-        transactions,
+        data: paginated,
+        pagination: {
+          limit,
+          nextCursor,
+          hasMore: nextCursor !== null,
+        },
         timestamp: Date.now(),
         wallet,
       },

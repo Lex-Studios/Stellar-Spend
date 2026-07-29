@@ -246,6 +246,37 @@ BREAKING CHANGE: The old endpoint path is removed. Update all clients.
    npm run test:e2e
    ```
 
+4. **If you changed `openapi.yaml`, any admin route, or any list endpoint**, run the
+   OpenAPI contract validation script to catch spec drift and missing auth guards:
+
+   ```bash
+   npm run validate:openapi
+   ```
+
+   The script performs seven checks and exits 1 on failure:
+
+   | Check | What it verifies |
+   |---|---|
+   | Parse | `openapi.yaml` is valid YAML |
+   | Spectral lint | Passes the Stoplight OAS ruleset (errors only fail the build) |
+   | Required fields | `openapi`, `info`, `paths` all present |
+   | `$ref` integrity | Every local `$ref` resolves to an existing schema |
+   | Pagination contract | `PageInfo`, `TransactionListResponse`, `CursorParam`, `LimitParam` defined |
+   | Admin guard audit | Every `src/app/api/admin/*/route.ts` imports `requireAdmin` |
+   | operationId uniqueness | No duplicate operation IDs across the spec |
+
+   Use `--warn-only` to print findings without failing CI (soft mode):
+
+   ```bash
+   node scripts/validate-openapi-contract.mjs --warn-only
+   ```
+
+   Use `--no-spectral` to skip the Spectral pass (faster, structural checks only):
+
+   ```bash
+   node scripts/validate-openapi-contract.mjs --no-spectral
+   ```
+
 ### Opening a PR
 
 - Use the **PR template** (`.github/PULL_REQUEST_TEMPLATE.md`) — fill every section

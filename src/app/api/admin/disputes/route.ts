@@ -4,10 +4,13 @@ import { disputeRepository } from '@/lib/repositories/dispute-repository';
 import { DisputeStatus, DisputeUpdate } from '@/types/disputes';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
+import { requireAdmin } from '@/lib/auth/require-admin';
 
 export async function GET(req: NextRequest) {
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
+
   try {
-    // TODO: Add admin authentication check
     const status = req.nextUrl.searchParams.get('status');
     const limit = parseInt(req.nextUrl.searchParams.get('limit') || '50');
     const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
@@ -26,8 +29,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
+
   try {
-    // TODO: Add admin authentication check
     const { disputeId, update }: { disputeId: string; update: DisputeUpdate } = await req.json();
 
     if (!disputeId) {

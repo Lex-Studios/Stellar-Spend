@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { queryOptimizer } from '@/lib/db/query-optimizer';
 import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';
+import { requireAdmin } from '@/lib/auth/require-admin';
 
 export async function GET(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type') || 'analysis';
@@ -29,6 +33,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     const { action } = body;

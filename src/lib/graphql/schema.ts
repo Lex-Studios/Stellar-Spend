@@ -197,12 +197,41 @@ export const typeDefs = `
     dlqCount: Int!
   }
 
+  # ─── Pagination ───────────────────────────────────────────────────────────────
+
+  """
+  Opaque cursor used for keyset / offset-backed pagination.
+  Pass the value returned in `PageInfo.nextCursor` as the `cursor` argument
+  on the next request to retrieve the following page.
+  """
+  scalar Cursor
+
+  type PageInfo {
+    """Maximum records returned per page."""
+    limit: Int!
+    """Pass this as `cursor` to fetch the next page.  Null on the last page."""
+    nextCursor: Cursor
+    """Whether more records exist beyond this page."""
+    hasMore: Boolean!
+  }
+
+  type TransactionPage {
+    data: [Transaction!]!
+    pagination: PageInfo!
+  }
+
   # ─── Queries ──────────────────────────────────────────────────────────────────
 
   type Query {
     # Transaction queries
     transaction(id: ID!): Transaction
-    transactions(limit: Int, offset: Int, status: String, currency: String): [Transaction!]!
+    transactions(
+      limit: Int
+      """Opaque continuation token from a previous response."""
+      cursor: Cursor
+      status: String
+      currency: String
+    ): TransactionPage!
 
     # Quote query
     quote(amount: String!, currency: String!, feeMethod: String, sourceAddress: String): Quote

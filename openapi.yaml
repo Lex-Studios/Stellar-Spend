@@ -612,6 +612,68 @@ components:
           items:
             type: string
 
+    # ───────── Pagination schemas (#804) ─────────
+    PageInfo:
+      description: >
+        Cursor-based pagination metadata included in every paginated list
+        response.  Pass `nextCursor` as the `cursor` query parameter on the
+        next request to retrieve the following page.  When `nextCursor` is
+        `null` there are no more records.
+      type: object
+      required: [limit, hasMore]
+      properties:
+        limit:
+          type: integer
+          description: Maximum records per page (1–200).
+          example: 20
+        nextCursor:
+          type: string
+          nullable: true
+          description: >
+            Opaque, base-64–encoded continuation token.  Pass as `cursor` on
+            the next request.  Absent / null on the last page.
+          example: 'eyJpZCI6InR4XzEyMyIsInRzIjoxNzUxMjM0NTY3fQ'
+        hasMore:
+          type: boolean
+          description: Whether more records exist beyond this page.
+          example: true
+
+    TransactionListResponse:
+      description: Paginated list of transactions.
+      type: object
+      required: [data, pagination]
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+        pagination:
+          $ref: '#/components/schemas/PageInfo'
+
+  # ───────── Reusable pagination parameters (#804) ─────────
+  parameters:
+    CursorParam:
+      name: cursor
+      in: query
+      required: false
+      description: >
+        Opaque continuation token returned by the previous page's `pagination.nextCursor`.
+        Omit or leave empty to start from the first page.
+      schema:
+        type: string
+        example: 'eyJpZCI6InR4XzEyMyIsInRzIjoxNzUxMjM0NTY3fQ'
+    LimitParam:
+      name: limit
+      in: query
+      required: false
+      description: Maximum number of records to return per page (1–200, default 20).
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 20
+        example: 20
+
 # ─────────────────────────────────────────────────────────────────
 # Paths
 # ─────────────────────────────────────────────────────────────────
@@ -2075,13 +2137,32 @@ paths:
       tags: [transactions]
       summary: List transactions
       operationId: listTransactions
+      description: >
+        Returns a cursor-paginated list of transactions for the given wallet
+        address.  Use `pagination.nextCursor` from the response as the `cursor`
+        query parameter on the next request.
+      parameters:
+        - name: wallet
+          in: query
+          required: true
+          description: The wallet address to fetch transactions for.
+          schema:
+            type: string
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
       responses:
         '200':
-          description: Transaction list
+          description: Paginated transaction list
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/TransactionListResponse'
+        '400':
+          description: Validation error (missing wallet)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     post:
       tags: [transactions]

@@ -3,8 +3,12 @@ import { vulnerabilityManager } from '@/lib/vulnerability-management';
 import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
+import { requireAdmin } from '@/lib/auth/require-admin';
 
 export async function GET(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const severity = searchParams.get('severity') as 'critical' | 'high' | 'medium' | 'low' | null;
@@ -32,6 +36,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
     const { title, severity, package: pkg, version, fixedVersion, description, cve } = body;

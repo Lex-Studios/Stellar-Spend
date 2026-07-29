@@ -1,0 +1,325 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GraphQL schema SDL snapshot matches the committed SDL 1`] = `
+"type AnalyticsSummary {\n  averageTransactionValue: String!\n  completedTransactions: Int!\n  failedTransactions: Int!\n  pendingTransactions: Int!\n  periodEnd: String!\n  periodStart: String!\n  topCurrencies: [CurrencyVolume!]!\n  totalTransactions: Int!\n  totalVolume: String!\n  volumeByDay: [DailyVolume!]!\n}\n\ntype Beneficiary {\n  accountIdentifier: String!\n  accountName: String\n  currency: String!\n  institution: String!\n}\n\ntype Currency {\n  code: String!\n  decimals: Int\n  flag: String\n  maxAmount: Float\n  minAmount: Float\n  name: String!\n  symbol: String!\n}\n\ntype CurrencyVolume {\n  count: Int!\n  currency: String!\n  volume: String!\n}\n\n\"\"\"\nOpaque cursor used for keyset / offset-backed pagination.\nPass the value returned in `PageInfo.nextCursor` as the `cursor` argument\non the next request to retrieve the following page.\n\"\"\"\nscalar Cursor\n\ntype DLQEntry {\n  addedAt: String!\n  deliveryId: String!\n  destinationUrl: String!\n  expiresAt: String!\n  finalError: String!\n  id: ID!\n}\n\ntype DailyVolume {\n  count: Int!\n  date: String!\n  volume: String!\n}\n\ntype Dispute {\n  createdAt: String!\n  evidence: [String!]\n  id: ID!\n  reason: String!\n  resolution: String\n  resolvedAt: String\n  resolvedBy: String\n  status: String!\n  transactionId: String!\n  updatedAt: String!\n  userId: String!\n}\n\ntype Institution {\n  code: String!\n  currency: String!\n  id: String!\n  name: String!\n  type: String\n}\n\ntype InsuranceInfo {\n  coverage: Float!\n  premium: Float!\n  provider: String!\n  purchasedAt: String!\n  status: String!\n}\n\ntype KYCInfo {\n  documentType: String\n  rejectionReason: String\n  status: String!\n  submittedAt: String!\n  userId: String!\n  verifiedAt: String\n}\n\ntype Mutation {\n  addScreeningOverride(address: String!, reason: String!, verdict: String!): Boolean!\n  approveKYC(userId: String!): KYCInfo!\n  createDispute(evidence: [String!], reason: String!, transactionId: String!): Dispute!\n  rejectKYC(reason: String!, userId: String!): KYCInfo!\n  removeScreeningOverride(address: String!): Boolean!\n  replayWebhook(dlqEntryId: ID!): WebhookDelivery!\n  resolveDispute(id: ID!, resolution: String!): Dispute!\n  retryWebhookDelivery(deliveryId: ID!): WebhookDelivery!\n  submitKYC(documentId: String!, documentType: String!, userId: String!): KYCInfo!\n}\n\ntype PageInfo {\n  \"\"\"Whether more records exist beyond this page.\"\"\"\n  hasMore: Boolean!\n\n  \"\"\"Maximum records returned per page.\"\"\"\n  limit: Int!\n\n  \"\"\"Pass this as `cursor` to fetch the next page.  Null on the last page.\"\"\"\n  nextCursor: Cursor\n}\n\ntype Query {\n  analyticsSummary(from: String, to: String): AnalyticsSummary!\n  currencies: [Currency!]!\n  dispute(id: ID!): Dispute\n  disputes(limit: Int, status: String): [Dispute!]!\n  dlqEntries(limit: Int): [DLQEntry!]!\n  institutions(currency: String!): [Institution!]!\n  kycInfo(userId: String!): KYCInfo\n  quote(amount: String!, currency: String!, feeMethod: String, sourceAddress: String): Quote\n  rate(currency: String): RateInfo!\n  screeningOverrides: [ScreeningResult!]!\n  screeningResult(address: String!): ScreeningResult\n  transaction(id: ID!): Transaction\n  transactions(\n    currency: String\n\n    \"\"\"Opaque continuation token from a previous response.\"\"\"\n    cursor: Cursor\n    limit: Int\n    status: String\n  ): TransactionPage!\n  userLimits(userId: String!): UserLimits\n  webhookDeliveries(limit: Int, status: String): [WebhookDelivery!]!\n  webhookDelivery(id: ID!): WebhookDelivery\n  webhookStats: WebhookStats!\n}\n\ntype Quote {\n  bridgeFee: String!\n  currency: String!\n  destinationAmount: String!\n  estimatedTime: Int!\n  payoutFee: String!\n  rate: Float!\n  sourceAmount: String\n  validUntil: String\n}\n\ntype RateInfo {\n  currency: String!\n  rate: Float!\n  updatedAt: String!\n}\n\ntype ReversalInfo {\n  amount: String!\n  createdAt: String!\n  id: ID!\n  reason: String!\n  status: String!\n}\n\ntype ScreeningResult {\n  flags: [String!]!\n  provider: String\n  score: Int!\n  screenedAt: String!\n  verdict: String!\n}\n\ntype Subscription {\n  disputeStatusChanged(id: ID!): Dispute!\n  rateUpdated(currency: String): RateInfo!\n  screeningAlert(address: String!): ScreeningResult!\n  transactionCreated: Transaction!\n  transactionStatusChanged(id: ID!): Transaction!\n}\n\ntype Tag {\n  color: String!\n  id: ID!\n  name: String!\n}\n\ntype Transaction {\n  amount: String!\n  beneficiary: Beneficiary\n  bridgeFee: String\n  bridgeStatus: String\n  createdAt: String!\n  currency: String!\n  destinationAmount: String\n  error: String\n  feeMethod: String\n  finalizedAt: String\n  id: ID!\n  insurance: InsuranceInfo\n  isFavorite: Boolean\n  networkFee: String\n  note: String\n  payoutFee: String\n  payoutOrderId: String\n  payoutStatus: String\n  rate: Float\n  reversal: ReversalInfo\n  status: String!\n  stellarTxHash: String\n  tags: [Tag!]\n  totalFee: String\n  updatedAt: String!\n  userAddress: String!\n}\n\ntype TransactionPage {\n  data: [Transaction!]!\n  pagination: PageInfo!\n}\n\ntype UserLimits {\n  dailyLimit: Float!\n  dailyUsed: Float!\n  monthlyLimit: Float!\n  monthlyUsed: Float!\n  tier: String!\n  transactionLimit: Float!\n  userId: String!\n}\n\ntype WebhookDelivery {\n  attemptCount: Int!\n  createdAt: String!\n  destinationUrl: String!\n  id: ID!\n  maxAttempts: Int!\n  nextAttemptAt: String\n  status: String!\n  updatedAt: String!\n}\n\ntype WebhookStats {\n  delivered: Int!\n  dlqCount: Int!\n  failed: Int!\n  pending: Int!\n}"
+`;
+
+exports[`GraphQL schema — query field inventory exposes exactly the expected query fields 1`] = `
+[
+  "analyticsSummary",
+  "currencies",
+  "dispute",
+  "disputes",
+  "dlqEntries",
+  "institutions",
+  "kycInfo",
+  "quote",
+  "rate",
+  "screeningOverrides",
+  "screeningResult",
+  "transaction",
+  "transactions",
+  "userLimits",
+  "webhookDeliveries",
+  "webhookDelivery",
+  "webhookStats"
+]
+`;
+
+exports[`GraphQL schema — mutation field inventory exposes exactly the expected mutation fields 1`] = `
+[
+  "addScreeningOverride",
+  "approveKYC",
+  "createDispute",
+  "rejectKYC",
+  "removeScreeningOverride",
+  "replayWebhook",
+  "resolveDispute",
+  "retryWebhookDelivery",
+  "submitKYC"
+]
+`;
+
+exports[`GraphQL schema — subscription field inventory exposes exactly the expected subscription fields 1`] = `
+[
+  "disputeStatusChanged",
+  "rateUpdated",
+  "screeningAlert",
+  "transactionCreated",
+  "transactionStatusChanged"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories Transaction fields match snapshot 1`] = `
+[
+  "amount",
+  "beneficiary",
+  "bridgeFee",
+  "bridgeStatus",
+  "createdAt",
+  "currency",
+  "destinationAmount",
+  "error",
+  "feeMethod",
+  "finalizedAt",
+  "id",
+  "insurance",
+  "isFavorite",
+  "networkFee",
+  "note",
+  "payoutFee",
+  "payoutOrderId",
+  "payoutStatus",
+  "rate",
+  "reversal",
+  "status",
+  "stellarTxHash",
+  "tags",
+  "totalFee",
+  "updatedAt",
+  "userAddress"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories TransactionPage fields match snapshot 1`] = `
+[
+  "data",
+  "pagination"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories PageInfo fields match snapshot 1`] = `
+[
+  "hasMore",
+  "limit",
+  "nextCursor"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories Beneficiary fields match snapshot 1`] = `
+[
+  "accountIdentifier",
+  "accountName",
+  "currency",
+  "institution"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories ReversalInfo fields match snapshot 1`] = `
+[
+  "amount",
+  "createdAt",
+  "id",
+  "reason",
+  "status"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories InsuranceInfo fields match snapshot 1`] = `
+[
+  "coverage",
+  "premium",
+  "provider",
+  "purchasedAt",
+  "status"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories Tag fields match snapshot 1`] = `
+[
+  "color",
+  "id",
+  "name"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories Quote fields match snapshot 1`] = `
+[
+  "bridgeFee",
+  "currency",
+  "destinationAmount",
+  "estimatedTime",
+  "payoutFee",
+  "rate",
+  "sourceAmount",
+  "validUntil"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories Currency fields match snapshot 1`] = `
+[
+  "code",
+  "decimals",
+  "flag",
+  "maxAmount",
+  "minAmount",
+  "name",
+  "symbol"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories Institution fields match snapshot 1`] = `
+[
+  "code",
+  "currency",
+  "id",
+  "name",
+  "type"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories RateInfo fields match snapshot 1`] = `
+[
+  "currency",
+  "rate",
+  "updatedAt"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories Dispute fields match snapshot 1`] = `
+[
+  "createdAt",
+  "evidence",
+  "id",
+  "reason",
+  "resolution",
+  "resolvedAt",
+  "resolvedBy",
+  "status",
+  "transactionId",
+  "updatedAt",
+  "userId"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories AnalyticsSummary fields match snapshot 1`] = `
+[
+  "averageTransactionValue",
+  "completedTransactions",
+  "failedTransactions",
+  "pendingTransactions",
+  "periodEnd",
+  "periodStart",
+  "topCurrencies",
+  "totalTransactions",
+  "totalVolume",
+  "volumeByDay"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories CurrencyVolume fields match snapshot 1`] = `
+[
+  "count",
+  "currency",
+  "volume"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories DailyVolume fields match snapshot 1`] = `
+[
+  "count",
+  "date",
+  "volume"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories KYCInfo fields match snapshot 1`] = `
+[
+  "documentType",
+  "rejectionReason",
+  "status",
+  "submittedAt",
+  "userId",
+  "verifiedAt"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories UserLimits fields match snapshot 1`] = `
+[
+  "dailyLimit",
+  "dailyUsed",
+  "monthlyLimit",
+  "monthlyUsed",
+  "tier",
+  "transactionLimit",
+  "userId"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories ScreeningResult fields match snapshot 1`] = `
+[
+  "flags",
+  "provider",
+  "score",
+  "screenedAt",
+  "verdict"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories WebhookDelivery fields match snapshot 1`] = `
+[
+  "attemptCount",
+  "createdAt",
+  "destinationUrl",
+  "id",
+  "maxAttempts",
+  "nextAttemptAt",
+  "status",
+  "updatedAt"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories DLQEntry fields match snapshot 1`] = `
+[
+  "addedAt",
+  "deliveryId",
+  "destinationUrl",
+  "expiresAt",
+  "finalError",
+  "id"
+]
+`;
+
+exports[`GraphQL schema — object type field inventories WebhookStats fields match snapshot 1`] = `
+[
+  "delivered",
+  "dlqCount",
+  "failed",
+  "pending"
+]
+`;
+
+exports[`GraphQL schema — resolver map alignment resolver map key inventory matches snapshot 1`] = `
+{
+  "queryResolvers": [
+    "analyticsSummary",
+    "currencies",
+    "dispute",
+    "disputes",
+    "dlqEntries",
+    "institutions",
+    "kycInfo",
+    "quote",
+    "rate",
+    "screeningOverrides",
+    "screeningResult",
+    "transaction",
+    "transactions",
+    "userLimits",
+    "webhookDeliveries",
+    "webhookDelivery",
+    "webhookStats"
+  ],
+  "mutationResolvers": [
+    "addScreeningOverride",
+    "approveKYC",
+    "createDispute",
+    "rejectKYC",
+    "removeScreeningOverride",
+    "replayWebhook",
+    "resolveDispute",
+    "retryWebhookDelivery",
+    "submitKYC"
+  ]
+}
+`;

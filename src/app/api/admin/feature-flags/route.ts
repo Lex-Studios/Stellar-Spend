@@ -2,15 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ErrorHandler } from '@/lib/error-handler';
 import {
   getFeatureFlags,
-  isFlagEnabled,
   setFlagOverrides,
   clearFlagOverrides,
-  invalidateFlagCache,
 } from '@/lib/feature-flags';
-import { requireApiKeyAdmin } from '@/app/api/api-keys/_utils';
+import { requireAdmin } from '@/lib/auth/require-admin';
 
 export async function GET(request: NextRequest) {
-  const unauthorized = requireApiKeyAdmin(request);
+  const unauthorized = requireAdmin(request);
   if (unauthorized) return unauthorized;
 
   const userId = request.nextUrl.searchParams.get('userId') ?? undefined;
@@ -24,7 +22,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const unauthorized = requireApiKeyAdmin(request);
+  const unauthorized = requireAdmin(request);
   if (unauthorized) return unauthorized;
 
   let body: Record<string, unknown>;
@@ -43,7 +41,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const unauthorized = requireApiKeyAdmin(request);
+  const unauthorized = requireAdmin(request);
   if (unauthorized) return unauthorized;
 
   try {

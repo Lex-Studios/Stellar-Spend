@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ErrorHandler } from '@/lib/error-handler';
 import { getRevenueSummary } from '@/lib/ledger/revenue';
-import { requireApiKeyAdmin } from '@/app/api/api-keys/_utils';
+import { requireAdmin } from '@/lib/auth/require-admin';
 
 export async function GET(request: NextRequest) {
-  const unauthorized = requireApiKeyAdmin(request);
+  const unauthorized = requireAdmin(request);
   if (unauthorized) return unauthorized;
 
   const { searchParams } = request.nextUrl;

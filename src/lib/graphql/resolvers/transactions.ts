@@ -22,20 +22,27 @@ export const transactionQueries = {
     _: unknown,
     {
       limit = 20,
-      offset = 0,
+      cursor,
       status,
       currency,
     }: {
       limit?: number;
-      offset?: number;
+      cursor?: string;
       status?: string;
       currency?: string;
     },
     ctx: GraphQLContext,
   ) {
     requireAuth(ctx);
+    const { decodeCursor, encodeOffsetCursor, decodeOffsetCursor } = await import('../../pagination');
+    const offset = cursor ? decodeOffsetCursor(cursor) : 0;
+    const clampedLimit = Math.min(Math.max(limit, 1), 200);
     const { getTransactions } = await import('../../db/dal');
-    return getTransactions({ limit, offset, status, currency });
+    const items = await getTransactions({ limit: clampedLimit + 1, offset, status, currency });
+    const hasMore = items.length > clampedLimit;
+    const data = hasMore ? items.slice(0, clampedLimit) : items;
+    const nextCursor = hasMore ? encodeOffsetCursor(offset + clampedLimit) : null;
+    return { data, pagination: { limit: clampedLimit, nextCursor, hasMore } };
   },
 
   async quote(

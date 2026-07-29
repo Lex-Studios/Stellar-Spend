@@ -3,6 +3,12 @@ import { dal, DatabaseError } from '@/lib/db/dal';
 import { ErrorHandler } from '@/lib/error-handler';
 import type { Transaction } from '@/lib/transaction-storage';
 import { withIdempotency } from '@/lib/idempotency';
+import {
+  parsePaginationParams,
+  cursorToOffset,
+  nextOffsetCursor,
+  paginatedResponse,
+} from '@/lib/pagination';
 
 const REQUIRED_FIELDS: (keyof Transaction)[] = [
   'id',
@@ -28,9 +34,25 @@ export async function GET(request: NextRequest) {
     return ErrorHandler.validation('wallet address is required');
   }
 
+  const { limit, cursor } = parsePaginationParams(request);
+  const offset = cursorToOffset(request.nextUrl.searchParams.get('cursor'));
+
   try {
     const transactions = await dal.getByUser(wallet);
-    return NextResponse.json(transactions, { status: 200 });
+    const paginated = transactions.slice(offset, offset + limit);
+    const nextCursor = nextOffsetCursor(offset, limit, paginated.length);
+
+    return NextResponse.json(
+      {
+        data: paginated,
+        pagination: {
+          limit,
+          nextCursor,
+          hasMore: nextCursor !== null,
+        },
+      },
+      { status: 200 },
+    );
   } catch (err) {
     if (err instanceof DatabaseError) {
       return ErrorHandler.serverError(err);

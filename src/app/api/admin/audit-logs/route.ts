@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auditLoggingService } from '@/lib/audit-logging';
 import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';
+import { requireAdmin } from '@/lib/auth/require-admin';
 
 export async function GET(request: NextRequest) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const actionType = searchParams.get('actionType') || undefined;

@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ErrorHandler } from '@/lib/error-handler';
 import { reconcileAccount, getReconciliationByReport } from '@/lib/ledger/reconciliation';
 import { verifyBalances } from '@/lib/ledger/entries';
-import { requireApiKeyAdmin } from '@/app/api/api-keys/_utils';
+import { requireAdmin } from '@/lib/auth/require-admin';
 
 export async function POST(request: NextRequest) {
-  const unauthorized = requireApiKeyAdmin(request);
+  const unauthorized = requireAdmin(request);
   if (unauthorized) return unauthorized;
 
   let body: { accountId?: string; reportId?: string; reportedBalance?: string; notes?: string };
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const unauthorized = requireApiKeyAdmin(request);
+  const unauthorized = requireAdmin(request);
   if (unauthorized) return unauthorized;
 
   const reportId = request.nextUrl.searchParams.get('reportId');

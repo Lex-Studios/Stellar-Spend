@@ -3,8 +3,12 @@ import { vulnerabilityManager } from '@/lib/vulnerability-management';
 import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
+import { requireAdmin } from '@/lib/auth/require-admin';
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+  const unauthorized = requireAdmin(request);
+  if (unauthorized) return unauthorized;
+
   try {
     const { id } = params;
     const success = vulnerabilityManager.resolveVulnerability(id);
