@@ -16,8 +16,11 @@ export interface SplitReconciliation {
   expectedTotal: number;
   executedTotal: number;
   variance: number;
-  status: 'balanced' | 'over' | 'under';
-  recipientBreakdown: Record<string, { expected: number; executed: number; variance: number }>;
+  status: "balanced" | "over" | "under";
+  recipientBreakdown: Record<
+    string,
+    { expected: number; executed: number; variance: number }
+  >;
 }
 
 export interface SplitAnalytics {
@@ -45,22 +48,27 @@ export interface SplitTransaction {
   totalAmount: string;
   currency: string;
   recipients: SplitRecipient[];
-  status: 'pending' | 'partial' | 'completed' | 'failed';
+  status: "pending" | "partial" | "completed" | "failed";
   /** Per-recipient execution results */
-  results: Record<string, { status: 'pending' | 'completed' | 'failed'; error?: string }>;
+  results: Record<
+    string,
+    { status: "pending" | "completed" | "failed"; error?: string }
+  >;
 }
 
-const STORAGE_KEY = 'stellar_spend_splits';
+const STORAGE_KEY = "stellar_spend_splits";
 
 // ---------------------------------------------------------------------------
 // Pure helpers
 // ---------------------------------------------------------------------------
 
 export function validateSplit(recipients: SplitRecipient[]): string | null {
-  if (recipients.length < 2) return 'At least 2 recipients required';
+  if (recipients.length < 2) return "At least 2 recipients required";
   const total = recipients.reduce((s, r) => s + r.percentage, 0);
-  if (Math.abs(total - 100) > 0.01) return `Percentages must sum to 100 (currently ${total.toFixed(2)})`;
-  if (recipients.some((r) => r.percentage <= 0)) return 'Each recipient must have a positive percentage';
+  if (Math.abs(total - 100) > 0.01)
+    return `Percentages must sum to 100 (currently ${total.toFixed(2)})`;
+  if (recipients.some((r) => r.percentage <= 0))
+    return "Each recipient must have a positive percentage";
   return null;
 }
 
@@ -77,17 +85,17 @@ export function computeSplitAmounts(
 }
 
 export function deriveSplitStatus(
-  results: SplitTransaction['results'],
+  results: SplitTransaction["results"],
   recipientCount: number,
-): SplitTransaction['status'] {
+): SplitTransaction["status"] {
   const values = Object.values(results);
-  if (values.length === 0) return 'pending';
-  const completed = values.filter((v) => v.status === 'completed').length;
-  const failed = values.filter((v) => v.status === 'failed').length;
-  if (completed === recipientCount) return 'completed';
-  if (failed === recipientCount) return 'failed';
-  if (completed + failed === recipientCount) return 'partial';
-  return 'pending';
+  if (values.length === 0) return "pending";
+  const completed = values.filter((v) => v.status === "completed").length;
+  const failed = values.filter((v) => v.status === "failed").length;
+  if (completed === recipientCount) return "completed";
+  if (failed === recipientCount) return "failed";
+  if (completed + failed === recipientCount) return "partial";
+  return "pending";
 }
 
 // ---------------------------------------------------------------------------
@@ -96,7 +104,7 @@ export function deriveSplitStatus(
 
 export class SplitStorage {
   static getAll(): SplitTransaction[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : [];
@@ -106,7 +114,7 @@ export class SplitStorage {
   }
 
   static save(split: SplitTransaction): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const all = this.getAll().filter((s) => s.id !== split.id);
     all.unshift(split);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all.slice(0, 20)));
@@ -115,13 +123,16 @@ export class SplitStorage {
   static updateResult(
     splitId: string,
     recipientId: string,
-    result: { status: 'completed' | 'failed'; error?: string },
+    result: { status: "completed" | "failed"; error?: string },
   ): void {
     const all = this.getAll();
     const idx = all.findIndex((s) => s.id === splitId);
     if (idx === -1) return;
     all[idx].results[recipientId] = result;
-    all[idx].status = deriveSplitStatus(all[idx].results, all[idx].recipients.length);
+    all[idx].status = deriveSplitStatus(
+      all[idx].results,
+      all[idx].recipients.length,
+    );
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   }
 
@@ -135,11 +146,16 @@ export class SplitStorage {
 
   static getAnalytics(): SplitAnalytics {
     const all = this.getAll();
-    const completed = all.filter((s) => s.status === 'completed').length;
-    const partial = all.filter((s) => s.status === 'partial').length;
-    const failed = all.filter((s) => s.status === 'failed').length;
-    const totalVolume = all.reduce((sum, s) => sum + parseFloat(s.totalAmount || '0'), 0);
-    const avgRecipients = all.length ? all.reduce((sum, s) => sum + s.recipients.length, 0) / all.length : 0;
+    const completed = all.filter((s) => s.status === "completed").length;
+    const partial = all.filter((s) => s.status === "partial").length;
+    const failed = all.filter((s) => s.status === "failed").length;
+    const totalVolume = all.reduce(
+      (sum, s) => sum + parseFloat(s.totalAmount || "0"),
+      0,
+    );
+    const avgRecipients = all.length
+      ? all.reduce((sum, s) => sum + s.recipients.length, 0) / all.length
+      : 0;
 
     return {
       totalSplits: all.length,
@@ -157,7 +173,10 @@ export class SplitStorage {
 // Fee calculation
 // ---------------------------------------------------------------------------
 
-export function calculateSplitFees(totalAmount: string, recipientCount: number): SplitFeeBreakdown {
+export function calculateSplitFees(
+  totalAmount: string,
+  recipientCount: number,
+): SplitFeeBreakdown {
   const BASE_FEE = 0.5; // flat base fee in USDC
   const PER_RECIPIENT_FEE = 0.1; // per recipient fee
   const total = parseFloat(totalAmount);
@@ -185,12 +204,12 @@ export async function executeSplit(
 
   for (const recipient of withAmounts) {
     try {
-      await executeRecipient(recipient.id, recipient.amount ?? '0');
-      SplitStorage.updateResult(splitId, recipient.id, { status: 'completed' });
+      await executeRecipient(recipient.id, recipient.amount ?? "0");
+      SplitStorage.updateResult(splitId, recipient.id, { status: "completed" });
     } catch (err) {
       SplitStorage.updateResult(splitId, recipient.id, {
-        status: 'failed',
-        error: err instanceof Error ? err.message : 'Unknown error',
+        status: "failed",
+        error: err instanceof Error ? err.message : "Unknown error",
       });
     }
   }
@@ -209,12 +228,12 @@ export function reconcileSplit(splitId: string): SplitReconciliation | null {
   const withAmounts = computeSplitAmounts(split.totalAmount, split.recipients);
   const expectedTotal = parseFloat(split.totalAmount);
   let executedTotal = 0;
-  const recipientBreakdown: SplitReconciliation['recipientBreakdown'] = {};
+  const recipientBreakdown: SplitReconciliation["recipientBreakdown"] = {};
 
   for (const r of withAmounts) {
-    const expected = parseFloat(r.amount ?? '0');
+    const expected = parseFloat(r.amount ?? "0");
     const resultStatus = split.results[r.id]?.status;
-    const executed = resultStatus === 'completed' ? expected : 0;
+    const executed = resultStatus === "completed" ? expected : 0;
     executedTotal += executed;
     recipientBreakdown[r.id] = {
       expected,
@@ -224,7 +243,7 @@ export function reconcileSplit(splitId: string): SplitReconciliation | null {
   }
 
   const variance = parseFloat((executedTotal - expectedTotal).toFixed(6));
-  const status = variance === 0 ? 'balanced' : variance > 0 ? 'over' : 'under';
+  const status = variance === 0 ? "balanced" : variance > 0 ? "over" : "under";
 
   return {
     splitId,

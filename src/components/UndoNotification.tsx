@@ -9,7 +9,11 @@ interface UndoNotificationProps {
   isVisible: boolean;
 }
 
-export function UndoNotification({ action, onUndo, isVisible }: UndoNotificationProps) {
+export function UndoNotification({
+  action,
+  onUndo,
+  isVisible,
+}: UndoNotificationProps) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {

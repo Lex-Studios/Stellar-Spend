@@ -24,14 +24,29 @@ query GetTransaction($id: ID!) {
     amount
     currency
     userAddress
-    beneficiary { institution accountIdentifier accountName currency }
+    beneficiary {
+      institution
+      accountIdentifier
+      accountName
+      currency
+    }
     stellarTxHash
     createdAt
   }
 }
 
-query ListTransactions($limit: Int, $offset: Int, $status: String, $currency: String) {
-  transactions(limit: $limit, offset: $offset, status: $status, currency: $currency) {
+query ListTransactions(
+  $limit: Int
+  $offset: Int
+  $status: String
+  $currency: String
+) {
+  transactions(
+    limit: $limit
+    offset: $offset
+    status: $status
+    currency: $currency
+  ) {
     id
     status
     amount
@@ -100,7 +115,11 @@ query {
     totalVolume
     completedTransactions
     failedTransactions
-    topCurrencies { currency count volume }
+    topCurrencies {
+      currency
+      count
+      volume
+    }
   }
 }
 ```
@@ -129,7 +148,9 @@ query {
 
 ```graphql
 query {
-  screeningResult(address: "GA2KP7ZOUR3QX5GYKHXMYLTPLTJMYBJ4QFDHZFRQLPN4JKNN2YXX5ABC") {
+  screeningResult(
+    address: "GA2KP7ZOUR3QX5GYKHXMYLTPLTJMYBJ4QFDHZFRQLPN4JKNN2YXX5ABC"
+  ) {
     verdict
     score
     flags
@@ -145,7 +166,11 @@ query {
 
 ```graphql
 mutation {
-  createDispute(transactionId: "tx_123", reason: "Incorrect amount", evidence: ["screenshot.png"]) {
+  createDispute(
+    transactionId: "tx_123"
+    reason: "Incorrect amount"
+    evidence: ["screenshot.png"]
+  ) {
     id
     status
     createdAt
@@ -246,14 +271,14 @@ Errors are aligned with the REST middleware format:
 }
 ```
 
-| error code | HTTP equivalent |
-|---|---|
-| `UNAUTHORIZED` | 401 |
-| `FORBIDDEN` | 403 |
-| `VALIDATION_ERROR` | 400 |
-| `QUERY_TOO_DEEP` | 400 |
-| `QUERY_TOO_COMPLEX` | 400 |
-| `SERVER_ERROR` | 500 |
+| error code          | HTTP equivalent |
+| ------------------- | --------------- |
+| `UNAUTHORIZED`      | 401             |
+| `FORBIDDEN`         | 403             |
+| `VALIDATION_ERROR`  | 400             |
+| `QUERY_TOO_DEEP`    | 400             |
+| `QUERY_TOO_COMPLEX` | 400             |
+| `SERVER_ERROR`      | 500             |
 
 ## Security
 

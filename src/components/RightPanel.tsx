@@ -99,7 +99,7 @@ function HeroPanel({
   const liveDestination =
     effectiveRate && hasAmount
       ? (parseFloat(amount) * effectiveRate).toFixed(2)
-      : quote?.destinationAmount ?? null;
+      : (quote?.destinationAmount ?? null);
 
   // Derive hero content based on state
   let heroLabel: string;
@@ -108,7 +108,11 @@ function HeroPanel({
 
   if (!isConnected && !isConnecting) {
     heroLabel = "WALLET REQUIRED";
-    heroValue = <span className="text-[#777777]">{getCurrencySymbol(currency || "NGN")} --</span>;
+    heroValue = (
+      <span className="text-[#777777]">
+        {getCurrencySymbol(currency || "NGN")} --
+      </span>
+    );
     heroMeta = "Connect wallet to preview payout";
   } else if (isConnecting) {
     heroLabel = "CONNECTING";
@@ -118,9 +122,15 @@ function HeroPanel({
     heroLabel = "CALCULATING";
     heroValue = (
       <span className="text-[#c9a962] flex items-center gap-1">
-        <span className="dot-bounce" style={{ animationDelay: "0ms" }}>.</span>
-        <span className="dot-bounce" style={{ animationDelay: "150ms" }}>.</span>
-        <span className="dot-bounce" style={{ animationDelay: "300ms" }}>.</span>
+        <span className="dot-bounce" style={{ animationDelay: "0ms" }}>
+          .
+        </span>
+        <span className="dot-bounce" style={{ animationDelay: "150ms" }}>
+          .
+        </span>
+        <span className="dot-bounce" style={{ animationDelay: "300ms" }}>
+          .
+        </span>
       </span>
     );
     heroMeta = "Fetching live rate...";
@@ -130,10 +140,13 @@ function HeroPanel({
       <span
         className={cn(
           "text-[#c9a962] transition-colors duration-300",
-          flash && "text-white"
+          flash && "text-white",
         )}
       >
-        {formatFiat(liveDestination ?? quote!.destinationAmount, currency || quote!.currency)}
+        {formatFiat(
+          liveDestination ?? quote!.destinationAmount,
+          currency || quote!.currency,
+        )}
       </span>
     );
     heroMeta = `Rate: ${formatRate(effectiveRate ?? quote!.rate, currency || quote!.currency)}`;
@@ -147,7 +160,7 @@ function HeroPanel({
     <div
       className={cn(
         "border border-[#333333] bg-[#111111] p-5 flex flex-col gap-4",
-        isConnecting && "animate-[pulse_2s_ease-in-out_infinite]"
+        isConnecting && "animate-[pulse_2s_ease-in-out_infinite]",
       )}
     >
       {/* Label */}
@@ -164,7 +177,9 @@ function HeroPanel({
       </div>
 
       {/* Meta */}
-      <span className="text-[11px] text-[#777777] tracking-wide">{heroMeta}</span>
+      <span className="text-[11px] text-[#777777] tracking-wide">
+        {heroMeta}
+      </span>
 
       {/* Connect button — only when fully disconnected */}
       {!isConnected && !isConnecting && (
@@ -174,7 +189,7 @@ function HeroPanel({
             "mt-1 w-full py-2.5 min-h-[44px] text-xs tracking-widest border border-[#c9a962]",
             "text-[#c9a962] bg-transparent transition-colors duration-150",
             "hover:bg-[#c9a962] hover:text-[#0a0a0a]",
-            "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a962] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]"
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a962] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]",
           )}
         >
           CONNECT WALLET
@@ -193,10 +208,20 @@ interface BreakdownRowProps {
 function BreakdownRow({ label, value, muted }: BreakdownRowProps) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className={cn("text-xs tracking-wider", muted ? "text-[#777777]" : "text-[#aaaaaa]")}>
+      <span
+        className={cn(
+          "text-xs tracking-wider",
+          muted ? "text-[#777777]" : "text-[#aaaaaa]",
+        )}
+      >
         {label}
       </span>
-      <span className={cn("text-xs tracking-wider tabular-nums", muted ? "text-[#777777]" : "text-white")}>
+      <span
+        className={cn(
+          "text-xs tracking-wider tabular-nums",
+          muted ? "text-[#777777]" : "text-white",
+        )}
+      >
         {value}
       </span>
     </div>
@@ -230,10 +255,13 @@ export default function RightPanel(props: RightPanelProps) {
 
   const payoutTotal =
     isConnected && (liveDestination || quote) && parseFloat(props.amount) > 0
-      ? formatFiat(liveDestination ?? quote!.destinationAmount, currency || quote!.currency)
+      ? formatFiat(
+          liveDestination ?? quote!.destinationAmount,
+          currency || quote!.currency,
+        )
       : isLoadingQuote
-      ? "..."
-      : `— ${currency.toUpperCase()}`;
+        ? "..."
+        : `— ${currency.toUpperCase()}`;
 
   return (
     <div className="flex flex-col gap-4 w-full">
@@ -268,7 +296,11 @@ export default function RightPanel(props: RightPanelProps) {
           <span
             className={cn(
               "font-space-grotesk font-bold tabular-nums leading-none transition-colors duration-300",
-              isLoadingQuote ? "text-[#777777]" : flash ? "text-white" : "text-[#c9a962]"
+              isLoadingQuote
+                ? "text-[#777777]"
+                : flash
+                  ? "text-white"
+                  : "text-[#c9a962]",
             )}
             style={{ fontSize: "clamp(1.1rem, 2.5vw, 1.5rem)" }}
           >
@@ -285,21 +317,9 @@ export default function RightPanel(props: RightPanelProps) {
         defaultOpen={false}
       >
         <div className="flex flex-col gap-3">
-          <BreakdownRow
-            label="Bridge Protocol"
-            value="Allbridge"
-            muted
-          />
-          <BreakdownRow
-            label="Settlement Chain"
-            value="Base"
-            muted
-          />
-          <BreakdownRow
-            label="Payout Provider"
-            value="Paycrest"
-            muted
-          />
+          <BreakdownRow label="Bridge Protocol" value="Allbridge" muted />
+          <BreakdownRow label="Settlement Chain" value="Base" muted />
+          <BreakdownRow label="Payout Provider" value="Paycrest" muted />
         </div>
       </CollapsibleSection>
     </div>

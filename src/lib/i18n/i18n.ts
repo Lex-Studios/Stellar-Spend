@@ -1,5 +1,5 @@
-import { Language, TranslationKeys } from './types';
-import { en, es, fr, zh, ar, pt, sw } from './translations';
+import { Language, TranslationKeys } from "./types";
+import { en, es, fr, zh, ar, pt, sw } from "./translations";
 
 const translations: Record<Language, TranslationKeys> = {
   en,
@@ -11,10 +11,10 @@ const translations: Record<Language, TranslationKeys> = {
   sw,
 };
 
-const RTL_LANGUAGES: Language[] = ['ar'];
+const RTL_LANGUAGES: Language[] = ["ar"];
 
 export class I18n {
-  private currentLanguage: Language = 'en';
+  private currentLanguage: Language = "en";
 
   constructor(language?: Language) {
     if (language && language in translations) {
@@ -33,18 +33,18 @@ export class I18n {
   }
 
   t(key: string): string {
-    const keys = key.split('.');
+    const keys = key.split(".");
     let value: any = translations[this.currentLanguage];
 
     for (const k of keys) {
-      if (value && typeof value === 'object' && k in value) {
+      if (value && typeof value === "object" && k in value) {
         value = value[k];
       } else {
         return key;
       }
     }
 
-    return typeof value === 'string' ? value : key;
+    return typeof value === "string" ? value : key;
   }
 
   getTranslations(): TranslationKeys {
@@ -60,4 +60,4 @@ export class I18n {
   }
 }
 
-export const i18n = new I18n('en');
+export const i18n = new I18n("en");

@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { cn } from "@/lib/cn";
 import type { Transaction } from "@/lib/transaction-storage";
-import { exportCSV, exportPDF, exportJSON, exportXLSX, filterByDateRange } from "@/lib/export";
+import {
+  exportCSV,
+  exportPDF,
+  exportJSON,
+  exportXLSX,
+  filterByDateRange,
+} from "@/lib/export";
 
 interface Props {
   transactions: Transaction[];
@@ -21,14 +27,13 @@ export default function ExportControls({ transactions, walletAddress }: Props) {
   const slug = walletAddress
     ? `${walletAddress.slice(0, 6)}_${walletAddress.slice(-4)}`
     : "wallet";
-  const dateTag = dateFrom || dateTo
-    ? `_${dateFrom || "start"}_to_${dateTo || "end"}`
-    : "";
+  const dateTag =
+    dateFrom || dateTo ? `_${dateFrom || "start"}_to_${dateTo || "end"}` : "";
   const basename = `stellar_spend_${slug}${dateTag}`;
 
   const inputCls = cn(
     "bg-[#0a0a0a] border border-[#333333] px-3 py-2 text-xs text-white",
-    "focus:outline-none focus:border-[#c9a962] [color-scheme:dark]"
+    "focus:outline-none focus:border-[#c9a962] [color-scheme:dark]",
   );
 
   const handleExport = async (format: "csv" | "pdf" | "json" | "xlsx") => {
@@ -55,13 +60,14 @@ export default function ExportControls({ transactions, walletAddress }: Props) {
     }
   };
 
-  const buttonCls = (format: string) => cn(
-    "text-[10px] tracking-widest uppercase px-4 py-2 border transition-colors duration-150",
-    "border-[#c9a962] text-[#c9a962]",
-    !disabled && "hover:bg-[#c9a962] hover:text-[#0a0a0a]",
-    disabled && "opacity-40 cursor-not-allowed",
-    exporting === format && "opacity-60"
-  );
+  const buttonCls = (format: string) =>
+    cn(
+      "text-[10px] tracking-widest uppercase px-4 py-2 border transition-colors duration-150",
+      "border-[#c9a962] text-[#c9a962]",
+      !disabled && "hover:bg-[#c9a962] hover:text-[#0a0a0a]",
+      disabled && "opacity-40 cursor-not-allowed",
+      exporting === format && "opacity-60",
+    );
 
   return (
     <div className="border border-[#333333] bg-[#111111] p-4 flex flex-wrap items-center gap-3">
@@ -135,7 +141,7 @@ export default function ExportControls({ transactions, walletAddress }: Props) {
           "border-[#777777] text-[#777777]",
           !disabled && "hover:border-[#c9a962] hover:text-[#c9a962]",
           disabled && "opacity-40 cursor-not-allowed",
-          exporting === "pdf" && "opacity-60"
+          exporting === "pdf" && "opacity-60",
         )}
       >
         {exporting === "pdf" ? "⟳ PDF" : "↓ PDF"}

@@ -1,13 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { ErrorHandler } from '@/lib/error-handler';
-import { getDeliveryLogById } from '@/lib/webhook/delivery-log';
-import { enqueue } from '@/lib/webhook/dispatcher';
-import { getSubscription } from '@/lib/webhook/subscription-store';
-import { requireApiKeyAdmin } from '@/app/api/api-keys/_utils';
+import { NextRequest, NextResponse } from "next/server";
+import { ErrorHandler } from "@/lib/error-handler";
+import { getDeliveryLogById } from "@/lib/webhook/delivery-log";
+import { enqueue } from "@/lib/webhook/dispatcher";
+import { getSubscription } from "@/lib/webhook/subscription-store";
+import { requireApiKeyAdmin } from "@/app/api/api-keys/_utils";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const unauthorized = requireApiKeyAdmin(request);
   if (unauthorized) return unauthorized;
@@ -24,29 +24,35 @@ export async function POST(
   try {
     if (body.deliveryLogId) {
       const log = await getDeliveryLogById(body.deliveryLogId);
-      if (!log) return ErrorHandler.notFound('Delivery log entry');
+      if (!log) return ErrorHandler.notFound("Delivery log entry");
       if (log.subscriptionId !== id) {
-        return ErrorHandler.validation('Delivery log does not belong to this subscription');
+        return ErrorHandler.validation(
+          "Delivery log does not belong to this subscription",
+        );
       }
 
       const record = await enqueue(
-        { headers: {}, body: log.requestBody, source: 'replay' },
-        log.payloadUrl
+        { headers: {}, body: log.requestBody, source: "replay" },
+        log.payloadUrl,
       );
 
       return NextResponse.json({
-        data: { deliveryId: record.id, status: record.status, replayedLogId: log.id },
+        data: {
+          deliveryId: record.id,
+          status: record.status,
+          replayedLogId: log.id,
+        },
       });
     }
 
     const subscription = await getSubscription(id);
-    if (!subscription) return ErrorHandler.notFound('Subscription');
-    if (subscription.status !== 'active') {
-      return ErrorHandler.validation('Subscription is not active');
+    if (!subscription) return ErrorHandler.notFound("Subscription");
+    if (subscription.status !== "active") {
+      return ErrorHandler.validation("Subscription is not active");
     }
 
     return NextResponse.json({
-      data: { message: 'Provide deliveryLogId to replay a specific delivery' },
+      data: { message: "Provide deliveryLogId to replay a specific delivery" },
     });
   } catch (error) {
     return ErrorHandler.serverError(error);

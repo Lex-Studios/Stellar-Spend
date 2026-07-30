@@ -1,4 +1,4 @@
-import type { Repository } from './base';
+import type { Repository } from "./base";
 
 export interface User {
   id: string;

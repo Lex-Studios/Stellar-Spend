@@ -1,15 +1,21 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Runtime type validation with Zod
  */
 
 // Amount validation
-export const AmountSchema = z.string().regex(/^\d+(\.\d{1,8})?$/, 'Invalid amount format');
+export const AmountSchema = z
+  .string()
+  .regex(/^\d+(\.\d{1,8})?$/, "Invalid amount format");
 
 // Address validation
-export const StellarAddressSchema = z.string().regex(/^G[A-Z2-7]{55}$/, 'Invalid Stellar address');
-export const EthereumAddressSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum address');
+export const StellarAddressSchema = z
+  .string()
+  .regex(/^G[A-Z2-7]{55}$/, "Invalid Stellar address");
+export const EthereumAddressSchema = z
+  .string()
+  .regex(/^0x[a-fA-F0-9]{40}$/, "Invalid Ethereum address");
 
 // Currency validation
 export const CurrencyCodeSchema = z.string().length(3).toUpperCase();
@@ -20,7 +26,7 @@ export const TransactionSchema = z.object({
   userAddress: StellarAddressSchema,
   amount: AmountSchema,
   currency: CurrencyCodeSchema,
-  status: z.enum(['pending', 'completed', 'failed']),
+  status: z.enum(["pending", "completed", "failed"]),
   timestamp: z.number().positive(),
 });
 

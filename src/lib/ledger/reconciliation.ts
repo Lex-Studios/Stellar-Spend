@@ -1,11 +1,14 @@
-import { randomUUID } from 'crypto';
-import { pool } from '@/lib/db/client';
-import type { LedgerReconciliation, ReconciliationStatus } from './types';
+import { randomUUID } from "crypto";
+import { pool } from "@/lib/db/client";
+import type { LedgerReconciliation, ReconciliationStatus } from "./types";
 
 export class ReconciliationError extends Error {
-  constructor(message: string, public readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public readonly cause?: unknown,
+  ) {
     super(message);
-    this.name = 'ReconciliationError';
+    this.name = "ReconciliationError";
   }
 }
 
@@ -18,8 +21,11 @@ export async function reconcileAccount(
 ): Promise<LedgerReconciliation> {
   const id = randomUUID();
   const now = Date.now();
-  const difference = (Number(reportedBalance) - Number(ledgerBalance)).toFixed(2);
-  const status: ReconciliationStatus = difference === '0.00' ? 'reconciled' : 'discrepancy';
+  const difference = (Number(reportedBalance) - Number(ledgerBalance)).toFixed(
+    2,
+  );
+  const status: ReconciliationStatus =
+    difference === "0.00" ? "reconciled" : "discrepancy";
 
   const sql = `
     INSERT INTO ledger_reconciliation
@@ -30,27 +36,44 @@ export async function reconcileAccount(
 
   try {
     const result = await pool.query(sql, [
-      id, reportId, accountId, reportedBalance, ledgerBalance,
-      difference, status, status === 'reconciled' ? now : null,
-      notes ?? null, now,
+      id,
+      reportId,
+      accountId,
+      reportedBalance,
+      ledgerBalance,
+      difference,
+      status,
+      status === "reconciled" ? now : null,
+      notes ?? null,
+      now,
     ]);
     return rowToReconciliation(result.rows[0]);
   } catch (err) {
-    throw new ReconciliationError('Failed to create reconciliation record', err);
+    throw new ReconciliationError(
+      "Failed to create reconciliation record",
+      err,
+    );
   }
 }
 
-export async function getReconciliationByReport(reportId: string): Promise<LedgerReconciliation[]> {
+export async function getReconciliationByReport(
+  reportId: string,
+): Promise<LedgerReconciliation[]> {
   const sql = `SELECT * FROM ledger_reconciliation WHERE report_id = $1 ORDER BY created_at DESC`;
   try {
     const result = await pool.query(sql, [reportId]);
     return result.rows.map(rowToReconciliation);
   } catch (err) {
-    throw new ReconciliationError('Failed to get reconciliation by report', err);
+    throw new ReconciliationError(
+      "Failed to get reconciliation by report",
+      err,
+    );
   }
 }
 
-function rowToReconciliation(row: Record<string, unknown>): LedgerReconciliation {
+function rowToReconciliation(
+  row: Record<string, unknown>,
+): LedgerReconciliation {
   return {
     id: row.id as string,
     reportId: row.report_id as string,

@@ -29,7 +29,11 @@ export interface SessionActivity {
 }
 
 export interface SessionSecurityEvent {
-  type: 'ip_mismatch' | 'concurrent_limit_exceeded' | 'suspicious_activity' | 'expired';
+  type:
+    | "ip_mismatch"
+    | "concurrent_limit_exceeded"
+    | "suspicious_activity"
+    | "expired";
   sessionId: string;
   userAddress: string;
   detail: string;
@@ -46,7 +50,7 @@ export interface SessionLimitsConfig {
 
 const DEFAULT_LIMITS: SessionLimitsConfig = {
   maxConcurrentSessions: 5,
-  sessionTimeoutMs: 30 * 60 * 1000,         // 30 minutes
+  sessionTimeoutMs: 30 * 60 * 1000, // 30 minutes
   refreshTokenExpiryMs: 7 * 24 * 60 * 60 * 1000, // 7 days
   maxActivityLogEntries: 100,
   enforceIpConsistency: false,
@@ -114,7 +118,11 @@ export class SessionManagementService {
       ],
     );
 
-    logger.info("Session created", { userId: userAddress, sessionId: id, ipAddress });
+    logger.info("Session created", {
+      userId: userAddress,
+      sessionId: id,
+      ipAddress,
+    });
 
     return {
       id,
@@ -136,7 +144,10 @@ export class SessionManagementService {
   // Validation
   // ---------------------------------------------------------------------------
 
-  async validateSession(token: string, requestIp?: string): Promise<Session | null> {
+  async validateSession(
+    token: string,
+    requestIp?: string,
+  ): Promise<Session | null> {
     const result = await pool.query(
       `SELECT id, user_address, token, refresh_token, ip_address, user_agent, device_fingerprint,
               is_active, created_at, expires_at, last_activity_at, refreshed_at, activity_count
@@ -210,9 +221,17 @@ export class SessionManagementService {
       [newExpiresAt, now, now, row.id],
     );
 
-    logger.info("Session refreshed", { userId: row.user_address, sessionId: row.id });
+    logger.info("Session refreshed", {
+      userId: row.user_address,
+      sessionId: row.id,
+    });
 
-    return mapRow({ ...row, expires_at: newExpiresAt, refreshed_at: now, last_activity_at: now });
+    return mapRow({
+      ...row,
+      expires_at: newExpiresAt,
+      refreshed_at: now,
+      last_activity_at: now,
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -327,7 +346,9 @@ export class SessionManagementService {
 
     const userAddress = result.rows[0].user_address;
 
-    await pool.query(`UPDATE sessions SET is_active = false WHERE id = $1`, [sessionId]);
+    await pool.query(`UPDATE sessions SET is_active = false WHERE id = $1`, [
+      sessionId,
+    ]);
 
     const revocationId = `revocation_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
     await pool.query(
@@ -339,7 +360,10 @@ export class SessionManagementService {
     logger.info("Session revoked", { userId: userAddress, sessionId, reason });
   }
 
-  async revokeAllUserSessions(userAddress: string, reason?: string): Promise<void> {
+  async revokeAllUserSessions(
+    userAddress: string,
+    reason?: string,
+  ): Promise<void> {
     const result = await pool.query(
       `SELECT id FROM sessions WHERE user_address = $1 AND is_active = true`,
       [userAddress],
@@ -349,14 +373,19 @@ export class SessionManagementService {
       await this.revokeSession(row.id, reason);
     }
 
-    logger.info("All sessions revoked for user", { userId: userAddress, reason });
+    logger.info("All sessions revoked for user", {
+      userId: userAddress,
+      reason,
+    });
   }
 
   // ---------------------------------------------------------------------------
   // Security
   // ---------------------------------------------------------------------------
 
-  async detectSuspiciousActivity(userAddress: string): Promise<SessionSecurityEvent[]> {
+  async detectSuspiciousActivity(
+    userAddress: string,
+  ): Promise<SessionSecurityEvent[]> {
     const sessions = await this.getUserSessions(userAddress);
     const events: SessionSecurityEvent[] = [];
     const now = Date.now();

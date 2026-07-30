@@ -95,7 +95,9 @@ export class TransactionSigningService {
           signatureId,
           isValid ? "verified" : "failed",
           now,
-          isValid ? "Signature verified successfully" : "Signature verification failed",
+          isValid
+            ? "Signature verified successfully"
+            : "Signature verification failed",
         ],
       );
 
@@ -131,12 +133,16 @@ export class TransactionSigningService {
     if (algorithm === "ed25519") {
       // Verify ed25519 signature
       // For now, just check that signature and public key are valid hex strings
-      return /^[a-f0-9]{128}$/.test(signature) && /^[a-f0-9]{64}$/.test(publicKey);
+      return (
+        /^[a-f0-9]{128}$/.test(signature) && /^[a-f0-9]{64}$/.test(publicKey)
+      );
     }
     return false;
   }
 
-  async getTransactionSignatures(transactionId: string): Promise<TransactionSignature[]> {
+  async getTransactionSignatures(
+    transactionId: string,
+  ): Promise<TransactionSignature[]> {
     const result = await pool.query(
       `SELECT id, transaction_id, user_address, signature, public_key, algorithm, signed_at, verified_at, is_valid, verification_error
        FROM transaction_signatures
@@ -159,7 +165,9 @@ export class TransactionSigningService {
     }));
   }
 
-  async getSignatureStatus(signatureId: string): Promise<TransactionSignature | null> {
+  async getSignatureStatus(
+    signatureId: string,
+  ): Promise<TransactionSignature | null> {
     const result = await pool.query(
       `SELECT id, transaction_id, user_address, signature, public_key, algorithm, signed_at, verified_at, is_valid, verification_error
        FROM transaction_signatures
@@ -186,7 +194,9 @@ export class TransactionSigningService {
     };
   }
 
-  async getVerificationLogs(signatureId: string): Promise<SignatureVerificationLog[]> {
+  async getVerificationLogs(
+    signatureId: string,
+  ): Promise<SignatureVerificationLog[]> {
     const result = await pool.query(
       `SELECT id, signature_id, verification_status, verified_by, verified_at, details
        FROM signature_verification_logs

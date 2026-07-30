@@ -9,7 +9,7 @@ export function Label({ className, ...props }: LabelProps) {
     <label
       className={cn(
         "text-xs font-semibold text-[#c9a962] uppercase tracking-widest",
-        className
+        className,
       )}
       {...props}
     />

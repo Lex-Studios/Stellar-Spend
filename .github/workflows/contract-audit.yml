@@ -4,15 +4,15 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'contracts/**'
-      - '.github/workflows/contract-audit.yml'
+      - "contracts/**"
+      - ".github/workflows/contract-audit.yml"
   pull_request:
     branches: [main, develop]
     paths:
-      - 'contracts/**'
+      - "contracts/**"
   schedule:
     # Weekly advisory database check
-    - cron: '0 4 * * 1'
+    - cron: "0 4 * * 1"
 
 jobs:
   static-analysis:

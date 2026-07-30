@@ -93,7 +93,8 @@ export function observeWebVitals(
         callback({
           name: "LCP",
           value: lastEntry.renderTime || lastEntry.loadTime,
-          rating: lastEntry.renderTime || lastEntry.loadTime > 2500 ? "poor" : "good",
+          rating:
+            lastEntry.renderTime || lastEntry.loadTime > 2500 ? "poor" : "good",
         });
       });
       lcpObserver.observe({ entryTypes: ["largest-contentful-paint"] });
@@ -106,8 +107,12 @@ export function observeWebVitals(
       let clsValue = 0;
       const clsObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          if (!(entry as PerformanceEntry & { hadRecentInput?: boolean }).hadRecentInput) {
-            clsValue += (entry as PerformanceEntry & { value?: number }).value || 0;
+          if (
+            !(entry as PerformanceEntry & { hadRecentInput?: boolean })
+              .hadRecentInput
+          ) {
+            clsValue +=
+              (entry as PerformanceEntry & { value?: number }).value || 0;
           }
         }
         callback({
@@ -130,8 +135,14 @@ export function observeWebVitals(
         entries.forEach((entry) => {
           callback({
             name: "FID",
-            value: (entry as PerformanceEntry & { processingDuration?: number }).processingDuration || 0,
-            rating: ((entry as PerformanceEntry & { processingDuration?: number }).processingDuration || 0) > 100 ? "poor" : "good",
+            value:
+              (entry as PerformanceEntry & { processingDuration?: number })
+                .processingDuration || 0,
+            rating:
+              ((entry as PerformanceEntry & { processingDuration?: number })
+                .processingDuration || 0) > 100
+                ? "poor"
+                : "good",
           });
         });
       });

@@ -1,4 +1,4 @@
-import { db } from '@/lib/db/client';
+import { db } from "@/lib/db/client";
 
 export interface InsuranceQuote {
   premium: number;
@@ -13,7 +13,7 @@ export interface InsuranceClaim {
   insuranceId: string;
   reason: string;
   amount: number;
-  status: 'filed' | 'under_review' | 'approved' | 'rejected' | 'paid';
+  status: "filed" | "under_review" | "approved" | "rejected" | "paid";
   filedAt: number;
   reviewedAt?: number;
   paidAt?: number;
@@ -29,7 +29,7 @@ export interface InsuranceAnalytics {
   averagePremium: number;
 }
 
-const PROVIDERS = ['default', 'premium', 'enterprise'];
+const PROVIDERS = ["default", "premium", "enterprise"];
 const BASE_PREMIUM_RATE = 0.005; // 0.5%
 const HIGH_VALUE_THRESHOLD = 10000;
 const HIGH_VALUE_RATE = 0.003; // 0.3% for high-value (bulk discount)
@@ -38,21 +38,27 @@ export function calculateRiskScore(amount: number, currency: string): number {
   let score = 50;
   if (amount > HIGH_VALUE_THRESHOLD) score -= 10;
   if (amount < 100) score += 10;
-  const stablecoins = ['USDC', 'USDT', 'DAI'];
+  const stablecoins = ["USDC", "USDT", "DAI"];
   if (stablecoins.includes(currency.toUpperCase())) score -= 5;
   return Math.max(0, Math.min(100, score));
 }
 
 export async function calculateInsurancePremium(
   amount: number,
-  currency: string
+  currency: string,
 ): Promise<InsuranceQuote> {
   const riskScore = calculateRiskScore(amount, currency);
-  const rate = amount >= HIGH_VALUE_THRESHOLD ? HIGH_VALUE_RATE : BASE_PREMIUM_RATE;
+  const rate =
+    amount >= HIGH_VALUE_THRESHOLD ? HIGH_VALUE_RATE : BASE_PREMIUM_RATE;
   const riskMultiplier = 1 + (riskScore - 50) / 500;
   const premium = parseFloat((amount * rate * riskMultiplier).toFixed(6));
   const coverage = parseFloat((amount * 1.1).toFixed(6));
-  const provider = amount >= HIGH_VALUE_THRESHOLD ? 'enterprise' : amount >= 1000 ? 'premium' : 'default';
+  const provider =
+    amount >= HIGH_VALUE_THRESHOLD
+      ? "enterprise"
+      : amount >= 1000
+        ? "premium"
+        : "default";
 
   return {
     premium,
@@ -67,54 +73,61 @@ export async function createInsurance(
   transactionId: string,
   premium: number,
   coverage: number,
-  provider: string
+  provider: string,
 ) {
   return db.query(
     `INSERT INTO transaction_insurance (transaction_id, premium_amount, coverage_amount, provider, status, created_at)
      VALUES ($1, $2, $3, $4, 'active', NOW())
      RETURNING *`,
-    [transactionId, premium, coverage, provider]
+    [transactionId, premium, coverage, provider],
   );
 }
 
 export async function getInsuranceStatus(transactionId: string) {
   return db.query(
     `SELECT * FROM transaction_insurance WHERE transaction_id = $1`,
-    [transactionId]
+    [transactionId],
   );
 }
 
 export async function getInsuranceById(insuranceId: string) {
-  return db.query(
-    `SELECT * FROM transaction_insurance WHERE id = $1`,
-    [insuranceId]
-  );
+  return db.query(`SELECT * FROM transaction_insurance WHERE id = $1`, [
+    insuranceId,
+  ]);
 }
 
-export async function fileClaim(insuranceId: string, reason: string, evidence?: string) {
+export async function fileClaim(
+  insuranceId: string,
+  reason: string,
+  evidence?: string,
+) {
   const claimId = `CLAIM-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
   return db.query(
     `UPDATE transaction_insurance
      SET status = 'claimed', claim_id = $1, claim_reason = $2, claim_evidence = $3, claimed_at = NOW()
      WHERE id = $4
      RETURNING *`,
-    [claimId, reason, evidence || null, insuranceId]
+    [claimId, reason, evidence || null, insuranceId],
   );
 }
 
-export async function verifyClaim(insuranceId: string): Promise<{ valid: boolean; reason?: string }> {
+export async function verifyClaim(
+  insuranceId: string,
+): Promise<{ valid: boolean; reason?: string }> {
   const result = await db.query(
     `SELECT ti.*, t.amount, t.status as tx_status
      FROM transaction_insurance ti
      LEFT JOIN transactions t ON t.id = ti.transaction_id
      WHERE ti.id = $1`,
-    [insuranceId]
+    [insuranceId],
   );
 
   const row = (result as { rows: Record<string, unknown>[] }).rows?.[0];
-  if (!row) return { valid: false, reason: 'Insurance record not found' };
-  if (row.status !== 'claimed') return { valid: false, reason: 'No active claim on this policy' };
-  if (!row.claim_reason) return { valid: false, reason: 'Claim has no stated reason' };
+  if (!row) return { valid: false, reason: "Insurance record not found" };
+  if (row.status !== "claimed")
+    return { valid: false, reason: "No active claim on this policy" };
+  if (!row.claim_reason)
+    return { valid: false, reason: "Claim has no stated reason" };
 
   return { valid: true };
 }
@@ -122,7 +135,7 @@ export async function verifyClaim(insuranceId: string): Promise<{ valid: boolean
 export async function approveClaim(insuranceId: string) {
   const verification = await verifyClaim(insuranceId);
   if (!verification.valid) {
-    throw new Error(verification.reason || 'Claim verification failed');
+    throw new Error(verification.reason || "Claim verification failed");
   }
 
   return db.query(
@@ -130,29 +143,33 @@ export async function approveClaim(insuranceId: string) {
      SET status = 'claim_approved', approved_at = NOW()
      WHERE id = $1
      RETURNING *`,
-    [insuranceId]
+    [insuranceId],
   );
 }
 
-export async function rejectClaim(insuranceId: string, rejectionReason: string) {
+export async function rejectClaim(
+  insuranceId: string,
+  rejectionReason: string,
+) {
   return db.query(
     `UPDATE transaction_insurance
      SET status = 'claim_rejected', rejection_reason = $1, reviewed_at = NOW()
      WHERE id = $2
      RETURNING *`,
-    [rejectionReason, insuranceId]
+    [rejectionReason, insuranceId],
   );
 }
 
 export async function processInsurancePayout(insuranceId: string) {
   const result = await db.query(
     `SELECT * FROM transaction_insurance WHERE id = $1`,
-    [insuranceId]
+    [insuranceId],
   );
 
   const row = (result as { rows: Record<string, unknown>[] }).rows?.[0];
-  if (!row) throw new Error('Insurance record not found');
-  if (row.status !== 'claim_approved') throw new Error('Claim must be approved before payout');
+  if (!row) throw new Error("Insurance record not found");
+  if (row.status !== "claim_approved")
+    throw new Error("Claim must be approved before payout");
 
   const payoutRef = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 
@@ -161,7 +178,7 @@ export async function processInsurancePayout(insuranceId: string) {
      SET status = 'paid', payout_reference = $1, paid_at = NOW()
      WHERE id = $2
      RETURNING *`,
-    [payoutRef, insuranceId]
+    [payoutRef, insuranceId],
   );
 }
 
@@ -174,7 +191,7 @@ export async function getInsuranceAnalytics(): Promise<InsuranceAnalytics> {
        COALESCE(SUM(coverage_amount) FILTER (WHERE status = 'paid'), 0) as total_paid,
        COUNT(*) FILTER (WHERE status IN ('claimed', 'claim_approved', 'claim_rejected', 'paid')) as total_claims
      FROM transaction_insurance`,
-    []
+    [],
   );
 
   const row = (result as { rows: Record<string, number>[] }).rows?.[0] ?? {};

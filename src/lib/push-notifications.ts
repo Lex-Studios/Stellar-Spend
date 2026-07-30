@@ -14,11 +14,15 @@ export function usePushNotifications() {
   });
 
   useEffect(() => {
-    const isSupported = "serviceWorker" in navigator && "Notification" in window;
+    const isSupported =
+      "serviceWorker" in navigator && "Notification" in window;
     setPermission((prev) => ({ ...prev, isSupported }));
 
     if (isSupported && Notification.permission !== "default") {
-      setPermission((prev) => ({ ...prev, status: Notification.permission as any }));
+      setPermission((prev) => ({
+        ...prev,
+        status: Notification.permission as any,
+      }));
     }
   }, []);
 
@@ -38,7 +42,10 @@ export function usePushNotifications() {
     }
   };
 
-  const sendNotification = async (title: string, options?: NotificationOptions) => {
+  const sendNotification = async (
+    title: string,
+    options?: NotificationOptions,
+  ) => {
     if (!permission.isSupported || permission.status !== "granted") {
       console.warn("Notifications not permitted");
       return;
@@ -66,7 +73,7 @@ export function usePushNotifications() {
 export function notifyTransactionStatus(
   status: "pending" | "completed" | "failed",
   amount: string,
-  currency: string
+  currency: string,
 ) {
   const titles = {
     pending: "Transaction Pending",

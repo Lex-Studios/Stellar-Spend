@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from "crypto";
 
 export interface TransactionTemplate {
   id: string;
@@ -6,7 +6,7 @@ export interface TransactionTemplate {
   amount: string;
   currency: string;
   beneficiaryId?: string;
-  feeMethod: 'XLM' | 'USDC';
+  feeMethod: "XLM" | "USDC";
   category: string;
   usageCount: number;
   createdAt: number;
@@ -19,19 +19,19 @@ export interface TransactionTemplate {
 }
 
 export class TemplateStorage {
-  private static readonly STORAGE_KEY = 'stellar_spend_templates';
+  private static readonly STORAGE_KEY = "stellar_spend_templates";
 
   static createTemplate(
-    template: Omit<TransactionTemplate, 'id' | 'createdAt' | 'sharedWith'>,
+    template: Omit<TransactionTemplate, "id" | "createdAt" | "sharedWith">,
   ): TransactionTemplate {
     const id = crypto.randomUUID();
     const saved: TransactionTemplate = {
       ...template,
       id,
       createdAt: Date.now(),
-      category: template.category ?? 'General',
+      category: template.category ?? "General",
       usageCount: template.usageCount ?? 0,
-      ownerAddress: template.ownerAddress ?? '',
+      ownerAddress: template.ownerAddress ?? "",
       sharedWith: [],
     };
 
@@ -47,7 +47,7 @@ export class TemplateStorage {
   }
 
   static getAllTemplates(): TransactionTemplate[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
     const stored = localStorage.getItem(this.STORAGE_KEY);
     return stored ? JSON.parse(stored) : [];
   }
@@ -78,7 +78,7 @@ export class TemplateStorage {
 
   static updateTemplate(
     id: string,
-    updates: Partial<Omit<TransactionTemplate, 'id' | 'createdAt'>>,
+    updates: Partial<Omit<TransactionTemplate, "id" | "createdAt">>,
   ): TransactionTemplate | null {
     const templates = this.getAllTemplates();
     const index = templates.findIndex((t) => t.id === id);
@@ -98,7 +98,10 @@ export class TemplateStorage {
   }
 
   /** Share a template with another user address. */
-  static shareTemplate(id: string, targetAddress: string): TransactionTemplate | null {
+  static shareTemplate(
+    id: string,
+    targetAddress: string,
+  ): TransactionTemplate | null {
     const templates = this.getAllTemplates();
     const index = templates.findIndex((t) => t.id === id);
     if (index === -1) return null;
@@ -114,7 +117,10 @@ export class TemplateStorage {
   }
 
   /** Remove a user's access to a shared template. */
-  static unshareTemplate(id: string, targetAddress: string): TransactionTemplate | null {
+  static unshareTemplate(
+    id: string,
+    targetAddress: string,
+  ): TransactionTemplate | null {
     const templates = this.getAllTemplates();
     const index = templates.findIndex((t) => t.id === id);
     if (index === -1) return null;
@@ -137,7 +143,7 @@ export class TemplateStorage {
   }
 
   private static persistTemplates(templates: TransactionTemplate[]): void {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(templates));
     }
   }

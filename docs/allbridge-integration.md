@@ -29,17 +29,20 @@ Once the bridge confirms `completed`, the server executes the Base USDC transfer
 
 The SDK is initialized with custom RPC URLs sourced from environment variables:
 
-| Env Variable | SDK Key | Purpose |
-|---|---|---|
-| `STELLAR_SOROBAN_RPC_URL` | `SRB` | Soroban contract calls |
-| `STELLAR_HORIZON_URL` | `STLR` | Stellar Horizon queries |
-| `BASE_RPC_URL` | `ETH` | Base chain interaction |
+| Env Variable              | SDK Key | Purpose                 |
+| ------------------------- | ------- | ----------------------- |
+| `STELLAR_SOROBAN_RPC_URL` | `SRB`   | Soroban contract calls  |
+| `STELLAR_HORIZON_URL`     | `STLR`  | Stellar Horizon queries |
+| `BASE_RPC_URL`            | `ETH`   | Base chain interaction  |
 
 The adapter (`allbridge-adapter.ts`) maintains a **module-level SDK singleton** and a **5-minute TTL cache** for `chainDetailsMap` and token info to avoid redundant network calls.
 
 ```ts
 // Cache is invalidated automatically on any SDK error
-import { initializeAllbridgeSdk, invalidateSdkCache } from '@/lib/offramp/adapters/allbridge-adapter';
+import {
+  initializeAllbridgeSdk,
+  invalidateSdkCache,
+} from "@/lib/offramp/adapters/allbridge-adapter";
 
 const sdk = initializeAllbridgeSdk(); // returns cached instance on repeat calls
 ```
@@ -50,10 +53,10 @@ const sdk = initializeAllbridgeSdk(); // returns cached instance on repeat calls
 
 Allbridge identifies chains and tokens by internal chain symbols. The two chains used in this integration are:
 
-| Chain | Allbridge Symbol | Token | Role |
-|---|---|---|---|
-| Stellar (Soroban) | `SRB` | USDC | Source |
-| Base | `BAS` | USDC | Destination |
+| Chain             | Allbridge Symbol | Token | Role        |
+| ----------------- | ---------------- | ----- | ----------- |
+| Stellar (Soroban) | `SRB`            | USDC  | Source      |
+| Base              | `BAS`            | USDC  | Destination |
 
 ### Resolving Tokens
 
@@ -63,15 +66,16 @@ Token objects are resolved from `sdk.chainDetailsMap()` by matching `symbol === 
 const chainDetailsMap = await sdk.chainDetailsMap();
 
 const stellarChain = chainDetailsMap.SRB;
-const sourceToken = stellarChain.tokens.find(t => t.symbol === 'USDC');
+const sourceToken = stellarChain.tokens.find((t) => t.symbol === "USDC");
 
 const baseChain = chainDetailsMap.BAS;
-const destinationToken = baseChain.tokens.find(t => t.symbol === 'USDC');
+const destinationToken = baseChain.tokens.find((t) => t.symbol === "USDC");
 ```
 
 Both `sourceToken` and `destinationToken` are `TokenWithChainDetails` objects. They carry the contract address, decimals, and chain metadata required by all subsequent SDK calls.
 
 **Errors thrown if tokens are missing:**
+
 - `'Stellar chain (SRB) not found in Allbridge chain details'`
 - `'USDC token not found on Stellar chain'`
 - `'Base chain (BAS) not found in Allbridge chain details'`
@@ -100,10 +104,10 @@ Before building the transaction, fetch the available fee options:
 
 Two fee payment methods are supported:
 
-| Method | Description | `gasAmount` | `feeTokenAmount` |
-|---|---|---|---|
-| `stablecoin` (default) | Fee paid in USDC — no extra XLM needed | `"0"` | stablecoin int value |
-| `native` | Fee paid in XLM | native int value | `"0"` |
+| Method                 | Description                            | `gasAmount`      | `feeTokenAmount`     |
+| ---------------------- | -------------------------------------- | ---------------- | -------------------- |
+| `stablecoin` (default) | Fee paid in USDC — no extra XLM needed | `"0"`            | stablecoin int value |
+| `native`               | Fee paid in XLM                        | native int value | `"0"`                |
 
 Use `getBridgeFeeForMethod(feeOptions, method)` from `allbridge-extensions.ts` to select the correct fee parameters.
 
@@ -122,20 +126,30 @@ Use `getBridgeFeeForMethod(feeOptions, method)` from `allbridge-extensions.ts` t
 }
 ```
 
-| Field | Type | Validation |
-|---|---|---|
-| `amount` | string | Must be a positive number |
-| `fromAddress` | string | Valid Stellar (G...) address |
-| `toAddress` | string | Valid Base (0x...) address |
-| `feePaymentMethod` | `"native"` \| `"stablecoin"` | Defaults to `"stablecoin"` |
+| Field              | Type                         | Validation                   |
+| ------------------ | ---------------------------- | ---------------------------- |
+| `amount`           | string                       | Must be a positive number    |
+| `fromAddress`      | string                       | Valid Stellar (G...) address |
+| `toAddress`        | string                       | Valid Base (0x...) address   |
+| `feePaymentMethod` | `"native"` \| `"stablecoin"` | Defaults to `"stablecoin"`   |
 
 **Successful response:**
 
 ```json
 {
   "xdr": "AAAAAgAAAA...",
-  "sourceToken": { "symbol": "USDC", "decimals": 6, "contract": "C...", "chain": "SRB" },
-  "destinationToken": { "symbol": "USDC", "decimals": 6, "contract": "0x...", "chain": "BAS" }
+  "sourceToken": {
+    "symbol": "USDC",
+    "decimals": 6,
+    "contract": "C...",
+    "chain": "SRB"
+  },
+  "destinationToken": {
+    "symbol": "USDC",
+    "decimals": 6,
+    "contract": "0x...",
+    "chain": "BAS"
+  }
 }
 ```
 
@@ -161,12 +175,12 @@ The route submits the XDR to the Soroban RPC via JSON-RPC `sendTransaction` and 
 { "status": "PENDING", "hash": "abc123..." }
 ```
 
-| RPC Status | Returned Status | Meaning |
-|---|---|---|
-| `PENDING` | `PENDING` | Transaction accepted, awaiting inclusion |
-| `SUCCESS` | `SUCCESS` | Transaction included in ledger |
-| `DUPLICATE` | `PENDING` | Already submitted; treat as pending |
-| `ERROR` / `TRY_AGAIN_LATER` | `400` error | Transaction rejected |
+| RPC Status                  | Returned Status | Meaning                                  |
+| --------------------------- | --------------- | ---------------------------------------- |
+| `PENDING`                   | `PENDING`       | Transaction accepted, awaiting inclusion |
+| `SUCCESS`                   | `SUCCESS`       | Transaction included in ledger           |
+| `DUPLICATE`                 | `PENDING`       | Already submitted; treat as pending      |
+| `ERROR` / `TRY_AGAIN_LATER` | `400` error     | Transaction rejected                     |
 
 ---
 
@@ -190,15 +204,16 @@ Once you have a `txHash`, poll the bridge status until a terminal state is reach
 
 ### Status Values
 
-| Allbridge Raw Status | Internal `BridgeStatus` | Terminal? |
-|---|---|---|
-| `pending` / `waiting` | `pending` | No |
-| `processing` / `in_progress` | `processing` | No |
-| `completed` / `success` | `completed` | ✅ Yes |
-| `failed` / `error` | `failed` | ✅ Yes |
-| `expired` | `expired` | ✅ Yes |
+| Allbridge Raw Status         | Internal `BridgeStatus` | Terminal? |
+| ---------------------------- | ----------------------- | --------- |
+| `pending` / `waiting`        | `pending`               | No        |
+| `processing` / `in_progress` | `processing`            | No        |
+| `completed` / `success`      | `completed`             | ✅ Yes    |
+| `failed` / `error`           | `failed`                | ✅ Yes    |
+| `expired`                    | `expired`               | ✅ Yes    |
 
 **Polling strategy:**
+
 - Poll every 5–10 seconds.
 - Stop when status is `completed`, `failed`, or `expired`.
 - A `404` from Allbridge (transaction not yet indexed) is handled gracefully — the route returns `pending` rather than an error.
@@ -206,9 +221,9 @@ Once you have a `txHash`, poll the bridge status until a terminal state is reach
 ### `getAllbridgeTransferStatus` (adapter utility)
 
 ```ts
-import { getAllbridgeTransferStatus } from '@/lib/offramp/utils/allbridge-extensions';
+import { getAllbridgeTransferStatus } from "@/lib/offramp/utils/allbridge-extensions";
 
-const result = await getAllbridgeTransferStatus(sdk, 'SRB', txHash);
+const result = await getAllbridgeTransferStatus(sdk, "SRB", txHash);
 // { status: 'processing', txHash: '...', receiveAmount?: '99.5' }
 ```
 
@@ -241,6 +256,7 @@ Full message: `resulting balance is not within the allowed range`
 **Cause:** `sdk.chainDetailsMap()` returned without `SRB` or `BAS` keys, or the SDK call timed out.
 
 **Fix:**
+
 1. Verify `STELLAR_SOROBAN_RPC_URL` and `STELLAR_HORIZON_URL` are set and reachable.
 2. The SDK cache is invalidated automatically on error — the next request will re-initialize.
 3. Check Allbridge service status if the issue persists.
@@ -257,11 +273,11 @@ Full message: `resulting balance is not within the allowed range`
 
 ### Soroban RPC submission errors
 
-| Error | Likely Cause |
-|---|---|
-| `TRY_AGAIN_LATER` | Network congestion; retry after a few seconds |
-| `DUPLICATE` | Transaction already submitted; poll status with the existing hash |
-| `ERROR` + `errorResultXdr` | Contract execution failed; decode XDR for details |
+| Error                      | Likely Cause                                                      |
+| -------------------------- | ----------------------------------------------------------------- |
+| `TRY_AGAIN_LATER`          | Network congestion; retry after a few seconds                     |
+| `DUPLICATE`                | Transaction already submitted; poll status with the existing hash |
+| `ERROR` + `errorResultXdr` | Contract execution failed; decode XDR for details                 |
 
 Diagnostic events are logged server-side on `ERROR` status — check server logs for `Diagnostic events:` entries.
 
@@ -295,16 +311,16 @@ The `allbridge-adapter.ts` module exports stateless functions rather than a clas
 The `BridgeProviderRegistry` (in `src/lib/offramp/adapters/provider-registry.ts`) manages all bridge and payout providers:
 
 ```ts
-import { providerRegistry } from '@/lib/offramp/adapters/provider-registry';
+import { providerRegistry } from "@/lib/offramp/adapters/provider-registry";
 
 // Register providers
-providerRegistry.registerBridge('allbridge', allbridgeAdapter);
+providerRegistry.registerBridge("allbridge", allbridgeAdapter);
 
 // Get eligible providers for a corridor
-const bridges = providerRegistry.getEligibleBridges('stellar→base');
+const bridges = providerRegistry.getEligibleBridges("stellar→base");
 
 // Check health
-const health = await providerRegistry.checkBridgeHealth('allbridge');
+const health = await providerRegistry.checkBridgeHealth("allbridge");
 ```
 
 ### Per-Corridor Routing
@@ -312,11 +328,11 @@ const health = await providerRegistry.checkBridgeHealth('allbridge');
 ```ts
 providerRegistry.configureRoutes([
   {
-    corridor: 'stellar→base',
-    sourceChain: 'stellar',
-    destinationChain: 'base',
-    token: 'USDC',
-    bridgeProvider: 'allbridge',
+    corridor: "stellar→base",
+    sourceChain: "stellar",
+    destinationChain: "base",
+    token: "USDC",
+    bridgeProvider: "allbridge",
     priority: 1,
   },
 ]);

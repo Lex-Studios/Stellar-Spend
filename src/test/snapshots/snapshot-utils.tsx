@@ -1,5 +1,5 @@
-import { render } from '@testing-library/react';
-import { ReactElement } from 'react';
+import { render } from "@testing-library/react";
+import { ReactElement } from "react";
 
 /**
  * Snapshot testing utilities for React components
@@ -16,7 +16,7 @@ export interface SnapshotTestOptions {
  */
 export function createComponentSnapshot(
   Component: React.ComponentType<any>,
-  options?: SnapshotTestOptions
+  options?: SnapshotTestOptions,
 ) {
   const { props = {}, children, errorBoundary = false } = options || {};
 
@@ -35,7 +35,7 @@ export function createComponentSnapshot(
  */
 export function testComponentVariations(
   Component: React.ComponentType<any>,
-  variations: Array<{ name: string; props: Record<string, unknown> }>
+  variations: Array<{ name: string; props: Record<string, unknown> }>,
 ) {
   return variations.map(({ name, props }) => ({
     name,
@@ -48,11 +48,14 @@ export function testComponentVariations(
  */
 export function testComponentErrorStates(
   Component: React.ComponentType<any>,
-  errorProps: Record<string, unknown>[]
+  errorProps: Record<string, unknown>[],
 ) {
   return errorProps.map((props, index) => ({
     name: `error-state-${index}`,
-    snapshot: createComponentSnapshot(Component, { props, errorBoundary: true }),
+    snapshot: createComponentSnapshot(Component, {
+      props,
+      errorBoundary: true,
+    }),
   }));
 }
 
@@ -74,27 +77,27 @@ export function normalizeSnapshot(snapshot: unknown): string {
  */
 export function compareSnapshots(
   current: string,
-  previous: string
+  previous: string,
 ): { matches: boolean; diff?: string } {
   if (current === previous) {
     return { matches: true };
   }
 
   // Simple diff: show lines that differ
-  const currentLines = current.split('\n');
-  const previousLines = previous.split('\n');
+  const currentLines = current.split("\n");
+  const previousLines = previous.split("\n");
   const diff: string[] = [];
 
   const maxLines = Math.max(currentLines.length, previousLines.length);
   for (let i = 0; i < maxLines; i++) {
     if (currentLines[i] !== previousLines[i]) {
       diff.push(`Line ${i + 1}:`);
-      diff.push(`- ${previousLines[i] || '[missing]'}`);
-      diff.push(`+ ${currentLines[i] || '[missing]'}`);
+      diff.push(`- ${previousLines[i] || "[missing]"}`);
+      diff.push(`+ ${currentLines[i] || "[missing]"}`);
     }
   }
 
-  return { matches: false, diff: diff.join('\n') };
+  return { matches: false, diff: diff.join("\n") };
 }
 
 /**
@@ -103,7 +106,7 @@ export function compareSnapshots(
 export function updateSnapshot(
   snapshotName: string,
   newValue: string,
-  snapshotMap: Map<string, string>
+  snapshotMap: Map<string, string>,
 ): void {
   snapshotMap.set(snapshotName, newValue);
 }
@@ -113,7 +116,7 @@ export function updateSnapshot(
  */
 export function getSnapshot(
   snapshotName: string,
-  snapshotMap: Map<string, string>
+  snapshotMap: Map<string, string>,
 ): string | undefined {
   return snapshotMap.get(snapshotName);
 }

@@ -1,10 +1,10 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { ErrorHandler } from '@/lib/error-handler';
+import { NextResponse, type NextRequest } from "next/server";
+import { ErrorHandler } from "@/lib/error-handler";
 
 interface SyncSettingsRecord {
   wallet: string;
   syncEnabled: boolean;
-  conflictResolutionStrategy: 'last-write-wins';
+  conflictResolutionStrategy: "last-write-wins";
   updatedAt: number;
 }
 
@@ -24,20 +24,20 @@ const syncSettingsStore = new Map<string, SyncSettingsRecord>();
  * Fetch sync settings for authenticated user
  */
 export async function GET(request: NextRequest) {
-  const wallet = request.nextUrl.searchParams.get('wallet');
+  const wallet = request.nextUrl.searchParams.get("wallet");
 
   if (!wallet) {
-    return ErrorHandler.validation('wallet address is required');
+    return ErrorHandler.validation("wallet address is required");
   }
 
   try {
     // TODO: Add authentication check to ensure user owns this wallet
-    
+
     const normalizedWallet = wallet.toLowerCase();
     const settings = syncSettingsStore.get(normalizedWallet) || {
       wallet: normalizedWallet,
       syncEnabled: false, // Default to disabled for privacy
-      conflictResolutionStrategy: 'last-write-wins' as const,
+      conflictResolutionStrategy: "last-write-wins" as const,
       updatedAt: Date.now(),
     };
 
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         settings,
         timestamp: Date.now(),
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     return ErrorHandler.serverError(err);
@@ -63,28 +63,28 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return ErrorHandler.validation('Invalid JSON body');
+    return ErrorHandler.validation("Invalid JSON body");
   }
 
   const wallet = body.wallet as string | undefined;
   const syncEnabled = body.syncEnabled as boolean | undefined;
 
   if (!wallet) {
-    return ErrorHandler.validation('wallet address is required');
+    return ErrorHandler.validation("wallet address is required");
   }
 
   if (syncEnabled === undefined) {
-    return ErrorHandler.validation('syncEnabled is required');
+    return ErrorHandler.validation("syncEnabled is required");
   }
 
   try {
     // TODO: Add authentication check to ensure user owns this wallet
-    
+
     const normalizedWallet = wallet.toLowerCase();
     const settings: SyncSettingsRecord = {
       wallet: normalizedWallet,
       syncEnabled,
-      conflictResolutionStrategy: 'last-write-wins',
+      conflictResolutionStrategy: "last-write-wins",
       updatedAt: Date.now(),
     };
 
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         settings,
         timestamp: Date.now(),
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     return ErrorHandler.serverError(err);

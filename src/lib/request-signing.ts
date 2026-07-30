@@ -26,7 +26,7 @@ export function generateSignature(
   body: string | null,
   timestamp: string,
   secret: string,
-  config: SignatureConfig = DEFAULT_SIGNATURE_CONFIG
+  config: SignatureConfig = DEFAULT_SIGNATURE_CONFIG,
 ): string {
   const message = [method, path, body || "", timestamp].join("\n");
 
@@ -46,7 +46,7 @@ export function verifySignature(
   timestamp: string,
   signature: string,
   secret: string,
-  config: SignatureConfig = DEFAULT_SIGNATURE_CONFIG
+  config: SignatureConfig = DEFAULT_SIGNATURE_CONFIG,
 ): { valid: boolean; error?: string } {
   // Validate timestamp
   const requestTime = parseInt(timestamp, 10);
@@ -57,17 +57,27 @@ export function verifySignature(
   }
 
   if (Math.abs(now - requestTime) > config.timestampTolerance) {
-    return { valid: false, error: "Request timestamp is too old or in the future" };
+    return {
+      valid: false,
+      error: "Request timestamp is too old or in the future",
+    };
   }
 
   // Generate expected signature
-  const expectedSignature = generateSignature(method, path, body, timestamp, secret, config);
+  const expectedSignature = generateSignature(
+    method,
+    path,
+    body,
+    timestamp,
+    secret,
+    config,
+  );
 
   // Use constant-time comparison to prevent timing attacks
   try {
     const isValid = timingSafeEqual(
       Buffer.from(signature, config.encoding),
-      Buffer.from(expectedSignature, config.encoding)
+      Buffer.from(expectedSignature, config.encoding),
     );
     return { valid: isValid };
   } catch {
@@ -78,7 +88,9 @@ export function verifySignature(
 /**
  * Extract signature from request headers
  */
-export function extractSignatureFromHeaders(headers: Record<string, string | string[] | undefined>): {
+export function extractSignatureFromHeaders(
+  headers: Record<string, string | string[] | undefined>,
+): {
   signature?: string;
   timestamp?: string;
   error?: string;
@@ -87,11 +99,15 @@ export function extractSignatureFromHeaders(headers: Record<string, string | str
   const timestamp = headers["x-timestamp"] || headers["x-request-timestamp"];
 
   if (!signature) {
-    return { error: "Missing signature header (x-signature or x-hmac-signature)" };
+    return {
+      error: "Missing signature header (x-signature or x-hmac-signature)",
+    };
   }
 
   if (!timestamp) {
-    return { error: "Missing timestamp header (x-timestamp or x-request-timestamp)" };
+    return {
+      error: "Missing timestamp header (x-timestamp or x-request-timestamp)",
+    };
   }
 
   return {
@@ -115,10 +131,17 @@ export function createSignedRequestHeaders(
   path: string,
   body: string | null,
   secret: string,
-  config: SignatureConfig = DEFAULT_SIGNATURE_CONFIG
+  config: SignatureConfig = DEFAULT_SIGNATURE_CONFIG,
 ): Record<string, string> {
   const timestamp = generateTimestamp();
-  const signature = generateSignature(method, path, body, timestamp, secret, config);
+  const signature = generateSignature(
+    method,
+    path,
+    body,
+    timestamp,
+    secret,
+    config,
+  );
 
   return {
     "x-signature": signature,
@@ -135,9 +158,13 @@ export function validateRequestSignature(
   body: string | null,
   headers: Record<string, string | string[] | undefined>,
   secret: string,
-  config: SignatureConfig = DEFAULT_SIGNATURE_CONFIG
+  config: SignatureConfig = DEFAULT_SIGNATURE_CONFIG,
 ): { valid: boolean; error?: string } {
-  const { signature, timestamp, error: extractError } = extractSignatureFromHeaders(headers);
+  const {
+    signature,
+    timestamp,
+    error: extractError,
+  } = extractSignatureFromHeaders(headers);
 
   if (extractError) {
     return { valid: false, error: extractError };
@@ -147,7 +174,15 @@ export function validateRequestSignature(
     return { valid: false, error: "Missing signature or timestamp" };
   }
 
-  return verifySignature(method, path, body, timestamp, signature, secret, config);
+  return verifySignature(
+    method,
+    path,
+    body,
+    timestamp,
+    signature,
+    secret,
+    config,
+  );
 }
 
 /**

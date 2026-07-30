@@ -1,11 +1,13 @@
-import { pool } from '../../lib/db/client';
-import type { TransactionRepository, Transaction } from './transaction';
+import { pool } from "../../lib/db/client";
+import type { TransactionRepository, Transaction } from "./transaction";
 
 export class DatabaseTransactionRepository implements TransactionRepository {
   async save(transaction: Transaction): Promise<void> {
     const finalizedAt =
       transaction.finalizedAt ??
-      (transaction.status === 'completed' || transaction.status === 'failed' ? Date.now() : null);
+      (transaction.status === "completed" || transaction.status === "failed"
+        ? Date.now()
+        : null);
 
     const sql = `
       INSERT INTO transactions (
@@ -80,37 +82,46 @@ export class DatabaseTransactionRepository implements TransactionRepository {
     if (setClauses.length === 0) return;
 
     values.push(id);
-    const sql = `UPDATE transactions SET ${setClauses.join(', ')} WHERE id = $${paramIndex}`;
+    const sql = `UPDATE transactions SET ${setClauses.join(", ")} WHERE id = $${paramIndex}`;
 
     await pool.query(sql, values);
   }
 
   async getById(id: string): Promise<Transaction | null> {
-    const result = await pool.query('SELECT * FROM transactions WHERE id = $1', [id]);
-    return result.rows.length > 0 ? this.rowToTransaction(result.rows[0]) : null;
+    const result = await pool.query(
+      "SELECT * FROM transactions WHERE id = $1",
+      [id],
+    );
+    return result.rows.length > 0
+      ? this.rowToTransaction(result.rows[0])
+      : null;
   }
 
   async delete(id: string): Promise<void> {
-    await pool.query('DELETE FROM transactions WHERE id = $1', [id]);
+    await pool.query("DELETE FROM transactions WHERE id = $1", [id]);
   }
 
   async getAll(): Promise<Transaction[]> {
-    const result = await pool.query('SELECT * FROM transactions');
+    const result = await pool.query("SELECT * FROM transactions");
     return result.rows.map((row) => this.rowToTransaction(row));
   }
 
   async getByUser(userAddress: string): Promise<Transaction[]> {
-    const result = await pool.query('SELECT * FROM transactions WHERE user_address = $1', [
-      userAddress,
-    ]);
+    const result = await pool.query(
+      "SELECT * FROM transactions WHERE user_address = $1",
+      [userAddress],
+    );
     return result.rows.map((row) => this.rowToTransaction(row));
   }
 
   async getByPayoutOrderId(orderId: string): Promise<Transaction | null> {
-    const result = await pool.query('SELECT * FROM transactions WHERE payout_order_id = $1', [
-      orderId,
-    ]);
-    return result.rows.length > 0 ? this.rowToTransaction(result.rows[0]) : null;
+    const result = await pool.query(
+      "SELECT * FROM transactions WHERE payout_order_id = $1",
+      [orderId],
+    );
+    return result.rows.length > 0
+      ? this.rowToTransaction(result.rows[0])
+      : null;
   }
 
   private rowToTransaction(row: Record<string, unknown>): Transaction {
@@ -121,7 +132,8 @@ export class DatabaseTransactionRepository implements TransactionRepository {
       userAddress: row.user_address as string,
       amount: row.amount as string,
       currency: row.currency as string,
-      feeMethod: (row.fee_method as Transaction['feeMethod'] | null) ?? undefined,
+      feeMethod:
+        (row.fee_method as Transaction["feeMethod"] | null) ?? undefined,
       bridgeFee: (row.bridge_fee as string | null) ?? undefined,
       networkFee: (row.network_fee as string | null) ?? undefined,
       paycrestFee: (row.paycrest_fee as string | null) ?? undefined,
@@ -136,7 +148,7 @@ export class DatabaseTransactionRepository implements TransactionRepository {
         accountName: row.beneficiary_account_name as string,
         currency: row.beneficiary_currency as string,
       },
-      status: row.status as Transaction['status'],
+      status: row.status as Transaction["status"],
       error: (row.error as string | null) ?? undefined,
     };
   }

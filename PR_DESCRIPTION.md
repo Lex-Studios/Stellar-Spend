@@ -14,18 +14,19 @@ This PR delivers four documentation issues that bring Stellar-Spend's operationa
 
 ### #661 — Operations Runbook Library (`docs/runbooks/`)
 
-| File | Description |
-|------|-------------|
-| `runbooks/index.md` | Master index with runbook template, escalation matrix, comms templates, and PIR process |
-| `runbooks/stuck-bridge.md` | RB-001 — bridge transaction stuck in-flight |
-| `runbooks/provider-outage.md` | RB-002 — Paycrest / Allbridge provider down |
-| `runbooks/database-failover.md` | RB-003 — RDS failover, connection exhaustion, PITR |
-| `runbooks/high-error-rate.md` | RB-004 — 5xx spike, deployment regression |
-| `runbooks/backup-failure.md` | RB-005 — AWS Backup job failure |
-| `runbooks/post-incident-review.md` | **New** — standalone PIR template (five-whys, timeline, action items) |
-| `docs/monitoring.md` | **Updated** — Runbook column added to alert table; all 13 critical/warning alerts now link to matching runbooks |
+| File                               | Description                                                                                                     |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `runbooks/index.md`                | Master index with runbook template, escalation matrix, comms templates, and PIR process                         |
+| `runbooks/stuck-bridge.md`         | RB-001 — bridge transaction stuck in-flight                                                                     |
+| `runbooks/provider-outage.md`      | RB-002 — Paycrest / Allbridge provider down                                                                     |
+| `runbooks/database-failover.md`    | RB-003 — RDS failover, connection exhaustion, PITR                                                              |
+| `runbooks/high-error-rate.md`      | RB-004 — 5xx spike, deployment regression                                                                       |
+| `runbooks/backup-failure.md`       | RB-005 — AWS Backup job failure                                                                                 |
+| `runbooks/post-incident-review.md` | **New** — standalone PIR template (five-whys, timeline, action items)                                           |
+| `docs/monitoring.md`               | **Updated** — Runbook column added to alert table; all 13 critical/warning alerts now link to matching runbooks |
 
 Acceptance criteria met:
+
 - ✅ Every critical alert in `monitoring.md` links to a matching runbook
 - ✅ Runbooks include escalation paths (SLA table per runbook + escalation matrix in index)
 - ✅ Communications templates (Slack internal, status page external, resolution) in index
@@ -45,6 +46,7 @@ Acceptance criteria met:
 - Localization notes and legal placeholder checklist
 
 Acceptance criteria met:
+
 - ✅ Each supported region shows its regulatory notice
 - ✅ KYC limits and data handling are documented
 
@@ -61,6 +63,7 @@ Acceptance criteria met:
 - Backup/restore procedures and migration guide
 
 Acceptance criteria met:
+
 - ✅ Schema docs cover all migrations and match the DB
 - ✅ ER diagram present
 - ✅ Migration history overview included
@@ -83,6 +86,7 @@ Acceptance criteria met:
 - Copy-paste examples: full offramp happy-path + fee estimation
 
 Acceptance criteria met:
+
 - ✅ A dev can build and submit a signed Soroban tx using the handbook
 - ✅ Network/fee handling clearly explained
 

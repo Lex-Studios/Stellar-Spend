@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { ErrorHandler } from '@/lib/error-handler';
-import { listApiKeyUsage } from '@/lib/api-keys/service';
-import { requireApiKeyAdmin } from '@/app/api/api-keys/_utils';
+import { NextRequest, NextResponse } from "next/server";
+import { ErrorHandler } from "@/lib/error-handler";
+import { listApiKeyUsage } from "@/lib/api-keys/service";
+import { requireApiKeyAdmin } from "@/app/api/api-keys/_utils";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const unauthorized = requireApiKeyAdmin(request);
   if (unauthorized) return unauthorized;

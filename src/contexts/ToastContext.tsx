@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+} from "react";
 
 type ToastType = "success" | "error" | "info" | "warning";
 
@@ -19,8 +25,12 @@ interface ToastActionContextValue {
   removeToast: (id: string) => void;
 }
 
-const ToastStateContext = createContext<ToastStateContextValue | undefined>(undefined);
-const ToastActionContext = createContext<ToastActionContextValue | undefined>(undefined);
+const ToastStateContext = createContext<ToastStateContextValue | undefined>(
+  undefined,
+);
+const ToastActionContext = createContext<ToastActionContextValue | undefined>(
+  undefined,
+);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);

@@ -5,7 +5,7 @@ export interface Transaction {
   userAddress: string;
   amount: string;
   currency: string;
-  feeMethod?: 'native' | 'stablecoin';
+  feeMethod?: "native" | "stablecoin";
   bridgeFee?: string;
   networkFee?: string;
   paycrestFee?: string;
@@ -20,7 +20,8 @@ export interface Transaction {
     accountName: string;
     currency: string;
   };
-  status: 'pending' | 'completed' | 'failed' | 'reversed' | 'partially_reversed';
+  status:
+    "pending" | "completed" | "failed" | "reversed" | "partially_reversed";
   error?: string;
   /** User-supplied note for this transaction (max 500 chars) */
   note?: string;
@@ -32,7 +33,7 @@ export interface Transaction {
     timestamp: number;
     amount: string;
     reason: string;
-    status: 'pending' | 'completed' | 'failed';
+    status: "pending" | "completed" | "failed";
   };
   /** Whether this transaction is marked as favorite */
   isFavorite?: boolean;
@@ -43,28 +44,37 @@ export interface Transaction {
     coverage: number;
     provider: string;
     riskScore: number;
-    status: 'pending' | 'active' | 'claimed' | 'claim_approved' | 'claim_rejected' | 'paid';
+    status:
+      | "pending"
+      | "active"
+      | "claimed"
+      | "claim_approved"
+      | "claim_rejected"
+      | "paid";
     claimId?: string;
     claimReason?: string;
     purchasedAt: number;
   };
 }
 
-const STORAGE_KEY = 'stellar_spend_transactions';
+const STORAGE_KEY = "stellar_spend_transactions";
 const MAX_TRANSACTIONS = 50;
 
 export class TransactionStorage {
   static save(transaction: Transaction): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const all = this.getAll();
     all.unshift(transaction);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all.slice(0, MAX_TRANSACTIONS)));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(all.slice(0, MAX_TRANSACTIONS)),
+    );
   }
 
   static update(id: string, updates: Partial<Transaction>): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const all = this.getAll();
-    const i = all.findIndex(tx => tx.id === id);
+    const i = all.findIndex((tx) => tx.id === id);
     if (i !== -1) {
       all[i] = { ...all[i], ...updates };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
@@ -72,7 +82,7 @@ export class TransactionStorage {
   }
 
   static getAll(): Transaction[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -82,15 +92,17 @@ export class TransactionStorage {
   }
 
   static getByUser(userAddress: string): Transaction[] {
-    return this.getAll().filter(tx => tx.userAddress.toLowerCase() === userAddress.toLowerCase());
+    return this.getAll().filter(
+      (tx) => tx.userAddress.toLowerCase() === userAddress.toLowerCase(),
+    );
   }
 
   static getById(id: string): Transaction | undefined {
-    return this.getAll().find(tx => tx.id === id);
+    return this.getAll().find((tx) => tx.id === id);
   }
 
   static clear(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     localStorage.removeItem(STORAGE_KEY);
   }
 
@@ -103,29 +115,35 @@ export class TransactionStorage {
   }
 
   static isReversalEligible(tx: Transaction): boolean {
-    return tx.status === 'completed' && !tx.reversal;
+    return tx.status === "completed" && !tx.reversal;
   }
 
   static reverse(id: string, amount: string, reason: string): void {
     const tx = this.getById(id);
     if (!tx || !this.isReversalEligible(tx)) return;
-    
+
     this.update(id, {
       reversal: {
         id: `rev_${Date.now()}`,
         timestamp: Date.now(),
         amount,
         reason,
-        status: 'pending',
+        status: "pending",
       },
-      status: parseFloat(amount) === parseFloat(tx.amount) ? 'reversed' : 'partially_reversed',
+      status:
+        parseFloat(amount) === parseFloat(tx.amount)
+          ? "reversed"
+          : "partially_reversed",
     });
   }
 
-  static updateReversalStatus(id: string, status: 'pending' | 'completed' | 'failed'): void {
+  static updateReversalStatus(
+    id: string,
+    status: "pending" | "completed" | "failed",
+  ): void {
     const tx = this.getById(id);
     if (!tx?.reversal) return;
-    
+
     this.update(id, {
       reversal: { ...tx.reversal, status },
     });
@@ -138,11 +156,11 @@ export class TransactionStorage {
   }
 
   static getFavorites(): Transaction[] {
-    return this.getAll().filter(tx => tx.isFavorite);
+    return this.getAll().filter((tx) => tx.isFavorite);
   }
 
   static getFavoritesByUser(userAddress: string): Transaction[] {
-    return this.getByUser(userAddress).filter(tx => tx.isFavorite);
+    return this.getByUser(userAddress).filter((tx) => tx.isFavorite);
   }
 
   /**
@@ -150,7 +168,10 @@ export class TransactionStorage {
    * the previous values. Use when the caller is also issuing a network
    * request and wants to revert the local change if it fails.
    */
-  static applyOptimistic(id: string, updates: Partial<Transaction>): () => void {
+  static applyOptimistic(
+    id: string,
+    updates: Partial<Transaction>,
+  ): () => void {
     const prior = this.getById(id);
     if (!prior) return () => {};
     const snapshot: Partial<Transaction> = {};
@@ -162,7 +183,7 @@ export class TransactionStorage {
     return () => this.update(id, snapshot);
   }
 
-  static addTag(id: string, tagName: string, color: string = '#3b82f6'): void {
+  static addTag(id: string, tagName: string, color: string = "#3b82f6"): void {
     const tx = this.getById(id);
     if (!tx) return;
     const tags = tx.tags || [];
@@ -174,17 +195,19 @@ export class TransactionStorage {
   static removeTag(id: string, tagId: string): void {
     const tx = this.getById(id);
     if (!tx?.tags) return;
-    this.update(id, { tags: tx.tags.filter(t => t.id !== tagId) });
+    this.update(id, { tags: tx.tags.filter((t) => t.id !== tagId) });
   }
 
   static getTransactionsByTag(tagName: string): Transaction[] {
-    return this.getAll().filter(tx => tx.tags?.some(t => t.name === tagName));
+    return this.getAll().filter((tx) =>
+      tx.tags?.some((t) => t.name === tagName),
+    );
   }
 
   static getAllTags(): Array<{ name: string; color: string; count: number }> {
     const tagMap = new Map<string, { color: string; count: number }>();
-    this.getAll().forEach(tx => {
-      tx.tags?.forEach(tag => {
+    this.getAll().forEach((tx) => {
+      tx.tags?.forEach((tag) => {
         const existing = tagMap.get(tag.name);
         tagMap.set(tag.name, {
           color: tag.color,

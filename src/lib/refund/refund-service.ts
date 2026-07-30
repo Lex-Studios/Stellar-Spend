@@ -1,11 +1,11 @@
 /**
  * Automated refund service for failed/expired transactions.
  */
-import { dal, DatabaseError } from '@/lib/db/dal';
-import type { Transaction } from '@/lib/transaction-storage';
-import { notifyTransactionStatusUpdate } from '@/lib/notifications/service';
+import { dal, DatabaseError } from "@/lib/db/dal";
+import type { Transaction } from "@/lib/transaction-storage";
+import { notifyTransactionStatusUpdate } from "@/lib/notifications/service";
 
-export type RefundReason = 'payment_failed' | 'timeout' | 'expired' | 'manual';
+export type RefundReason = "payment_failed" | "timeout" | "expired" | "manual";
 
 export interface RefundResult {
   transactionId: string;
@@ -30,9 +30,10 @@ export interface RefundNotification {
  * Eligible: status is 'failed' or payoutStatus is 'expired'/'refunded' and not already completed.
  */
 export function isRefundEligible(tx: Transaction): boolean {
-  if (tx.status === 'completed') return false;
-  if (tx.status === 'failed') return true;
-  if (tx.payoutStatus === 'expired' || tx.payoutStatus === 'refunded') return true;
+  if (tx.status === "completed") return false;
+  if (tx.status === "failed") return true;
+  if (tx.payoutStatus === "expired" || tx.payoutStatus === "refunded")
+    return true;
   return false;
 }
 
@@ -40,7 +41,10 @@ export function isRefundEligible(tx: Transaction): boolean {
  * Calculates refund amount. For partial refunds, deducts any fees already incurred.
  * Currently returns full amount; extend with fee deduction logic as needed.
  */
-export function calculateRefundAmount(tx: Transaction, partial = false): string {
+export function calculateRefundAmount(
+  tx: Transaction,
+  partial = false,
+): string {
   if (!partial) return tx.amount;
   // Partial refund: deduct a nominal processing fee (0.5%)
   const amount = parseFloat(tx.amount);
@@ -56,7 +60,7 @@ export function calculateRefundAmount(tx: Transaction, partial = false): string 
 export async function processRefund(
   transactionId: string,
   reason: RefundReason,
-  partial = false
+  partial = false,
 ): Promise<RefundResult> {
   const timestamp = new Date().toISOString();
 
@@ -65,28 +69,56 @@ export async function processRefund(
     tx = await dal.getById(transactionId);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return { transactionId, success: false, refundAmount: '0', reason, error: msg, timestamp };
+    return {
+      transactionId,
+      success: false,
+      refundAmount: "0",
+      reason,
+      error: msg,
+      timestamp,
+    };
   }
 
   if (!tx) {
-    return { transactionId, success: false, refundAmount: '0', reason, error: 'Transaction not found', timestamp };
+    return {
+      transactionId,
+      success: false,
+      refundAmount: "0",
+      reason,
+      error: "Transaction not found",
+      timestamp,
+    };
   }
 
   if (!isRefundEligible(tx)) {
-    return { transactionId, success: false, refundAmount: '0', reason, error: 'Transaction not eligible for refund', timestamp };
+    return {
+      transactionId,
+      success: false,
+      refundAmount: "0",
+      reason,
+      error: "Transaction not eligible for refund",
+      timestamp,
+    };
   }
 
   const refundAmount = calculateRefundAmount(tx, partial);
 
   try {
     await dal.update(transactionId, {
-      status: 'failed',
-      payoutStatus: 'refunded',
+      status: "failed",
+      payoutStatus: "refunded",
       error: `Refunded: ${reason}`,
     });
   } catch (err) {
     const msg = err instanceof DatabaseError ? err.message : String(err);
-    return { transactionId, success: false, refundAmount, reason, error: msg, timestamp };
+    return {
+      transactionId,
+      success: false,
+      refundAmount,
+      reason,
+      error: msg,
+      timestamp,
+    };
   }
 
   const updated = await dal.getById(transactionId);
@@ -95,7 +127,7 @@ export async function processRefund(
       transaction: updated,
       previousStatus: tx.status,
       previousPayoutStatus: tx.payoutStatus,
-      source: 'refund',
+      source: "refund",
     });
   }
 
@@ -117,7 +149,9 @@ export async function processRefund(
  * Detects all transactions eligible for refund and processes them.
  * Returns results for each processed transaction.
  */
-export async function processEligibleRefunds(userAddress?: string): Promise<RefundResult[]> {
+export async function processEligibleRefunds(
+  userAddress?: string,
+): Promise<RefundResult[]> {
   let transactions: Transaction[];
   try {
     if (userAddress) {
@@ -132,7 +166,7 @@ export async function processEligibleRefunds(userAddress?: string): Promise<Refu
 
   const eligible = transactions.filter(isRefundEligible);
   const results = await Promise.all(
-    eligible.map((tx) => processRefund(tx.id, 'payment_failed'))
+    eligible.map((tx) => processRefund(tx.id, "payment_failed")),
   );
   return results;
 }
@@ -141,5 +175,5 @@ export async function processEligibleRefunds(userAddress?: string): Promise<Refu
  * Emits a refund notification (structured log; extend with email/webhook as needed).
  */
 function emitRefundNotification(notification: RefundNotification): void {
-  console.log(JSON.stringify({ event: 'refund.processed', ...notification }));
+  console.log(JSON.stringify({ event: "refund.processed", ...notification }));
 }

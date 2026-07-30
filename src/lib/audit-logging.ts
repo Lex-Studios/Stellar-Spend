@@ -2,7 +2,8 @@ import { pool } from "./db/client";
 import { logger } from "./logger";
 import crypto from "crypto";
 
-const LOG_INTEGRITY_KEY = process.env.AUDIT_LOG_INTEGRITY_KEY ?? 'default-dev-key-change-in-prod';
+const LOG_INTEGRITY_KEY =
+  process.env.AUDIT_LOG_INTEGRITY_KEY ?? "default-dev-key-change-in-prod";
 
 export interface AuditLog {
   id: string;
@@ -51,7 +52,7 @@ export interface SensitiveDataAccessLog {
 
 export interface AuditLogExport {
   exportedAt: string;
-  format: 'json' | 'csv';
+  format: "json" | "csv";
   data: string;
   recordCount: number;
 }
@@ -285,7 +286,9 @@ export class AuditLoggingService {
     }));
   }
 
-  async cleanupOldLogs(retentionDays = this.DEFAULT_RETENTION_DAYS): Promise<number> {
+  async cleanupOldLogs(
+    retentionDays = this.DEFAULT_RETENTION_DAYS,
+  ): Promise<number> {
     const cutoffTime = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
 
     const result = await pool.query(
@@ -336,16 +339,34 @@ export class AuditLoggingService {
     statusCode: number,
     options?: { ipAddress?: string; userAgent?: string },
   ): Promise<ApiKeyUsageLog> {
-    const id = `apikey_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+    const id = `apikey_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
     const now = Date.now();
 
     await pool.query(
       `INSERT INTO api_key_usage_logs (id, api_key_id, endpoint, method, status_code, ip_address, user_agent, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [id, apiKeyId, endpoint, method, statusCode, options?.ipAddress ?? null, options?.userAgent ?? null, now],
+      [
+        id,
+        apiKeyId,
+        endpoint,
+        method,
+        statusCode,
+        options?.ipAddress ?? null,
+        options?.userAgent ?? null,
+        now,
+      ],
     );
 
-    return { id, apiKeyId, endpoint, method, statusCode, ipAddress: options?.ipAddress, userAgent: options?.userAgent, createdAt: now };
+    return {
+      id,
+      apiKeyId,
+      endpoint,
+      method,
+      statusCode,
+      ipAddress: options?.ipAddress,
+      userAgent: options?.userAgent,
+      createdAt: now,
+    };
   }
 
   async logSensitiveDataAccess(
@@ -353,16 +374,29 @@ export class AuditLoggingService {
     dataType: string,
     options?: { userAddress?: string; resourceId?: string; reason?: string },
   ): Promise<SensitiveDataAccessLog> {
-    const id = `sensitive_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+    const id = `sensitive_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
     const now = Date.now();
 
     await pool.query(
       `INSERT INTO sensitive_data_access_logs (id, user_address, accessed_by, data_type, resource_id, reason, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [id, options?.userAddress ?? null, accessedBy, dataType, options?.resourceId ?? null, options?.reason ?? null, now],
+      [
+        id,
+        options?.userAddress ?? null,
+        accessedBy,
+        dataType,
+        options?.resourceId ?? null,
+        options?.reason ?? null,
+        now,
+      ],
     );
 
-    logger.warn('Sensitive data access logged', { id, accessedBy, dataType, resourceId: options?.resourceId });
+    logger.warn("Sensitive data access logged", {
+      id,
+      accessedBy,
+      dataType,
+      resourceId: options?.resourceId,
+    });
 
     return {
       id,
@@ -411,23 +445,38 @@ export class AuditLoggingService {
   }
 
   async exportAuditLogs(
-    format: 'json' | 'csv' = 'json',
+    format: "json" | "csv" = "json",
     filters?: { startDate?: number; endDate?: number; actionType?: string },
   ): Promise<AuditLogExport> {
     const logs = await this.getAuditLogs(filters, 10000, 0);
 
     let data: string;
-    if (format === 'csv') {
-      const header = 'id,userAddress,actionType,resourceType,resourceId,status,ipAddress,createdAt';
+    if (format === "csv") {
+      const header =
+        "id,userAddress,actionType,resourceType,resourceId,status,ipAddress,createdAt";
       const rows = logs.map((l) =>
-        [l.id, l.userAddress ?? '', l.actionType, l.resourceType, l.resourceId ?? '', l.status, l.ipAddress ?? '', l.createdAt].join(','),
+        [
+          l.id,
+          l.userAddress ?? "",
+          l.actionType,
+          l.resourceType,
+          l.resourceId ?? "",
+          l.status,
+          l.ipAddress ?? "",
+          l.createdAt,
+        ].join(","),
       );
-      data = [header, ...rows].join('\n');
+      data = [header, ...rows].join("\n");
     } else {
       data = JSON.stringify(logs, null, 2);
     }
 
-    return { exportedAt: new Date().toISOString(), format, data, recordCount: logs.length };
+    return {
+      exportedAt: new Date().toISOString(),
+      format,
+      data,
+      recordCount: logs.length,
+    };
   }
 
   /**
@@ -443,12 +492,18 @@ export class AuditLoggingService {
       status: log.status,
       createdAt: log.createdAt,
     });
-    return crypto.createHmac('sha256', LOG_INTEGRITY_KEY).update(payload).digest('hex');
+    return crypto
+      .createHmac("sha256", LOG_INTEGRITY_KEY)
+      .update(payload)
+      .digest("hex");
   }
 
   verifyLogIntegrity(log: AuditLog, storedHash: string): boolean {
     const expected = this.computeLogIntegrityHash(log);
-    return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(storedHash, 'hex'));
+    return crypto.timingSafeEqual(
+      Buffer.from(expected, "hex"),
+      Buffer.from(storedHash, "hex"),
+    );
   }
 }
 

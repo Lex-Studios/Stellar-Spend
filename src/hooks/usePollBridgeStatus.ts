@@ -1,13 +1,21 @@
-'use client';
+"use client";
 
-import { useCallback } from 'react';
-import type { BridgeStatus } from '@/lib/offramp/types';
-import { TransactionStorage } from '@/lib/transaction-storage';
-import { usePollingManager, DurationExceededError, ConsecutiveErrorsExceededError } from '@/lib/polling/polling-manager';
-import type { StatusResponse } from '@/lib/polling/polling-manager';
-import { BRIDGE_CONFIG } from '@/lib/polling/backoff';
+import { useCallback } from "react";
+import type { BridgeStatus } from "@/lib/offramp/types";
+import { TransactionStorage } from "@/lib/transaction-storage";
+import {
+  usePollingManager,
+  DurationExceededError,
+  ConsecutiveErrorsExceededError,
+} from "@/lib/polling/polling-manager";
+import type { StatusResponse } from "@/lib/polling/polling-manager";
+import { BRIDGE_CONFIG } from "@/lib/polling/backoff";
 
-const BRIDGE_TERMINAL_STATES: BridgeStatus[] = ['completed', 'failed', 'expired'];
+const BRIDGE_TERMINAL_STATES: BridgeStatus[] = [
+  "completed",
+  "failed",
+  "expired",
+];
 
 interface PollBridgeStatusOptions {
   transactionId: string;
@@ -26,17 +34,29 @@ export function usePollBridgeStatus() {
   const { start } = usePollingManager(BRIDGE_CONFIG);
 
   const pollBridgeStatus = useCallback(
-    async (txHash: string, { transactionId, onBridgeComplete }: PollBridgeStatusOptions): Promise<void> => {
-      const fetchFn = async (id: string, signal: AbortSignal): Promise<StatusResponse> => {
+    async (
+      txHash: string,
+      { transactionId, onBridgeComplete }: PollBridgeStatusOptions,
+    ): Promise<void> => {
+      const fetchFn = async (
+        id: string,
+        signal: AbortSignal,
+      ): Promise<StatusResponse> => {
         const res = await fetch(`/api/offramp/bridge/status/${id}`, {
-          cache: 'no-store',
+          cache: "no-store",
           signal,
         });
 
-        const data: { data?: { status?: BridgeStatus }; status?: BridgeStatus; error?: string } = await res.json();
+        const data: {
+          data?: { status?: BridgeStatus };
+          status?: BridgeStatus;
+          error?: string;
+        } = await res.json();
 
         // Support both wrapped { data: { status } } and flat { status } response shapes
-        const status: BridgeStatus = (data.data?.status ?? data.status ?? 'pending') as BridgeStatus;
+        const status: BridgeStatus = (data.data?.status ??
+          data.status ??
+          "pending") as BridgeStatus;
 
         if (status) {
           TransactionStorage.update(transactionId, { bridgeStatus: status });
@@ -48,31 +68,34 @@ export function usePollBridgeStatus() {
       };
 
       try {
-        const result = await start(txHash, fetchFn, () => { });
+        const result = await start(txHash, fetchFn, () => {});
 
         const status = result.status as BridgeStatus;
 
-        if (status === 'completed') {
+        if (status === "completed") {
           onBridgeComplete?.();
           return;
         }
 
-        if (status === 'failed' || status === 'expired') {
+        if (status === "failed" || status === "expired") {
           throw new Error(
-            status === 'failed'
-              ? 'Bridge transfer failed. Please contact support.'
-              : 'Bridge transfer expired. Please try again.'
+            status === "failed"
+              ? "Bridge transfer failed. Please contact support."
+              : "Bridge transfer expired. Please try again.",
           );
         }
       } catch (err) {
         // Total timeout or 10 consecutive errors → resolve silently (best-effort)
-        if (err instanceof DurationExceededError || err instanceof ConsecutiveErrorsExceededError) {
+        if (
+          err instanceof DurationExceededError ||
+          err instanceof ConsecutiveErrorsExceededError
+        ) {
           return;
         }
         throw err;
       }
     },
-    [start]
+    [start],
   );
 
   return { pollBridgeStatus };

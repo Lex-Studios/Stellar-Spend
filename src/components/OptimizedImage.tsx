@@ -2,7 +2,10 @@
 
 import Image, { ImageProps } from "next/image";
 import { memo } from "react";
-import { imageConfigs, ImageOptimizationConfig } from "@/lib/image-optimization";
+import {
+  imageConfigs,
+  ImageOptimizationConfig,
+} from "@/lib/image-optimization";
 
 interface OptimizedImageProps extends Omit<ImageProps, "alt"> {
   alt: string;

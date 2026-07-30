@@ -1,5 +1,5 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { getDetailedFeeBreakdown } from '@/lib/fee-calculation';
+import { NextResponse, type NextRequest } from "next/server";
+import { getDetailedFeeBreakdown } from "@/lib/fee-calculation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,19 +8,22 @@ export async function POST(request: NextRequest) {
 
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
       return NextResponse.json(
-        { error: 'Invalid amount: must be a positive number' },
-        { status: 400 }
+        { error: "Invalid amount: must be a positive number" },
+        { status: 400 },
       );
     }
 
-    if (!currency || typeof currency !== 'string') {
-      return NextResponse.json({ error: 'currency is required' }, { status: 400 });
+    if (!currency || typeof currency !== "string") {
+      return NextResponse.json(
+        { error: "currency is required" },
+        { status: 400 },
+      );
     }
 
-    if (!feeMethod || !['stablecoin', 'native'].includes(feeMethod)) {
+    if (!feeMethod || !["stablecoin", "native"].includes(feeMethod)) {
       return NextResponse.json(
         { error: 'feeMethod must be "stablecoin" or "native"' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -33,12 +36,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(feeBreakdown);
   } catch (error) {
-    console.error('Fee calculation error:', error);
+    console.error("Fee calculation error:", error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'Failed to calculate fees',
+        error:
+          error instanceof Error ? error.message : "Failed to calculate fees",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

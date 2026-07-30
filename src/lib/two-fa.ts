@@ -1,8 +1,8 @@
-import crypto from 'crypto';
+import crypto from "crypto";
 
 export interface TwoFAConfig {
   userId: string;
-  method: 'totp' | 'sms';
+  method: "totp" | "sms";
   secret?: string;
   phoneNumber?: string;
   isEnabled: boolean;
@@ -21,9 +21,9 @@ export interface TwoFAVerification {
 }
 
 export interface TwoFAEnforcementPolicy {
-  requireFor: ('login' | 'withdrawal' | 'profile_change' | 'api_key')[];
+  requireFor: ("login" | "withdrawal" | "profile_change" | "api_key")[];
   gracePeriodMs: number;
-  allowedMethods: ('totp' | 'sms' | 'backup')[];
+  allowedMethods: ("totp" | "sms" | "backup")[];
 }
 
 export interface RecoverySession {
@@ -34,9 +34,9 @@ export interface RecoverySession {
 }
 
 const DEFAULT_ENFORCEMENT: TwoFAEnforcementPolicy = {
-  requireFor: ['withdrawal', 'api_key'],
-  gracePeriodMs: 5 * 60 * 1000,  // 5 minutes
-  allowedMethods: ['totp', 'sms', 'backup'],
+  requireFor: ["withdrawal", "api_key"],
+  gracePeriodMs: 5 * 60 * 1000, // 5 minutes
+  allowedMethods: ["totp", "sms", "backup"],
 };
 
 // In-memory 2FA config store (replace with DB in production)
@@ -45,7 +45,7 @@ const recoveryStore = new Map<string, RecoverySession>();
 let enforcementPolicy: TwoFAEnforcementPolicy = { ...DEFAULT_ENFORCEMENT };
 
 export class TwoFAService {
-  private static readonly TOTP_WINDOW = 30;    // seconds
+  private static readonly TOTP_WINDOW = 30; // seconds
   private static readonly TOTP_DIGITS = 6;
   private static readonly BACKUP_CODE_COUNT = 10;
 
@@ -54,10 +54,14 @@ export class TwoFAService {
   // ---------------------------------------------------------------------------
 
   static generateTOTPSecret(): string {
-    return crypto.randomBytes(20).toString('base64');
+    return crypto.randomBytes(20).toString("base64");
   }
 
-  static generateTOTPURI(secret: string, email: string, issuer = 'Stellar-Spend'): string {
+  static generateTOTPURI(
+    secret: string,
+    email: string,
+    issuer = "Stellar-Spend",
+  ): string {
     const encodedEmail = encodeURIComponent(email);
     const encodedIssuer = encodeURIComponent(issuer);
     return `otpauth://totp/${encodedIssuer}:${encodedEmail}?secret=${secret}&issuer=${encodedIssuer}&digits=${this.TOTP_DIGITS}&period=${this.TOTP_WINDOW}`;
@@ -79,7 +83,7 @@ export class TwoFAService {
       }
 
       const hmac = crypto
-        .createHmac('sha1', Buffer.from(secret, 'base64'))
+        .createHmac("sha1", Buffer.from(secret, "base64"))
         .update(counterBuf)
         .digest();
 
@@ -92,7 +96,7 @@ export class TwoFAService {
 
       const totp = (value % Math.pow(10, this.TOTP_DIGITS))
         .toString()
-        .padStart(this.TOTP_DIGITS, '0');
+        .padStart(this.TOTP_DIGITS, "0");
 
       if (crypto.timingSafeEqual(Buffer.from(totp), Buffer.from(code))) {
         return true;
@@ -108,7 +112,7 @@ export class TwoFAService {
 
   static generateBackupCodes(count = this.BACKUP_CODE_COUNT): string[] {
     return Array.from({ length: count }, () =>
-      crypto.randomBytes(4).toString('hex').toUpperCase(),
+      crypto.randomBytes(4).toString("hex").toUpperCase(),
     );
   }
 
@@ -126,7 +130,11 @@ export class TwoFAService {
       return { isValid: false, remainingCodes: backupCodes, usedCodes };
     }
     const remainingCodes = backupCodes.filter((_, i) => i !== index);
-    return { isValid: true, remainingCodes, usedCodes: [...usedCodes, normalised] };
+    return {
+      isValid: true,
+      remainingCodes,
+      usedCodes: [...usedCodes, normalised],
+    };
   }
 
   // ---------------------------------------------------------------------------
@@ -135,16 +143,19 @@ export class TwoFAService {
 
   static setup(
     userId: string,
-    method: 'totp' | 'sms',
+    method: "totp" | "sms",
     extra?: { secret?: string; phoneNumber?: string },
   ): TwoFAConfig {
     const existing = configStore.get(userId);
     const config: TwoFAConfig = {
       userId,
       method,
-      secret: method === 'totp' ? (extra?.secret ?? this.generateTOTPSecret()) : undefined,
-      phoneNumber: method === 'sms' ? extra?.phoneNumber : undefined,
-      isEnabled: false,        // enabled after first successful verification
+      secret:
+        method === "totp"
+          ? (extra?.secret ?? this.generateTOTPSecret())
+          : undefined,
+      phoneNumber: method === "sms" ? extra?.phoneNumber : undefined,
+      isEnabled: false, // enabled after first successful verification
       isEnforced: false,
       backupCodes: this.generateBackupCodes(),
       usedBackupCodes: existing?.usedBackupCodes ?? [],
@@ -178,7 +189,11 @@ export class TwoFAService {
     const config = configStore.get(userId);
     if (!config) return null;
     const newCodes = this.generateBackupCodes();
-    configStore.set(userId, { ...config, backupCodes: newCodes, usedBackupCodes: [] });
+    configStore.set(userId, {
+      ...config,
+      backupCodes: newCodes,
+      usedBackupCodes: [],
+    });
     return newCodes;
   }
 
@@ -186,11 +201,15 @@ export class TwoFAService {
   // Verification
   // ---------------------------------------------------------------------------
 
-  static verify(userId: string, code: string, method: 'totp' | 'backup'): boolean {
+  static verify(
+    userId: string,
+    code: string,
+    method: "totp" | "backup",
+  ): boolean {
     const config = configStore.get(userId);
     if (!config || !config.isEnabled) return false;
 
-    if (method === 'totp') {
+    if (method === "totp") {
       if (!config.secret) return false;
       const valid = this.verifyTOTP(config.secret, code);
       if (valid) {
@@ -199,7 +218,7 @@ export class TwoFAService {
       return valid;
     }
 
-    if (method === 'backup') {
+    if (method === "backup") {
       const { isValid, remainingCodes, usedCodes } = this.verifyBackupCode(
         config.backupCodes,
         config.usedBackupCodes,
@@ -224,18 +243,21 @@ export class TwoFAService {
   // ---------------------------------------------------------------------------
 
   static initiateRecovery(userId: string): RecoverySession {
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = crypto.randomBytes(32).toString("hex");
     const session: RecoverySession = {
       token,
       userId,
-      expiresAt: Date.now() + 15 * 60 * 1000,  // 15 minutes
+      expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutes
       used: false,
     };
     recoveryStore.set(token, session);
     return session;
   }
 
-  static completeRecovery(token: string, newMethod: 'totp' | 'sms'): TwoFAConfig | null {
+  static completeRecovery(
+    token: string,
+    newMethod: "totp" | "sms",
+  ): TwoFAConfig | null {
     const session = recoveryStore.get(token);
     if (!session || session.used || session.expiresAt < Date.now()) return null;
 
@@ -251,12 +273,16 @@ export class TwoFAService {
     return { ...enforcementPolicy };
   }
 
-  static updateEnforcementPolicy(updates: Partial<TwoFAEnforcementPolicy>): TwoFAEnforcementPolicy {
+  static updateEnforcementPolicy(
+    updates: Partial<TwoFAEnforcementPolicy>,
+  ): TwoFAEnforcementPolicy {
     enforcementPolicy = { ...enforcementPolicy, ...updates };
     return { ...enforcementPolicy };
   }
 
-  static isRequired(action: TwoFAEnforcementPolicy['requireFor'][number]): boolean {
+  static isRequired(
+    action: TwoFAEnforcementPolicy["requireFor"][number],
+  ): boolean {
     return enforcementPolicy.requireFor.includes(action);
   }
 

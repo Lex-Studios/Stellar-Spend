@@ -45,28 +45,33 @@ src/
 ## Module Organization Principles
 
 ### 1. Feature Modules
+
 Group related functionality into feature modules:
+
 - Each feature has its own directory
 - Contains types, services, components, and utilities
 - Exports public API via barrel exports (index.ts)
 
 ### 2. Barrel Exports
+
 Use index.ts files to export public APIs:
 
 ```typescript
 // src/lib/validators/index.ts
-export * from './schemas';
-export * from './service';
-export { ValidationService } from './service';
+export * from "./schemas";
+export * from "./service";
+export { ValidationService } from "./service";
 ```
 
 ### 3. Layered Architecture
+
 - **Components**: UI layer (React components)
 - **Services**: Business logic layer
 - **Repositories**: Data access layer
 - **Utilities**: Cross-cutting concerns
 
 ### 4. Naming Conventions
+
 - Services: `*.service.ts`
 - Adapters: `*.adapter.ts`
 - Utilities: `*.ts` or `*.util.ts`
@@ -76,27 +81,29 @@ export { ValidationService } from './service';
 ## Import Patterns
 
 ### Absolute Imports
+
 Use path aliases for cleaner imports:
 
 ```typescript
 // ✅ Good
-import { ValidationService } from '@/lib/validators';
-import { Button } from '@/components/ui';
+import { ValidationService } from "@/lib/validators";
+import { Button } from "@/components/ui";
 
 // ❌ Avoid
-import { ValidationService } from '../../../lib/validators';
+import { ValidationService } from "../../../lib/validators";
 ```
 
 ### Barrel Exports
+
 Import from barrel exports:
 
 ```typescript
 // ✅ Good
-import { ValidationService, amountSchema } from '@/lib/validators';
+import { ValidationService, amountSchema } from "@/lib/validators";
 
 // ❌ Avoid
-import { ValidationService } from '@/lib/validators/service';
-import { amountSchema } from '@/lib/validators/schemas';
+import { ValidationService } from "@/lib/validators/service";
+import { amountSchema } from "@/lib/validators/schemas";
 ```
 
 ## Feature Module Template

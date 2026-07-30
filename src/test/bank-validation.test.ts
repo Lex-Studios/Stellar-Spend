@@ -94,7 +94,9 @@ describe("validateBankField", () => {
   });
 
   it("delegates 'iban' to validateIBAN", () => {
-    expect(validateBankField("iban", "GB29NWBK60161331926819").valid).toBe(true);
+    expect(validateBankField("iban", "GB29NWBK60161331926819").valid).toBe(
+      true,
+    );
     expect(validateBankField("iban", "INVALID").valid).toBe(false);
   });
 });

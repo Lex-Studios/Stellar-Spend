@@ -1,11 +1,24 @@
-import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'crypto';
-import { pool } from '@/lib/db/client';
-import type { ApiKeyAnalytics, ApiKeyRecord, ApiKeyScope, ApiKeyUsageEvent, ApiKeyWithSecret } from '@/lib/api-keys/types';
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from "crypto";
+import { pool } from "@/lib/db/client";
+import type {
+  ApiKeyAnalytics,
+  ApiKeyRecord,
+  ApiKeyScope,
+  ApiKeyUsageEvent,
+  ApiKeyWithSecret,
+} from "@/lib/api-keys/types";
 
 class PerKeyRateLimiter {
-  private readonly store = new Map<string, { count: number; resetTime: number }>();
+  private readonly store = new Map<
+    string,
+    { count: number; resetTime: number }
+  >();
 
-  check(key: string, maxRequests: number, windowMs: number): { allowed: boolean; retryAfter?: number } {
+  check(
+    key: string,
+    maxRequests: number,
+    windowMs: number,
+  ): { allowed: boolean; retryAfter?: number } {
     const now = Date.now();
     const record = this.store.get(key);
 
@@ -27,17 +40,17 @@ class PerKeyRateLimiter {
 }
 
 const perKeyRateLimiter = new PerKeyRateLimiter();
-const API_KEY_PREFIX = 'ssp_live_';
+const API_KEY_PREFIX = "ssp_live_";
 
 function hashApiKey(value: string): string {
-  return createHash('sha256').update(value).digest('hex');
+  return createHash("sha256").update(value).digest("hex");
 }
 
 function mapApiKey(row: Record<string, unknown>): ApiKeyRecord {
   const rawScopes = row.scopes;
   const scopes: ApiKeyScope[] = Array.isArray(rawScopes)
     ? (rawScopes as ApiKeyScope[])
-    : typeof rawScopes === 'string' && rawScopes
+    : typeof rawScopes === "string" && rawScopes
       ? (JSON.parse(rawScopes) as ApiKeyScope[])
       : [];
 
@@ -45,13 +58,15 @@ function mapApiKey(row: Record<string, unknown>): ApiKeyRecord {
     id: row.id as string,
     name: row.name as string,
     keyPrefix: row.key_prefix as string,
-    status: row.status as ApiKeyRecord['status'],
+    status: row.status as ApiKeyRecord["status"],
     scopes,
     rateLimitMaxRequests: Number(row.rate_limit_max_requests),
     rateLimitWindowMs: Number(row.rate_limit_window_ms),
     usageCount: Number(row.usage_count),
     lastUsedAt: row.last_used_at ? Number(row.last_used_at) : undefined,
-    lastRotatedAt: row.last_rotated_at ? Number(row.last_rotated_at) : undefined,
+    lastRotatedAt: row.last_rotated_at
+      ? Number(row.last_rotated_at)
+      : undefined,
     revokedAt: row.revoked_at ? Number(row.revoked_at) : undefined,
     revokedReason: (row.revoked_reason as string | null) ?? undefined,
     expiresAt: row.expires_at ? Number(row.expires_at) : undefined,
@@ -76,8 +91,8 @@ function mapUsageEvent(row: Record<string, unknown>): ApiKeyUsageEvent {
 }
 
 function generatePlaintextKey(): { plaintextKey: string; keyPrefix: string } {
-  const publicPrefix = randomBytes(6).toString('hex');
-  const secret = randomBytes(24).toString('hex');
+  const publicPrefix = randomBytes(6).toString("hex");
+  const secret = randomBytes(24).toString("hex");
   return {
     plaintextKey: `${API_KEY_PREFIX}${publicPrefix}.${secret}`,
     keyPrefix: publicPrefix,
@@ -118,7 +133,7 @@ export async function createApiKey(input: {
 
   const rateLimitMaxRequests = input.rateLimitMaxRequests ?? 60;
   const rateLimitWindowMs = input.rateLimitWindowMs ?? 60_000;
-  const scopes = input.scopes ?? ['transactions:read'];
+  const scopes = input.scopes ?? ["transactions:read"];
 
   const result = await pool.query(
     `
@@ -140,7 +155,7 @@ export async function createApiKey(input: {
       input.expiresAt ?? null,
       input.rotatedFromKeyId ?? null,
       now,
-    ]
+    ],
   );
 
   return {
@@ -155,7 +170,7 @@ export async function listApiKeys(): Promise<ApiKeyRecord[]> {
       SELECT *
       FROM api_keys
       ORDER BY created_at DESC
-    `
+    `,
   );
 
   return result.rows.map((row) => mapApiKey(row));
@@ -166,7 +181,10 @@ export async function getApiKeyById(id: string): Promise<ApiKeyRecord | null> {
   return result.rows[0] ? mapApiKey(result.rows[0]) : null;
 }
 
-export async function revokeApiKey(id: string, reason?: string): Promise<ApiKeyRecord | null> {
+export async function revokeApiKey(
+  id: string,
+  reason?: string,
+): Promise<ApiKeyRecord | null> {
   const now = Date.now();
   const result = await pool.query(
     `
@@ -178,13 +196,15 @@ export async function revokeApiKey(id: string, reason?: string): Promise<ApiKeyR
       WHERE id = $1
       RETURNING *
     `,
-    [id, now, reason ?? null]
+    [id, now, reason ?? null],
   );
 
   return result.rows[0] ? mapApiKey(result.rows[0]) : null;
 }
 
-export async function rotateApiKey(id: string): Promise<ApiKeyWithSecret | null> {
+export async function rotateApiKey(
+  id: string,
+): Promise<ApiKeyWithSecret | null> {
   const existing = await getApiKeyById(id);
   if (!existing) return null;
 
@@ -205,13 +225,15 @@ export async function rotateApiKey(id: string): Promise<ApiKeyWithSecret | null>
           updated_at = $2
       WHERE id = $1
     `,
-    [id, Date.now()]
+    [id, Date.now()],
   );
 
   return rotated;
 }
 
-export async function authenticateApiKey(rawKey: string): Promise<ApiKeyRecord | null> {
+export async function authenticateApiKey(
+  rawKey: string,
+): Promise<ApiKeyRecord | null> {
   const keyHash = hashApiKey(rawKey);
   const result = await pool.query(
     `
@@ -220,19 +242,26 @@ export async function authenticateApiKey(rawKey: string): Promise<ApiKeyRecord |
       WHERE key_hash = $1
       LIMIT 1
     `,
-    [keyHash]
+    [keyHash],
   );
 
   if (!result.rows[0]) return null;
   const apiKey = mapApiKey(result.rows[0]);
 
-  if (apiKey.status !== 'active') return null;
+  if (apiKey.status !== "active") return null;
   if (apiKey.expiresAt && apiKey.expiresAt <= Date.now()) return null;
   return apiKey;
 }
 
-export function checkApiKeyRateLimit(apiKey: ApiKeyRecord): { allowed: boolean; retryAfter?: number } {
-  return perKeyRateLimiter.check(apiKey.id, apiKey.rateLimitMaxRequests, apiKey.rateLimitWindowMs);
+export function checkApiKeyRateLimit(apiKey: ApiKeyRecord): {
+  allowed: boolean;
+  retryAfter?: number;
+} {
+  return perKeyRateLimiter.check(
+    apiKey.id,
+    apiKey.rateLimitMaxRequests,
+    apiKey.rateLimitWindowMs,
+  );
 }
 
 export async function recordApiKeyUsage(input: {
@@ -261,7 +290,7 @@ export async function recordApiKeyUsage(input: {
       input.ipAddress ?? null,
       now,
       JSON.stringify(input.metadata ?? {}),
-    ]
+    ],
   );
 
   await pool.query(
@@ -272,11 +301,13 @@ export async function recordApiKeyUsage(input: {
           updated_at = $2
       WHERE id = $1
     `,
-    [input.apiKeyId, now]
+    [input.apiKeyId, now],
   );
 }
 
-export async function listApiKeyUsage(apiKeyId: string): Promise<ApiKeyUsageEvent[]> {
+export async function listApiKeyUsage(
+  apiKeyId: string,
+): Promise<ApiKeyUsageEvent[]> {
   const result = await pool.query(
     `
       SELECT *
@@ -285,13 +316,15 @@ export async function listApiKeyUsage(apiKeyId: string): Promise<ApiKeyUsageEven
       ORDER BY used_at DESC
       LIMIT 100
     `,
-    [apiKeyId]
+    [apiKeyId],
   );
 
   return result.rows.map((row) => mapUsageEvent(row));
 }
 
-export async function getApiKeyAnalytics(apiKeyId: string): Promise<ApiKeyAnalytics | null> {
+export async function getApiKeyAnalytics(
+  apiKeyId: string,
+): Promise<ApiKeyAnalytics | null> {
   const keyRecord = await getApiKeyById(apiKeyId);
   if (!keyRecord) return null;
 
@@ -307,7 +340,7 @@ export async function getApiKeyAnalytics(apiKeyId: string): Promise<ApiKeyAnalyt
         FROM api_key_usage_events
         WHERE api_key_id = $1
       `,
-      [apiKeyId]
+      [apiKeyId],
     ),
     pool.query(
       `
@@ -318,7 +351,7 @@ export async function getApiKeyAnalytics(apiKeyId: string): Promise<ApiKeyAnalyt
         ORDER BY count DESC
         LIMIT 10
       `,
-      [apiKeyId]
+      [apiKeyId],
     ),
     pool.query(
       `
@@ -331,7 +364,7 @@ export async function getApiKeyAnalytics(apiKeyId: string): Promise<ApiKeyAnalyt
         ORDER BY date DESC
         LIMIT 30
       `,
-      [apiKeyId]
+      [apiKeyId],
     ),
   ]);
 
@@ -341,7 +374,9 @@ export async function getApiKeyAnalytics(apiKeyId: string): Promise<ApiKeyAnalyt
   const errorRequests = Number(totals.error_requests);
   const rateLimitedRequests = Number(totals.rate_limited_requests);
 
-  const firstUsedAt = totals.first_used_at ? Number(totals.first_used_at) : null;
+  const firstUsedAt = totals.first_used_at
+    ? Number(totals.first_used_at)
+    : null;
   const spanMs = firstUsedAt ? Date.now() - firstUsedAt : 0;
   const spanHours = spanMs > 0 ? spanMs / 3_600_000 : 1;
   const averageRequestsPerHour = totalRequests / spanHours;
@@ -353,12 +388,18 @@ export async function getApiKeyAnalytics(apiKeyId: string): Promise<ApiKeyAnalyt
     errorRequests,
     rateLimitedRequests,
     successRate: totalRequests > 0 ? successRequests / totalRequests : 0,
-    topPaths: topPathsResult.rows.map((r) => ({ path: r.path as string, count: Number(r.count) })),
-    requestsByDay: byDayResult.rows.map((r) => ({ date: r.date as string, count: Number(r.count) })),
+    topPaths: topPathsResult.rows.map((r) => ({
+      path: r.path as string,
+      count: Number(r.count),
+    })),
+    requestsByDay: byDayResult.rows.map((r) => ({
+      date: r.date as string,
+      count: Number(r.count),
+    })),
     averageRequestsPerHour,
   };
 }
 
 export function hasScope(apiKey: ApiKeyRecord, scope: ApiKeyScope): boolean {
-  return apiKey.scopes.includes('admin') || apiKey.scopes.includes(scope);
+  return apiKey.scopes.includes("admin") || apiKey.scopes.includes(scope);
 }

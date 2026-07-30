@@ -118,7 +118,12 @@ export class SlidingWindowRateLimiter {
 
 // ─── Violation Logging ────────────────────────────────────────────────────────
 
-function logViolation(namespace: string, key: string, count: number, limit: number): void {
+function logViolation(
+  namespace: string,
+  key: string,
+  count: number,
+  limit: number,
+): void {
   console.warn(
     JSON.stringify({
       event: "rate_limit.violation",
@@ -176,11 +181,14 @@ export const buildTxLimiter = new SlidingWindowRateLimiter("build-tx", {
   premiumBypass: false,
 });
 
-export const paycrestOrderLimiter = new SlidingWindowRateLimiter("paycrest-order", {
-  maxRequests: 5,
-  windowMs: 60_000,
-  premiumBypass: true,
-});
+export const paycrestOrderLimiter = new SlidingWindowRateLimiter(
+  "paycrest-order",
+  {
+    maxRequests: 5,
+    windowMs: 60_000,
+    premiumBypass: true,
+  },
+);
 
 export const quoteLimiter = new SlidingWindowRateLimiter("quote", {
   maxRequests: 30,

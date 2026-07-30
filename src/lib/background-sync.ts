@@ -3,7 +3,10 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Transaction } from "./transaction-storage";
 import { SyncStorage } from "./sync-storage";
-import { syncTransactionHistory, getSyncStatus } from "./transaction-sync-client";
+import {
+  syncTransactionHistory,
+  getSyncStatus,
+} from "./transaction-sync-client";
 
 interface FailedTransaction extends Transaction {
   retryCount?: number;
@@ -38,7 +41,9 @@ export interface SyncStatus {
 
 export function useBackgroundSync() {
   const [isSupported, setIsSupported] = useState(false);
-  const [failedTransactions, setFailedTransactions] = useState<FailedTransaction[]>([]);
+  const [failedTransactions, setFailedTransactions] = useState<
+    FailedTransaction[]
+  >([]);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
     enabled: false,
     lastSyncAt: 0,
@@ -64,7 +69,7 @@ export function useBackgroundSync() {
 
   const updateSyncStatus = useCallback(() => {
     const status = getSyncStatus();
-    setSyncStatus(prev => ({
+    setSyncStatus((prev) => ({
       ...prev,
       ...status,
     }));
@@ -77,7 +82,7 @@ export function useBackgroundSync() {
     if (supported) {
       loadFailedTransactions();
       updateSyncStatus();
-      
+
       // Update sync status every 5 seconds
       const interval = setInterval(updateSyncStatus, 5000);
       return () => clearInterval(interval);
@@ -142,8 +147,11 @@ export function useBackgroundSync() {
     }
   };
 
-  const triggerHistorySync = async (userAddress: string, localTransactions: Transaction[]) => {
-    setSyncStatus(prev => ({ ...prev, syncing: true }));
+  const triggerHistorySync = async (
+    userAddress: string,
+    localTransactions: Transaction[],
+  ) => {
+    setSyncStatus((prev) => ({ ...prev, syncing: true }));
     try {
       const result = await syncTransactionHistory(localTransactions, {
         userAddress,
@@ -158,7 +166,7 @@ export function useBackgroundSync() {
     } catch (err) {
       console.error("Error syncing history:", err);
     } finally {
-      setSyncStatus(prev => ({ ...prev, syncing: false }));
+      setSyncStatus((prev) => ({ ...prev, syncing: false }));
       updateSyncStatus();
     }
   };

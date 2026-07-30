@@ -1,5 +1,5 @@
-import type { DepositProviderAdapter } from './deposit-provider';
-import type { OnrampProviderCapabilities } from './deposit-provider';
+import type { DepositProviderAdapter } from "./deposit-provider";
+import type { OnrampProviderCapabilities } from "./deposit-provider";
 
 export interface ProviderRoute {
   fiatCurrency: string;
@@ -22,19 +22,27 @@ export class OnrampProviderRegistry {
     return this.providers.get(name);
   }
 
-  getProvidersForCorridor(fiatCurrency: string, destinationToken: string): string[] {
+  getProvidersForCorridor(
+    fiatCurrency: string,
+    destinationToken: string,
+  ): string[] {
     const direct = this.routes
-      .filter(r => r.fiatCurrency === fiatCurrency && r.destinationToken === destinationToken)
+      .filter(
+        (r) =>
+          r.fiatCurrency === fiatCurrency &&
+          r.destinationToken === destinationToken,
+      )
       .sort((a, b) => a.priority - b.priority)
-      .map(r => r.provider);
+      .map((r) => r.provider);
 
     const byCapability = Array.from(this.capabilities.entries())
-      .filter(([name, caps]) =>
-        caps.supportedFiatCurrencies.includes(fiatCurrency) &&
-        caps.supportedDestinationTokens.includes(destinationToken)
+      .filter(
+        ([name, caps]) =>
+          caps.supportedFiatCurrencies.includes(fiatCurrency) &&
+          caps.supportedDestinationTokens.includes(destinationToken),
       )
       .map(([name]) => name)
-      .filter(name => !direct.includes(name));
+      .filter((name) => !direct.includes(name));
 
     return [...new Set([...direct, ...byCapability])];
   }
@@ -53,7 +61,9 @@ export class OnrampProviderRegistry {
     }
   }
 
-  async checkAllHealth(): Promise<Record<string, { ok: boolean; latencyMs: number }>> {
+  async checkAllHealth(): Promise<
+    Record<string, { ok: boolean; latencyMs: number }>
+  > {
     const results: Record<string, { ok: boolean; latencyMs: number }> = {};
     for (const [name, provider] of this.providers) {
       try {

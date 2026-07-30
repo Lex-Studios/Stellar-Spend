@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-describe('Chaos Engineering: Network Failures', () => {
-  describe('Network timeout scenarios', () => {
-    it('should handle request timeout and retry', async () => {
+describe("Chaos Engineering: Network Failures", () => {
+  describe("Network timeout scenarios", () => {
+    it("should handle request timeout and retry", async () => {
       let attempts = 0;
 
       const mockFetch = async () => {
         attempts++;
         if (attempts < 3) {
-          throw new Error('Timeout');
+          throw new Error("Timeout");
         }
-        return { status: 200, data: { status: 'success' } };
+        return { status: 200, data: { status: "success" } };
       };
 
       try {
@@ -23,16 +23,16 @@ describe('Chaos Engineering: Network Failures', () => {
       }
     });
 
-    it('should fail after max retries exceeded', async () => {
+    it("should fail after max retries exceeded", async () => {
       const maxRetries = 3;
       let attempts = 0;
 
       const mockFetch = async () => {
         attempts++;
         if (attempts > maxRetries) {
-          throw new Error('Max retries exceeded');
+          throw new Error("Max retries exceeded");
         }
-        throw new Error('Network unreachable');
+        throw new Error("Network unreachable");
       };
 
       try {
@@ -40,11 +40,13 @@ describe('Chaos Engineering: Network Failures', () => {
           await mockFetch();
         }
       } catch (error) {
-        expect((error as Error).message).toMatch(/Network unreachable|Max retries/);
+        expect((error as Error).message).toMatch(
+          /Network unreachable|Max retries/,
+        );
       }
     });
 
-    it('should implement exponential backoff', async () => {
+    it("should implement exponential backoff", async () => {
       const delays: number[] = [];
       let attempts = 0;
 
@@ -64,37 +66,37 @@ describe('Chaos Engineering: Network Failures', () => {
     });
   });
 
-  describe('Rate limiting scenarios', () => {
-    it('should handle 429 rate limit errors', async () => {
-      const mockResponse = { status: 429, message: 'Rate limited' };
+  describe("Rate limiting scenarios", () => {
+    it("should handle 429 rate limit errors", async () => {
+      const mockResponse = { status: 429, message: "Rate limited" };
 
       expect(mockResponse.status).toBe(429);
-      expect(mockResponse.message).toContain('Rate');
+      expect(mockResponse.message).toContain("Rate");
     });
 
-    it('should handle 503 service unavailable', async () => {
-      const mockResponse = { status: 503, message: 'Service unavailable' };
+    it("should handle 503 service unavailable", async () => {
+      const mockResponse = { status: 503, message: "Service unavailable" };
 
       expect(mockResponse.status).toBe(503);
-      expect(mockResponse.message).toContain('unavailable');
+      expect(mockResponse.message).toContain("unavailable");
     });
 
-    it('should respect retry-after header', async () => {
+    it("should respect retry-after header", async () => {
       const retryAfter = 60;
-      const headers = { 'retry-after': retryAfter.toString() };
+      const headers = { "retry-after": retryAfter.toString() };
 
-      expect(parseInt(headers['retry-after'])).toBe(60);
+      expect(parseInt(headers["retry-after"])).toBe(60);
     });
   });
 
-  describe('Partial failure recovery', () => {
-    it('should recover from transient failures', async () => {
+  describe("Partial failure recovery", () => {
+    it("should recover from transient failures", async () => {
       let attempts = 0;
 
       const mockFetch = async () => {
         attempts++;
         if (attempts === 1) {
-          throw new Error('Transient error');
+          throw new Error("Transient error");
         }
         return { status: 200, data: { success: true } };
       };
@@ -108,7 +110,7 @@ describe('Chaos Engineering: Network Failures', () => {
       }
     });
 
-    it('should handle partial response data', async () => {
+    it("should handle partial response data", async () => {
       const response = {
         status: 200,
         data: {
@@ -123,15 +125,15 @@ describe('Chaos Engineering: Network Failures', () => {
   });
 });
 
-describe('Chaos Engineering: Database Failures', () => {
-  describe('Connection pool exhaustion', () => {
-    it('should handle connection pool timeout', async () => {
+describe("Chaos Engineering: Database Failures", () => {
+  describe("Connection pool exhaustion", () => {
+    it("should handle connection pool timeout", async () => {
       const mockPool = {
         activeConnections: 10,
         maxConnections: 10,
         getConnection: async () => {
           if (mockPool.activeConnections >= mockPool.maxConnections) {
-            throw new Error('Connection pool timeout');
+            throw new Error("Connection pool timeout");
           }
           mockPool.activeConnections++;
           return { id: 1 };
@@ -143,11 +145,11 @@ describe('Chaos Engineering: Database Failures', () => {
           await mockPool.getConnection();
         }
       } catch (error) {
-        expect((error as Error).message).toBe('Connection pool timeout');
+        expect((error as Error).message).toBe("Connection pool timeout");
       }
     });
 
-    it('should queue requests when pool exhausted', async () => {
+    it("should queue requests when pool exhausted", async () => {
       const queue: (() => Promise<void>)[] = [];
       const mockPool = {
         activeConnections: 0,
@@ -160,8 +162,8 @@ describe('Chaos Engineering: Database Failures', () => {
     });
   });
 
-  describe('Query timeout scenarios', () => {
-    it('should handle long-running queries', async () => {
+  describe("Query timeout scenarios", () => {
+    it("should handle long-running queries", async () => {
       const queryTimeout = 1000;
 
       const mockQuery = async () => {
@@ -172,21 +174,21 @@ describe('Chaos Engineering: Database Failures', () => {
       const timeoutPromise = Promise.race([
         mockQuery(),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Query timeout')), queryTimeout)
+          setTimeout(() => reject(new Error("Query timeout")), queryTimeout),
         ),
       ]);
 
-      await expect(timeoutPromise).rejects.toThrow('Query timeout');
+      await expect(timeoutPromise).rejects.toThrow("Query timeout");
     });
 
-    it('should cancel query on timeout', async () => {
+    it("should cancel query on timeout", async () => {
       let cancelled = false;
 
       const mockQuery = async (signal: AbortSignal) => {
         return new Promise((resolve, reject) => {
-          signal.addEventListener('abort', () => {
+          signal.addEventListener("abort", () => {
             cancelled = true;
-            reject(new Error('Query cancelled'));
+            reject(new Error("Query cancelled"));
           });
           setTimeout(() => resolve({ rows: [] }), 5000);
         });
@@ -203,37 +205,37 @@ describe('Chaos Engineering: Database Failures', () => {
     });
   });
 
-  describe('Transaction rollback scenarios', () => {
-    it('should handle transaction rollback on error', async () => {
+  describe("Transaction rollback scenarios", () => {
+    it("should handle transaction rollback on error", async () => {
       const mockTransaction = {
         inProgress: false,
         rollback: async () => {
           mockTransaction.inProgress = false;
         },
         execute: async (sql: string) => {
-          if (sql.includes('INSERT')) {
-            throw new Error('Constraint violation');
+          if (sql.includes("INSERT")) {
+            throw new Error("Constraint violation");
           }
           return { rows: [] };
         },
       };
 
       try {
-        await mockTransaction.execute('INSERT INTO transactions VALUES (...)');
+        await mockTransaction.execute("INSERT INTO transactions VALUES (...)");
       } catch (error) {
         await mockTransaction.rollback();
         expect(mockTransaction.inProgress).toBe(false);
       }
     });
 
-    it('should maintain data consistency on rollback', async () => {
+    it("should maintain data consistency on rollback", async () => {
       const data = { balance: 1000 };
 
       const transaction = async () => {
         const originalBalance = data.balance;
         try {
           data.balance -= 100;
-          throw new Error('Transaction failed');
+          throw new Error("Transaction failed");
         } catch {
           data.balance = originalBalance;
         }
@@ -245,13 +247,13 @@ describe('Chaos Engineering: Database Failures', () => {
   });
 });
 
-describe('Chaos Engineering: Timeout Scenarios', () => {
-  describe('Request timeout handling', () => {
-    it('should abort request after timeout', async () => {
+describe("Chaos Engineering: Timeout Scenarios", () => {
+  describe("Request timeout handling", () => {
+    it("should abort request after timeout", async () => {
       const controller = new AbortController();
       let aborted = false;
 
-      controller.signal.addEventListener('abort', () => {
+      controller.signal.addEventListener("abort", () => {
         aborted = true;
       });
 
@@ -261,7 +263,7 @@ describe('Chaos Engineering: Timeout Scenarios', () => {
       expect(aborted).toBe(true);
     });
 
-    it('should cleanup resources on timeout', async () => {
+    it("should cleanup resources on timeout", async () => {
       const resources = { connections: 5 };
 
       const cleanup = () => {
@@ -277,22 +279,22 @@ describe('Chaos Engineering: Timeout Scenarios', () => {
     });
   });
 
-  describe('Cascading timeout scenarios', () => {
-    it('should handle timeout in dependent services', async () => {
+  describe("Cascading timeout scenarios", () => {
+    it("should handle timeout in dependent services", async () => {
       const service1 = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Service 1 timeout')), 100)
+        setTimeout(() => reject(new Error("Service 1 timeout")), 100),
       );
 
       const service2 = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Service 2 timeout')), 200)
+        setTimeout(() => reject(new Error("Service 2 timeout")), 200),
       );
 
       const allServices = Promise.all([service1, service2]);
 
-      await expect(allServices).rejects.toThrow('Service 1 timeout');
+      await expect(allServices).rejects.toThrow("Service 1 timeout");
     });
 
-    it('should prevent timeout cascade', async () => {
+    it("should prevent timeout cascade", async () => {
       const timeouts: string[] = [];
 
       const service = async (name: string, delay: number) => {
@@ -300,12 +302,12 @@ describe('Chaos Engineering: Timeout Scenarios', () => {
           setTimeout(() => {
             timeouts.push(name);
             reject(new Error(`${name} timeout`));
-          }, delay)
+          }, delay),
         );
       };
 
       try {
-        await Promise.race([service('A', 100), service('B', 200)]);
+        await Promise.race([service("A", 100), service("B", 200)]);
       } catch (error) {
         expect(timeouts.length).toBe(1);
       }
@@ -313,15 +315,15 @@ describe('Chaos Engineering: Timeout Scenarios', () => {
   });
 });
 
-describe('Chaos Engineering: Load Spike Testing', () => {
-  it('should handle sudden traffic spike', async () => {
+describe("Chaos Engineering: Load Spike Testing", () => {
+  it("should handle sudden traffic spike", async () => {
     const metrics = { requests: 0, errors: 0 };
 
     const handleRequest = async () => {
       metrics.requests++;
       if (metrics.requests > 100) {
         metrics.errors++;
-        throw new Error('Overloaded');
+        throw new Error("Overloaded");
       }
       return { success: true };
     };
@@ -338,7 +340,7 @@ describe('Chaos Engineering: Load Spike Testing', () => {
     expect(metrics.errors).toBeGreaterThan(0);
   });
 
-  it('should implement rate limiting', async () => {
+  it("should implement rate limiting", async () => {
     const rateLimiter = {
       requests: 0,
       limit: 10,
@@ -362,29 +364,29 @@ describe('Chaos Engineering: Load Spike Testing', () => {
   });
 });
 
-describe('Chaos Engineering: Error Recovery', () => {
-  describe('Circuit breaker pattern', () => {
-    it('should fail fast after threshold exceeded', async () => {
+describe("Chaos Engineering: Error Recovery", () => {
+  describe("Circuit breaker pattern", () => {
+    it("should fail fast after threshold exceeded", async () => {
       let failureCount = 0;
       const failureThreshold = 3;
       let circuitOpen = false;
 
       const callService = async () => {
         if (circuitOpen) {
-          throw new Error('Circuit breaker open');
+          throw new Error("Circuit breaker open");
         }
         failureCount++;
         if (failureCount >= failureThreshold) {
           circuitOpen = true;
         }
-        throw new Error('Service error');
+        throw new Error("Service error");
       };
 
       for (let i = 0; i < 5; i++) {
         try {
           await callService();
         } catch (error) {
-          if ((error as Error).message === 'Circuit breaker open') {
+          if ((error as Error).message === "Circuit breaker open") {
             expect(circuitOpen).toBe(true);
             break;
           }
@@ -392,7 +394,7 @@ describe('Chaos Engineering: Error Recovery', () => {
       }
     });
 
-    it('should attempt recovery after timeout', async () => {
+    it("should attempt recovery after timeout", async () => {
       let circuitOpen = false;
       let recoveryAttempts = 0;
 
@@ -413,23 +415,23 @@ describe('Chaos Engineering: Error Recovery', () => {
     });
   });
 
-  describe('Graceful degradation', () => {
-    it('should use fallback when primary service fails', async () => {
+  describe("Graceful degradation", () => {
+    it("should use fallback when primary service fails", async () => {
       const primaryService = async () => {
-        throw new Error('Primary service down');
+        throw new Error("Primary service down");
       };
 
       const fallbackService = async () => {
-        return { data: 'fallback', degraded: true };
+        return { data: "fallback", degraded: true };
       };
 
       const result = await primaryService().catch(() => fallbackService());
 
-      expect(result.data).toBe('fallback');
+      expect(result.data).toBe("fallback");
       expect(result.degraded).toBe(true);
     });
 
-    it('should reduce functionality gracefully', async () => {
+    it("should reduce functionality gracefully", async () => {
       const service = {
         features: {
           realtime: true,
@@ -449,8 +451,8 @@ describe('Chaos Engineering: Error Recovery', () => {
     });
   });
 
-  describe('Recovery mechanisms', () => {
-    it('should implement automatic retry with backoff', async () => {
+  describe("Recovery mechanisms", () => {
+    it("should implement automatic retry with backoff", async () => {
       let attempts = 0;
       const maxAttempts = 3;
 
@@ -458,12 +460,12 @@ describe('Chaos Engineering: Error Recovery', () => {
         for (let i = 0; i < maxAttempts; i++) {
           try {
             attempts++;
-            if (i < 2) throw new Error('Retry');
+            if (i < 2) throw new Error("Retry");
             return { success: true };
           } catch {
             if (i < maxAttempts - 1) {
               await new Promise((resolve) =>
-                setTimeout(resolve, Math.pow(2, i) * 100)
+                setTimeout(resolve, Math.pow(2, i) * 100),
               );
             }
           }
@@ -475,19 +477,19 @@ describe('Chaos Engineering: Error Recovery', () => {
       expect(attempts).toBe(3);
     });
 
-    it('should log recovery events', async () => {
+    it("should log recovery events", async () => {
       const logs: string[] = [];
 
       const logRecovery = (event: string) => {
         logs.push(`[${new Date().toISOString()}] ${event}`);
       };
 
-      logRecovery('Service degraded');
-      logRecovery('Attempting recovery');
-      logRecovery('Service recovered');
+      logRecovery("Service degraded");
+      logRecovery("Attempting recovery");
+      logRecovery("Service recovered");
 
       expect(logs.length).toBe(3);
-      expect(logs[2]).toContain('recovered');
+      expect(logs[2]).toContain("recovered");
     });
   });
 });

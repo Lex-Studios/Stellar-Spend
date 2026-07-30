@@ -1,10 +1,10 @@
-import { ShareableTransaction, ShareSettings } from '@/types/sharing';
+import { ShareableTransaction, ShareSettings } from "@/types/sharing";
 
 export class SharingService {
   async createShareLink(
     transactionId: string,
     userAddress: string,
-    settings: ShareSettings
+    settings: ShareSettings,
   ): Promise<ShareableTransaction> {
     const shareToken = this.generateShareToken();
     const id = `share_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -39,14 +39,18 @@ export class SharingService {
     // TODO: Delete from database
   }
 
-  async getUserShareLinks(userAddress: string): Promise<ShareableTransaction[]> {
+  async getUserShareLinks(
+    userAddress: string,
+  ): Promise<ShareableTransaction[]> {
     // TODO: Fetch from database
     return [];
   }
 
   private generateShareToken(): string {
-    return Math.random().toString(36).substring(2, 15) +
-           Math.random().toString(36).substring(2, 15);
+    return (
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
   }
 
   generateShareUrl(shareToken: string, baseUrl: string): string {
@@ -70,10 +74,16 @@ export class SharingService {
     return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(title)}`;
   }
 
-  generateEmailShareUrl(shareUrl: string, amount: string, currency: string): string {
-    const subject = encodeURIComponent(`Check out my Stellar-Spend transaction`);
+  generateEmailShareUrl(
+    shareUrl: string,
+    amount: string,
+    currency: string,
+  ): string {
+    const subject = encodeURIComponent(
+      `Check out my Stellar-Spend transaction`,
+    );
     const body = encodeURIComponent(
-      `I just completed a transaction of ${amount} ${currency}.\n\nView details: ${shareUrl}`
+      `I just completed a transaction of ${amount} ${currency}.\n\nView details: ${shareUrl}`,
     );
     return `mailto:?subject=${subject}&body=${body}`;
   }

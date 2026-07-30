@@ -12,7 +12,7 @@ export async function retryWithBackoff<T>(
     initialDelay?: number;
     maxDelay?: number;
     backoffMultiplier?: number;
-  } = {}
+  } = {},
 ): Promise<T> {
   const {
     maxAttempts = 3,
@@ -39,7 +39,7 @@ export async function retryWithBackoff<T>(
     }
   }
 
-  throw lastError || new Error('Max retry attempts exceeded');
+  throw lastError || new Error("Max retry attempts exceeded");
 }
 
 /**
@@ -47,7 +47,7 @@ export async function retryWithBackoff<T>(
  */
 export function debounce<T extends (...args: any[]) => any>(
   fn: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   let timeoutId: NodeJS.Timeout | null = null;
 
@@ -67,7 +67,7 @@ export function debounce<T extends (...args: any[]) => any>(
  */
 export function throttle<T extends (...args: any[]) => any>(
   fn: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   let lastCall = 0;
   let timeoutId: NodeJS.Timeout | null = null;
@@ -83,11 +83,14 @@ export function throttle<T extends (...args: any[]) => any>(
         timeoutId = null;
       }
     } else if (!timeoutId) {
-      timeoutId = setTimeout(() => {
-        fn(...args);
-        lastCall = Date.now();
-        timeoutId = null;
-      }, delay - (now - lastCall));
+      timeoutId = setTimeout(
+        () => {
+          fn(...args);
+          lastCall = Date.now();
+          timeoutId = null;
+        },
+        delay - (now - lastCall),
+      );
     }
   };
 }
@@ -114,7 +117,10 @@ export function memoize<T extends (...args: any[]) => any>(fn: T): T {
 /**
  * Deep merge objects
  */
-export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
+export function deepMerge<T extends Record<string, any>>(
+  target: T,
+  source: Partial<T>,
+): T {
   const result = { ...target };
 
   for (const key in source) {
@@ -124,10 +130,10 @@ export function deepMerge<T extends Record<string, any>>(target: T, source: Part
 
       if (
         sourceValue &&
-        typeof sourceValue === 'object' &&
+        typeof sourceValue === "object" &&
         !Array.isArray(sourceValue) &&
         targetValue &&
-        typeof targetValue === 'object' &&
+        typeof targetValue === "object" &&
         !Array.isArray(targetValue)
       ) {
         result[key] = deepMerge(targetValue, sourceValue);
@@ -154,9 +160,12 @@ export function safeJsonParse<T>(json: string, fallback: T): T {
 /**
  * Format currency
  */
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
+export function formatCurrency(
+  amount: number,
+  currency: string = "USD",
+): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
     currency,
   }).format(amount);
 }
@@ -182,13 +191,13 @@ export function isEmpty(value: any): boolean {
   if (value === null || value === undefined) {
     return true;
   }
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     return value.trim().length === 0;
   }
   if (Array.isArray(value)) {
     return value.length === 0;
   }
-  if (typeof value === 'object') {
+  if (typeof value === "object") {
     return Object.keys(value).length === 0;
   }
   return false;

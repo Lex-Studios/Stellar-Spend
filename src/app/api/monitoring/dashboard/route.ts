@@ -1,10 +1,15 @@
-import { NextResponse } from 'next/server';
-import { getDashboardMetrics, recordUptimeCheck } from '@/lib/monitoring';
-import { getTransactionQueue } from '@/lib/priority-queue';
-import { getTransactionAnalytics } from '@/lib/transaction-analytics';
-import { getApiMetrics, getDbMetrics, getVitalsMetrics, getPerfAlerts } from '@/lib/performance';
+import { NextResponse } from "next/server";
+import { getDashboardMetrics, recordUptimeCheck } from "@/lib/monitoring";
+import { getTransactionQueue } from "@/lib/priority-queue";
+import { getTransactionAnalytics } from "@/lib/transaction-analytics";
+import {
+  getApiMetrics,
+  getDbMetrics,
+  getVitalsMetrics,
+  getPerfAlerts,
+} from "@/lib/performance";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   // Ping the health endpoint and record uptime
@@ -12,8 +17,8 @@ export async function GET() {
   let healthOk = false;
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001'}/api/health`,
-      { signal: AbortSignal.timeout(5000) }
+      `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3001"}/api/health`,
+      { signal: AbortSignal.timeout(5000) },
     );
     healthOk = res.ok;
   } catch {

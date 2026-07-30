@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server';
-import { env } from '@/lib/env';
-import { ErrorHandler } from '@/lib/error-handler';
-import { withPaycrestTimeout } from '@/lib/offramp/utils/timeout';
-import { getActiveCurrencies, isSupportedCurrency, validateCurrencyAmount } from '@/lib/currencies';
-import { getCurrencyFlag } from '@/lib/currency-flags';
+import { NextResponse } from "next/server";
+import { env } from "@/lib/env";
+import { ErrorHandler } from "@/lib/error-handler";
+import { withPaycrestTimeout } from "@/lib/offramp/utils/timeout";
+import {
+  getActiveCurrencies,
+  isSupportedCurrency,
+  validateCurrencyAmount,
+} from "@/lib/currencies";
+import { getCurrencyFlag } from "@/lib/currency-flags";
 
 export const maxDuration = 10;
 
@@ -18,7 +22,7 @@ interface Currency {
 
 class PaycrestAdapter {
   private apiKey: string;
-  private apiUrl = 'https://api.paycrest.io/v1';
+  private apiUrl = "https://api.paycrest.io/v1";
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -28,11 +32,11 @@ class PaycrestAdapter {
     const response = await withPaycrestTimeout(
       fetch(`${this.apiUrl}/currencies`, {
         headers: {
-          'Content-Type': 'application/json',
-          'API-Key': this.apiKey,
+          "Content-Type": "application/json",
+          "API-Key": this.apiKey,
         },
       }),
-      'get_currencies'
+      "get_currencies",
     );
 
     if (!response.ok) {
@@ -43,15 +47,15 @@ class PaycrestAdapter {
 
     const currencies = Array.isArray(data)
       ? data.map((c: any) => ({
-        code: c.code || c.currency || '',
-        name: c.name || '',
-        symbol: c.symbol || '',
-      }))
+          code: c.code || c.currency || "",
+          name: c.name || "",
+          symbol: c.symbol || "",
+        }))
       : data.currencies?.map((c: any) => ({
-        code: c.code || c.currency || '',
-        name: c.name || '',
-        symbol: c.symbol || '',
-      })) || [];
+          code: c.code || c.currency || "",
+          name: c.name || "",
+          symbol: c.symbol || "",
+        })) || [];
 
     return currencies;
   }
@@ -115,11 +119,14 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
   // Currency/amount validation endpoint
-  const validateCode = searchParams.get('validate');
+  const validateCode = searchParams.get("validate");
   if (validateCode) {
-    const amountStr = searchParams.get('amount');
+    const amountStr = searchParams.get("amount");
     if (!isSupportedCurrency(validateCode)) {
-      return NextResponse.json({ valid: false, error: `Unsupported currency: ${validateCode}` });
+      return NextResponse.json({
+        valid: false,
+        error: `Unsupported currency: ${validateCode}`,
+      });
     }
     if (amountStr) {
       const amount = parseFloat(amountStr);
@@ -135,7 +142,7 @@ export async function GET(request: Request) {
     if (cachedCurrencies && now - cacheTimestamp < CACHE_DURATION) {
       return NextResponse.json(
         { data: cachedCurrencies },
-        { headers: { 'Cache-Control': 'public, max-age=300' } }
+        { headers: { "Cache-Control": "public, max-age=300" } },
       );
     }
 
@@ -161,10 +168,10 @@ export async function GET(request: Request) {
 
     return NextResponse.json(
       { data: currencies },
-      { headers: { 'Cache-Control': 'public, max-age=300' } }
+      { headers: { "Cache-Control": "public, max-age=300" } },
     );
   } catch (error) {
-    console.error('Error fetching currencies:', error);
+    console.error("Error fetching currencies:", error);
     return ErrorHandler.handle(error);
   }
 }

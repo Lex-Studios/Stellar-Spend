@@ -75,14 +75,26 @@
   --color-error: var(--error);
   --color-info: var(--info);
 
-  --font-space-grotesk: var(--font-space-grotesk-source), "Space Grotesk", "IBM Plex Sans", sans-serif;
-  --font-ibm-plex-mono: var(--font-ibm-plex-mono-source), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-space-grotesk:
+    var(--font-space-grotesk-source), "Space Grotesk", "IBM Plex Sans",
+    sans-serif;
+  --font-ibm-plex-mono:
+    var(--font-ibm-plex-mono-source), ui-monospace, SFMono-Regular, Menlo,
+    Monaco, Consolas, monospace;
 
   --animate-spin-slow: spin-slow 2s linear infinite;
   --animate-scale-in: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-* { box-sizing: border-box; transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, fill 0.25s ease, stroke 0.25s ease; }
+* {
+  box-sizing: border-box;
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease,
+    fill 0.25s ease,
+    stroke 0.25s ease;
+}
 
 /* Suppress transitions during initial paint and explicit no-animate theme apply */
 html.theme-no-transition,
@@ -92,13 +104,18 @@ html.theme-no-transition *::after {
   transition: none !important;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   background: radial-gradient(circle at top right, #1a1a1a 0%, var(--bg) 45%);
   color: var(--text);
-  font-family: var(--font-ibm-plex-mono-source), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  transition: background 0.25s ease, color 0.25s ease;
+  font-family:
+    var(--font-ibm-plex-mono-source), ui-monospace, SFMono-Regular, Menlo,
+    Monaco, Consolas, monospace;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease;
 }
 
 html[data-theme="light"],
@@ -111,7 +128,13 @@ html[data-theme="high-contrast"] body {
   background: var(--bg);
 }
 
-button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
 
 /* Global focus styles for accessibility (#396) */
 a:focus-visible,
@@ -174,8 +197,15 @@ select:focus-visible,
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.01); filter: brightness(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.01);
+    filter: brightness(1.05);
+  }
 }
 
 @property --border-angle {
@@ -184,12 +214,40 @@ select:focus-visible,
   inherits: false;
 }
 
-@keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes scale-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@keyframes racing-border { to { --border-angle: 360deg; } }
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes scale-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes racing-border {
+  to {
+    --border-angle: 360deg;
+  }
+}
 @keyframes dot-bounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-4px); opacity: 1; }
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
 }
 
 @utility animate-spin-slow {
@@ -200,18 +258,37 @@ select:focus-visible,
   animation: var(--animate-scale-in);
 }
 
-
-@keyframes scale-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.animate-scale-in { animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+@keyframes scale-in {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.animate-scale-in {
+  animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
 
 @keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.65; }
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.65;
+  }
 }
 
 @keyframes skeleton-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .skeleton {
@@ -242,7 +319,9 @@ select:focus-visible,
 
 @media (prefers-reduced-motion: reduce) {
   .skeleton,
-  .skeleton::after { animation: none; }
+  .skeleton::after {
+    animation: none;
+  }
 }
 
 @utility dot-bounce {
@@ -252,20 +331,28 @@ select:focus-visible,
 @utility racing-border-wrapper {
   --border-size: 2px;
   padding: var(--border-size);
-  background: conic-gradient(from var(--border-angle), transparent 40%, var(--color-accent) 50%, #f4e1ad 55%, var(--color-accent) 60%, transparent 70%);
+  background: conic-gradient(
+    from var(--border-angle),
+    transparent 40%,
+    var(--color-accent) 50%,
+    #f4e1ad 55%,
+    var(--color-accent) 60%,
+    transparent 70%
+  );
   animation: racing-border 2.5s linear infinite;
 }
 
 @utility racing-border-content {
   background: color-mix(in srgb, var(--color-panel) 88%, black);
-
 }
 
 .theme-toggle .theme-toggle-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+  transition:
+    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.25s ease;
   animation: theme-icon-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -278,8 +365,14 @@ select:focus-visible,
 }
 
 @keyframes theme-icon-in {
-  from { transform: rotate(-45deg) scale(0.4); opacity: 0; }
-  to   { transform: rotate(0deg)   scale(1);   opacity: 1; }
+  from {
+    transform: rotate(-45deg) scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

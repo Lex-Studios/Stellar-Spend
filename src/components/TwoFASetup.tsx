@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { cn } from '@/lib/cn';
+import { useState } from "react";
+import { cn } from "@/lib/cn";
 
 interface TwoFASetupProps {
   userId: string;
@@ -10,36 +10,36 @@ interface TwoFASetupProps {
 }
 
 export function TwoFASetup({ userId, onSuccess, onCancel }: TwoFASetupProps) {
-  const [method, setMethod] = useState<'totp' | 'sms'>('totp');
-  const [step, setStep] = useState<'method' | 'setup' | 'verify'>('method');
+  const [method, setMethod] = useState<"totp" | "sms">("totp");
+  const [step, setStep] = useState<"method" | "setup" | "verify">("method");
   const [setupData, setSetupData] = useState<any>(null);
-  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationCode, setVerificationCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState("");
 
-  const handleMethodSelect = async (selectedMethod: 'totp' | 'sms') => {
+  const handleMethodSelect = async (selectedMethod: "totp" | "sms") => {
     setMethod(selectedMethod);
     setIsLoading(true);
     setError(null);
 
     try {
-      const res = await fetch('/api/auth/2fa/setup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/2fa/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, method: selectedMethod }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Setup failed');
+        throw new Error(data.error || "Setup failed");
       }
 
       const data = await res.json();
       setSetupData(data);
-      setStep('setup');
+      setStep("setup");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +47,7 @@ export function TwoFASetup({ userId, onSuccess, onCancel }: TwoFASetupProps) {
 
   const handleVerify = async () => {
     if (!verificationCode.trim()) {
-      setError('Please enter the verification code');
+      setError("Please enter the verification code");
       return;
     }
 
@@ -55,9 +55,9 @@ export function TwoFASetup({ userId, onSuccess, onCancel }: TwoFASetupProps) {
     setError(null);
 
     try {
-      const res = await fetch('/api/auth/2fa/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/auth/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
           code: verificationCode,
@@ -69,12 +69,12 @@ export function TwoFASetup({ userId, onSuccess, onCancel }: TwoFASetupProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Verification failed');
+        throw new Error(data.error || "Verification failed");
       }
 
       onSuccess(setupData.backupCodes);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Verification failed');
+      setError(err instanceof Error ? err.message : "Verification failed");
     } finally {
       setIsLoading(false);
     }
@@ -85,35 +85,37 @@ export function TwoFASetup({ userId, onSuccess, onCancel }: TwoFASetupProps) {
       <div className="bg-[#1a1a1a] border border-[#333333] p-6 max-w-md w-full mx-4">
         <h2 className="text-lg font-bold text-white mb-4">Set Up 2FA</h2>
 
-        {step === 'method' && (
+        {step === "method" && (
           <div className="space-y-3">
             <p className="text-sm text-[#999999] mb-4">
               Choose your preferred 2FA method
             </p>
             <button
-              onClick={() => handleMethodSelect('totp')}
+              onClick={() => handleMethodSelect("totp")}
               disabled={isLoading}
               className={cn(
-                'w-full p-4 border text-left transition-colors',
-                method === 'totp'
-                  ? 'border-[#c9a962] bg-[#c9a962]/10'
-                  : 'border-[#333333] hover:border-[#555555]'
+                "w-full p-4 border text-left transition-colors",
+                method === "totp"
+                  ? "border-[#c9a962] bg-[#c9a962]/10"
+                  : "border-[#333333] hover:border-[#555555]",
               )}
             >
-              <div className="font-semibold text-white">Authenticator App (TOTP)</div>
+              <div className="font-semibold text-white">
+                Authenticator App (TOTP)
+              </div>
               <div className="text-xs text-[#999999] mt-1">
                 Use Google Authenticator, Authy, or similar
               </div>
             </button>
 
             <button
-              onClick={() => handleMethodSelect('sms')}
+              onClick={() => handleMethodSelect("sms")}
               disabled={isLoading}
               className={cn(
-                'w-full p-4 border text-left transition-colors',
-                method === 'sms'
-                  ? 'border-[#c9a962] bg-[#c9a962]/10'
-                  : 'border-[#333333] hover:border-[#555555]'
+                "w-full p-4 border text-left transition-colors",
+                method === "sms"
+                  ? "border-[#c9a962] bg-[#c9a962]/10"
+                  : "border-[#333333] hover:border-[#555555]",
               )}
             >
               <div className="font-semibold text-white">SMS</div>
@@ -139,21 +141,21 @@ export function TwoFASetup({ userId, onSuccess, onCancel }: TwoFASetupProps) {
                 onClick={() => handleMethodSelect(method)}
                 disabled={isLoading}
                 className={cn(
-                  'flex-1 px-4 py-2 text-xs font-semibold transition-colors',
+                  "flex-1 px-4 py-2 text-xs font-semibold transition-colors",
                   isLoading
-                    ? 'bg-[#666666] text-[#999999] cursor-not-allowed'
-                    : 'bg-[#c9a962] text-[#0a0a0a] hover:bg-[#d4b574]'
+                    ? "bg-[#666666] text-[#999999] cursor-not-allowed"
+                    : "bg-[#c9a962] text-[#0a0a0a] hover:bg-[#d4b574]",
                 )}
               >
-                {isLoading ? 'Setting up...' : 'Continue'}
+                {isLoading ? "Setting up..." : "Continue"}
               </button>
             </div>
           </div>
         )}
 
-        {step === 'setup' && setupData && (
+        {step === "setup" && setupData && (
           <div className="space-y-4">
-            {method === 'totp' && (
+            {method === "totp" && (
               <div>
                 <p className="text-sm text-[#999999] mb-3">
                   Scan this QR code with your authenticator app:
@@ -172,7 +174,7 @@ export function TwoFASetup({ userId, onSuccess, onCancel }: TwoFASetupProps) {
               </div>
             )}
 
-            {method === 'sms' && (
+            {method === "sms" && (
               <div>
                 <label className="block text-xs text-[#999999] mb-2">
                   Phone Number
@@ -194,7 +196,9 @@ export function TwoFASetup({ userId, onSuccess, onCancel }: TwoFASetupProps) {
               <input
                 type="text"
                 value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value.slice(0, 6))}
+                onChange={(e) =>
+                  setVerificationCode(e.target.value.slice(0, 6))
+                }
                 placeholder="000000"
                 maxLength={6}
                 className="w-full bg-[#0a0a0a] border border-[#333333] px-3 py-2 text-white text-sm text-center tracking-widest"
@@ -209,7 +213,7 @@ export function TwoFASetup({ userId, onSuccess, onCancel }: TwoFASetupProps) {
 
             <div className="flex gap-2 pt-4">
               <button
-                onClick={() => setStep('method')}
+                onClick={() => setStep("method")}
                 className="flex-1 px-4 py-2 border border-[#333333] text-white text-xs hover:bg-[#222222] transition-colors"
               >
                 Back
@@ -218,13 +222,13 @@ export function TwoFASetup({ userId, onSuccess, onCancel }: TwoFASetupProps) {
                 onClick={handleVerify}
                 disabled={isLoading}
                 className={cn(
-                  'flex-1 px-4 py-2 text-xs font-semibold transition-colors',
+                  "flex-1 px-4 py-2 text-xs font-semibold transition-colors",
                   isLoading
-                    ? 'bg-[#666666] text-[#999999] cursor-not-allowed'
-                    : 'bg-[#c9a962] text-[#0a0a0a] hover:bg-[#d4b574]'
+                    ? "bg-[#666666] text-[#999999] cursor-not-allowed"
+                    : "bg-[#c9a962] text-[#0a0a0a] hover:bg-[#d4b574]",
                 )}
               >
-                {isLoading ? 'Verifying...' : 'Verify & Enable'}
+                {isLoading ? "Verifying..." : "Verify & Enable"}
               </button>
             </div>
           </div>

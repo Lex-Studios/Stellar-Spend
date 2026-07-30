@@ -1,11 +1,13 @@
-import type { Transaction } from '@/lib/transaction-storage';
+import type { Transaction } from "@/lib/transaction-storage";
 
-export type NotificationChannel = 'email' | 'sms' | 'push';
-export type NotificationDeliveryStatus = 'sent' | 'failed' | 'skipped';
-export type TransactionNotificationEvent = 'pending' | 'completed' | 'failed';
+export type NotificationChannel = "email" | "sms" | "push";
+export type NotificationDeliveryStatus = "sent" | "failed" | "skipped";
+export type TransactionNotificationEvent = "pending" | "completed" | "failed";
 
 /** Which channels are enabled per event type for a given user */
-export type ChannelEventRouting = Partial<Record<TransactionNotificationEvent, NotificationChannel[]>>;
+export type ChannelEventRouting = Partial<
+  Record<TransactionNotificationEvent, NotificationChannel[]>
+>;
 
 export interface NotificationPreferences {
   userAddress: string;
@@ -53,9 +55,9 @@ export interface NotificationDeliveryRecord {
 
 export interface NotificationContext {
   transaction: Transaction;
-  previousStatus?: Transaction['status'];
+  previousStatus?: Transaction["status"];
   previousPayoutStatus?: string;
-  source: 'webhook' | 'refund' | 'timeout' | 'manual_update';
+  source: "webhook" | "refund" | "timeout" | "manual_update";
 }
 
 export interface DeliveryResult {
@@ -70,6 +72,6 @@ export interface ChannelAdapter {
   send(
     destination: string,
     subject: string,
-    message: string
+    message: string,
   ): Promise<DeliveryResult>;
 }

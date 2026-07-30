@@ -3,19 +3,19 @@
  * Implements last-write-wins strategy with audit trail
  */
 
-import type { Transaction } from './transaction-storage';
+import type { Transaction } from "./transaction-storage";
 
 export interface MergeResult {
   merged: Transaction[];
   conflicts: ConflictRecord[];
-  strategy: 'last-write-wins';
+  strategy: "last-write-wins";
 }
 
 export interface ConflictRecord {
   transactionId: string;
   localVersion: Transaction;
   serverVersion: Transaction;
-  winner: 'local' | 'server';
+  winner: "local" | "server";
   resolvedAt: number;
   reason: string;
 }
@@ -27,11 +27,11 @@ export interface ConflictRecord {
 export function mergeTransactionHistories(
   local: Transaction[],
   server: Transaction[],
-  conflictResolutionStrategy: 'last-write-wins' = 'last-write-wins'
+  conflictResolutionStrategy: "last-write-wins" = "last-write-wins",
 ): MergeResult {
   const conflicts: ConflictRecord[] = [];
-  const localMap = new Map(local.map(tx => [tx.id, tx]));
-  const serverMap = new Map(server.map(tx => [tx.id, tx]));
+  const localMap = new Map(local.map((tx) => [tx.id, tx]));
+  const serverMap = new Map(server.map((tx) => [tx.id, tx]));
   const merged = new Map<string, Transaction>();
 
   // Process all transactions from both sources
@@ -49,24 +49,28 @@ export function mergeTransactionHistories(
       merged.set(txId, localTx);
     } else {
       // Both exist - resolve conflict using last-write-wins
-      const resolvedTx = resolveConflict(localTx, serverTx, conflictResolutionStrategy);
-      
+      const resolvedTx = resolveConflict(
+        localTx,
+        serverTx,
+        conflictResolutionStrategy,
+      );
+
       // Record the conflict for audit trail
-      if (resolvedTx.winner === 'server') {
+      if (resolvedTx.winner === "server") {
         conflicts.push({
           transactionId: txId,
           localVersion: localTx,
           serverVersion: serverTx,
-          winner: 'server',
+          winner: "server",
           resolvedAt: Date.now(),
           reason: `Server version newer (server: ${serverTx.finalizedAt || serverTx.timestamp}, local: ${localTx.finalizedAt || localTx.timestamp})`,
         });
-      } else if (resolvedTx.winner === 'local') {
+      } else if (resolvedTx.winner === "local") {
         conflicts.push({
           transactionId: txId,
           localVersion: localTx,
           serverVersion: serverTx,
-          winner: 'local',
+          winner: "local",
           resolvedAt: Date.now(),
           reason: `Local version newer (local: ${localTx.finalizedAt || localTx.timestamp}, server: ${serverTx.finalizedAt || serverTx.timestamp})`,
         });
@@ -85,7 +89,7 @@ export function mergeTransactionHistories(
 
 interface ResolveResult {
   transaction: Transaction;
-  winner: 'local' | 'server' | 'same';
+  winner: "local" | "server" | "same";
 }
 
 /**
@@ -95,9 +99,9 @@ interface ResolveResult {
 function resolveConflict(
   local: Transaction,
   server: Transaction,
-  strategy: 'last-write-wins'
+  strategy: "last-write-wins",
 ): ResolveResult {
-  if (strategy !== 'last-write-wins') {
+  if (strategy !== "last-write-wins") {
     throw new Error(`Unknown conflict resolution strategy: ${strategy}`);
   }
 
@@ -109,12 +113,12 @@ function resolveConflict(
   if (serverTime > localTime) {
     return {
       transaction: server,
-      winner: 'server',
+      winner: "server",
     };
   } else if (localTime > serverTime) {
     return {
       transaction: local,
-      winner: 'local',
+      winner: "local",
     };
   } else {
     // Same timestamp - merge fields, preferring non-empty values
@@ -126,7 +130,7 @@ function resolveConflict(
         tags: mergeArraysUnique(local.tags, server.tags),
         isFavorite: local.isFavorite || server.isFavorite,
       },
-      winner: 'same',
+      winner: "same",
     };
   }
 }
@@ -136,14 +140,14 @@ function resolveConflict(
  */
 function mergeArraysUnique<T extends { id: string }>(
   arr1: T[] | undefined,
-  arr2: T[] | undefined
+  arr2: T[] | undefined,
 ): T[] | undefined {
   if (!arr1 && !arr2) return undefined;
   if (!arr1) return arr2;
   if (!arr2) return arr1;
 
-  const map = new Map(arr2.map(item => [item.id, item]));
-  arr1.forEach(item => map.set(item.id, item));
+  const map = new Map(arr2.map((item) => [item.id, item]));
+  arr1.forEach((item) => map.set(item.id, item));
   return Array.from(map.values());
 }
 
@@ -153,14 +157,14 @@ function mergeArraysUnique<T extends { id: string }>(
  */
 export function findDifferences(
   local: Transaction[],
-  server: Transaction[]
+  server: Transaction[],
 ): {
   onlyLocal: Transaction[];
   onlyServer: Transaction[];
   modified: Array<{ local: Transaction; server: Transaction }>;
 } {
-  const localMap = new Map(local.map(tx => [tx.id, tx]));
-  const serverMap = new Map(server.map(tx => [tx.id, tx]));
+  const localMap = new Map(local.map((tx) => [tx.id, tx]));
+  const serverMap = new Map(server.map((tx) => [tx.id, tx]));
 
   const onlyLocal: Transaction[] = [];
   const onlyServer: Transaction[] = [];

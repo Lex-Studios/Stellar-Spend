@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { cn } from '@/lib/cn';
-import { useI18n } from '@/lib/i18n';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/cn";
+import { useI18n } from "@/lib/i18n";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -11,7 +11,7 @@ import { useI18n } from '@/lib/i18n';
 export interface InsuranceQuote {
   premium: number;
   coverage: number;
-  provider: 'default' | 'premium' | 'enterprise';
+  provider: "default" | "premium" | "enterprise";
   riskScore: number;
   expiresAt: number;
 }
@@ -32,38 +32,41 @@ export interface InsuranceOptionProps {
 // ---------------------------------------------------------------------------
 
 const PROVIDER_LABELS: Record<string, string> = {
-  default: 'Standard',
-  premium: 'Premium',
-  enterprise: 'Enterprise',
+  default: "Standard",
+  premium: "Premium",
+  enterprise: "Enterprise",
 };
 
 const PROVIDER_DESCRIPTIONS: Record<string, string> = {
-  default: 'Basic coverage for everyday transactions',
-  premium: 'Enhanced coverage with priority claim processing',
-  enterprise: 'Full coverage with dedicated support & bulk discount',
+  default: "Basic coverage for everyday transactions",
+  premium: "Enhanced coverage with priority claim processing",
+  enterprise: "Full coverage with dedicated support & bulk discount",
 };
 
 const RISK_LABELS: Record<string, { label: string; color: string }> = {
-  low: { label: 'Low Risk', color: 'text-[#4ade80]' },
-  medium: { label: 'Medium Risk', color: 'text-[#fbbf24]' },
-  high: { label: 'High Risk', color: 'text-[#f87171]' },
+  low: { label: "Low Risk", color: "text-[#4ade80]" },
+  medium: { label: "Medium Risk", color: "text-[#fbbf24]" },
+  high: { label: "High Risk", color: "text-[#f87171]" },
 };
 
-function getRiskBand(score: number): 'low' | 'medium' | 'high' {
-  if (score < 40) return 'low';
-  if (score < 65) return 'medium';
-  return 'high';
+function getRiskBand(score: number): "low" | "medium" | "high" {
+  if (score < 40) return "low";
+  if (score < 65) return "medium";
+  return "high";
 }
 
 function formatAmount(n: number): string {
-  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+  return n.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
+  });
 }
 
 function formatCountdown(ms: number): string {
   const totalSec = Math.max(0, Math.floor(ms / 1000));
   const m = Math.floor(totalSec / 60);
   const s = totalSec % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 /** Client-side premium calculation matching the service logic */
@@ -71,7 +74,7 @@ function calculateQuote(amount: number, currency: string): InsuranceQuote {
   const HIGH_VALUE_THRESHOLD = 10000;
   const BASE_RATE = 0.005;
   const HIGH_VALUE_RATE = 0.003;
-  const stablecoins = ['USDC', 'USDT', 'DAI'];
+  const stablecoins = ["USDC", "USDT", "DAI"];
 
   let riskScore = 50;
   if (amount > HIGH_VALUE_THRESHOLD) riskScore -= 10;
@@ -84,7 +87,11 @@ function calculateQuote(amount: number, currency: string): InsuranceQuote {
   const premium = parseFloat((amount * rate * riskMultiplier).toFixed(6));
   const coverage = parseFloat((amount * 1.1).toFixed(6));
   const provider =
-    amount >= HIGH_VALUE_THRESHOLD ? 'enterprise' : amount >= 1000 ? 'premium' : 'default';
+    amount >= HIGH_VALUE_THRESHOLD
+      ? "enterprise"
+      : amount >= 1000
+        ? "premium"
+        : "default";
 
   return {
     premium,
@@ -109,10 +116,10 @@ function TermsModal({ onClose }: TermsModalProps) {
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === "Escape") onClose();
     };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
   }, [onClose]);
 
   return (
@@ -136,7 +143,7 @@ function TermsModal({ onClose }: TermsModalProps) {
             id="insurance-terms-title"
             className="text-sm font-semibold text-white tracking-wider uppercase"
           >
-            {t('insurance.terms_title')}
+            {t("insurance.terms_title")}
           </h2>
           <button
             onClick={onClose}
@@ -149,20 +156,26 @@ function TermsModal({ onClose }: TermsModalProps) {
 
         <div className="flex flex-col gap-4 text-xs text-[#aaaaaa] leading-relaxed">
           <section>
-            <h3 className="text-[10px] tracking-widest uppercase text-[#c9a962] mb-2">{t('insurance.coverage')}</h3>
+            <h3 className="text-[10px] tracking-widest uppercase text-[#c9a962] mb-2">
+              {t("insurance.coverage")}
+            </h3>
             <p>
-              Transaction insurance covers up to 110% of the insured transaction amount in the event
-              of a verified loss. Coverage applies to failed, reversed, or fraudulent transactions
-              confirmed by our review team.
+              Transaction insurance covers up to 110% of the insured transaction
+              amount in the event of a verified loss. Coverage applies to
+              failed, reversed, or fraudulent transactions confirmed by our
+              review team.
             </p>
           </section>
 
           <section>
-            <h3 className="text-[10px] tracking-widest uppercase text-[#c9a962] mb-2">{t('insurance.premium')}</h3>
+            <h3 className="text-[10px] tracking-widest uppercase text-[#c9a962] mb-2">
+              {t("insurance.premium")}
+            </h3>
             <p>
-              The premium is calculated based on transaction amount, currency risk profile, and
-              provider tier. Premiums are non-refundable once a transaction is submitted. High-value
-              transactions (≥ $10,000 USDC) qualify for a bulk discount rate of 0.3%.
+              The premium is calculated based on transaction amount, currency
+              risk profile, and provider tier. Premiums are non-refundable once
+              a transaction is submitted. High-value transactions (≥ $10,000
+              USDC) qualify for a bulk discount rate of 0.3%.
             </p>
           </section>
 
@@ -171,14 +184,17 @@ function TermsModal({ onClose }: TermsModalProps) {
               Filing a Claim
             </h3>
             <p>
-              Claims must be filed within 30 days of the transaction date. You will need to provide
-              a reason and any supporting evidence. Claims are reviewed within 5–10 business days.
-              Approved claims are paid out to your connected wallet.
+              Claims must be filed within 30 days of the transaction date. You
+              will need to provide a reason and any supporting evidence. Claims
+              are reviewed within 5–10 business days. Approved claims are paid
+              out to your connected wallet.
             </p>
           </section>
 
           <section>
-            <h3 className="text-[10px] tracking-widest uppercase text-[#c9a962] mb-2">Exclusions</h3>
+            <h3 className="text-[10px] tracking-widest uppercase text-[#c9a962] mb-2">
+              Exclusions
+            </h3>
             <ul className="list-disc list-inside space-y-1">
               <li>Transactions cancelled by the user</li>
               <li>Losses due to user error (wrong account, wrong amount)</li>
@@ -192,10 +208,17 @@ function TermsModal({ onClose }: TermsModalProps) {
               Provider Tiers
             </h3>
             <div className="flex flex-col gap-2">
-              {(['default', 'premium', 'enterprise'] as const).map((tier) => (
-                <div key={tier} className="border border-[#222222] bg-[#111111] px-3 py-2">
-                  <span className="text-white font-semibold">{PROVIDER_LABELS[tier]}</span>
-                  <span className="text-[#777777] ml-2">— {PROVIDER_DESCRIPTIONS[tier]}</span>
+              {(["default", "premium", "enterprise"] as const).map((tier) => (
+                <div
+                  key={tier}
+                  className="border border-[#222222] bg-[#111111] px-3 py-2"
+                >
+                  <span className="text-white font-semibold">
+                    {PROVIDER_LABELS[tier]}
+                  </span>
+                  <span className="text-[#777777] ml-2">
+                    — {PROVIDER_DESCRIPTIONS[tier]}
+                  </span>
                 </div>
               ))}
             </div>
@@ -205,13 +228,13 @@ function TermsModal({ onClose }: TermsModalProps) {
         <button
           onClick={onClose}
           className={cn(
-            'mt-2 w-full py-2.5 min-h-[44px] text-xs tracking-widest border border-[#c9a962]',
-            'text-[#c9a962] bg-transparent transition-colors duration-150',
-            'hover:bg-[#c9a962] hover:text-[#0a0a0a]',
-            'focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]',
+            "mt-2 w-full py-2.5 min-h-[44px] text-xs tracking-widest border border-[#c9a962]",
+            "text-[#c9a962] bg-transparent transition-colors duration-150",
+            "hover:bg-[#c9a962] hover:text-[#0a0a0a]",
+            "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
           )}
         >
-          {t('common.close').toUpperCase()}
+          {t("common.close").toUpperCase()}
         </button>
       </div>
     </div>
@@ -224,7 +247,7 @@ function TermsModal({ onClose }: TermsModalProps) {
 
 export function InsuranceOption({
   amount,
-  currency = 'USDC',
+  currency = "USDC",
   onToggle,
   disabled = false,
 }: InsuranceOptionProps) {
@@ -306,9 +329,11 @@ export function InsuranceOption({
     <>
       <div
         className={cn(
-          'border transition-colors duration-150',
-          enabled ? 'border-[#c9a962] bg-[#c9a962]/5 shadow-[inset_0_0_20px_rgba(201,169,98,0.05)]' : 'border-[#333333] bg-[#0a0a0a]',
-          isDisabled && 'opacity-50 cursor-not-allowed',
+          "border transition-colors duration-150",
+          enabled
+            ? "border-[#c9a962] bg-[#c9a962]/5 shadow-[inset_0_0_20px_rgba(201,169,98,0.05)]"
+            : "border-[#333333] bg-[#0a0a0a]",
+          isDisabled && "opacity-50 cursor-not-allowed",
         )}
         role="group"
         aria-labelledby="insurance-option-label"
@@ -325,16 +350,16 @@ export function InsuranceOption({
               onClick={handleToggle}
               disabled={isDisabled}
               className={cn(
-                'relative flex-shrink-0 mt-0.5 w-10 h-5 rounded-full transition-colors duration-200',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a962] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]',
-                enabled ? 'bg-[#c9a962]' : 'bg-[#333333]',
-                isDisabled && 'cursor-not-allowed',
+                "relative flex-shrink-0 mt-0.5 w-10 h-5 rounded-full transition-colors duration-200",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a962] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]",
+                enabled ? "bg-[#c9a962]" : "bg-[#333333]",
+                isDisabled && "cursor-not-allowed",
               )}
             >
               <span
                 className={cn(
-                  'absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200',
-                  enabled && 'translate-x-5',
+                  "absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200",
+                  enabled && "translate-x-5",
                 )}
                 aria-hidden="true"
               />
@@ -345,14 +370,14 @@ export function InsuranceOption({
               <p
                 id="insurance-option-label"
                 className={cn(
-                  'text-sm font-semibold tracking-wide',
-                  enabled ? 'text-[#c9a962]' : 'text-white',
+                  "text-sm font-semibold tracking-wide",
+                  enabled ? "text-[#c9a962]" : "text-white",
                 )}
               >
-                {t('insurance.title')}
+                {t("insurance.title")}
               </p>
               <p className="text-xs text-[#777777] mt-0.5">
-                {t('insurance.description')}
+                {t("insurance.description")}
               </p>
             </div>
           </div>
@@ -361,13 +386,13 @@ export function InsuranceOption({
           <button
             onClick={() => setShowTerms(true)}
             className={cn(
-              'flex-shrink-0 text-[10px] tracking-widest uppercase text-[#777777]',
-              'hover:text-[#c9a962] transition-colors duration-150',
-              'focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]',
+              "flex-shrink-0 text-[10px] tracking-widest uppercase text-[#777777]",
+              "hover:text-[#c9a962] transition-colors duration-150",
+              "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
             )}
             aria-label="View insurance terms and conditions"
           >
-            {t('insurance.terms')}
+            {t("insurance.terms")}
           </button>
         </div>
 
@@ -376,15 +401,17 @@ export function InsuranceOption({
           <div className="border-t border-[#222222] px-4 py-3 flex flex-col gap-2 bg-[#0d0d0d]">
             {/* Provider tier badge */}
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] tracking-widest uppercase text-[#777777]">{t('insurance.provider')}</span>
+              <span className="text-[10px] tracking-widest uppercase text-[#777777]">
+                {t("insurance.provider")}
+              </span>
               <span
                 className={cn(
-                  'text-[10px] tracking-widest uppercase px-2 py-0.5 border font-bold',
-                  quote.provider === 'enterprise'
-                    ? 'border-[#c9a962] text-[#c9a962]'
-                    : quote.provider === 'premium'
-                      ? 'border-[#60a5fa] text-[#60a5fa]'
-                      : 'border-[#555555] text-[#aaaaaa]',
+                  "text-[10px] tracking-widest uppercase px-2 py-0.5 border font-bold",
+                  quote.provider === "enterprise"
+                    ? "border-[#c9a962] text-[#c9a962]"
+                    : quote.provider === "premium"
+                      ? "border-[#60a5fa] text-[#60a5fa]"
+                      : "border-[#555555] text-[#aaaaaa]",
                 )}
               >
                 {PROVIDER_LABELS[quote.provider]}
@@ -395,9 +422,14 @@ export function InsuranceOption({
             {riskInfo && (
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[10px] tracking-widest uppercase text-[#777777]">
-                  {t('insurance.risk_score')}
+                  {t("insurance.risk_score")}
                 </span>
-                <span className={cn('text-xs tabular-nums font-semibold', riskInfo.color)}>
+                <span
+                  className={cn(
+                    "text-xs tabular-nums font-semibold",
+                    riskInfo.color,
+                  )}
+                >
                   {quote.riskScore}/100 — {riskInfo.label}
                 </span>
               </div>
@@ -405,20 +437,24 @@ export function InsuranceOption({
 
             {/* Premium */}
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] tracking-widest uppercase text-[#777777]">{t('insurance.premium')}</span>
+              <span className="text-[10px] tracking-widest uppercase text-[#777777]">
+                {t("insurance.premium")}
+              </span>
               <div className="text-right">
                 <div className="text-xs text-white tabular-nums font-bold">
                   {formatAmount(quote.premium)} USDC
                 </div>
                 <div className="text-[9px] text-[#555555] tracking-widest uppercase mt-0.5">
-                  ({amount >= 10000 ? '0.3%' : '0.5%'} fixed rate)
+                  ({amount >= 10000 ? "0.3%" : "0.5%"} fixed rate)
                 </div>
               </div>
             </div>
 
             {/* Coverage */}
             <div className="flex items-center justify-between gap-2 pt-1">
-              <span className="text-[10px] tracking-widest uppercase text-[#777777]">{t('insurance.coverage')}</span>
+              <span className="text-[10px] tracking-widest uppercase text-[#777777]">
+                {t("insurance.coverage")}
+              </span>
               <span className="text-xs text-[#4ade80] tabular-nums font-black">
                 Up to {formatAmount(quote.coverage)} USDC
               </span>
@@ -428,12 +464,14 @@ export function InsuranceOption({
             {enabled && timeLeft !== null && (
               <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-[#222222]">
                 <span className="text-[10px] tracking-widest uppercase text-[#777777]">
-                  {t('insurance.expires')}
+                  {t("insurance.expires")}
                 </span>
                 <span
                   className={cn(
-                    'text-[10px] tabular-nums font-mono font-bold',
-                    timeLeft < 60000 ? 'text-[#f87171] animate-pulse' : 'text-[#777777]',
+                    "text-[10px] tabular-nums font-mono font-bold",
+                    timeLeft < 60000
+                      ? "text-[#f87171] animate-pulse"
+                      : "text-[#777777]",
                   )}
                   aria-live="polite"
                   aria-label={`Quote expires in ${formatCountdown(timeLeft)}`}
@@ -459,4 +497,3 @@ export function InsuranceOption({
     </>
   );
 }
-

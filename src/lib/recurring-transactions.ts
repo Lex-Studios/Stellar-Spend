@@ -3,11 +3,11 @@
  * Schedules are stored in localStorage; execution is triggered client-side.
  */
 
-export type RecurringFrequency = 'daily' | 'weekly' | 'monthly';
+export type RecurringFrequency = "daily" | "weekly" | "monthly";
 
 export interface ExecutionHistoryRecord {
   timestamp: number;
-  status: 'success' | 'failed';
+  status: "success" | "failed";
   error?: string;
   retryAttempt: number;
 }
@@ -40,7 +40,11 @@ export interface RecurringSchedule {
   /** Number of successful executions */
   executionCount: number;
   /** Last execution result */
-  lastResult?: { status: 'success' | 'failed'; error?: string; timestamp: number };
+  lastResult?: {
+    status: "success" | "failed";
+    error?: string;
+    timestamp: number;
+  };
   /** Max executions (undefined = unlimited) */
   maxExecutions?: number;
   /** Retry configuration for failed executions */
@@ -51,23 +55,26 @@ export interface RecurringSchedule {
   notificationsEnabled: boolean;
 }
 
-const STORAGE_KEY = 'stellar_spend_recurring';
+const STORAGE_KEY = "stellar_spend_recurring";
 const MAX_HISTORY_PER_SCHEDULE = 20;
 
 // ---------------------------------------------------------------------------
 // Pure helpers
 // ---------------------------------------------------------------------------
 
-export function computeNextRunAt(from: number, frequency: RecurringFrequency): number {
+export function computeNextRunAt(
+  from: number,
+  frequency: RecurringFrequency,
+): number {
   const d = new Date(from);
   switch (frequency) {
-    case 'daily':
+    case "daily":
       d.setDate(d.getDate() + 1);
       break;
-    case 'weekly':
+    case "weekly":
       d.setDate(d.getDate() + 7);
       break;
-    case 'monthly':
+    case "monthly":
       d.setMonth(d.getMonth() + 1);
       break;
   }
@@ -76,7 +83,11 @@ export function computeNextRunAt(from: number, frequency: RecurringFrequency): n
 
 export function isDue(schedule: RecurringSchedule): boolean {
   if (schedule.paused) return false;
-  if (schedule.maxExecutions !== undefined && schedule.executionCount >= schedule.maxExecutions) return false;
+  if (
+    schedule.maxExecutions !== undefined &&
+    schedule.executionCount >= schedule.maxExecutions
+  )
+    return false;
   if (schedule.retryConfig?.nextRetryAt) {
     return Date.now() >= schedule.retryConfig.nextRetryAt;
   }
@@ -85,8 +96,12 @@ export function isDue(schedule: RecurringSchedule): boolean {
 
 export function isPendingRetry(schedule: RecurringSchedule): boolean {
   if (!schedule.retryConfig) return false;
-  if (schedule.retryConfig.currentRetryCount >= schedule.retryConfig.maxRetries) return false;
-  return !!schedule.retryConfig.nextRetryAt && Date.now() >= schedule.retryConfig.nextRetryAt;
+  if (schedule.retryConfig.currentRetryCount >= schedule.retryConfig.maxRetries)
+    return false;
+  return (
+    !!schedule.retryConfig.nextRetryAt &&
+    Date.now() >= schedule.retryConfig.nextRetryAt
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -95,7 +110,7 @@ export function isPendingRetry(schedule: RecurringSchedule): boolean {
 
 export class RecurringStorage {
   static getAll(): RecurringSchedule[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : [];
@@ -111,7 +126,7 @@ export class RecurringStorage {
   }
 
   static save(schedule: RecurringSchedule): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const all = this.getAll().filter((s) => s.id !== schedule.id);
     all.unshift(schedule);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all.slice(0, 50)));
@@ -126,16 +141,16 @@ export class RecurringStorage {
   }
 
   static delete(id: string): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const all = this.getAll().filter((s) => s.id !== id);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   }
 
   static recordResult(
     id: string,
-    result: { status: 'success' | 'failed'; error?: string },
+    result: { status: "success" | "failed"; error?: string },
   ): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const all = this.getAll();
     const idx = all.findIndex((s) => s.id === id);
     if (idx === -1) return;
@@ -143,7 +158,7 @@ export class RecurringStorage {
     const retryAttempt = s.retryConfig?.currentRetryCount ?? 0;
     s.lastResult = { ...result, timestamp: Date.now() };
 
-    if (result.status === 'success') {
+    if (result.status === "success") {
       s.executionCount += 1;
       s.nextRunAt = computeNextRunAt(Date.now(), s.frequency);
       if (s.retryConfig) {
@@ -163,11 +178,17 @@ export class RecurringStorage {
   }
 
   /** Push a history record onto an in-memory schedule object (mutates). */
-  static pushHistoryInPlace(schedule: RecurringSchedule, record: ExecutionHistoryRecord): void {
+  static pushHistoryInPlace(
+    schedule: RecurringSchedule,
+    record: ExecutionHistoryRecord,
+  ): void {
     if (!schedule.executionHistory) schedule.executionHistory = [];
     schedule.executionHistory.unshift(record);
     if (schedule.executionHistory.length > MAX_HISTORY_PER_SCHEDULE) {
-      schedule.executionHistory = schedule.executionHistory.slice(0, MAX_HISTORY_PER_SCHEDULE);
+      schedule.executionHistory = schedule.executionHistory.slice(
+        0,
+        MAX_HISTORY_PER_SCHEDULE,
+      );
     }
   }
 
@@ -178,13 +199,14 @@ export class RecurringStorage {
 
   /** Schedule the next retry attempt. Returns false if retries are exhausted. */
   static scheduleRetry(id: string): boolean {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false;
     const all = this.getAll();
     const idx = all.findIndex((s) => s.id === id);
     if (idx === -1) return false;
     const s = all[idx];
     if (!s.retryConfig) return false;
-    if (s.retryConfig.currentRetryCount >= s.retryConfig.maxRetries) return false;
+    if (s.retryConfig.currentRetryCount >= s.retryConfig.maxRetries)
+      return false;
     s.retryConfig.currentRetryCount += 1;
     s.retryConfig.nextRetryAt = Date.now() + s.retryConfig.retryIntervalMs;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
@@ -192,7 +214,7 @@ export class RecurringStorage {
   }
 
   static clearRetry(id: string): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const all = this.getAll();
     const idx = all.findIndex((s) => s.id === id);
     if (idx === -1) return;
@@ -213,7 +235,7 @@ export class RecurringStorage {
   }
 
   private static _update(id: string, patch: Partial<RecurringSchedule>): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     const all = this.getAll();
     const idx = all.findIndex((s) => s.id === id);
     if (idx === -1) return;
@@ -230,7 +252,7 @@ export interface RecurringNotificationEvent {
   scheduleId: string;
   userAddress: string;
   label: string;
-  status: 'success' | 'failed';
+  status: "success" | "failed";
   executionCount: number;
   error?: string;
   timestamp: number;
@@ -238,7 +260,7 @@ export interface RecurringNotificationEvent {
 
 export function buildRecurringNotification(
   schedule: RecurringSchedule,
-  status: 'success' | 'failed',
+  status: "success" | "failed",
   error?: string,
 ): RecurringNotificationEvent {
   return {

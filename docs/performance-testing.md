@@ -43,6 +43,7 @@ BASE_URL=https://staging.stellar-spend.com k6 run scripts/performance/load-test.
 ## CI/CD Integration
 
 Performance tests run automatically on:
+
 - Push to main/develop
 - Pull requests
 - Daily schedule (2 AM UTC)
@@ -51,12 +52,12 @@ Results are uploaded as artifacts and commented on PRs.
 
 ## Performance Budgets
 
-| Endpoint | P95 Latency | Error Rate |
-|----------|------------|-----------|
-| `/api/health` | 200ms | 0% |
-| `/api/offramp/quote` | 1000ms | 5% |
-| `/api/offramp/currencies` | 500ms | 1% |
-| `/api/offramp/rate` | 300ms | 1% |
+| Endpoint                  | P95 Latency | Error Rate |
+| ------------------------- | ----------- | ---------- |
+| `/api/health`             | 200ms       | 0%         |
+| `/api/offramp/quote`      | 1000ms      | 5%         |
+| `/api/offramp/currencies` | 500ms       | 1%         |
+| `/api/offramp/rate`       | 300ms       | 1%         |
 
 ## Baseline Metrics
 

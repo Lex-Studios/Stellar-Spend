@@ -26,7 +26,9 @@ export function SelectField({
 }: SelectFieldProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em" }}>
+      <label
+        style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em" }}
+      >
         {label}
       </label>
       <div
@@ -40,7 +42,11 @@ export function SelectField({
         }}
       >
         {isLoading ? (
-          <Skeleton width="100%" height={16} aria-label={`Loading ${label.toLowerCase()}…`} />
+          <Skeleton
+            width="100%"
+            height={16}
+            aria-label={`Loading ${label.toLowerCase()}…`}
+          />
         ) : (
           <>
             <select
@@ -62,7 +68,11 @@ export function SelectField({
             >
               {!value && <option value="">{placeholder}</option>}
               {options.map((o) => (
-                <option key={o.value} value={o.value} style={{ background: "var(--panel)" }}>
+                <option
+                  key={o.value}
+                  value={o.value}
+                  style={{ background: "var(--panel)" }}
+                >
                   {o.label}
                 </option>
               ))}
@@ -76,7 +86,12 @@ export function SelectField({
               style={{ pointerEvents: "none", flexShrink: 0 }}
               aria-hidden="true"
             >
-              <path d="M2 4l4 4 4-4" stroke="var(--muted)" strokeWidth="1.5" strokeLinecap="round" />
+              <path
+                d="M2 4l4 4 4-4"
+                stroke="var(--muted)"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
             </svg>
           </>
         )}

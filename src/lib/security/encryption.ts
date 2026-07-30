@@ -1,5 +1,5 @@
-import * as crypto from 'crypto';
-import { logger } from '../logger';
+import * as crypto from "crypto";
+import { logger } from "../logger";
 
 /**
  * Encryption configuration
@@ -13,7 +13,7 @@ export interface EncryptionConfig {
 }
 
 const DEFAULT_CONFIG: EncryptionConfig = {
-  algorithm: 'aes-256-gcm',
+  algorithm: "aes-256-gcm",
   keyLength: 32, // 256 bits
   ivLength: 16, // 128 bits
   authTagLength: 16, // 128 bits
@@ -26,20 +26,30 @@ const DEFAULT_CONFIG: EncryptionConfig = {
 function getEncryptionKey(): Buffer {
   const keyEnv = process.env.ENCRYPTION_KEY;
   if (!keyEnv) {
-    logger.warn('encryption_key_not_configured', {
-      message: 'ENCRYPTION_KEY not set, using default key. This is insecure in production.',
+    logger.warn("encryption_key_not_configured", {
+      message:
+        "ENCRYPTION_KEY not set, using default key. This is insecure in production.",
     });
-    return Buffer.alloc(DEFAULT_CONFIG.keyLength, 'default-key-change-in-production');
+    return Buffer.alloc(
+      DEFAULT_CONFIG.keyLength,
+      "default-key-change-in-production",
+    );
   }
 
   // If key is hex-encoded, decode it
-  if (keyEnv.startsWith('0x')) {
-    return Buffer.from(keyEnv.slice(2), 'hex');
+  if (keyEnv.startsWith("0x")) {
+    return Buffer.from(keyEnv.slice(2), "hex");
   }
 
   // Otherwise, derive key from password using PBKDF2
-  const salt = Buffer.from('stellar-spend-salt', 'utf-8');
-  return crypto.pbkdf2Sync(keyEnv, salt, 100000, DEFAULT_CONFIG.keyLength, 'sha256');
+  const salt = Buffer.from("stellar-spend-salt", "utf-8");
+  return crypto.pbkdf2Sync(
+    keyEnv,
+    salt,
+    100000,
+    DEFAULT_CONFIG.keyLength,
+    "sha256",
+  );
 }
 
 /**
@@ -51,7 +61,8 @@ export function encryptData(data: string | Buffer): string {
     const iv = crypto.randomBytes(DEFAULT_CONFIG.ivLength);
     const cipher = crypto.createCipheriv(DEFAULT_CONFIG.algorithm, key, iv);
 
-    const dataBuffer = typeof data === 'string' ? Buffer.from(data, 'utf-8') : data;
+    const dataBuffer =
+      typeof data === "string" ? Buffer.from(data, "utf-8") : data;
     let encrypted = cipher.update(dataBuffer);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
 
@@ -59,12 +70,12 @@ export function encryptData(data: string | Buffer): string {
 
     // Combine IV + authTag + encrypted data
     const combined = Buffer.concat([iv, authTag, encrypted]);
-    return combined.toString('base64');
+    return combined.toString("base64");
   } catch (error) {
-    logger.error('encryption_failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error("encryption_failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
     });
-    throw new Error('Encryption failed');
+    throw new Error("Encryption failed");
   }
 }
 
@@ -74,15 +85,17 @@ export function encryptData(data: string | Buffer): string {
 export function decryptData(encryptedData: string): string {
   try {
     const key = getEncryptionKey();
-    const combined = Buffer.from(encryptedData, 'base64');
+    const combined = Buffer.from(encryptedData, "base64");
 
     // Extract IV, authTag, and encrypted data
     const iv = combined.slice(0, DEFAULT_CONFIG.ivLength);
     const authTag = combined.slice(
       DEFAULT_CONFIG.ivLength,
-      DEFAULT_CONFIG.ivLength + DEFAULT_CONFIG.authTagLength
+      DEFAULT_CONFIG.ivLength + DEFAULT_CONFIG.authTagLength,
     );
-    const encrypted = combined.slice(DEFAULT_CONFIG.ivLength + DEFAULT_CONFIG.authTagLength);
+    const encrypted = combined.slice(
+      DEFAULT_CONFIG.ivLength + DEFAULT_CONFIG.authTagLength,
+    );
 
     const decipher = crypto.createDecipheriv(DEFAULT_CONFIG.algorithm, key, iv);
     decipher.setAuthTag(authTag);
@@ -90,19 +103,21 @@ export function decryptData(encryptedData: string): string {
     let decrypted = decipher.update(encrypted);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
 
-    return decrypted.toString('utf-8');
+    return decrypted.toString("utf-8");
   } catch (error) {
-    logger.error('decryption_failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error("decryption_failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
     });
-    throw new Error('Decryption failed');
+    throw new Error("Decryption failed");
   }
 }
 
 /**
  * Encrypt object to JSON string
  */
-export function encryptObject<T extends Record<string, unknown>>(obj: T): string {
+export function encryptObject<T extends Record<string, unknown>>(
+  obj: T,
+): string {
   const jsonString = JSON.stringify(obj);
   return encryptData(jsonString);
 }
@@ -110,7 +125,9 @@ export function encryptObject<T extends Record<string, unknown>>(obj: T): string
 /**
  * Decrypt JSON string to object
  */
-export function decryptObject<T extends Record<string, unknown>>(encryptedData: string): T {
+export function decryptObject<T extends Record<string, unknown>>(
+  encryptedData: string,
+): T {
   const jsonString = decryptData(encryptedData);
   return JSON.parse(jsonString) as T;
 }
@@ -119,8 +136,9 @@ export function decryptObject<T extends Record<string, unknown>>(encryptedData: 
  * Hash data using SHA-256
  */
 export function hashData(data: string | Buffer): string {
-  const dataBuffer = typeof data === 'string' ? Buffer.from(data, 'utf-8') : data;
-  return crypto.createHash('sha256').update(dataBuffer).digest('hex');
+  const dataBuffer =
+    typeof data === "string" ? Buffer.from(data, "utf-8") : data;
+  return crypto.createHash("sha256").update(dataBuffer).digest("hex");
 }
 
 /**
@@ -134,7 +152,7 @@ export function verifyHash(data: string | Buffer, hash: string): boolean {
  * Generate a random encryption key
  */
 export function generateEncryptionKey(): string {
-  return crypto.randomBytes(DEFAULT_CONFIG.keyLength).toString('hex');
+  return crypto.randomBytes(DEFAULT_CONFIG.keyLength).toString("hex");
 }
 
 /**
@@ -142,14 +160,19 @@ export function generateEncryptionKey(): string {
  */
 export function encryptSensitiveFields<T extends Record<string, unknown>>(
   obj: T,
-  sensitiveFields: string[]
+  sensitiveFields: string[],
 ): Record<string, unknown> {
   const encrypted: Record<string, unknown> = { ...obj };
 
   for (const field of sensitiveFields) {
-    if (field in encrypted && encrypted[field] !== null && encrypted[field] !== undefined) {
+    if (
+      field in encrypted &&
+      encrypted[field] !== null &&
+      encrypted[field] !== undefined
+    ) {
       const value = encrypted[field];
-      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+      const stringValue =
+        typeof value === "string" ? value : JSON.stringify(value);
       encrypted[`${field}_encrypted`] = encryptData(stringValue);
       delete encrypted[field];
     }
@@ -163,21 +186,24 @@ export function encryptSensitiveFields<T extends Record<string, unknown>>(
  */
 export function decryptSensitiveFields<T extends Record<string, unknown>>(
   obj: Record<string, unknown>,
-  sensitiveFields: string[]
+  sensitiveFields: string[],
 ): T {
   const decrypted: Record<string, unknown> = { ...obj };
 
   for (const field of sensitiveFields) {
     const encryptedField = `${field}_encrypted`;
-    if (encryptedField in decrypted && typeof decrypted[encryptedField] === 'string') {
+    if (
+      encryptedField in decrypted &&
+      typeof decrypted[encryptedField] === "string"
+    ) {
       try {
         const decryptedValue = decryptData(decrypted[encryptedField] as string);
         decrypted[field] = decryptedValue;
         delete decrypted[encryptedField];
       } catch (error) {
-        logger.error('sensitive_field_decryption_failed', {
+        logger.error("sensitive_field_decryption_failed", {
           field,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
@@ -190,18 +216,19 @@ export function decryptSensitiveFields<T extends Record<string, unknown>>(
  * Encrypt localStorage data
  */
 export function encryptLocalStorageData(key: string, value: unknown): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   try {
-    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+    const stringValue =
+      typeof value === "string" ? value : JSON.stringify(value);
     const encrypted = encryptData(stringValue);
     localStorage.setItem(`encrypted_${key}`, encrypted);
     // Remove unencrypted version if it exists
     localStorage.removeItem(key);
   } catch (error) {
-    logger.error('localstorage_encryption_failed', {
+    logger.error("localstorage_encryption_failed", {
       key,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }
@@ -210,7 +237,7 @@ export function encryptLocalStorageData(key: string, value: unknown): void {
  * Decrypt localStorage data
  */
 export function decryptLocalStorageData<T = unknown>(key: string): T | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
 
   try {
     const encrypted = localStorage.getItem(`encrypted_${key}`);
@@ -234,9 +261,9 @@ export function decryptLocalStorageData<T = unknown>(key: string): T | null {
       return decrypted as T;
     }
   } catch (error) {
-    logger.error('localstorage_decryption_failed', {
+    logger.error("localstorage_decryption_failed", {
       key,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     });
     return null;
   }
@@ -245,14 +272,28 @@ export function decryptLocalStorageData<T = unknown>(key: string): T | null {
 /**
  * Encrypt log entry
  */
-export function encryptLogEntry(entry: Record<string, unknown>): Record<string, unknown> {
-  const sensitiveFields = ['password', 'token', 'secret', 'key', 'apiKey', 'privateKey'];
+export function encryptLogEntry(
+  entry: Record<string, unknown>,
+): Record<string, unknown> {
+  const sensitiveFields = [
+    "password",
+    "token",
+    "secret",
+    "key",
+    "apiKey",
+    "privateKey",
+  ];
   const encrypted: Record<string, unknown> = { ...entry };
 
   for (const field of sensitiveFields) {
-    if (field in encrypted && encrypted[field] !== null && encrypted[field] !== undefined) {
+    if (
+      field in encrypted &&
+      encrypted[field] !== null &&
+      encrypted[field] !== undefined
+    ) {
       const value = encrypted[field];
-      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+      const stringValue =
+        typeof value === "string" ? value : JSON.stringify(value);
       encrypted[`${field}_hash`] = hashData(stringValue);
       delete encrypted[field];
     }
@@ -278,11 +319,13 @@ export function encryptBackupData(data: Record<string, unknown>): string {
 /**
  * Decrypt backup data
  */
-export function decryptBackupData(backupString: string): Record<string, unknown> | null {
+export function decryptBackupData(
+  backupString: string,
+): Record<string, unknown> | null {
   try {
     const backup = JSON.parse(backupString);
     if (backup.version !== 1) {
-      logger.error('backup_version_mismatch', { version: backup.version });
+      logger.error("backup_version_mismatch", { version: backup.version });
       return null;
     }
 
@@ -292,7 +335,7 @@ export function decryptBackupData(backupString: string): Record<string, unknown>
     // Verify checksum
     const checksum = hashData(decrypted);
     if (checksum !== backup.checksum) {
-      logger.error('backup_checksum_mismatch', {
+      logger.error("backup_checksum_mismatch", {
         expected: backup.checksum,
         actual: checksum,
       });
@@ -301,8 +344,8 @@ export function decryptBackupData(backupString: string): Record<string, unknown>
 
     return data;
   } catch (error) {
-    logger.error('backup_decryption_failed', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error("backup_decryption_failed", {
+      error: error instanceof Error ? error.message : "Unknown error",
     });
     return null;
   }

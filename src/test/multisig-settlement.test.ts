@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { MultisigSettlementService, type MultisigConfig } from "@/lib/multisig-settlement";
+import {
+  MultisigSettlementService,
+  type MultisigConfig,
+} from "@/lib/multisig-settlement";
 
 // Mock DB pool so tests don't need a real Postgres connection
 vi.mock("@/lib/db/client", () => ({

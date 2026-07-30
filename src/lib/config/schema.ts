@@ -1,10 +1,10 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Configuration schema for validation
  */
 
-const EnvironmentSchema = z.enum(['development', 'staging', 'production']);
+const EnvironmentSchema = z.enum(["development", "staging", "production"]);
 
 const ApiConfigSchema = z.object({
   maxDuration: z.number().positive().default(20),
@@ -14,13 +14,15 @@ const ApiConfigSchema = z.object({
 });
 
 const FeeConfigSchema = z.object({
-  stablecoinFee: z.string().default('0.5'),
+  stablecoinFee: z.string().default("0.5"),
   bridgeFeePercentage: z.number().nonnegative().default(0.5),
   payoutFeePercentage: z.number().nonnegative().default(0),
 });
 
 const StellarConfigSchema = z.object({
-  mainnetPassphrase: z.string().default('Public Global Stellar Network ; September 2015'),
+  mainnetPassphrase: z
+    .string()
+    .default("Public Global Stellar Network ; September 2015"),
   minXlmBalance: z.number().positive().default(2),
   reserveAmount: z.number().positive().default(0.5),
 });
@@ -54,13 +56,13 @@ const CacheConfigSchema = z.object({
 });
 
 const ValidationConfigSchema = z.object({
-  minAmount: z.string().default('0.01'),
-  maxAmount: z.string().default('1000000'),
+  minAmount: z.string().default("0.01"),
+  maxAmount: z.string().default("1000000"),
   amountDecimals: z.number().nonnegative().default(2),
 });
 
 export const ConfigSchema = z.object({
-  environment: EnvironmentSchema.default('development'),
+  environment: EnvironmentSchema.default("development"),
   api: ApiConfigSchema.default({}),
   fees: FeeConfigSchema.default({}),
   stellar: StellarConfigSchema.default({}),

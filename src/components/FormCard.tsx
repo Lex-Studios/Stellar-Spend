@@ -1,6 +1,13 @@
 "use client";
 
-import { ChangeEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  KeyboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "@/lib/cn";
 import {
   validateAmount,
@@ -12,9 +19,15 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { Label } from "@/components/ui/Label";
 import { FormCardSkeleton } from "@/components/skeletons";
 import { BankAccountInput, type BankMode } from "@/components/BankAccountInput";
-import { QuoteComparison, type ProviderQuote } from "@/components/QuoteComparison";
+import {
+  QuoteComparison,
+  type ProviderQuote,
+} from "@/components/QuoteComparison";
 import { Tooltip } from "@/components/Tooltip";
-import { InsuranceOption, type InsuranceQuote } from "@/components/InsuranceOption";
+import {
+  InsuranceOption,
+  type InsuranceQuote,
+} from "@/components/InsuranceOption";
 import { useFxRate } from "@/hooks/useFxRate";
 import type { QuoteResult as QuoteFetcherResult } from "@/lib/offramp/utils/quote-fetcher";
 
@@ -109,7 +122,10 @@ function formatPayout(amount: string, currency: string): string {
   }
 }
 
-function buildProviderQuotes(quote: QuoteResult, currency: string): ProviderQuote[] {
+function buildProviderQuotes(
+  quote: QuoteResult,
+  currency: string,
+): ProviderQuote[] {
   const base = parseFloat(quote.destinationAmount);
   const baseRate = quote.rate;
   const baseFee = parseFloat(quote.bridgeFee ?? "0.5");
@@ -232,14 +248,22 @@ function InputField({
           id={id}
           type={type}
           value={value}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            onChange(e.target.value)
+          }
           onBlur={onBlur}
           placeholder={placeholder}
           disabled={disabled}
           inputMode={inputMode}
           aria-invalid={showError ? "true" : undefined}
           aria-describedby={
-            showError ? `${id}-error` : showSuccess ? `${id}-success` : help ? `${id}-help` : undefined
+            showError
+              ? `${id}-error`
+              : showSuccess
+                ? `${id}-success`
+                : help
+                  ? `${id}-help`
+                  : undefined
           }
           className={cn(
             "w-full bg-[#0a0a0a] border px-3 py-2.5 text-sm text-white placeholder-[#444444]",
@@ -249,8 +273,8 @@ function InputField({
             showError
               ? "border-red-500/60 focus:border-red-500/80"
               : showSuccess
-              ? "border-green-500/50 focus:border-green-500/70"
-              : "border-[#333333] focus:border-[#c9a962]",
+                ? "border-green-500/50 focus:border-green-500/70"
+                : "border-[#333333] focus:border-[#c9a962]",
             suffix && "pr-20",
           )}
         />
@@ -262,15 +286,46 @@ function InputField({
             />
           )}
           {!validating && showError && (
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-red-400" aria-hidden="true">
-              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M8 4.5V8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="text-red-400"
+              aria-hidden="true"
+            >
+              <circle
+                cx="8"
+                cy="8"
+                r="7"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M8 4.5V8.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
               <circle cx="8" cy="11" r="0.75" fill="currentColor" />
             </svg>
           )}
           {!validating && showSuccess && (
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-green-400" aria-hidden="true">
-              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="text-green-400"
+              aria-hidden="true"
+            >
+              <circle
+                cx="8"
+                cy="8"
+                r="7"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
               <path
                 d="M5 8L7 10L11 6"
                 stroke="currentColor"
@@ -286,17 +341,27 @@ function InputField({
         </span>
       </div>
       {showError && (
-        <span id={`${id}-error`} role="alert" className="text-[10px] text-red-400 tracking-wide">
+        <span
+          id={`${id}-error`}
+          role="alert"
+          className="text-[10px] text-red-400 tracking-wide"
+        >
           {error}
         </span>
       )}
       {showSuccess && (
-        <span id={`${id}-success`} className="text-[10px] text-green-400 tracking-wide">
+        <span
+          id={`${id}-success`}
+          className="text-[10px] text-green-400 tracking-wide"
+        >
           {success}
         </span>
       )}
       {!showError && !showSuccess && help && (
-        <span id={`${id}-help`} className="text-[10px] text-[#666666] tracking-wide">
+        <span
+          id={`${id}-help`}
+          className="text-[10px] text-[#666666] tracking-wide"
+        >
           {help}
         </span>
       )}
@@ -334,14 +399,19 @@ function SelectField({
   const showError = touched && !!error && !value;
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
+      <label
+        htmlFor={id}
+        className="text-[10px] tracking-[0.18em] text-[#777777] uppercase"
+      >
         {label}
       </label>
       <div className="relative">
         <select
           id={id}
           value={value}
-          onChange={(e: ChangeEvent<HTMLSelectElement>) => onChange(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+            onChange(e.target.value)
+          }
           onBlur={onBlur}
           disabled={disabled || loading}
           aria-invalid={showError ? "true" : undefined}
@@ -351,7 +421,11 @@ function SelectField({
             "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962] focus:border-[#c9a962]",
             "disabled:opacity-40 disabled:cursor-not-allowed",
             "transition-colors duration-150",
-            showError ? "border-red-500/60" : value ? "border-[#c9a962]/40" : "border-[#333333]",
+            showError
+              ? "border-red-500/60"
+              : value
+                ? "border-[#c9a962]/40"
+                : "border-[#333333]",
             value ? "text-white" : "text-[#444444]",
           )}
         >
@@ -359,7 +433,11 @@ function SelectField({
             {loading ? "Loading..." : placeholder}
           </option>
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value} className="bg-[#111111] text-white">
+            <option
+              key={opt.value}
+              value={opt.value}
+              className="bg-[#111111] text-white"
+            >
               {opt.label}
             </option>
           ))}
@@ -369,7 +447,11 @@ function SelectField({
         </span>
       </div>
       {showError && (
-        <span id={`${id}-error`} role="alert" className="text-[10px] text-red-400 tracking-wide">
+        <span
+          id={`${id}-error`}
+          role="alert"
+          className="text-[10px] text-red-400 tracking-wide"
+        >
           {error}
         </span>
       )}
@@ -390,7 +472,9 @@ function ResolvedField({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">{label}</span>
+      <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
+        {label}
+      </span>
       <div
         className={cn(
           "bg-[#0a0a0a] border px-3 py-2.5 text-sm min-h-[42px] flex items-center justify-between",
@@ -399,7 +483,9 @@ function ResolvedField({
       >
         <span>
           {loading ? (
-            <span className="text-[#777777] text-xs tracking-wider">Resolving...</span>
+            <span className="text-[#777777] text-xs tracking-wider">
+              Resolving...
+            </span>
           ) : value ? (
             <span className="text-[#c9a962]">{value}</span>
           ) : (
@@ -407,9 +493,28 @@ function ResolvedField({
           )}
         </span>
         {value && !loading && (
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-green-400 shrink-0" aria-hidden="true">
-            <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M5 8L7 10L11 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            className="text-green-400 shrink-0"
+            aria-hidden="true"
+          >
+            <circle
+              cx="8"
+              cy="8"
+              r="7"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+            <path
+              d="M5 8L7 10L11 6"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         )}
       </div>
@@ -438,7 +543,9 @@ function PayoutBox({
   return (
     <div className="border border-[#c9a962]/30 bg-[#c9a962]/5 px-4 py-3 flex items-center justify-between gap-4">
       <div className="flex flex-col gap-0.5">
-        <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">Estimated Payout</span>
+        <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
+          Estimated Payout
+        </span>
         <span className="text-[10px] text-[#777777]">
           Rate:{" "}
           {currency.toUpperCase() === "NGN"
@@ -502,7 +609,9 @@ export function FormCard({
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [quote, setQuote] = useState<QuoteResult | null>(null);
-  const [insuranceQuote, setInsuranceQuote] = useState<InsuranceQuote | null>(null);
+  const [insuranceQuote, setInsuranceQuote] = useState<InsuranceQuote | null>(
+    null,
+  );
   const [insuranceEnabled, setInsuranceEnabled] = useState(false);
   const [gasFees, setGasFees] = useState<GasFeeOptions | null>(null);
 
@@ -518,9 +627,12 @@ export function FormCard({
   const [amountError, setAmountError] = useState("");
   const [quoteError, setQuoteError] = useState("");
   const [verifyError, setVerifyError] = useState("");
-  const [selectedProviderId, setSelectedProviderId] = useState<string>("paycrest");
+  const [selectedProviderId, setSelectedProviderId] =
+    useState<string>("paycrest");
 
-  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>(
+    {},
+  );
   const touchField = (field: string) =>
     setTouchedFields((prev) => ({ ...prev, [field]: true }));
 
@@ -613,7 +725,11 @@ export function FormCard({
           const res = await fetch("/api/offramp/quote", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: amt, currency: cur, feeMethod: fee }),
+            body: JSON.stringify({
+              amount: amt,
+              currency: cur,
+              feeMethod: fee,
+            }),
           });
           const data = await res.json();
           if (!res.ok) throw new Error(data.error || "Failed to fetch quote");
@@ -622,7 +738,8 @@ export function FormCard({
           setQuote(result);
           onQuoteChange?.(result);
         } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : "Could not fetch quote";
+          const msg =
+            err instanceof Error ? err.message : "Could not fetch quote";
           if (!msg.includes("Not implemented")) setQuoteError(msg);
           setQuote(null);
           onQuoteChange?.(null);
@@ -659,7 +776,8 @@ export function FormCard({
           if (!res.ok) throw new Error(data.error || "Verification failed");
           setAccountName(data.accountName ?? "");
         } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : "Could not verify account";
+          const msg =
+            err instanceof Error ? err.message : "Could not verify account";
           setVerifyError(msg);
         } finally {
           setIsVerifyingAccount(false);
@@ -765,10 +883,10 @@ export function FormCard({
   const ctaState: CtaState = isConnecting
     ? "connecting"
     : !isConnected
-    ? "disconnected"
-    : isSubmitting
-    ? "submitting"
-    : "ready";
+      ? "disconnected"
+      : isSubmitting
+        ? "submitting"
+        : "ready";
 
   const ctaDisabled =
     ctaState === "connecting" ||
@@ -783,7 +901,11 @@ export function FormCard({
         !!verifyError));
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !ctaDisabled) {
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key === "Enter" &&
+      !ctaDisabled
+    ) {
       event.preventDefault();
       void handleSubmit();
     }
@@ -808,54 +930,70 @@ export function FormCard({
           placeholder="0.00"
           suffix={isQuoteLoading ? "..." : "USDC"}
           error={amountError || quoteError}
-          success={validateAmount(amount) && parseFloat(amount) >= 0.7 ? "Valid amount" : undefined}
+          success={
+            validateAmount(amount) && parseFloat(amount) >= 0.7
+              ? "Valid amount"
+              : undefined
+          }
           touched={touchedFields["amount"]}
           disabled={!isConnected || isSubmitting}
         />
 
-      {/* Fee method */}
-      <div className="flex flex-col gap-1.5">
-        <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
-          Gas Fee Method
-        </span>
-        {isGasFeesLoading ? (
-          <div className="flex gap-2">
-            <Skeleton width="50%" height={44} aria-label="Loading fee option…" />
-            <Skeleton width="50%" height={44} aria-label="Loading fee option…" />
-          </div>
-        ) : (
-          <div className="flex gap-2">
-            {(["USDC", "XLM"] as FeeMethod[]).map((m) => {
-              const fee = m === "USDC" ? gasFees?.usdcFee : gasFees?.xlmFee;
-              const active = feeMethod === m;
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => handleFeeMethodChange(m)}
-                  disabled={!isConnected || isSubmitting}
-                  className={cn(
-                    "flex-1 py-2.5 px-3 min-h-[44px] text-xs tracking-widest border transition-colors duration-150",
-                    "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
-                    "disabled:opacity-40 disabled:cursor-not-allowed",
-                    active
-                      ? "border-[#c9a962] bg-[#c9a962]/10 text-[#c9a962]"
-                      : "border-[#333333] bg-[#0a0a0a] text-[#777777] hover:border-[#c9a962]/50",
-                  )}
-                >
-                  <span className="block font-semibold">{m}</span>
-                  {fee && <span className="block text-[10px] mt-0.5 opacity-80">{fee}</span>}
-                </button>
-              );
-            })}
-          </div>
-        )}
-        <p className="text-[10px] text-[#666666] leading-relaxed">
-          {feeMethod === "XLM"
-            ? "XLM will be used to cover Stellar network fees."
-            : "A small USDC amount will be deducted to cover network fees."}
-        </p>
-      </div>
+        {/* Fee method */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
+            Gas Fee Method
+          </span>
+          {isGasFeesLoading ? (
+            <div className="flex gap-2">
+              <Skeleton
+                width="50%"
+                height={44}
+                aria-label="Loading fee option…"
+              />
+              <Skeleton
+                width="50%"
+                height={44}
+                aria-label="Loading fee option…"
+              />
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              {(["USDC", "XLM"] as FeeMethod[]).map((m) => {
+                const fee = m === "USDC" ? gasFees?.usdcFee : gasFees?.xlmFee;
+                const active = feeMethod === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => handleFeeMethodChange(m)}
+                    disabled={!isConnected || isSubmitting}
+                    className={cn(
+                      "flex-1 py-2.5 px-3 min-h-[44px] text-xs tracking-widest border transition-colors duration-150",
+                      "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
+                      "disabled:opacity-40 disabled:cursor-not-allowed",
+                      active
+                        ? "border-[#c9a962] bg-[#c9a962]/10 text-[#c9a962]"
+                        : "border-[#333333] bg-[#0a0a0a] text-[#777777] hover:border-[#c9a962]/50",
+                    )}
+                  >
+                    <span className="block font-semibold">{m}</span>
+                    {fee && (
+                      <span className="block text-[10px] mt-0.5 opacity-80">
+                        {fee}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <p className="text-[10px] text-[#666666] leading-relaxed">
+            {feeMethod === "XLM"
+              ? "XLM will be used to cover Stellar network fees."
+              : "A small USDC amount will be deducted to cover network fees."}
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SelectField
@@ -864,7 +1002,12 @@ export function FormCard({
             value={currency}
             options={currencies.map((c) => {
               const flag = getCurrencyFlag(c.code);
-              return { value: c.code, label: flag ? `${flag} ${c.name} (${c.code})` : `${c.name} (${c.code})` };
+              return {
+                value: c.code,
+                label: flag
+                  ? `${flag} ${c.name} (${c.code})`
+                  : `${c.name} (${c.code})`,
+              };
             })}
             onChange={handleCurrencyChange}
             onBlur={() => touchField("currency")}
@@ -877,7 +1020,10 @@ export function FormCard({
             label="Bank / Institution"
             id="institution"
             value={institution}
-            options={institutions.map((i) => ({ value: i.code, label: i.name }))}
+            options={institutions.map((i) => ({
+              value: i.code,
+              label: i.name,
+            }))}
             onChange={handleInstitutionChange}
             onBlur={() => touchField("institution")}
             loading={isInstitutionsLoading}
@@ -890,43 +1036,50 @@ export function FormCard({
 
         {/* Account number */}
         <BankAccountInput
-        mode={bankMode}
-        onModeChange={setBankMode}
-        accountNumber={accountNumber}
-        onAccountNumberChange={handleAccountNumberChange}
-        routingNumber={routingNumber}
-        onRoutingNumberChange={setRoutingNumber}
-        iban={iban}
-        onIbanChange={setIban}
-        disabled={!institution || !isConnected || isSubmitting}
-      />
+          mode={bankMode}
+          onModeChange={setBankMode}
+          accountNumber={accountNumber}
+          onAccountNumberChange={handleAccountNumberChange}
+          routingNumber={routingNumber}
+          onRoutingNumberChange={setRoutingNumber}
+          iban={iban}
+          onIbanChange={setIban}
+          disabled={!institution || !isConnected || isSubmitting}
+        />
 
-      {verifyError && (
-        <span role="alert" className="text-[10px] text-red-400 tracking-wide">
-          {verifyError}
-        </span>
-      )}
+        {verifyError && (
+          <span role="alert" className="text-[10px] text-red-400 tracking-wide">
+            {verifyError}
+          </span>
+        )}
 
-      <ResolvedField
-        label="Account Name"
-        value={accountName}
-        loading={isVerifyingAccount}
-        placeholder={accountNumber ? "Verifying…" : "Enter account number to verify"}
-      />
+        <ResolvedField
+          label="Account Name"
+          value={accountName}
+          loading={isVerifyingAccount}
+          placeholder={
+            accountNumber ? "Verifying…" : "Enter account number to verify"
+          }
+        />
 
-      {quote && (
-        <PayoutBox quote={quote} currency={currency} liveRate={liveRate} flash={rateFlash} />
-      )}
+        {quote && (
+          <PayoutBox
+            quote={quote}
+            currency={currency}
+            liveRate={liveRate}
+            flash={rateFlash}
+          />
+        )}
 
-      <InsuranceOption
-        amount={parseFloat(amount) || 0}
-        currency="USDC"
-        disabled={!isConnected || isSubmitting}
-        onToggle={(enabled, selectedQuote) => {
-          setInsuranceEnabled(enabled);
-          setInsuranceQuote(selectedQuote);
-        }}
-      />
+        <InsuranceOption
+          amount={parseFloat(amount) || 0}
+          currency="USDC"
+          disabled={!isConnected || isSubmitting}
+          onToggle={(enabled, selectedQuote) => {
+            setInsuranceEnabled(enabled);
+            setInsuranceQuote(selectedQuote);
+          }}
+        />
 
         <button
           onClick={ctaState === "disconnected" ? onConnect : handleSubmitForm}
@@ -938,7 +1091,8 @@ export function FormCard({
             ctaState === "ready"
               ? "bg-[#c9a962] text-black hover:bg-[#d4b982]"
               : "bg-[#222222] text-[#555555] cursor-not-allowed border border-[#333333]",
-            (ctaState === "connecting" || ctaState === "submitting") && "animate-pulse"
+            (ctaState === "connecting" || ctaState === "submitting") &&
+              "animate-pulse",
           )}
         >
           {getCtaLabel(ctaState)}

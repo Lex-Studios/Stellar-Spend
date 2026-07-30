@@ -7,7 +7,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const actionType = searchParams.get("actionType") || undefined;
     const resourceType = searchParams.get("resourceType") || undefined;
-    const status = (searchParams.get("status") as "success" | "failure") || undefined;
+    const status =
+      (searchParams.get("status") as "success" | "failure") || undefined;
     const startDate = searchParams.get("startDate")
       ? parseInt(searchParams.get("startDate")!, 10)
       : undefined;

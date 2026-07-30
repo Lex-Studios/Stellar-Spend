@@ -11,19 +11,19 @@ This guide documents patterns and utilities created to eliminate code duplicatio
 Centralized API request handling:
 
 ```typescript
-import { apiGet, apiPost, apiDelete } from '@/lib/api-utils';
+import { apiGet, apiPost, apiDelete } from "@/lib/api-utils";
 
 // GET request
-const data = await apiGet<QuoteResponse>('/api/offramp/quote');
+const data = await apiGet<QuoteResponse>("/api/offramp/quote");
 
 // POST request
-const result = await apiPost<OrderResponse>('/api/offramp/order', {
-  amount: '100',
-  currency: 'NGN',
+const result = await apiPost<OrderResponse>("/api/offramp/order", {
+  amount: "100",
+  currency: "NGN",
 });
 
 // DELETE request
-await apiDelete('/api/offramp/order/123');
+await apiDelete("/api/offramp/order/123");
 ```
 
 ### Common Utilities (`src/lib/common-utils.ts`)
@@ -41,7 +41,7 @@ import {
   formatCurrency,
   delay,
   isEmpty,
-} from '@/lib/common-utils';
+} from "@/lib/common-utils";
 
 // Retry with exponential backoff
 const result = await retryWithBackoff(() => fetchData(), {
@@ -55,7 +55,7 @@ const handleSearch = debounce((query: string) => {
 }, 300);
 
 // Format currency
-const formatted = formatCurrency(1000, 'NGN'); // ₦1,000.00
+const formatted = formatCurrency(1000, "NGN"); // ₦1,000.00
 ```
 
 ## Shared Hooks
@@ -65,15 +65,15 @@ const formatted = formatCurrency(1000, 'NGN'); // ₦1,000.00
 Replaces duplicated polling logic:
 
 ```typescript
-import { useGenericPolling } from '@/hooks/useGenericPolling';
-import { BRIDGE_CONFIG } from '@/lib/polling/backoff';
+import { useGenericPolling } from "@/hooks/useGenericPolling";
+import { BRIDGE_CONFIG } from "@/lib/polling/backoff";
 
 const { pollStatus } = useGenericPolling({
   config: BRIDGE_CONFIG,
-  terminalStates: ['completed', 'failed'],
+  terminalStates: ["completed", "failed"],
   onTerminalState: (state) => {
-    if (state === 'completed') {
-      console.log('Success!');
+    if (state === "completed") {
+      console.log("Success!");
     }
   },
   updateStorage: (status) => {
@@ -81,7 +81,7 @@ const { pollStatus } = useGenericPolling({
   },
 });
 
-await pollStatus('/api/status/123', { id: '123' }, (data) => data.status);
+await pollStatus("/api/status/123", { id: "123" }, (data) => data.status);
 ```
 
 ## Higher-Order Components (HOCs)
@@ -162,22 +162,27 @@ function MyComponent() {
 ## Patterns Eliminated
 
 ### 1. Polling Logic Duplication
+
 **Before**: `usePollBridgeStatus` and `usePollPayoutStatus` had 80% identical code
 **After**: Single `useGenericPolling` hook with configuration
 
 ### 2. Form Validation Duplication
+
 **Before**: Each form component had its own validation state management
 **After**: Shared `useFormValidation` hook and `withFormValidation` HOC
 
 ### 3. API Request Duplication
+
 **Before**: Each component/service had its own fetch wrapper
 **After**: Centralized `apiGet`, `apiPost`, `apiDelete` utilities
 
 ### 4. Loading State Duplication
+
 **Before**: Each component managed its own loading state
 **After**: Shared `useLoading` hook
 
 ### 5. Error Handling Duplication
+
 **Before**: Try-catch blocks scattered throughout
 **After**: Shared `useErrorHandling` hook
 

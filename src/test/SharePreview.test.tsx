@@ -13,7 +13,7 @@ describe("SharePreview", () => {
           status: "completed",
           timestamp: Date.now(),
         }}
-      />
+      />,
     );
 
     expect(screen.getByText("100")).toBeInTheDocument();

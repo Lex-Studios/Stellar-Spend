@@ -2,14 +2,14 @@
  * Centralized configuration module for all application constants
  */
 
-export { type Config, ConfigSchema, validateConfig } from './schema';
+export { type Config, ConfigSchema, validateConfig } from "./schema";
 
 export {
   developmentConfig,
   stagingConfig,
   productionConfig,
   getEnvironmentConfig,
-} from './environments';
+} from "./environments";
 
 export {
   ConfigManager,
@@ -17,7 +17,7 @@ export {
   getConfigManager,
   getConfig,
   getConfigSection,
-} from './manager';
+} from "./manager";
 
 // Legacy CONFIG export for backward compatibility
 export const CONFIG = {
@@ -31,14 +31,14 @@ export const CONFIG = {
 
   // Fee Configuration
   FEES: {
-    STABLECOIN_FEE: '0.5',
+    STABLECOIN_FEE: "0.5",
     BRIDGE_FEE_PERCENTAGE: 0.5,
     PAYOUT_FEE_PERCENTAGE: 0,
   },
 
   // Stellar Configuration
   STELLAR: {
-    MAINNET_PASSPHRASE: 'Public Global Stellar Network ; September 2015',
+    MAINNET_PASSPHRASE: "Public Global Stellar Network ; September 2015",
     MIN_XLM_BALANCE: 2,
     RESERVE_AMOUNT: 0.5,
   },
@@ -78,8 +78,8 @@ export const CONFIG = {
 
   // Validation
   VALIDATION: {
-    MIN_AMOUNT: '0.01',
-    MAX_AMOUNT: '1000000',
+    MIN_AMOUNT: "0.01",
+    MAX_AMOUNT: "1000000",
     AMOUNT_DECIMALS: 2,
   },
 } as const;

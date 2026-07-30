@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { cn } from '@/lib/cn';
-import type { WalletError } from '@/lib/wallets';
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/cn";
+import type { WalletError } from "@/lib/wallets";
 
 interface WalletErrorDisplayProps {
   error: WalletError | null;
@@ -43,7 +43,12 @@ export function WalletErrorDisplay({
       aria-hidden="true"
     >
       <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M8 4.5V8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path
+        d="M8 4.5V8.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
       <circle cx="8" cy="11" r="0.75" fill="currentColor" />
     </svg>
   );
@@ -52,7 +57,7 @@ export function WalletErrorDisplay({
     if (!error.code) return null;
 
     switch (error.code) {
-      case 'WALLET_NOT_AVAILABLE':
+      case "WALLET_NOT_AVAILABLE":
         return (
           <div className="text-[11px] text-red-300 mt-2 space-y-1">
             <p>Wallet extension not installed. Try:</p>
@@ -62,8 +67,8 @@ export function WalletErrorDisplay({
             </ul>
           </div>
         );
-      case 'WALLET_CONNECTION_ERROR':
-        if (error.message?.includes('locked')) {
+      case "WALLET_CONNECTION_ERROR":
+        if (error.message?.includes("locked")) {
           return (
             <div className="text-[11px] text-red-300 mt-2">
               <p>Your wallet appears to be locked.</p>
@@ -71,15 +76,23 @@ export function WalletErrorDisplay({
             </div>
           );
         }
-        if (error.message?.includes('rejected') || error.message?.includes('declined')) {
+        if (
+          error.message?.includes("rejected") ||
+          error.message?.includes("declined")
+        ) {
           return (
             <div className="text-[11px] text-red-300 mt-2">
               <p>You declined the connection request.</p>
-              <p className="mt-1">Approve it in your wallet popup to continue.</p>
+              <p className="mt-1">
+                Approve it in your wallet popup to continue.
+              </p>
             </div>
           );
         }
-        if (error.message?.includes('network') || error.message?.includes('testnet')) {
+        if (
+          error.message?.includes("network") ||
+          error.message?.includes("testnet")
+        ) {
           return (
             <div className="text-[11px] text-red-300 mt-2">
               <p>Wrong network selected in your wallet.</p>
@@ -88,16 +101,21 @@ export function WalletErrorDisplay({
           );
         }
         break;
-      case 'WALLET_SIGNING_ERROR':
-        if (error.message?.includes('rejected') || error.message?.includes('declined')) {
+      case "WALLET_SIGNING_ERROR":
+        if (
+          error.message?.includes("rejected") ||
+          error.message?.includes("declined")
+        ) {
           return (
             <div className="text-[11px] text-red-300 mt-2">
               <p>Transaction rejected in your wallet.</p>
-              <p className="mt-1">Review and approve the transaction to continue.</p>
+              <p className="mt-1">
+                Review and approve the transaction to continue.
+              </p>
             </div>
           );
         }
-        if (error.message?.includes('locked')) {
+        if (error.message?.includes("locked")) {
           return (
             <div className="text-[11px] text-red-300 mt-2">
               <p>Wallet is locked for signing.</p>
@@ -106,7 +124,7 @@ export function WalletErrorDisplay({
           );
         }
         break;
-      case 'ACCOUNT_CHANGED':
+      case "ACCOUNT_CHANGED":
         return (
           <div className="text-[11px] text-red-300 mt-2">
             <p>Your wallet account changed. Reconnecting...</p>
@@ -128,9 +146,9 @@ export function WalletErrorDisplay({
   return (
     <div
       className={cn(
-        'relative px-4 py-3 border border-red-500/30 bg-red-500/10 rounded',
-        'flex items-start gap-3',
-        className
+        "relative px-4 py-3 border border-red-500/30 bg-red-500/10 rounded",
+        "flex items-start gap-3",
+        className,
       )}
       role="alert"
       aria-live="polite"
@@ -140,9 +158,7 @@ export function WalletErrorDisplay({
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-[12px] font-medium text-red-400">
-          {error.message}
-        </p>
+        <p className="text-[12px] font-medium text-red-400">{error.message}</p>
         {getErrorSuggestion()}
       </div>
 
@@ -152,9 +168,9 @@ export function WalletErrorDisplay({
           <button
             onClick={onAction}
             className={cn(
-              'text-[10px] tracking-widest uppercase text-red-400',
-              'hover:text-red-300 transition-colors',
-              'focus:outline-none focus-visible:underline'
+              "text-[10px] tracking-widest uppercase text-red-400",
+              "hover:text-red-300 transition-colors",
+              "focus:outline-none focus-visible:underline",
             )}
           >
             {actionLabel}
@@ -165,7 +181,13 @@ export function WalletErrorDisplay({
           aria-label="Dismiss error"
           className="text-red-400/60 hover:text-red-400 transition-colors"
         >
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
             <path
               d="M12 4L4 12M4 4L12 12"
               stroke="currentColor"

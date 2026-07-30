@@ -61,7 +61,8 @@ export default function OfflineBanner() {
       {isOffline ? (
         <>
           <span aria-hidden="true">⚠</span>
-          You&apos;re offline — showing cached data. Actions will sync when you reconnect.
+          You&apos;re offline — showing cached data. Actions will sync when you
+          reconnect.
         </>
       ) : (
         <>

@@ -14,10 +14,12 @@ export function useTheme() {
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
     localStorage.setItem("theme", newTheme);
-    
+
     let effectiveTheme = newTheme;
     if (newTheme === "system") {
-      effectiveTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      effectiveTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
     }
     document.documentElement.setAttribute("data-theme", effectiveTheme);
   };

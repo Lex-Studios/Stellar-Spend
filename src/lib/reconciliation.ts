@@ -1,6 +1,6 @@
-import { env } from './env';
-import { pool } from './db/client';
-import { logger } from './logger';
+import { env } from "./env";
+import { pool } from "./db/client";
+import { logger } from "./logger";
 
 export interface ReconciliationRecord {
   transactionId: string;
@@ -21,9 +21,15 @@ export interface ReconciliationHistoryEntry {
 
 export interface ReconciliationDiscrepancy {
   transactionId: string;
-  type: 'missing_stellar' | 'missing_base' | 'missing_paycrest' | 'amount_mismatch' | 'status_mismatch' | 'unsettled_order';
+  type:
+    | "missing_stellar"
+    | "missing_base"
+    | "missing_paycrest"
+    | "amount_mismatch"
+    | "status_mismatch"
+    | "unsettled_order";
   description: string;
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
   stellarData?: any;
   baseData?: any;
   paycrestData?: any;
@@ -46,7 +52,7 @@ export interface ReconciliationReport {
 }
 
 export interface ReconciliationAlert {
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
   message: string;
   discrepancies: ReconciliationDiscrepancy[];
   timestamp: string;
@@ -54,7 +60,7 @@ export interface ReconciliationAlert {
 
 export interface ManualReconciliationAction {
   transactionId: string;
-  action: 'retry' | 'mark_resolved' | 'investigate';
+  action: "retry" | "mark_resolved" | "investigate";
   notes?: string;
   resolvedBy?: string;
 }
@@ -75,9 +81,12 @@ export interface DailySettlementReport {
 
 async function fetchStellarTransaction(txHash: string): Promise<any> {
   try {
-    const response = await fetch(`${env.server.STELLAR_HORIZON_URL}/transactions/${txHash}`, {
-      signal: AbortSignal.timeout(5000),
-    });
+    const response = await fetch(
+      `${env.server.STELLAR_HORIZON_URL}/transactions/${txHash}`,
+      {
+        signal: AbortSignal.timeout(5000),
+      },
+    );
     if (!response.ok) return null;
     return await response.json();
   } catch {
@@ -88,12 +97,12 @@ async function fetchStellarTransaction(txHash: string): Promise<any> {
 async function fetchBaseTransaction(txHash: string): Promise<any> {
   try {
     const response = await fetch(env.server.BASE_RPC_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: 1,
-        method: 'eth_getTransactionByHash',
+        method: "eth_getTransactionByHash",
         params: [txHash],
       }),
       signal: AbortSignal.timeout(5000),
@@ -108,10 +117,13 @@ async function fetchBaseTransaction(txHash: string): Promise<any> {
 
 async function fetchPaycrestOrder(orderId: string): Promise<any> {
   try {
-    const response = await fetch(`https://api.paycrest.io/aggregator/orders/${orderId}`, {
-      headers: { 'x-api-key': env.server.PAYCREST_API_KEY },
-      signal: AbortSignal.timeout(5000),
-    });
+    const response = await fetch(
+      `https://api.paycrest.io/aggregator/orders/${orderId}`,
+      {
+        headers: { "x-api-key": env.server.PAYCREST_API_KEY },
+        signal: AbortSignal.timeout(5000),
+      },
+    );
     if (!response.ok) return null;
     const data = await response.json();
     return data.data || null;
@@ -120,60 +132,68 @@ async function fetchPaycrestOrder(orderId: string): Promise<any> {
   }
 }
 
-export async function reconcileTransaction(record: ReconciliationRecord): Promise<ReconciliationDiscrepancy[]> {
+export async function reconcileTransaction(
+  record: ReconciliationRecord,
+): Promise<ReconciliationDiscrepancy[]> {
   const discrepancies: ReconciliationDiscrepancy[] = [];
 
   const [stellarData, baseData, paycrestData] = await Promise.all([
-    record.stellarTxHash ? fetchStellarTransaction(record.stellarTxHash) : Promise.resolve(null),
-    record.baseTxHash ? fetchBaseTransaction(record.baseTxHash) : Promise.resolve(null),
-    record.paycrestOrderId ? fetchPaycrestOrder(record.paycrestOrderId) : Promise.resolve(null),
+    record.stellarTxHash
+      ? fetchStellarTransaction(record.stellarTxHash)
+      : Promise.resolve(null),
+    record.baseTxHash
+      ? fetchBaseTransaction(record.baseTxHash)
+      : Promise.resolve(null),
+    record.paycrestOrderId
+      ? fetchPaycrestOrder(record.paycrestOrderId)
+      : Promise.resolve(null),
   ]);
 
   if (record.stellarTxHash && !stellarData) {
     discrepancies.push({
       transactionId: record.transactionId,
-      type: 'missing_stellar',
+      type: "missing_stellar",
       description: `Stellar transaction ${record.stellarTxHash} not found`,
-      severity: 'high',
+      severity: "high",
     });
   }
 
   if (record.baseTxHash && !baseData) {
     discrepancies.push({
       transactionId: record.transactionId,
-      type: 'missing_base',
+      type: "missing_base",
       description: `Base transaction ${record.baseTxHash} not found`,
-      severity: 'high',
+      severity: "high",
     });
   }
 
   if (record.paycrestOrderId && !paycrestData) {
     discrepancies.push({
       transactionId: record.transactionId,
-      type: 'missing_paycrest',
+      type: "missing_paycrest",
       description: `Paycrest order ${record.paycrestOrderId} not found`,
-      severity: 'medium',
+      severity: "medium",
     });
   }
 
-  if (paycrestData && paycrestData.status === 'pending') {
+  if (paycrestData && paycrestData.status === "pending") {
     discrepancies.push({
       transactionId: record.transactionId,
-      type: 'unsettled_order',
+      type: "unsettled_order",
       description: `Paycrest order ${record.paycrestOrderId} is still unsettled`,
-      severity: 'medium',
+      severity: "medium",
     });
   }
 
   if (stellarData && paycrestData) {
     const stellarSuccess = stellarData.successful === true;
-    const paycrestSuccess = paycrestData.status === 'completed';
+    const paycrestSuccess = paycrestData.status === "completed";
     if (stellarSuccess !== paycrestSuccess) {
       discrepancies.push({
         transactionId: record.transactionId,
-        type: 'status_mismatch',
-        description: 'Status mismatch between Stellar and Paycrest',
-        severity: 'high',
+        type: "status_mismatch",
+        description: "Status mismatch between Stellar and Paycrest",
+        severity: "high",
         stellarData: { successful: stellarSuccess },
         paycrestData: { status: paycrestData.status },
       });
@@ -185,9 +205,9 @@ export async function reconcileTransaction(record: ReconciliationRecord): Promis
     if (paycrestAmount && String(paycrestAmount) !== record.amount) {
       discrepancies.push({
         transactionId: record.transactionId,
-        type: 'amount_mismatch',
+        type: "amount_mismatch",
         description: `Amount mismatch: expected ${record.amount}, Paycrest has ${paycrestAmount}`,
-        severity: 'high',
+        severity: "high",
         stellarData,
         paycrestData,
       });
@@ -197,26 +217,42 @@ export async function reconcileTransaction(record: ReconciliationRecord): Promis
   return discrepancies;
 }
 
-export async function generateReconciliationReport(records: ReconciliationRecord[]): Promise<ReconciliationReport> {
+export async function generateReconciliationReport(
+  records: ReconciliationRecord[],
+): Promise<ReconciliationReport> {
   const allDiscrepancies: ReconciliationDiscrepancy[] = [];
 
   const batchSize = 10;
   for (let i = 0; i < records.length; i += batchSize) {
     const batch = records.slice(i, i + batchSize);
-    const batchResults = await Promise.all(batch.map((record) => reconcileTransaction(record)));
+    const batchResults = await Promise.all(
+      batch.map((record) => reconcileTransaction(record)),
+    );
     allDiscrepancies.push(...batchResults.flat());
   }
 
-  const uniqueTransactions = new Set(allDiscrepancies.map((d) => d.transactionId));
+  const uniqueTransactions = new Set(
+    allDiscrepancies.map((d) => d.transactionId),
+  );
   const matchedCount = records.length - uniqueTransactions.size;
 
   const summary = {
-    missingStellar: allDiscrepancies.filter((d) => d.type === 'missing_stellar').length,
-    missingBase: allDiscrepancies.filter((d) => d.type === 'missing_base').length,
-    missingPaycrest: allDiscrepancies.filter((d) => d.type === 'missing_paycrest').length,
-    amountMismatches: allDiscrepancies.filter((d) => d.type === 'amount_mismatch').length,
-    statusMismatches: allDiscrepancies.filter((d) => d.type === 'status_mismatch').length,
-    unsettledOrders: allDiscrepancies.filter((d) => d.type === 'unsettled_order').length,
+    missingStellar: allDiscrepancies.filter((d) => d.type === "missing_stellar")
+      .length,
+    missingBase: allDiscrepancies.filter((d) => d.type === "missing_base")
+      .length,
+    missingPaycrest: allDiscrepancies.filter(
+      (d) => d.type === "missing_paycrest",
+    ).length,
+    amountMismatches: allDiscrepancies.filter(
+      (d) => d.type === "amount_mismatch",
+    ).length,
+    statusMismatches: allDiscrepancies.filter(
+      (d) => d.type === "status_mismatch",
+    ).length,
+    unsettledOrders: allDiscrepancies.filter(
+      (d) => d.type === "unsettled_order",
+    ).length,
   };
 
   return {
@@ -229,13 +265,17 @@ export async function generateReconciliationReport(records: ReconciliationRecord
   };
 }
 
-export function generateAlerts(report: ReconciliationReport): ReconciliationAlert[] {
+export function generateAlerts(
+  report: ReconciliationReport,
+): ReconciliationAlert[] {
   const alerts: ReconciliationAlert[] = [];
 
-  const highSeverity = report.discrepancies.filter((d) => d.severity === 'high');
+  const highSeverity = report.discrepancies.filter(
+    (d) => d.severity === "high",
+  );
   if (highSeverity.length > 0) {
     alerts.push({
-      severity: 'high',
+      severity: "high",
       message: `${highSeverity.length} high-severity discrepancies detected`,
       discrepancies: highSeverity,
       timestamp: new Date().toISOString(),
@@ -244,27 +284,33 @@ export function generateAlerts(report: ReconciliationReport): ReconciliationAler
 
   if (report.summary.missingStellar > 5) {
     alerts.push({
-      severity: 'high',
+      severity: "high",
       message: `${report.summary.missingStellar} missing Stellar transactions`,
-      discrepancies: report.discrepancies.filter((d) => d.type === 'missing_stellar'),
+      discrepancies: report.discrepancies.filter(
+        (d) => d.type === "missing_stellar",
+      ),
       timestamp: new Date().toISOString(),
     });
   }
 
   if (report.summary.missingPaycrest > 5) {
     alerts.push({
-      severity: 'medium',
+      severity: "medium",
       message: `${report.summary.missingPaycrest} missing Paycrest orders`,
-      discrepancies: report.discrepancies.filter((d) => d.type === 'missing_paycrest'),
+      discrepancies: report.discrepancies.filter(
+        (d) => d.type === "missing_paycrest",
+      ),
       timestamp: new Date().toISOString(),
     });
   }
 
   if (report.summary.unsettledOrders > 3) {
     alerts.push({
-      severity: 'medium',
+      severity: "medium",
       message: `${report.summary.unsettledOrders} unsettled Paycrest orders`,
-      discrepancies: report.discrepancies.filter((d) => d.type === 'unsettled_order'),
+      discrepancies: report.discrepancies.filter(
+        (d) => d.type === "unsettled_order",
+      ),
       timestamp: new Date().toISOString(),
     });
   }
@@ -273,21 +319,29 @@ export function generateAlerts(report: ReconciliationReport): ReconciliationAler
 }
 
 export function buildSettlementCsv(report: ReconciliationReport): string {
-  const header = 'Transaction ID,Discrepancy Type,Severity,Description';
+  const header = "Transaction ID,Discrepancy Type,Severity,Description";
   const rows = report.discrepancies.map(
     (d) => `${d.transactionId},${d.type},${d.severity},"${d.description}"`,
   );
-  return [header, ...rows].join('\n');
+  return [header, ...rows].join("\n");
 }
 
-export async function buildDailySettlementReport(records: ReconciliationRecord[]): Promise<DailySettlementReport> {
+export async function buildDailySettlementReport(
+  records: ReconciliationRecord[],
+): Promise<DailySettlementReport> {
   const report = await generateReconciliationReport(records);
   const discrepancies = report.discrepancies;
 
-  const stellarVolume = records.filter((r) => r.stellarTxHash).length.toString();
+  const stellarVolume = records
+    .filter((r) => r.stellarTxHash)
+    .length.toString();
   const baseVolume = records.filter((r) => r.baseTxHash).length.toString();
-  const paycrestVolume = records.filter((r) => r.paycrestOrderId).length.toString();
-  const unsettled = discrepancies.filter((d) => d.type === 'unsettled_order').map((d) => d.transactionId);
+  const paycrestVolume = records
+    .filter((r) => r.paycrestOrderId)
+    .length.toString();
+  const unsettled = discrepancies
+    .filter((d) => d.type === "unsettled_order")
+    .map((d) => d.transactionId);
 
   return {
     date: report.date,
@@ -303,16 +357,18 @@ export async function buildDailySettlementReport(records: ReconciliationRecord[]
   };
 }
 
-export async function performManualReconciliation(action: ManualReconciliationAction): Promise<{ success: boolean; message: string }> {
-  logger.info('reconciliation.manual_action', {
+export async function performManualReconciliation(
+  action: ManualReconciliationAction,
+): Promise<{ success: boolean; message: string }> {
+  logger.info("reconciliation.manual_action", {
     transactionId: action.transactionId,
     action: action.action,
     notes: action.notes,
     resolvedBy: action.resolvedBy,
   });
 
-  if (action.action === 'retry') {
-    const { default: txModule } = await import('./transaction-timeout');
+  if (action.action === "retry") {
+    const { default: txModule } = await import("./transaction-timeout");
     try {
       await (txModule as any).attemptTimeoutRecovery(action.transactionId);
       return {
@@ -346,11 +402,13 @@ export async function createReconciliationTable(): Promise<void> {
   try {
     await pool.query(sql);
   } catch (err) {
-    logger.error('reconciliation.create_table_failed', {}, err);
+    logger.error("reconciliation.create_table_failed", {}, err);
   }
 }
 
-export async function storeReconciliationHistory(entry: ReconciliationHistoryEntry): Promise<void> {
+export async function storeReconciliationHistory(
+  entry: ReconciliationHistoryEntry,
+): Promise<void> {
   await createReconciliationTable();
   const sql = `
     INSERT INTO reconciliation_history (id, date, run_at, report, alerts)
@@ -369,7 +427,7 @@ export async function storeReconciliationHistory(entry: ReconciliationHistoryEnt
     ]);
     await cleanOldHistory();
   } catch (err) {
-    logger.error('reconciliation.store_failed', {}, err);
+    logger.error("reconciliation.store_failed", {}, err);
   }
 }
 
@@ -377,13 +435,15 @@ async function cleanOldHistory(): Promise<void> {
   const sql = `DELETE FROM reconciliation_history WHERE run_at < NOW() - INTERVAL '90 days'`;
   try {
     await pool.query(sql);
-  } catch {
-  }
+  } catch {}
 }
 
-export async function getReconciliationHistory(): Promise<ReconciliationHistoryEntry[]> {
+export async function getReconciliationHistory(): Promise<
+  ReconciliationHistoryEntry[]
+> {
   await createReconciliationTable();
-  const sql = 'SELECT * FROM reconciliation_history ORDER BY run_at DESC LIMIT 30';
+  const sql =
+    "SELECT * FROM reconciliation_history ORDER BY run_at DESC LIMIT 30";
   try {
     const result = await pool.query(sql);
     return result.rows.map((row: any) => ({
@@ -397,7 +457,9 @@ export async function getReconciliationHistory(): Promise<ReconciliationHistoryE
   }
 }
 
-export async function runReconciliationJob(records: ReconciliationRecord[]): Promise<ReconciliationHistoryEntry> {
+export async function runReconciliationJob(
+  records: ReconciliationRecord[],
+): Promise<ReconciliationHistoryEntry> {
   const report = await generateReconciliationReport(records);
   const alerts = generateAlerts(report);
   const entry: ReconciliationHistoryEntry = {
@@ -409,7 +471,7 @@ export async function runReconciliationJob(records: ReconciliationRecord[]): Pro
 
   await storeReconciliationHistory(entry);
 
-  logger.info('reconciliation.job_completed', {
+  logger.info("reconciliation.job_completed", {
     runId: entry.id,
     totalTransactions: report.totalTransactions,
     discrepancies: report.discrepancies.length,

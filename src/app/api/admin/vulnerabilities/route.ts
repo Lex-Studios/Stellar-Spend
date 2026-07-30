@@ -6,15 +6,12 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const severity = searchParams.get("severity") as
-      | "critical"
-      | "high"
-      | "medium"
-      | "low"
-      | null;
+      "critical" | "high" | "medium" | "low" | null;
 
     let vulnerabilities;
     if (severity) {
-      vulnerabilities = vulnerabilityManager.getVulnerabilitiesBySeverity(severity);
+      vulnerabilities =
+        vulnerabilityManager.getVulnerabilitiesBySeverity(severity);
     } else {
       vulnerabilities = vulnerabilityManager.getActiveVulnerabilities();
     }
@@ -38,7 +35,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { title, severity, package: pkg, version, fixedVersion, description, cve } = body;
+    const {
+      title,
+      severity,
+      package: pkg,
+      version,
+      fixedVersion,
+      description,
+      cve,
+    } = body;
 
     if (!title || !severity || !pkg || !version) {
       return NextResponse.json(

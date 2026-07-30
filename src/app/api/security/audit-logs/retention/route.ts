@@ -38,9 +38,13 @@ export async function POST(request: NextRequest) {
     await auditLoggingService.setRetentionPolicy(retentionDays);
 
     // Log the admin action
-    await auditLoggingService.logAdminAction(adminAddress, "UPDATE_RETENTION_POLICY", {
-      actionDetails: `Retention policy updated to ${retentionDays} days`,
-    });
+    await auditLoggingService.logAdminAction(
+      adminAddress,
+      "UPDATE_RETENTION_POLICY",
+      {
+        actionDetails: `Retention policy updated to ${retentionDays} days`,
+      },
+    );
 
     return NextResponse.json({ success: true, retentionDays });
   } catch (error) {

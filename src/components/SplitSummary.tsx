@@ -32,7 +32,10 @@ export default function SplitSummary({ split }: Props) {
       </div>
 
       <div className="text-xs text-[#aaaaaa]">
-        Total: <span className="text-white font-semibold">{split.totalAmount} USDC</span>
+        Total:{" "}
+        <span className="text-white font-semibold">
+          {split.totalAmount} USDC
+        </span>
         {" · "}
         {split.recipients.length} recipients
       </div>
@@ -41,12 +44,20 @@ export default function SplitSummary({ split }: Props) {
         {split.recipients.map((r) => {
           const result = split.results[r.id];
           return (
-            <div key={r.id} className="flex items-center justify-between text-xs">
-              <span className="text-[#aaaaaa] truncate max-w-[140px]" title={r.label}>
+            <div
+              key={r.id}
+              className="flex items-center justify-between text-xs"
+            >
+              <span
+                className="text-[#aaaaaa] truncate max-w-[140px]"
+                title={r.label}
+              >
                 {r.label}
               </span>
               <div className="flex items-center gap-3">
-                <span className="text-white tabular-nums">{r.amount ?? "—"} USDC</span>
+                <span className="text-white tabular-nums">
+                  {r.amount ?? "—"} USDC
+                </span>
                 <span className="text-[#777777]">{r.percentage}%</span>
                 {result && (
                   <span

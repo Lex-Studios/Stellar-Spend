@@ -1,92 +1,92 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { createMocks } from 'node-mocks-http';
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { createMocks } from "node-mocks-http";
 
-describe('Paycrest API Endpoints - Integration Tests', () => {
-  describe('POST /api/offramp/paycrest/order', () => {
-    it('should create payout order with valid data', async () => {
+describe("Paycrest API Endpoints - Integration Tests", () => {
+  describe("POST /api/offramp/paycrest/order", () => {
+    it("should create payout order with valid data", async () => {
       const { req, res } = createMocks({
-        method: 'POST',
+        method: "POST",
         body: {
-          amount: '100',
-          currency: 'NGN',
+          amount: "100",
+          currency: "NGN",
           beneficiary: {
-            accountNumber: '1234567890',
-            bankCode: '044',
-            name: 'John Doe',
+            accountNumber: "1234567890",
+            bankCode: "044",
+            name: "John Doe",
           },
-          sourceAddress: '0x1234567890123456789012345678901234567890',
+          sourceAddress: "0x1234567890123456789012345678901234567890",
         },
       });
 
-      expect(req.body.amount).toBe('100');
-      expect(req.body.currency).toBe('NGN');
+      expect(req.body.amount).toBe("100");
+      expect(req.body.currency).toBe("NGN");
       expect(req.body.beneficiary).toBeDefined();
     });
 
-    it('should reject invalid amount', async () => {
+    it("should reject invalid amount", async () => {
       const { req, res } = createMocks({
-        method: 'POST',
+        method: "POST",
         body: {
-          amount: '-100',
-          currency: 'NGN',
+          amount: "-100",
+          currency: "NGN",
           beneficiary: {
-            accountNumber: '1234567890',
-            bankCode: '044',
-            name: 'John Doe',
+            accountNumber: "1234567890",
+            bankCode: "044",
+            name: "John Doe",
           },
         },
       });
 
-      expect(req.body.amount).toBe('-100');
+      expect(req.body.amount).toBe("-100");
     });
 
-    it('should reject unsupported currency', async () => {
+    it("should reject unsupported currency", async () => {
       const { req, res } = createMocks({
-        method: 'POST',
+        method: "POST",
         body: {
-          amount: '100',
-          currency: 'INVALID',
+          amount: "100",
+          currency: "INVALID",
           beneficiary: {
-            accountNumber: '1234567890',
-            bankCode: '044',
-            name: 'John Doe',
+            accountNumber: "1234567890",
+            bankCode: "044",
+            name: "John Doe",
           },
         },
       });
 
-      expect(req.body.currency).toBe('INVALID');
+      expect(req.body.currency).toBe("INVALID");
     });
 
-    it('should reject missing beneficiary data', async () => {
+    it("should reject missing beneficiary data", async () => {
       const { req, res } = createMocks({
-        method: 'POST',
+        method: "POST",
         body: {
-          amount: '100',
-          currency: 'NGN',
+          amount: "100",
+          currency: "NGN",
           beneficiary: {
-            accountNumber: '',
-            bankCode: '044',
-            name: 'John Doe',
+            accountNumber: "",
+            bankCode: "044",
+            name: "John Doe",
           },
         },
       });
 
-      expect(req.body.beneficiary.accountNumber).toBe('');
+      expect(req.body.beneficiary.accountNumber).toBe("");
     });
 
-    it('should handle multiple currencies', async () => {
-      const currencies = ['NGN', 'KES', 'GHS', 'UGX'];
+    it("should handle multiple currencies", async () => {
+      const currencies = ["NGN", "KES", "GHS", "UGX"];
 
       for (const currency of currencies) {
         const { req, res } = createMocks({
-          method: 'POST',
+          method: "POST",
           body: {
-            amount: '100',
+            amount: "100",
             currency,
             beneficiary: {
-              accountNumber: '1234567890',
-              bankCode: '044',
-              name: 'John Doe',
+              accountNumber: "1234567890",
+              bankCode: "044",
+              name: "John Doe",
             },
           },
         });
@@ -96,83 +96,83 @@ describe('Paycrest API Endpoints - Integration Tests', () => {
     });
   });
 
-  describe('GET /api/offramp/status/:orderId', () => {
-    it('should return order status', async () => {
+  describe("GET /api/offramp/status/:orderId", () => {
+    it("should return order status", async () => {
       const { req, res } = createMocks({
-        method: 'GET',
-        query: { orderId: 'order-123' },
+        method: "GET",
+        query: { orderId: "order-123" },
       });
 
-      expect(req.query.orderId).toBe('order-123');
+      expect(req.query.orderId).toBe("order-123");
     });
 
-    it('should handle pending status', async () => {
+    it("should handle pending status", async () => {
       const { req, res } = createMocks({
-        method: 'GET',
-        query: { orderId: 'pending-order' },
+        method: "GET",
+        query: { orderId: "pending-order" },
       });
 
-      expect(req.query.orderId).toBe('pending-order');
+      expect(req.query.orderId).toBe("pending-order");
     });
 
-    it('should handle completed status', async () => {
+    it("should handle completed status", async () => {
       const { req, res } = createMocks({
-        method: 'GET',
-        query: { orderId: 'completed-order' },
+        method: "GET",
+        query: { orderId: "completed-order" },
       });
 
-      expect(req.query.orderId).toBe('completed-order');
+      expect(req.query.orderId).toBe("completed-order");
     });
 
-    it('should handle failed status', async () => {
+    it("should handle failed status", async () => {
       const { req, res } = createMocks({
-        method: 'GET',
-        query: { orderId: 'failed-order' },
+        method: "GET",
+        query: { orderId: "failed-order" },
       });
 
-      expect(req.query.orderId).toBe('failed-order');
+      expect(req.query.orderId).toBe("failed-order");
     });
   });
 
-  describe('POST /api/offramp/verify-account', () => {
-    it('should verify valid account', async () => {
+  describe("POST /api/offramp/verify-account", () => {
+    it("should verify valid account", async () => {
       const { req, res } = createMocks({
-        method: 'POST',
+        method: "POST",
         body: {
-          accountNumber: '1234567890',
-          bankCode: '044',
-          currency: 'NGN',
+          accountNumber: "1234567890",
+          bankCode: "044",
+          currency: "NGN",
         },
       });
 
-      expect(req.body.accountNumber).toBe('1234567890');
-      expect(req.body.bankCode).toBe('044');
+      expect(req.body.accountNumber).toBe("1234567890");
+      expect(req.body.bankCode).toBe("044");
     });
 
-    it('should reject invalid account number', async () => {
+    it("should reject invalid account number", async () => {
       const { req, res } = createMocks({
-        method: 'POST',
+        method: "POST",
         body: {
-          accountNumber: 'invalid',
-          bankCode: '044',
-          currency: 'NGN',
+          accountNumber: "invalid",
+          bankCode: "044",
+          currency: "NGN",
         },
       });
 
-      expect(req.body.accountNumber).toBe('invalid');
+      expect(req.body.accountNumber).toBe("invalid");
     });
 
-    it('should reject missing bank code', async () => {
+    it("should reject missing bank code", async () => {
       const { req, res } = createMocks({
-        method: 'POST',
+        method: "POST",
         body: {
-          accountNumber: '1234567890',
-          bankCode: '',
-          currency: 'NGN',
+          accountNumber: "1234567890",
+          bankCode: "",
+          currency: "NGN",
         },
       });
 
-      expect(req.body.bankCode).toBe('');
+      expect(req.body.bankCode).toBe("");
     });
   });
 });

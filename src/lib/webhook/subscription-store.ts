@@ -1,15 +1,24 @@
-import { randomUUID, createHash } from 'crypto';
-import { pool } from '../db/client';
-import type { WebhookSubscription, WebhookEvent, SubscriptionStatus } from './subscription-types';
+import { randomUUID, createHash } from "crypto";
+import { pool } from "../db/client";
+import type {
+  WebhookSubscription,
+  WebhookEvent,
+  SubscriptionStatus,
+} from "./subscription-types";
 
 export class SubscriptionStoreError extends Error {
-  constructor(message: string, public readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public readonly cause?: unknown,
+  ) {
     super(message);
-    this.name = 'SubscriptionStoreError';
+    this.name = "SubscriptionStoreError";
   }
 }
 
-export function rowToSubscription(row: Record<string, unknown>): WebhookSubscription {
+export function rowToSubscription(
+  row: Record<string, unknown>,
+): WebhookSubscription {
   return {
     id: row.id as string,
     endpointUrl: row.endpoint_url as string,
@@ -40,7 +49,10 @@ export async function createTable(): Promise<void> {
   try {
     await pool.query(sql);
   } catch (err) {
-    throw new SubscriptionStoreError('Failed to create webhook_subscriptions table', err);
+    throw new SubscriptionStoreError(
+      "Failed to create webhook_subscriptions table",
+      err,
+    );
   }
 }
 
@@ -53,7 +65,9 @@ export async function createSubscription(input: {
 }): Promise<WebhookSubscription> {
   const now = Date.now();
   const id = randomUUID();
-  const signingSecret = input.signingSecret ?? randomUUID().replace(/-/g, '') + randomUUID().replace(/-/g, '');
+  const signingSecret =
+    input.signingSecret ??
+    randomUUID().replace(/-/g, "") + randomUUID().replace(/-/g, "");
   const rateLimitMaxPerMinute = input.rateLimitMaxPerMinute ?? 60;
 
   const sql = `
@@ -64,13 +78,17 @@ export async function createSubscription(input: {
   `;
   try {
     const result = await pool.query(sql, [
-      id, input.endpointUrl, signingSecret,
-      JSON.stringify(input.events), rateLimitMaxPerMinute,
-      input.description ?? null, now,
+      id,
+      input.endpointUrl,
+      signingSecret,
+      JSON.stringify(input.events),
+      rateLimitMaxPerMinute,
+      input.description ?? null,
+      now,
     ]);
     return rowToSubscription(result.rows[0]);
   } catch (err) {
-    throw new SubscriptionStoreError('Failed to create subscription', err);
+    throw new SubscriptionStoreError("Failed to create subscription", err);
   }
 }
 
@@ -80,11 +98,13 @@ export async function listSubscriptions(): Promise<WebhookSubscription[]> {
     const result = await pool.query(sql);
     return result.rows.map(rowToSubscription);
   } catch (err) {
-    throw new SubscriptionStoreError('Failed to list subscriptions', err);
+    throw new SubscriptionStoreError("Failed to list subscriptions", err);
   }
 }
 
-export async function getSubscription(id: string): Promise<WebhookSubscription | null> {
+export async function getSubscription(
+  id: string,
+): Promise<WebhookSubscription | null> {
   const sql = `SELECT * FROM webhook_subscriptions WHERE id = $1`;
   try {
     const result = await pool.query(sql, [id]);
@@ -96,9 +116,18 @@ export async function getSubscription(id: string): Promise<WebhookSubscription |
 
 export async function updateSubscription(
   id: string,
-  updates: Partial<Pick<WebhookSubscription, 'endpointUrl' | 'events' | 'status' | 'rateLimitMaxPerMinute' | 'description'>>
+  updates: Partial<
+    Pick<
+      WebhookSubscription,
+      | "endpointUrl"
+      | "events"
+      | "status"
+      | "rateLimitMaxPerMinute"
+      | "description"
+    >
+  >,
 ): Promise<WebhookSubscription | null> {
-  const setClauses: string[] = ['updated_at = $2'];
+  const setClauses: string[] = ["updated_at = $2"];
   const values: unknown[] = [];
   let paramIndex = 3;
 
@@ -124,26 +153,37 @@ export async function updateSubscription(
   }
 
   values.unshift(Date.now(), id);
-  const sql = `UPDATE webhook_subscriptions SET ${setClauses.join(', ')} WHERE id = $1 RETURNING *`;
+  const sql = `UPDATE webhook_subscriptions SET ${setClauses.join(", ")} WHERE id = $1 RETURNING *`;
 
   try {
     const result = await pool.query(sql, values);
     return result.rows[0] ? rowToSubscription(result.rows[0]) : null;
   } catch (err) {
-    throw new SubscriptionStoreError(`Failed to update subscription ${id}`, err);
+    throw new SubscriptionStoreError(
+      `Failed to update subscription ${id}`,
+      err,
+    );
   }
 }
 
 export async function deleteSubscription(id: string): Promise<boolean> {
   try {
-    const result = await pool.query(`DELETE FROM webhook_subscriptions WHERE id = $1`, [id]);
+    const result = await pool.query(
+      `DELETE FROM webhook_subscriptions WHERE id = $1`,
+      [id],
+    );
     return (result.rowCount ?? 0) > 0;
   } catch (err) {
-    throw new SubscriptionStoreError(`Failed to delete subscription ${id}`, err);
+    throw new SubscriptionStoreError(
+      `Failed to delete subscription ${id}`,
+      err,
+    );
   }
 }
 
-export async function getSubscriptionsByEvent(event: WebhookEvent): Promise<WebhookSubscription[]> {
+export async function getSubscriptionsByEvent(
+  event: WebhookEvent,
+): Promise<WebhookSubscription[]> {
   const sql = `
     SELECT * FROM webhook_subscriptions
     WHERE status = 'active' AND events @> $1::jsonb
@@ -153,6 +193,9 @@ export async function getSubscriptionsByEvent(event: WebhookEvent): Promise<Webh
     const result = await pool.query(sql, [JSON.stringify([event])]);
     return result.rows.map(rowToSubscription);
   } catch (err) {
-    throw new SubscriptionStoreError(`Failed to get subscriptions for event ${event}`, err);
+    throw new SubscriptionStoreError(
+      `Failed to get subscriptions for event ${event}`,
+      err,
+    );
   }
 }

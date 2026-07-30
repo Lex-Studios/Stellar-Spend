@@ -12,7 +12,12 @@ interface CopyButtonProps {
   keyboardShortcut?: string;
 }
 
-export function CopyButton({ text, label = "Copy", className = "", keyboardShortcut }: CopyButtonProps) {
+export function CopyButton({
+  text,
+  label = "Copy",
+  className = "",
+  keyboardShortcut,
+}: CopyButtonProps) {
   const { isCopied, copy } = useClipboard();
   const { showToast } = useToast();
 
@@ -31,7 +36,11 @@ export function CopyButton({ text, label = "Copy", className = "", keyboardShort
 
     const handler = (e: KeyboardEvent) => {
       const isMod = e.ctrlKey || e.metaKey;
-      if (isMod && e.shiftKey && e.key.toLowerCase() === keyboardShortcut.toLowerCase()) {
+      if (
+        isMod &&
+        e.shiftKey &&
+        e.key.toLowerCase() === keyboardShortcut.toLowerCase()
+      ) {
         e.preventDefault();
         handleCopy();
       }
@@ -51,12 +60,18 @@ export function CopyButton({ text, label = "Copy", className = "", keyboardShort
         isCopied
           ? "Copied!"
           : keyboardShortcut
-          ? `Copy to clipboard (Ctrl+Shift+${keyboardShortcut.toUpperCase()})`
-          : "Copy to clipboard"
+            ? `Copy to clipboard (Ctrl+Shift+${keyboardShortcut.toUpperCase()})`
+            : "Copy to clipboard"
       }
     >
       {isCopied ? (
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-accent">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 16 16"
+          fill="none"
+          className="text-accent"
+        >
           <path
             d="M13.5 4.5L6 12L2.5 8.5"
             stroke="currentColor"

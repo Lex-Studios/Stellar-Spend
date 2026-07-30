@@ -8,7 +8,8 @@ export const QUOTE_TTL_SECONDS = INTERVAL / 1_000; // 30
 export function useFxRate() {
   const [rate, setRate] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
-  const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(QUOTE_TTL_SECONDS);
+  const [secondsUntilRefresh, setSecondsUntilRefresh] =
+    useState(QUOTE_TTL_SECONDS);
   const [isStale, setIsStale] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);

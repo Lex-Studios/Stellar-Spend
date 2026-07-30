@@ -10,7 +10,12 @@ interface SkeletonProps {
  * counterpart so no layout shift occurs when data arrives.
  * pointer-events: none and user-select: none are applied via the .skeleton CSS class.
  */
-export function Skeleton({ width, height, className = "", "aria-label": ariaLabel }: SkeletonProps) {
+export function Skeleton({
+  width,
+  height,
+  className = "",
+  "aria-label": ariaLabel,
+}: SkeletonProps) {
   return (
     <span
       className={`skeleton ${className}`}

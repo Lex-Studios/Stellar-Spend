@@ -16,7 +16,7 @@ function parseBalance(raw: string | null): number {
 function checkBalance(
   payload: { amount: string; feeMethod: "USDC" | "XLM" },
   usdcBalance: string | null,
-  xlmBalance: string | null
+  xlmBalance: string | null,
 ): string | null {
   const usdc = parseBalance(usdcBalance);
   const needed = Number(payload.amount);
@@ -40,19 +40,31 @@ function checkBalance(
 
 describe("Pre-flight balance validation", () => {
   it("blocks trade when USDC balance is insufficient", () => {
-    const err = checkBalance({ amount: "100", feeMethod: "USDC" }, "50.00", "10.00");
+    const err = checkBalance(
+      { amount: "100", feeMethod: "USDC" },
+      "50.00",
+      "10.00",
+    );
     expect(err).toMatch(/Insufficient USDC balance/);
     expect(err).toMatch(/50\.00 USDC/);
     expect(err).toMatch(/100 USDC/);
   });
 
   it("blocks trade when USDC balance is insufficient (comma-formatted balance)", () => {
-    const err = checkBalance({ amount: "2000", feeMethod: "USDC" }, "1,500.00", "10.00");
+    const err = checkBalance(
+      { amount: "2000", feeMethod: "USDC" },
+      "1,500.00",
+      "10.00",
+    );
     expect(err).toMatch(/Insufficient USDC balance/);
   });
 
   it("blocks trade when XLM balance is below reserve + gas", () => {
-    const err = checkBalance({ amount: "10", feeMethod: "XLM" }, "100.00", "4.00");
+    const err = checkBalance(
+      { amount: "10", feeMethod: "XLM" },
+      "100.00",
+      "4.00",
+    );
     expect(err).toMatch(/Insufficient XLM for gas/);
     expect(err).toMatch(/5\.5 XLM/);
     expect(err).toMatch(/4\.00 XLM/);
@@ -60,23 +72,39 @@ describe("Pre-flight balance validation", () => {
   });
 
   it("blocks trade when XLM balance is zero", () => {
-    const err = checkBalance({ amount: "10", feeMethod: "XLM" }, "100.00", "0.00");
+    const err = checkBalance(
+      { amount: "10", feeMethod: "XLM" },
+      "100.00",
+      "0.00",
+    );
     expect(err).toMatch(/Insufficient XLM for gas/);
   });
 
   it("allows trade when USDC and XLM balances are sufficient", () => {
-    const err = checkBalance({ amount: "50", feeMethod: "XLM" }, "100.00", "10.00");
+    const err = checkBalance(
+      { amount: "50", feeMethod: "XLM" },
+      "100.00",
+      "10.00",
+    );
     expect(err).toBeNull();
   });
 
   it("allows trade when USDC fee method and balance is sufficient", () => {
-    const err = checkBalance({ amount: "50", feeMethod: "USDC" }, "100.00", "0.00");
+    const err = checkBalance(
+      { amount: "50", feeMethod: "USDC" },
+      "100.00",
+      "0.00",
+    );
     expect(err).toBeNull();
   });
 
   it("skips XLM check when feeMethod is USDC", () => {
     // XLM balance is 0 but feeMethod is USDC — should not block on XLM
-    const err = checkBalance({ amount: "10", feeMethod: "USDC" }, "100.00", "0.00");
+    const err = checkBalance(
+      { amount: "10", feeMethod: "USDC" },
+      "100.00",
+      "0.00",
+    );
     expect(err).toBeNull();
   });
 

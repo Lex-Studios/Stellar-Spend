@@ -64,6 +64,7 @@ npm run storybook
 ```
 
 When creating or updating a UI component, add a `.stories.tsx` file covering:
+
 - Different variants and states (loading, disabled, error)
 - Edge cases for input data
 - Accessibility checks via the integrated `axe` addon
@@ -74,19 +75,20 @@ When creating or updating a UI component, add a `.stories.tsx` file covering:
 
 Use descriptive branch names with these prefixes:
 
-| Prefix | Purpose |
-|--------|---------|
-| `feat/` | New features |
-| `fix/` | Bug fixes |
-| `docs/` | Documentation updates |
-| `style/` | Formatting / whitespace only |
+| Prefix      | Purpose                             |
+| ----------- | ----------------------------------- |
+| `feat/`     | New features                        |
+| `fix/`      | Bug fixes                           |
+| `docs/`     | Documentation updates               |
+| `style/`    | Formatting / whitespace only        |
 | `refactor/` | Refactoring without behavior change |
-| `test/` | Adding or updating tests |
-| `chore/` | Maintenance, dependency updates |
-| `ci/` | CI/CD changes |
-| `contract/` | Soroban smart contract changes |
+| `test/`     | Adding or updating tests            |
+| `chore/`    | Maintenance, dependency updates     |
+| `ci/`       | CI/CD changes                       |
+| `contract/` | Soroban smart contract changes      |
 
 **Examples:**
+
 - `feat/add-kes-corridor`
 - `fix/paycrest-webhook-hmac`
 - `docs/update-adr-escrow`
@@ -110,18 +112,18 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### Types
 
-| Type | When to use |
-|------|-------------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `docs` | Documentation only |
-| `style` | Formatting, whitespace |
+| Type       | When to use                            |
+| ---------- | -------------------------------------- |
+| `feat`     | New feature                            |
+| `fix`      | Bug fix                                |
+| `docs`     | Documentation only                     |
+| `style`    | Formatting, whitespace                 |
 | `refactor` | Code restructuring, no behavior change |
-| `test` | Adding or updating tests |
-| `chore` | Maintenance, dependency bumps |
-| `ci` | CI/CD configuration |
-| `perf` | Performance improvement |
-| `contract` | Soroban contract change |
+| `test`     | Adding or updating tests               |
+| `chore`    | Maintenance, dependency bumps          |
+| `ci`       | CI/CD configuration                    |
+| `perf`     | Performance improvement                |
+| `contract` | Soroban contract change                |
 
 ### Scope (optional)
 
@@ -156,12 +158,14 @@ BREAKING CHANGE: The old endpoint path is removed. Update all clients.
 ### Before opening a PR
 
 1. Make sure your branch is up to date with `main`:
+
    ```bash
    git fetch origin
    git rebase origin/main
    ```
 
 2. Run the full check suite:
+
    ```bash
    npm run lint && npm run format:check && npx tsc --noEmit && npm test
    ```
@@ -194,6 +198,7 @@ PRs are merged by a maintainer using **squash and merge** once all checks pass a
 A contribution is **done** when **all** of the following are true:
 
 ### Code
+
 - [ ] Implements the acceptance criteria from the linked issue
 - [ ] No regressions introduced (all existing tests still pass)
 - [ ] No TypeScript errors: `npx tsc --noEmit` exits 0
@@ -203,6 +208,7 @@ A contribution is **done** when **all** of the following are true:
 - [ ] No secrets, PII, or credentials in the diff
 
 ### Tests
+
 - [ ] New logic has unit tests covering the happy path and primary error paths
 - [ ] Changed API routes have integration tests
 - [ ] UI changes have component tests (render states + key interactions)
@@ -210,18 +216,21 @@ A contribution is **done** when **all** of the following are true:
 - [ ] All CI test jobs pass (lint, type-check, unit, build, E2E)
 
 ### Accessibility (UI changes)
+
 - [ ] New interactive elements have accessible names
 - [ ] Focus management is correct (modals trap focus, focus restores on close)
 - [ ] Keyboard navigation works without a mouse
 - [ ] Color contrast ≥ 4.5:1 for text (WCAG AA)
 
 ### Documentation
+
 - [ ] `docs/` updated if architecture, API behavior, or configuration changed
 - [ ] New environment variables are added to `.env.example` with descriptions
 - [ ] New ADRs created for significant architectural decisions (see `docs/adr/`)
 - [ ] In-code comments are accurate and not stale
 
 ### Security
+
 - [ ] No `NEXT_PUBLIC_` prefix on server-side secrets
 - [ ] All user input is validated and sanitized
 - [ ] New dependencies are from well-known, actively maintained packages
@@ -238,12 +247,12 @@ A contribution is **done** when **all** of the following are true:
 
 ### Review SLAs
 
-| PR size | First review | Follow-up response |
-|---------|-------------|-------------------|
-| Small (< 100 lines changed) | 2 business days | 1 business day |
-| Medium (100–500 lines) | 3 business days | 2 business days |
-| Large (> 500 lines) | 5 business days | 2 business days |
-| Security fix / hotfix | Same day (tag `urgent`) | 4 hours |
+| PR size                     | First review            | Follow-up response |
+| --------------------------- | ----------------------- | ------------------ |
+| Small (< 100 lines changed) | 2 business days         | 1 business day     |
+| Medium (100–500 lines)      | 3 business days         | 2 business days    |
+| Large (> 500 lines)         | 5 business days         | 2 business days    |
+| Security fix / hotfix       | Same day (tag `urgent`) | 4 hours            |
 
 SLAs are for the first substantive review. Trivial approvals (docs typo) may be faster.
 

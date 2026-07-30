@@ -19,15 +19,15 @@ This guide describes how to integrate with Stellar-Spend webhooks: which events 
 
 Stellar-Spend sends webhook deliveries as HTTP `POST` requests with a JSON body and an HMAC-SHA256 signature. Inbound webhooks (Paycrest → Stellar-Spend) follow the same security model in reverse — both directions verify a shared secret.
 
-| Property | Value |
-|---|---|
-| HTTP method | `POST` |
-| Content type | `application/json` |
-| Signature algorithm | HMAC-SHA256, hex-encoded |
-| Signature header | `X-Webhook-Signature` (outgoing), `X-Paycrest-Signature` (inbound) |
-| Timestamp header | `X-Webhook-Timestamp` (Unix epoch ms) |
-| Max body size | 1 MB |
-| Required response | 2xx within 10 seconds |
+| Property            | Value                                                              |
+| ------------------- | ------------------------------------------------------------------ |
+| HTTP method         | `POST`                                                             |
+| Content type        | `application/json`                                                 |
+| Signature algorithm | HMAC-SHA256, hex-encoded                                           |
+| Signature header    | `X-Webhook-Signature` (outgoing), `X-Paycrest-Signature` (inbound) |
+| Timestamp header    | `X-Webhook-Timestamp` (Unix epoch ms)                              |
+| Max body size       | 1 MB                                                               |
+| Required response   | 2xx within 10 seconds                                              |
 
 ## Event Types
 
@@ -35,26 +35,26 @@ Stellar-Spend currently emits and consumes the following events.
 
 ### Outbound (Stellar-Spend → your endpoint)
 
-| Event | Triggered when |
-|---|---|
-| `transaction.created` | A new transaction record is created |
-| `transaction.updated` | A transaction's status changes |
+| Event                   | Triggered when                                     |
+| ----------------------- | -------------------------------------------------- |
+| `transaction.created`   | A new transaction record is created                |
+| `transaction.updated`   | A transaction's status changes                     |
 | `transaction.completed` | A transaction reaches a terminal `completed` state |
-| `transaction.failed` | A transaction reaches a terminal `failed` state |
-| `payout.settled` | Off-ramp payout settles to fiat |
-| `payout.refunded` | Off-ramp payout is refunded |
-| `payout.expired` | Off-ramp order expires before fulfilment |
+| `transaction.failed`    | A transaction reaches a terminal `failed` state    |
+| `payout.settled`        | Off-ramp payout settles to fiat                    |
+| `payout.refunded`       | Off-ramp payout is refunded                        |
+| `payout.expired`        | Off-ramp order expires before fulfilment           |
 
 ### Inbound (Paycrest → Stellar-Spend)
 
 These are documented for parity; they are handled by `/api/webhooks/paycrest`.
 
-| Event | Maps to internal status |
-|---|---|
-| `payment_order.pending` | `payoutStatus = pending` |
-| `payment_order.settled` | `status = completed`, `payoutStatus = settled` |
-| `payment_order.refunded` | `status = failed`, `payoutStatus = refunded` |
-| `payment_order.expired` | `status = failed`, `payoutStatus = expired` |
+| Event                    | Maps to internal status                        |
+| ------------------------ | ---------------------------------------------- |
+| `payment_order.pending`  | `payoutStatus = pending`                       |
+| `payment_order.settled`  | `status = completed`, `payoutStatus = settled` |
+| `payment_order.refunded` | `status = failed`, `payoutStatus = refunded`   |
+| `payment_order.expired`  | `status = failed`, `payoutStatus = expired`    |
 
 ## Payload Schemas
 
@@ -133,23 +133,23 @@ If any check fails, return `401 Unauthorized` and do not process the payload.
 
 Failed deliveries are retried with exponential backoff and jitter. Source: `src/lib/webhook/retry-scheduler.ts` and `src/lib/webhook/config.ts:42`.
 
-| Setting | Default | Env var |
-|---|---|---|
-| Base delay | 30 s | `WEBHOOK_RETRY_BASE_DELAY_SECONDS` |
-| Max attempts | 5 | `WEBHOOK_RETRY_MAX_ATTEMPTS` |
-| Jitter | ±25 % | (fixed) |
-| Alert suppression window | 300 s | `WEBHOOK_ALERT_SUPPRESSION_SECONDS` |
-| DLQ retention | 30 days | (fixed) |
+| Setting                  | Default | Env var                             |
+| ------------------------ | ------- | ----------------------------------- |
+| Base delay               | 30 s    | `WEBHOOK_RETRY_BASE_DELAY_SECONDS`  |
+| Max attempts             | 5       | `WEBHOOK_RETRY_MAX_ATTEMPTS`        |
+| Jitter                   | ±25 %   | (fixed)                             |
+| Alert suppression window | 300 s   | `WEBHOOK_ALERT_SUPPRESSION_SECONDS` |
+| DLQ retention            | 30 days | (fixed)                             |
 
 Backoff schedule (attempts 1–5 with base 30 s):
 
 | Attempt | Delay before |
-|---|---|
-| 1 | 0 s |
-| 2 | ~30 s |
-| 3 | ~60 s |
-| 4 | ~120 s |
-| 5 | ~240 s |
+| ------- | ------------ |
+| 1       | 0 s          |
+| 2       | ~30 s        |
+| 3       | ~60 s        |
+| 4       | ~120 s       |
+| 5       | ~240 s       |
 
 ### Retryable vs. terminal status codes
 
@@ -253,7 +253,7 @@ app.post(
     const event = JSON.parse(body);
     // enqueue async work, do not block
     res.status(200).json({ received: true });
-  }
+  },
 );
 ```
 
@@ -404,16 +404,16 @@ Each subscription has a per-minute rate limit (default 60 deliveries/minute). Wh
 
 ### Available Events
 
-| Event | Description |
-|---|---|
-| `transaction.created` | A new transaction is created |
+| Event                   | Description                         |
+| ----------------------- | ----------------------------------- |
+| `transaction.created`   | A new transaction is created        |
 | `transaction.completed` | Transaction reaches completed state |
-| `transaction.failed` | Transaction reaches failed state |
-| `payout.initiated` | Payout has been initiated |
-| `payout.completed` | Payout has settled |
-| `payout.failed` | Payout has failed |
-| `bridge.initiated` | Bridge transfer has started |
-| `bridge.completed` | Bridge transfer has completed |
+| `transaction.failed`    | Transaction reaches failed state    |
+| `payout.initiated`      | Payout has been initiated           |
+| `payout.completed`      | Payout has settled                  |
+| `payout.failed`         | Payout has failed                   |
+| `bridge.initiated`      | Bridge transfer has started         |
+| `bridge.completed`      | Bridge transfer has completed       |
 
 ### Verifying Outbound Signatures
 
@@ -421,10 +421,10 @@ Every outbound webhook includes `X-Webhook-Timestamp` and `X-Webhook-Signature` 
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| 401 on every request | Wrong secret or signing the parsed body instead of raw body | Use the raw bytes; confirm secret matches the environment |
-| 401 only on retries | Replay protection — your endpoint returned non-2xx, the same event re-arrives within the dedupe window | Return 2xx and dedupe by `id` on your side |
-| Endpoint times out, all deliveries DLQ'd | Synchronous work takes > 10 s | Queue work; respond 200 immediately |
-| Signature header missing | Reverse proxy stripping `X-*` headers | Allowlist the headers in your proxy config |
-| Events out of order | Retries can interleave with new events | Use `data.updatedAt` to ignore stale updates |
+| Symptom                                  | Likely cause                                                                                           | Fix                                                       |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| 401 on every request                     | Wrong secret or signing the parsed body instead of raw body                                            | Use the raw bytes; confirm secret matches the environment |
+| 401 only on retries                      | Replay protection — your endpoint returned non-2xx, the same event re-arrives within the dedupe window | Return 2xx and dedupe by `id` on your side                |
+| Endpoint times out, all deliveries DLQ'd | Synchronous work takes > 10 s                                                                          | Queue work; respond 200 immediately                       |
+| Signature header missing                 | Reverse proxy stripping `X-*` headers                                                                  | Allowlist the headers in your proxy config                |
+| Events out of order                      | Retries can interleave with new events                                                                 | Use `data.updatedAt` to ignore stale updates              |

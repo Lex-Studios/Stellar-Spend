@@ -93,9 +93,10 @@ export async function generateAnalyticsSummary(
     completedTransactions: completed.length,
     failedTransactions: failed.length,
     pendingTransactions: pending.length,
-    averageTransactionValue: totalTransactions > 0
-      ? (totalVolume / totalTransactions).toFixed(2)
-      : "0.00",
+    averageTransactionValue:
+      totalTransactions > 0
+        ? (totalVolume / totalTransactions).toFixed(2)
+        : "0.00",
     topCurrencies,
     volumeByDay,
     periodStart: new Date(periodStart).toISOString(),

@@ -1,6 +1,9 @@
-import { calculateBackoff, hasRemainingAttempts } from './webhook/retry-scheduler';
-import type { DeliveryRecord } from './webhook/types';
-import { logger } from './logger';
+import {
+  calculateBackoff,
+  hasRemainingAttempts,
+} from "./webhook/retry-scheduler";
+import type { DeliveryRecord } from "./webhook/types";
+import { logger } from "./logger";
 
 export enum TransactionPriority {
   LOW = 1,
@@ -14,7 +17,7 @@ export interface QueuedTransaction {
   priority: TransactionPriority;
   amount: string;
   currency: string;
-  feeMethod: 'stablecoin' | 'native';
+  feeMethod: "stablecoin" | "native";
   payload: Record<string, unknown>;
   enqueuedAt: number;
   attempts: number;
@@ -109,8 +112,12 @@ export class TransactionPriorityQueue {
     );
   }
 
-  enqueue(tx: Omit<QueuedTransaction, 'enqueuedAt' | 'attempts'>): void {
-    const item: QueuedTransaction = { ...tx, enqueuedAt: Date.now(), attempts: 0 };
+  enqueue(tx: Omit<QueuedTransaction, "enqueuedAt" | "attempts">): void {
+    const item: QueuedTransaction = {
+      ...tx,
+      enqueuedAt: Date.now(),
+      attempts: 0,
+    };
     this.heap.push(item);
     this.bubbleUp(this.heap.length - 1);
     this.metrics.totalEnqueued++;
@@ -182,14 +189,19 @@ export class TransactionPriorityQueue {
   }
 }
 
-export function calculatePriorityFee(baseFee: string, priority: TransactionPriority): string {
+export function calculatePriorityFee(
+  baseFee: string,
+  priority: TransactionPriority,
+): string {
   const base = parseFloat(baseFee);
   if (isNaN(base)) return baseFee;
   const adjusted = base * FEE_MULTIPLIERS[priority];
   return adjusted.toFixed(6);
 }
 
-export function inferPriorityFromAmount(amountUsdc: string): TransactionPriority {
+export function inferPriorityFromAmount(
+  amountUsdc: string,
+): TransactionPriority {
   const amount = parseFloat(amountUsdc);
   if (isNaN(amount)) return TransactionPriority.NORMAL;
   if (amount >= 10000) return TransactionPriority.URGENT;
@@ -224,7 +236,10 @@ export class DeliveryRetryQueue {
   push(record: DeliveryRecord): void {
     if (!hasRemainingAttempts(record)) {
       this.metrics.totalExhausted++;
-      logger.warn('delivery_retry.exhausted', { deliveryId: record.id, destinationUrl: record.destinationUrl });
+      logger.warn("delivery_retry.exhausted", {
+        deliveryId: record.id,
+        destinationUrl: record.destinationUrl,
+      });
       return;
     }
 
@@ -237,14 +252,18 @@ export class DeliveryRetryQueue {
       attemptCount: record.attemptCount,
       maxAttempts: record.maxAttempts,
       nextAttemptAt,
-      lastError: record.attempts.length > 0 ? record.attempts[record.attempts.length - 1].errorType : undefined,
+      lastError:
+        record.attempts.length > 0
+          ? record.attempts[record.attempts.length - 1].errorType
+          : undefined,
       enqueuedAt: Date.now(),
     };
 
     this.retries.set(record.id, state);
     this.metrics.activeRetries = this.retries.size;
     this.metrics.totalRetried++;
-    this.metrics.byDestination[record.destinationUrl] = (this.metrics.byDestination[record.destinationUrl] ?? 0) + 1;
+    this.metrics.byDestination[record.destinationUrl] =
+      (this.metrics.byDestination[record.destinationUrl] ?? 0) + 1;
   }
 
   poll(): DeliveryRetryState[] {
@@ -270,7 +289,10 @@ export class DeliveryRetryQueue {
     this.metrics.dlqDepth = depth;
     this.metrics.dlqThresholdBreached = depth >= this.dlqThreshold;
     if (this.metrics.dlqThresholdBreached) {
-      logger.warn('dlq.threshold_breached', { depth, threshold: this.dlqThreshold });
+      logger.warn("dlq.threshold_breached", {
+        depth,
+        threshold: this.dlqThreshold,
+      });
     }
   }
 

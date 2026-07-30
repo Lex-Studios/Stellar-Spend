@@ -1,5 +1,5 @@
-import { logger } from '../logger';
-import { ApplicationError, isApplicationError } from './custom-errors';
+import { logger } from "../logger";
+import { ApplicationError, isApplicationError } from "./custom-errors";
 
 export interface ErrorLogContext {
   userId?: string;
@@ -35,14 +35,18 @@ export class ErrorLogger {
       });
     } else {
       logger.error({
-        message: 'Unknown error',
+        message: "Unknown error",
         error: String(error),
         ...logContext,
       });
     }
   }
 
-  static logValidation(field: string, message: string, context?: ErrorLogContext): void {
+  static logValidation(
+    field: string,
+    message: string,
+    context?: ErrorLogContext,
+  ): void {
     this.log(new Error(`Validation error on ${field}: ${message}`), context);
   }
 
@@ -50,8 +54,15 @@ export class ErrorLogger {
     this.log(new Error(`Unauthorized: ${reason}`), context);
   }
 
-  static logExternalService(service: string, error: unknown, context?: ErrorLogContext): void {
+  static logExternalService(
+    service: string,
+    error: unknown,
+    context?: ErrorLogContext,
+  ): void {
     const message = error instanceof Error ? error.message : String(error);
-    this.log(new Error(`External service error from ${service}: ${message}`), context);
+    this.log(
+      new Error(`External service error from ${service}: ${message}`),
+      context,
+    );
   }
 }

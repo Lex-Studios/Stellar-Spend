@@ -18,7 +18,7 @@ export interface PayoutResponse {
 
 export interface PayoutStatusResponse {
   orderId: string;
-  status: 'pending' | 'processing' | 'settled' | 'failed' | 'refunded';
+  status: "pending" | "processing" | "settled" | "failed" | "refunded";
   amount: string;
   currency: string;
   settledAt?: string;
@@ -33,28 +33,31 @@ export class PayoutService {
     // This would integrate with Paycrest API
     return {
       orderId: request.orderId,
-      status: 'pending',
+      status: "pending",
       createdAt: new Date().toISOString(),
     };
   }
 
   async getOrderStatus(orderId: string): Promise<PayoutStatusResponse> {
     if (!orderId) {
-      throw new Error('Order ID is required');
+      throw new Error("Order ID is required");
     }
 
     // Poll payout status logic would go here
     return {
       orderId,
-      status: 'pending',
-      amount: '100.00',
-      currency: 'NGN',
+      status: "pending",
+      amount: "100.00",
+      currency: "NGN",
     };
   }
 
-  async executePayout(orderId: string, baseUsdcAmount: string): Promise<{ success: boolean }> {
+  async executePayout(
+    orderId: string,
+    baseUsdcAmount: string,
+  ): Promise<{ success: boolean }> {
     if (!orderId || !baseUsdcAmount) {
-      throw new Error('Order ID and USDC amount are required');
+      throw new Error("Order ID and USDC amount are required");
     }
 
     // Execute payout logic would go here
@@ -64,23 +67,26 @@ export class PayoutService {
 
   private validatePayoutRequest(request: PayoutRequest): void {
     if (!request.orderId) {
-      throw new Error('Order ID is required');
+      throw new Error("Order ID is required");
     }
 
     if (!request.amount || parseFloat(request.amount) <= 0) {
-      throw new Error('Amount must be a positive number');
+      throw new Error("Amount must be a positive number");
     }
 
     if (!request.currency) {
-      throw new Error('Currency is required');
+      throw new Error("Currency is required");
     }
 
-    if (!request.beneficiary?.institution || !request.beneficiary?.accountIdentifier) {
-      throw new Error('Beneficiary information is incomplete');
+    if (
+      !request.beneficiary?.institution ||
+      !request.beneficiary?.accountIdentifier
+    ) {
+      throw new Error("Beneficiary information is incomplete");
     }
 
     if (!request.baseAddress) {
-      throw new Error('Base address is required');
+      throw new Error("Base address is required");
     }
   }
 }

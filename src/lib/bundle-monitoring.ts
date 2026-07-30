@@ -27,19 +27,30 @@ const DEFAULT_THRESHOLDS: BundleThresholds = {
 /**
  * Log bundle metrics for monitoring
  */
-export function logBundleMetrics(metrics: BundleMetrics, thresholds = DEFAULT_THRESHOLDS): void {
+export function logBundleMetrics(
+  metrics: BundleMetrics,
+  thresholds = DEFAULT_THRESHOLDS,
+): void {
   const warnings: string[] = [];
 
   if (metrics.gzipSize > thresholds.gzipSizeError) {
-    warnings.push(`❌ Gzip size ${formatBytes(metrics.gzipSize)} exceeds error threshold ${formatBytes(thresholds.gzipSizeError)}`);
+    warnings.push(
+      `❌ Gzip size ${formatBytes(metrics.gzipSize)} exceeds error threshold ${formatBytes(thresholds.gzipSizeError)}`,
+    );
   } else if (metrics.gzipSize > thresholds.gzipSizeWarning) {
-    warnings.push(`⚠️  Gzip size ${formatBytes(metrics.gzipSize)} exceeds warning threshold ${formatBytes(thresholds.gzipSizeWarning)}`);
+    warnings.push(
+      `⚠️  Gzip size ${formatBytes(metrics.gzipSize)} exceeds warning threshold ${formatBytes(thresholds.gzipSizeWarning)}`,
+    );
   }
 
   if (metrics.totalSize > thresholds.totalSizeError) {
-    warnings.push(`❌ Total size ${formatBytes(metrics.totalSize)} exceeds error threshold ${formatBytes(thresholds.totalSizeError)}`);
+    warnings.push(
+      `❌ Total size ${formatBytes(metrics.totalSize)} exceeds error threshold ${formatBytes(thresholds.totalSizeError)}`,
+    );
   } else if (metrics.totalSize > thresholds.totalSizeWarning) {
-    warnings.push(`⚠️  Total size ${formatBytes(metrics.totalSize)} exceeds warning threshold ${formatBytes(thresholds.totalSizeWarning)}`);
+    warnings.push(
+      `⚠️  Total size ${formatBytes(metrics.totalSize)} exceeds warning threshold ${formatBytes(thresholds.totalSizeWarning)}`,
+    );
   }
 
   if (warnings.length > 0) {
@@ -61,7 +72,9 @@ function formatBytes(bytes: number): string {
 /**
  * Get optimization recommendations based on bundle metrics
  */
-export function getOptimizationRecommendations(metrics: BundleMetrics): string[] {
+export function getOptimizationRecommendations(
+  metrics: BundleMetrics,
+): string[] {
   const recommendations: string[] = [];
 
   // Check for large chunks
@@ -77,7 +90,9 @@ export function getOptimizationRecommendations(metrics: BundleMetrics): string[]
   }
 
   if (metrics.gzipSize > 200 * 1024) {
-    recommendations.push("Consider dynamic imports for heavy dependencies like @allbridge/bridge-core-sdk");
+    recommendations.push(
+      "Consider dynamic imports for heavy dependencies like @allbridge/bridge-core-sdk",
+    );
   }
 
   if (metrics.totalSize > 1024 * 1024) {

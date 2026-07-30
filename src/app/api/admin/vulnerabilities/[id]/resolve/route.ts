@@ -11,7 +11,10 @@ export async function POST(
     const success = vulnerabilityManager.resolveVulnerability(id);
 
     if (!success) {
-      return NextResponse.json({ error: "Vulnerability not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Vulnerability not found" },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({ success: true });

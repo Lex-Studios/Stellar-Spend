@@ -24,11 +24,13 @@ export function useFocusTrap(options: FocusTrapOptions = {}) {
 
     // Get all focusable elements
     const focusableElements = containerRef.current.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
 
     const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+    const lastElement = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement;
 
     // Focus the first element
     if (firstElement) {
@@ -79,14 +81,21 @@ interface KeyboardShortcutConfig {
 /**
  * Hook for managing keyboard shortcuts with focus awareness
  */
-export function useKeyboardShortcuts(shortcuts: KeyboardShortcutConfig[], enabled = true) {
+export function useKeyboardShortcuts(
+  shortcuts: KeyboardShortcutConfig[],
+  enabled = true,
+) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (!enabled) return;
 
       // Don't trigger shortcuts when typing in form fields
       const target = e.target as HTMLElement;
-      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT") {
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.tagName === "SELECT"
+      ) {
         return;
       }
       if (target.isContentEditable) return;
@@ -107,7 +116,7 @@ export function useKeyboardShortcuts(shortcuts: KeyboardShortcutConfig[], enable
         }
       }
     },
-    [enabled, shortcuts]
+    [enabled, shortcuts],
   );
 
   useEffect(() => {
@@ -129,7 +138,10 @@ export function getFocusableElements(container: HTMLElement): HTMLElement[] {
 /**
  * Utility to move focus to the next focusable element
  */
-export function focusNextElement(container: HTMLElement, currentElement: HTMLElement): void {
+export function focusNextElement(
+  container: HTMLElement,
+  currentElement: HTMLElement,
+): void {
   const focusableElements = getFocusableElements(container);
   const currentIndex = focusableElements.indexOf(currentElement);
   const nextIndex = (currentIndex + 1) % focusableElements.length;
@@ -139,17 +151,24 @@ export function focusNextElement(container: HTMLElement, currentElement: HTMLEle
 /**
  * Utility to move focus to the previous focusable element
  */
-export function focusPreviousElement(container: HTMLElement, currentElement: HTMLElement): void {
+export function focusPreviousElement(
+  container: HTMLElement,
+  currentElement: HTMLElement,
+): void {
   const focusableElements = getFocusableElements(container);
   const currentIndex = focusableElements.indexOf(currentElement);
-  const prevIndex = currentIndex === 0 ? focusableElements.length - 1 : currentIndex - 1;
+  const prevIndex =
+    currentIndex === 0 ? focusableElements.length - 1 : currentIndex - 1;
   focusableElements[prevIndex]?.focus();
 }
 
 /**
  * Utility to announce messages to screen readers
  */
-export function announceToScreenReader(message: string, priority: "polite" | "assertive" = "polite"): void {
+export function announceToScreenReader(
+  message: string,
+  priority: "polite" | "assertive" = "polite",
+): void {
   const announcement = document.createElement("div");
   announcement.setAttribute("role", "status");
   announcement.setAttribute("aria-live", priority);

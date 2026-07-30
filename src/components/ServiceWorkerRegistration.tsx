@@ -5,7 +5,8 @@ import { cn } from "@/lib/cn";
 
 export default function ServiceWorkerRegistration() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const [registration, setRegistration] =
+    useState<ServiceWorkerRegistration | null>(null);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) {
@@ -31,7 +32,10 @@ export default function ServiceWorkerRegistration() {
           if (!newWorker) return;
 
           newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            if (
+              newWorker.state === "installed" &&
+              navigator.serviceWorker.controller
+            ) {
               // New service worker is ready
               setUpdateAvailable(true);
               notifyUpdateAvailable();
@@ -78,9 +82,12 @@ export default function ServiceWorkerRegistration() {
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 text-xl">🔄</div>
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-[#c9a962] mb-1">Update Available</h3>
+            <h3 className="text-sm font-semibold text-[#c9a962] mb-1">
+              Update Available
+            </h3>
             <p className="text-xs text-[#999999] mb-3">
-              A new version of Stellar-Spend is ready. Refresh to get the latest features and fixes.
+              A new version of Stellar-Spend is ready. Refresh to get the latest
+              features and fixes.
             </p>
             <div className="flex gap-2">
               <button
@@ -88,7 +95,7 @@ export default function ServiceWorkerRegistration() {
                 className={cn(
                   "flex-1 px-3 py-2 text-xs font-semibold tracking-widest uppercase",
                   "bg-[#c9a962] text-[#0a0a0a] rounded transition-colors duration-150",
-                  "hover:bg-[#d4b982] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]"
+                  "hover:bg-[#d4b982] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
                 )}
               >
                 Refresh
@@ -98,7 +105,7 @@ export default function ServiceWorkerRegistration() {
                 className={cn(
                   "flex-1 px-3 py-2 text-xs font-semibold tracking-widest uppercase",
                   "border border-[#555555] text-[#555555] rounded transition-colors duration-150",
-                  "hover:border-[#c9a962] hover:text-[#c9a962] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#555555]"
+                  "hover:border-[#c9a962] hover:text-[#c9a962] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#555555]",
                 )}
               >
                 Later

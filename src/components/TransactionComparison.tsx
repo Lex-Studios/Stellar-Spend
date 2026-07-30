@@ -2,14 +2,21 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/cn";
-import { TransactionStorage, type Transaction } from "@/lib/transaction-storage";
+import {
+  TransactionStorage,
+  type Transaction,
+} from "@/lib/transaction-storage";
 
 interface TransactionComparisonProps {
   className?: string;
 }
 
-export default function TransactionComparison({ className }: TransactionComparisonProps) {
-  const [selectedTransactions, setSelectedTransactions] = useState<Transaction[]>([]);
+export default function TransactionComparison({
+  className,
+}: TransactionComparisonProps) {
+  const [selectedTransactions, setSelectedTransactions] = useState<
+    Transaction[]
+  >([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [showComparison, setShowComparison] = useState(false);
 
@@ -35,7 +42,7 @@ export default function TransactionComparison({ className }: TransactionComparis
     const element = document.createElement("a");
     element.setAttribute(
       "href",
-      "data:text/plain;charset=utf-8," + encodeURIComponent(report)
+      "data:text/plain;charset=utf-8," + encodeURIComponent(report),
     );
     element.setAttribute("download", "transaction-comparison.txt");
     element.style.display = "none";
@@ -106,7 +113,12 @@ export default function TransactionComparison({ className }: TransactionComparis
   const differences = getHighlightedDifferences();
 
   return (
-    <div className={cn("space-y-4 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900", className)}>
+    <div
+      className={cn(
+        "space-y-4 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900",
+        className,
+      )}
+    >
       <h2 className="text-lg font-semibold">Transaction Comparison Tool</h2>
 
       {/* Transaction Selection */}
@@ -129,7 +141,10 @@ export default function TransactionComparison({ className }: TransactionComparis
                   type="checkbox"
                   checked={selectedTransactions.some((t) => t.id === tx.id)}
                   onChange={() => toggleTransactionSelection(tx)}
-                  disabled={selectedTransactions.length >= 5 && !selectedTransactions.some((t) => t.id === tx.id)}
+                  disabled={
+                    selectedTransactions.length >= 5 &&
+                    !selectedTransactions.some((t) => t.id === tx.id)
+                  }
                   className="h-4 w-4"
                 />
                 <div className="flex-1 text-sm">
@@ -172,7 +187,8 @@ export default function TransactionComparison({ className }: TransactionComparis
                     key={tx.id}
                     className={cn(
                       "px-3 py-2",
-                      differences["amount"] && "bg-yellow-100 dark:bg-yellow-900"
+                      differences["amount"] &&
+                        "bg-yellow-100 dark:bg-yellow-900",
                     )}
                   >
                     {tx.amount} {tx.currency}
@@ -186,7 +202,8 @@ export default function TransactionComparison({ className }: TransactionComparis
                     key={tx.id}
                     className={cn(
                       "px-3 py-2",
-                      differences["status"] && "bg-yellow-100 dark:bg-yellow-900"
+                      differences["status"] &&
+                        "bg-yellow-100 dark:bg-yellow-900",
                     )}
                   >
                     <span
@@ -194,7 +211,7 @@ export default function TransactionComparison({ className }: TransactionComparis
                         "inline-block rounded px-2 py-1 text-xs font-medium text-white",
                         tx.status === "completed" && "bg-green-500",
                         tx.status === "pending" && "bg-blue-500",
-                        tx.status === "failed" && "bg-red-500"
+                        tx.status === "failed" && "bg-red-500",
                       )}
                     >
                       {tx.status}
@@ -209,7 +226,8 @@ export default function TransactionComparison({ className }: TransactionComparis
                     key={tx.id}
                     className={cn(
                       "px-3 py-2",
-                      differences["bridgeFee"] && "bg-yellow-100 dark:bg-yellow-900"
+                      differences["bridgeFee"] &&
+                        "bg-yellow-100 dark:bg-yellow-900",
                     )}
                   >
                     {tx.bridgeFee || "N/A"}%
@@ -223,7 +241,8 @@ export default function TransactionComparison({ className }: TransactionComparis
                     key={tx.id}
                     className={cn(
                       "px-3 py-2",
-                      differences["paycrestFee"] && "bg-yellow-100 dark:bg-yellow-900"
+                      differences["paycrestFee"] &&
+                        "bg-yellow-100 dark:bg-yellow-900",
                     )}
                   >
                     {tx.paycrestFee || "N/A"}%
@@ -237,7 +256,8 @@ export default function TransactionComparison({ className }: TransactionComparis
                     key={tx.id}
                     className={cn(
                       "px-3 py-2",
-                      differences["totalFee"] && "bg-yellow-100 dark:bg-yellow-900"
+                      differences["totalFee"] &&
+                        "bg-yellow-100 dark:bg-yellow-900",
                     )}
                   >
                     {tx.totalFee || "N/A"}%

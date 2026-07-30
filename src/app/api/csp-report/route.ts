@@ -7,7 +7,7 @@ interface CSPReport {
     "violated-directive": string;
     "effective-directive": string;
     "original-policy": string;
-    "disposition": string;
+    disposition: string;
     "blocked-uri"?: string;
     "source-file"?: string;
     "line-number"?: number;
@@ -43,6 +43,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ success: true }, { status: 204 });
   } catch (error) {
     logger.error("Failed to process CSP report", { error });
-    return NextResponse.json({ error: "Failed to process report" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Failed to process report" },
+      { status: 400 },
+    );
   }
 }

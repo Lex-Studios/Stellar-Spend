@@ -16,11 +16,11 @@ on:
       - package-lock.json
   schedule:
     # Re-scan weekly even without code changes
-    - cron: '0 3 * * 1'
+    - cron: "0 3 * * 1"
 
 permissions:
   contents: read
-  security-events: write   # needed to upload SARIF to GitHub Security
+  security-events: write # needed to upload SARIF to GitHub Security
 
 env:
   IMAGE_NAME: stellar-spend
@@ -80,7 +80,7 @@ jobs:
           image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           format: sarif
           output: trivy-results.sarif
-          exit-code: '1'
+          exit-code: "1"
           severity: HIGH,CRITICAL
           ignore-unfixed: true
 

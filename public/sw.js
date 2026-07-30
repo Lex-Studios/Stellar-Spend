@@ -16,9 +16,11 @@ self.addEventListener("install", (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS).catch((err) => {
         console.warn("Failed to cache some assets:", err);
-        return cache.addAll(STATIC_ASSETS.filter(url => url !== "/offline.html"));
+        return cache.addAll(
+          STATIC_ASSETS.filter((url) => url !== "/offline.html"),
+        );
       });
-    })
+    }),
   );
   self.skipWaiting();
 });
@@ -32,9 +34,9 @@ self.addEventListener("activate", (event) => {
           .filter((key) => {
             return key !== CACHE_NAME && key.startsWith("stellar-spend-");
           })
-          .map((key) => caches.delete(key))
+          .map((key) => caches.delete(key)),
       );
-    })
+    }),
   );
   self.clients.claim();
 });
@@ -50,21 +52,28 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const networkFetch = fetch(event.request).then((res) => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return res;
-      }).catch(() => {
-        // Return offline fallback for navigation requests
-        if (event.request.mode === "navigate") {
-          return caches.match(OFFLINE_FALLBACK) || new Response("Offline", { status: 503 });
-        }
-        return cached || new Response("Offline", { status: 503 });
-      });
+      const networkFetch = fetch(event.request)
+        .then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put(event.request, clone));
+          }
+          return res;
+        })
+        .catch(() => {
+          // Return offline fallback for navigation requests
+          if (event.request.mode === "navigate") {
+            return (
+              caches.match(OFFLINE_FALLBACK) ||
+              new Response("Offline", { status: 503 })
+            );
+          }
+          return cached || new Response("Offline", { status: 503 });
+        });
       return cached ?? networkFetch;
-    })
+    }),
   );
 });
 
@@ -94,7 +103,7 @@ async function syncFailedTransactions() {
   try {
     const db = await openIndexedDB();
     const failedTxs = await getFailedTransactions(db);
-    
+
     for (const tx of failedTxs) {
       try {
         const response = await fetch("/api/offramp/execute-payout", {
@@ -102,10 +111,13 @@ async function syncFailedTransactions() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(tx),
         });
-        
+
         if (response.ok) {
           await markTransactionSynced(db, tx.id);
-          await notifyClients({ type: "transaction-synced", transactionId: tx.id });
+          await notifyClients({
+            type: "transaction-synced",
+            transactionId: tx.id,
+          });
         }
       } catch (err) {
         console.error("Failed to sync transaction:", tx.id, err);
@@ -127,7 +139,7 @@ async function syncTransactionHistory() {
 // Push notifications
 self.addEventListener("push", (event) => {
   if (!event.data) return;
-  
+
   const data = event.data.json();
   const options = {
     body: data.body || "Transaction update",
@@ -137,27 +149,31 @@ self.addEventListener("push", (event) => {
     requireInteraction: data.requireInteraction || false,
     data: data.data || {},
   };
-  
-  event.waitUntil(self.registration.showNotification(data.title || "Stellar-Spend", options));
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Stellar-Spend", options),
+  );
 });
 
 // Handle notification clicks
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  
+
   const urlToOpen = event.notification.data.url || "/";
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      for (let i = 0; i < clientList.length; i++) {
-        const client = clientList[i];
-        if (client.url === urlToOpen && "focus" in client) {
-          return client.focus();
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (let i = 0; i < clientList.length; i++) {
+          const client = clientList[i];
+          if (client.url === urlToOpen && "focus" in client) {
+            return client.focus();
+          }
         }
-      }
-      if (clients.openWindow) {
-        return clients.openWindow(urlToOpen);
-      }
-    })
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      }),
   );
 });
 
@@ -201,4 +217,3 @@ function notifyClients(message) {
     clients.forEach((client) => client.postMessage(message));
   });
 }
-

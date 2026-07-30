@@ -20,9 +20,13 @@ export async function POST(request: NextRequest) {
     );
 
     // Log the admin action
-    await auditLoggingService.logAdminAction(adminAddress, "CLEANUP_AUDIT_LOGS", {
-      actionDetails: `Cleaned up ${deletedCount} old audit logs`,
-    });
+    await auditLoggingService.logAdminAction(
+      adminAddress,
+      "CLEANUP_AUDIT_LOGS",
+      {
+        actionDetails: `Cleaned up ${deletedCount} old audit logs`,
+      },
+    );
 
     return NextResponse.json({
       success: true,

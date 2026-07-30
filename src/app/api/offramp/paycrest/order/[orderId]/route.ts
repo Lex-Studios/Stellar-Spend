@@ -1,18 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { env } from '@/lib/env';
+import { NextRequest, NextResponse } from "next/server";
+import { env } from "@/lib/env";
 
 export const maxDuration = 10;
 
-import { PaycrestAdapter, PaycrestHttpError } from '@/lib/offramp/adapters/paycrest-adapter';
+import {
+  PaycrestAdapter,
+  PaycrestHttpError,
+} from "@/lib/offramp/adapters/paycrest-adapter";
 
 /**
  * GET /api/offramp/paycrest/order/[orderId]
- * 
+ *
  * Fetches the status of a Paycrest payout order.
- * 
+ *
  * Path parameters:
  * - orderId: string (required)
- * 
+ *
  * Response:
  * {
  *   data: {
@@ -24,15 +27,15 @@ import { PaycrestAdapter, PaycrestHttpError } from '@/lib/offramp/adapters/paycr
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { orderId: string } }
+  { params }: { params: { orderId: string } },
 ) {
   try {
     const { orderId } = params;
 
-    if (!orderId || typeof orderId !== 'string') {
+    if (!orderId || typeof orderId !== "string") {
       return NextResponse.json(
-        { error: 'orderId is required' },
-        { status: 400 }
+        { error: "orderId is required" },
+        { status: 400 },
       );
     }
 
@@ -49,22 +52,17 @@ export async function GET(
       },
     });
   } catch (err: unknown) {
-    console.error('Error fetching Paycrest order status:', err);
+    console.error("Error fetching Paycrest order status:", err);
 
     if (err instanceof PaycrestHttpError) {
       if (err.status === 404) {
-        return NextResponse.json(
-          { error: 'Order not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: "Order not found" }, { status: 404 });
       }
-      return NextResponse.json(
-        { error: err.message },
-        { status: err.status }
-      );
+      return NextResponse.json({ error: err.message }, { status: err.status });
     }
 
-    const message = err instanceof Error ? err.message : 'Internal server error';
+    const message =
+      err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -21,7 +21,7 @@ export function useClipboard(timeout = 2000) {
         return false;
       }
     },
-    [timeout]
+    [timeout],
   );
 
   return { isCopied, copy };

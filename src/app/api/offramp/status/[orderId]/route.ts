@@ -1,14 +1,17 @@
-import { NextResponse } from 'next/server';
-import { env } from '@/lib/env';
-import { get, set, isFresh } from '@/lib/polling/status-cache';
+import { NextResponse } from "next/server";
+import { env } from "@/lib/env";
+import { get, set, isFresh } from "@/lib/polling/status-cache";
 
 export const maxDuration = 10;
 
-const PAYCREST_BASE_URL = 'https://api.paycrest.io/v1';
+const PAYCREST_BASE_URL = "https://api.paycrest.io/v1";
 
-const PAYOUT_TERMINAL_STATES = ['validated', 'settled', 'refunded', 'expired'];
+const PAYOUT_TERMINAL_STATES = ["validated", "settled", "refunded", "expired"];
 
-export async function GET(_req: Request, { params }: { params: Promise<{ orderId: string }> }) {
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ orderId: string }> },
+) {
   const { orderId } = await params;
 
   // Check cache first
@@ -25,14 +28,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orderId
     const res = await fetch(`${PAYCREST_BASE_URL}/sender/orders/${orderId}`, {
       headers: {
         Authorization: `Bearer ${env.server.PAYCREST_API_KEY}`,
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      cache: 'no-store',
+      cache: "no-store",
     });
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      const errorMessage = body.message ?? 'Failed to fetch order status';
+      const errorMessage = body.message ?? "Failed to fetch order status";
 
       // Return stale cache entry with upstreamError if available
       if (cached) {
@@ -44,10 +47,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orderId
         });
       }
 
-      return NextResponse.json(
-        { error: errorMessage },
-        { status: res.status }
-      );
+      return NextResponse.json({ error: errorMessage }, { status: res.status });
     }
 
     const data = await res.json();
@@ -64,7 +64,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orderId
 
     return NextResponse.json({ status, id: orderId });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Internal server error';
+    const message =
+      err instanceof Error ? err.message : "Internal server error";
 
     // Return stale cache entry with upstreamError if available
     if (cached) {

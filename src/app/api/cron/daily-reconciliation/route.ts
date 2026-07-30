@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { runReconciliationJob, getReconciliationHistory } from '@/lib/reconciliation';
-import { dal } from '@/lib/db/dal';
-import { logger } from '@/lib/logger';
-import type { ReconciliationRecord } from '@/lib/reconciliation';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  runReconciliationJob,
+  getReconciliationHistory,
+} from "@/lib/reconciliation";
+import { dal } from "@/lib/db/dal";
+import { logger } from "@/lib/logger";
+import type { ReconciliationRecord } from "@/lib/reconciliation";
 
 async function fetchDailyRecords(): Promise<ReconciliationRecord[]> {
   const yesterday = Date.now() - 24 * 60 * 60 * 1000;
   try {
-    const transactions = await dal.getByUser('*').catch(() => []);
+    const transactions = await dal.getByUser("*").catch(() => []);
     return transactions
       .filter((tx: any) => tx.timestamp >= yesterday)
       .map((tx: any) => ({
@@ -26,18 +29,18 @@ async function fetchDailyRecords(): Promise<ReconciliationRecord[]> {
 
 export async function POST(req: NextRequest) {
   try {
-    const secret = req.headers.get('x-cron-secret');
+    const secret = req.headers.get("x-cron-secret");
     if (secret !== process.env.CRON_SECRET) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    logger.info('cron.daily-reconciliation.start', {});
+    logger.info("cron.daily-reconciliation.start", {});
 
     const records = await fetchDailyRecords();
     const entry = await runReconciliationJob(records);
     const history = await getReconciliationHistory();
 
-    logger.info('cron.daily-reconciliation.complete', {
+    logger.info("cron.daily-reconciliation.complete", {
       runId: entry.id,
       totalTransactions: entry.report.totalTransactions,
       discrepancies: entry.report.discrepancies.length,
@@ -55,7 +58,10 @@ export async function POST(req: NextRequest) {
       history: history.slice(0, 5),
     });
   } catch (err) {
-    logger.error('cron.daily-reconciliation.failed', {}, err);
-    return NextResponse.json({ error: 'Daily reconciliation failed' }, { status: 500 });
+    logger.error("cron.daily-reconciliation.failed", {}, err);
+    return NextResponse.json(
+      { error: "Daily reconciliation failed" },
+      { status: 500 },
+    );
   }
 }

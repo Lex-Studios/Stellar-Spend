@@ -23,7 +23,11 @@ export function BankAccountInputSkeleton({ fields = 1 }: { fields?: 1 | 2 }) {
       {Array.from({ length: fields }).map((_, i) => (
         <div key={i} className="flex flex-col gap-1.5">
           <Skeleton width={110} height={11} aria-label="Loading field label…" />
-          <Skeleton width="100%" height={46} aria-label="Loading field input…" />
+          <Skeleton
+            width="100%"
+            height={46}
+            aria-label="Loading field input…"
+          />
         </div>
       ))}
     </div>

@@ -1,12 +1,15 @@
-import { randomUUID } from 'crypto';
-import { pool } from '../db/client';
-import type { WebhookDeliveryLog } from './subscription-types';
-import type { DeliveryStatus } from './types';
+import { randomUUID } from "crypto";
+import { pool } from "../db/client";
+import type { WebhookDeliveryLog } from "./subscription-types";
+import type { DeliveryStatus } from "./types";
 
 export class DeliveryLogError extends Error {
-  constructor(message: string, public readonly cause?: unknown) {
+  constructor(
+    message: string,
+    public readonly cause?: unknown,
+  ) {
     super(message);
-    this.name = 'DeliveryLogError';
+    this.name = "DeliveryLogError";
   }
 }
 
@@ -29,11 +32,16 @@ export async function createTable(): Promise<void> {
   try {
     await pool.query(sql);
   } catch (err) {
-    throw new DeliveryLogError('Failed to create webhook_delivery_logs table', err);
+    throw new DeliveryLogError(
+      "Failed to create webhook_delivery_logs table",
+      err,
+    );
   }
 }
 
-export async function logDelivery(entry: Omit<WebhookDeliveryLog, 'id' | 'createdAt'>): Promise<WebhookDeliveryLog> {
+export async function logDelivery(
+  entry: Omit<WebhookDeliveryLog, "id" | "createdAt">,
+): Promise<WebhookDeliveryLog> {
   const id = randomUUID();
   const now = Date.now();
   const sql = `
@@ -44,13 +52,21 @@ export async function logDelivery(entry: Omit<WebhookDeliveryLog, 'id' | 'create
   `;
   try {
     const result = await pool.query(sql, [
-      id, entry.subscriptionId, entry.event, entry.payloadUrl,
-      entry.requestBody, entry.responseStatus, entry.responseBody,
-      entry.durationMs, entry.status, entry.attemptCount, now,
+      id,
+      entry.subscriptionId,
+      entry.event,
+      entry.payloadUrl,
+      entry.requestBody,
+      entry.responseStatus,
+      entry.responseBody,
+      entry.durationMs,
+      entry.status,
+      entry.attemptCount,
+      now,
     ]);
     return rowToDeliveryLog(result.rows[0]);
   } catch (err) {
-    throw new DeliveryLogError('Failed to log delivery', err);
+    throw new DeliveryLogError("Failed to log delivery", err);
   }
 }
 
@@ -58,7 +74,7 @@ function rowToDeliveryLog(row: Record<string, unknown>): WebhookDeliveryLog {
   return {
     id: row.id as string,
     subscriptionId: row.subscription_id as string,
-    event: row.event as WebhookDeliveryLog['event'],
+    event: row.event as WebhookDeliveryLog["event"],
     payloadUrl: row.payload_url as string,
     requestBody: row.request_body as string,
     responseStatus: row.response_status as number | null,
@@ -73,7 +89,7 @@ function rowToDeliveryLog(row: Record<string, unknown>): WebhookDeliveryLog {
 export async function getDeliveryLogs(
   subscriptionId?: string,
   limit = 50,
-  offset = 0
+  offset = 0,
 ): Promise<WebhookDeliveryLog[]> {
   let sql = `SELECT * FROM webhook_delivery_logs`;
   const params: unknown[] = [];
@@ -90,11 +106,13 @@ export async function getDeliveryLogs(
     const result = await pool.query(sql, params);
     return result.rows.map(rowToDeliveryLog);
   } catch (err) {
-    throw new DeliveryLogError('Failed to get delivery logs', err);
+    throw new DeliveryLogError("Failed to get delivery logs", err);
   }
 }
 
-export async function getDeliveryLogById(id: string): Promise<WebhookDeliveryLog | null> {
+export async function getDeliveryLogById(
+  id: string,
+): Promise<WebhookDeliveryLog | null> {
   const sql = `SELECT * FROM webhook_delivery_logs WHERE id = $1`;
   try {
     const result = await pool.query(sql, [id]);

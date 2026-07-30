@@ -1,13 +1,13 @@
 export type EventType =
-  | 'transaction.created'
-  | 'transaction.completed'
-  | 'transaction.failed'
-  | 'bridge.initiated'
-  | 'bridge.completed'
-  | 'payout.initiated'
-  | 'payout.completed'
-  | 'payout.failed'
-  | 'error.occurred';
+  | "transaction.created"
+  | "transaction.completed"
+  | "transaction.failed"
+  | "bridge.initiated"
+  | "bridge.completed"
+  | "payout.initiated"
+  | "payout.completed"
+  | "payout.failed"
+  | "error.occurred";
 
 export interface Event<T = any> {
   type: EventType;

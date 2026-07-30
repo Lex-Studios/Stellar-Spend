@@ -1,8 +1,20 @@
-import { graphql, parse, validate, visit, type DocumentNode, type ValidationRule } from "graphql";
+import {
+  graphql,
+  parse,
+  validate,
+  visit,
+  type DocumentNode,
+  type ValidationRule,
+} from "graphql";
 import { schema } from "../../../../lib/graphql/schema";
 import { resolvers } from "../../../../lib/graphql/resolvers";
 import { buildContext } from "../../../../lib/graphql/context";
-import { MAX_DEPTH, validateQueryDepth, resetNodeCount, GraphQLError } from "../../../../lib/graphql/auth-guards";
+import {
+  MAX_DEPTH,
+  validateQueryDepth,
+  resetNodeCount,
+  GraphQLError,
+} from "../../../../lib/graphql/auth-guards";
 
 const PLAYGROUND_HTML = `<!DOCTYPE html>
 <html>
@@ -57,7 +69,7 @@ function formatError(err: any): Record<string, unknown> {
   // Align with StandardErrorResponse from error-handler.middleware.ts
   const code =
     err instanceof GraphQLError
-      ? (err.extensions?.code as string) ?? "SERVER_ERROR"
+      ? ((err.extensions?.code as string) ?? "SERVER_ERROR")
       : "SERVER_ERROR";
 
   return {
@@ -78,30 +90,43 @@ export async function GET(request: Request) {
       headers: { "Content-Type": "text/html" },
     });
   }
-  return new Response(JSON.stringify({ message: "GraphQL endpoint. Use POST." }), {
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({ message: "GraphQL endpoint. Use POST." }),
+    {
+      headers: { "Content-Type": "application/json" },
+    },
+  );
 }
 
 export async function POST(request: Request) {
-  let body: { query?: string; variables?: Record<string, unknown>; operationName?: string };
+  let body: {
+    query?: string;
+    variables?: Record<string, unknown>;
+    operationName?: string;
+  };
 
   try {
     body = await request.json();
   } catch {
-    return new Response(JSON.stringify({ errors: [{ message: "Invalid JSON body" }] }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ errors: [{ message: "Invalid JSON body" }] }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 
   const { query, variables, operationName } = body;
 
   if (!query) {
-    return new Response(JSON.stringify({ errors: [{ message: "Missing query" }] }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ errors: [{ message: "Missing query" }] }),
+      {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   }
 
   // Parse
@@ -110,7 +135,9 @@ export async function POST(request: Request) {
     document = parse(query);
   } catch (err) {
     return new Response(
-      JSON.stringify({ errors: [{ message: `Parse error: ${(err as Error).message}` }] }),
+      JSON.stringify({
+        errors: [{ message: `Parse error: ${(err as Error).message}` }],
+      }),
       { status: 400, headers: { "Content-Type": "application/json" } },
     );
   }

@@ -19,7 +19,8 @@ const STORAGE_KEY = "theme";
 
 function resolveSystemTheme(): Theme {
   if (typeof window === "undefined") return "dark";
-  if (window.matchMedia("(prefers-contrast: more)").matches) return "high-contrast";
+  if (window.matchMedia("(prefers-contrast: more)").matches)
+    return "high-contrast";
   if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
   return "light";
 }
@@ -27,7 +28,9 @@ function resolveSystemTheme(): Theme {
 function readStoredTheme(): Theme | null {
   if (typeof window === "undefined") return null;
   const stored = window.localStorage.getItem(STORAGE_KEY);
-  return stored === "light" || stored === "dark" || stored === "high-contrast" ? stored : null;
+  return stored === "light" || stored === "dark" || stored === "high-contrast"
+    ? stored
+    : null;
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -66,7 +69,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (!opts.animate) {
       root.classList.add("theme-no-transition");
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => root.classList.remove("theme-no-transition"));
+        requestAnimationFrame(() =>
+          root.classList.remove("theme-no-transition"),
+        );
       });
     }
     root.setAttribute("data-theme", next);
@@ -79,7 +84,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         label: next,
         timestamp: new Date().toISOString(),
       });
-      navigator.sendBeacon("/api/monitoring/vitals", new Blob([payload], { type: "application/json" }));
+      navigator.sendBeacon(
+        "/api/monitoring/vitals",
+        new Blob([payload], { type: "application/json" }),
+      );
     }
   }
 
@@ -108,7 +116,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, isSystem, toggleTheme, setTheme, useSystemTheme }}>
+    <ThemeContext.Provider
+      value={{ theme, isSystem, toggleTheme, setTheme, useSystemTheme }}
+    >
       {children}
     </ThemeContext.Provider>
   );

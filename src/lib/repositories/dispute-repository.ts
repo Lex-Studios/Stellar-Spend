@@ -6,7 +6,7 @@ import {
   DisputeNote,
   DisputeEscalation,
   DisputeAnalytics,
-} from '@/types/disputes';
+} from "@/types/disputes";
 
 // ---------------------------------------------------------------------------
 // In-memory store (replace with DB persistence when ready)
@@ -23,9 +23,9 @@ function generateId(prefix: string): string {
 // ---------------------------------------------------------------------------
 
 const VALID_TRANSITIONS: Record<DisputeStatus, DisputeStatus[]> = {
-  open: ['in_review', 'rejected', 'escalated'],
-  in_review: ['resolved', 'rejected', 'escalated'],
-  escalated: ['in_review', 'resolved', 'rejected'],
+  open: ["in_review", "rejected", "escalated"],
+  in_review: ["resolved", "rejected", "escalated"],
+  escalated: ["in_review", "resolved", "rejected"],
   resolved: [],
   rejected: [],
 };
@@ -40,7 +40,7 @@ function isValidTransition(from: DisputeStatus, to: DisputeStatus): boolean {
 
 async function notifyDisputeEvent(
   dispute: Dispute,
-  event: 'created' | 'status_changed' | 'escalated' | 'resolved',
+  event: "created" | "status_changed" | "escalated" | "resolved",
 ): Promise<void> {
   // Hook point: forward to notification service, email, webhook, etc.
   // Intentionally a no-op stub until notification backend is wired.
@@ -53,8 +53,11 @@ async function notifyDisputeEvent(
 // ---------------------------------------------------------------------------
 
 export class DisputeRepository {
-  async createDispute(userAddress: string, req: CreateDisputeRequest): Promise<Dispute> {
-    const id = generateId('dispute');
+  async createDispute(
+    userAddress: string,
+    req: CreateDisputeRequest,
+  ): Promise<Dispute> {
+    const id = generateId("dispute");
     const now = Date.now();
 
     const dispute: Dispute = {
@@ -63,8 +66,8 @@ export class DisputeRepository {
       userAddress,
       reason: req.reason,
       description: req.description,
-      status: 'open',
-      priority: req.priority ?? 'medium',
+      status: "open",
+      priority: req.priority ?? "medium",
       createdAt: now,
       updatedAt: now,
       notes: [],
@@ -73,7 +76,7 @@ export class DisputeRepository {
     disputes.set(id, dispute);
     notes.set(id, []);
 
-    await notifyDisputeEvent(dispute, 'created');
+    await notifyDisputeEvent(dispute, "created");
     return dispute;
   }
 
@@ -95,7 +98,10 @@ export class DisputeRepository {
       .sort((a, b) => b.createdAt - a.createdAt);
   }
 
-  async updateDispute(id: string, update: DisputeUpdate): Promise<Dispute | null> {
+  async updateDispute(
+    id: string,
+    update: DisputeUpdate,
+  ): Promise<Dispute | null> {
     const existing = disputes.get(id);
     if (!existing) return null;
 
@@ -113,7 +119,7 @@ export class DisputeRepository {
       ...update,
       updatedAt: now,
       resolvedAt:
-        update.status === 'resolved' || update.status === 'rejected'
+        update.status === "resolved" || update.status === "rejected"
           ? now
           : existing.resolvedAt,
     };
@@ -121,7 +127,7 @@ export class DisputeRepository {
     disputes.set(id, updated);
 
     if (update.status && update.status !== existing.status) {
-      await notifyDisputeEvent(updated, 'status_changed');
+      await notifyDisputeEvent(updated, "status_changed");
     }
 
     return { ...updated, notes: notes.get(id) ?? [] };
@@ -154,7 +160,7 @@ export class DisputeRepository {
     if (!disputes.has(disputeId)) return null;
 
     const note: DisputeNote = {
-      id: generateId('note'),
+      id: generateId("note"),
       disputeId,
       authorId,
       content,
@@ -173,12 +179,18 @@ export class DisputeRepository {
     return note;
   }
 
-  async getNotes(disputeId: string, includeInternal = false): Promise<DisputeNote[]> {
+  async getNotes(
+    disputeId: string,
+    includeInternal = false,
+  ): Promise<DisputeNote[]> {
     const all = notes.get(disputeId) ?? [];
     return includeInternal ? all : all.filter((n) => !n.isInternal);
   }
 
-  async assignDispute(disputeId: string, assignedTo: string): Promise<Dispute | null> {
+  async assignDispute(
+    disputeId: string,
+    assignedTo: string,
+  ): Promise<Dispute | null> {
     return this.updateDispute(disputeId, { assignedTo });
   }
 
@@ -190,17 +202,17 @@ export class DisputeRepository {
     disputeId: string,
     escalatedBy: string,
     reason: string,
-    priority: DisputeEscalation['priority'] = 'high',
+    priority: DisputeEscalation["priority"] = "high",
   ): Promise<Dispute | null> {
     const existing = disputes.get(disputeId);
     if (!existing) return null;
 
-    if (!isValidTransition(existing.status, 'escalated')) {
+    if (!isValidTransition(existing.status, "escalated")) {
       throw new Error(`Cannot escalate dispute in status: ${existing.status}`);
     }
 
     const escalation: DisputeEscalation = {
-      id: generateId('escalation'),
+      id: generateId("escalation"),
       disputeId,
       escalatedBy,
       reason,
@@ -210,14 +222,14 @@ export class DisputeRepository {
 
     const updated: Dispute = {
       ...existing,
-      status: 'escalated',
+      status: "escalated",
       priority,
       escalation,
       updatedAt: Date.now(),
     };
 
     disputes.set(disputeId, updated);
-    await notifyDisputeEvent(updated, 'escalated');
+    await notifyDisputeEvent(updated, "escalated");
 
     return { ...updated, notes: notes.get(disputeId) ?? [] };
   }
@@ -228,7 +240,7 @@ export class DisputeRepository {
 
   async resolveDispute(
     disputeId: string,
-    outcome: 'resolved' | 'rejected',
+    outcome: "resolved" | "rejected",
     resolutionNotes: string,
   ): Promise<Dispute | null> {
     const updated = await this.updateDispute(disputeId, {
@@ -237,7 +249,7 @@ export class DisputeRepository {
     });
 
     if (updated) {
-      await notifyDisputeEvent(updated, 'resolved');
+      await notifyDisputeEvent(updated, "resolved");
     }
 
     return updated;
@@ -266,15 +278,18 @@ export class DisputeRepository {
     for (const d of all) {
       byStatus[d.status] = (byStatus[d.status] ?? 0) + 1;
 
-      const priority = d.priority ?? 'medium';
+      const priority = d.priority ?? "medium";
       byPriority[priority] = (byPriority[priority] ?? 0) + 1;
 
-      if ((d.status === 'resolved' || d.status === 'rejected') && d.resolvedAt) {
+      if (
+        (d.status === "resolved" || d.status === "rejected") &&
+        d.resolvedAt
+      ) {
         totalResolutionTime += d.resolvedAt - d.createdAt;
         resolvedCount++;
       }
 
-      if (d.status === 'escalated' || d.escalation) {
+      if (d.status === "escalated" || d.escalation) {
         escalatedCount++;
       }
     }
@@ -283,7 +298,8 @@ export class DisputeRepository {
       total: all.length,
       byStatus,
       byPriority,
-      avgResolutionTimeMs: resolvedCount > 0 ? totalResolutionTime / resolvedCount : null,
+      avgResolutionTimeMs:
+        resolvedCount > 0 ? totalResolutionTime / resolvedCount : null,
       escalationRate: all.length > 0 ? escalatedCount / all.length : 0,
       resolutionRate: all.length > 0 ? resolvedCount / all.length : 0,
     };

@@ -4,12 +4,12 @@ import SettingsPage from "../page";
 import { I18nProvider } from "@/lib/i18n/provider";
 
 // Mock hooks
-const mockSetTheme = vi.fn((t) => localStorage.setItem('theme', t));
-vi.mock('@/hooks/useTheme', () => ({
+const mockSetTheme = vi.fn((t) => localStorage.setItem("theme", t));
+vi.mock("@/hooks/useTheme", () => ({
   useTheme: () => ({
-    theme: localStorage.getItem('theme') || 'system',
+    theme: localStorage.getItem("theme") || "system",
     setTheme: mockSetTheme,
-  })
+  }),
 }));
 
 describe("SettingsPage Persistence", () => {

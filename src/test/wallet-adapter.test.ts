@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { StellarWalletAdapter, _resetAdapterSingleton, getStellarWalletAdapter } from "@/lib/stellar/wallet-adapter";
+import {
+  StellarWalletAdapter,
+  _resetAdapterSingleton,
+  getStellarWalletAdapter,
+} from "@/lib/stellar/wallet-adapter";
 
 // ── Mock @stellar/freighter-api ────────────────────────────────────────────────
 vi.mock("@stellar/freighter-api", () => ({
@@ -8,7 +12,9 @@ vi.mock("@stellar/freighter-api", () => ({
   getAddress: vi.fn(),
   requestAccess: vi.fn(),
   signTransaction: vi.fn(),
-  getNetworkDetails: vi.fn().mockResolvedValue({ networkPassphrase: "Public Global Stellar Network ; September 2015" }),
+  getNetworkDetails: vi.fn().mockResolvedValue({
+    networkPassphrase: "Public Global Stellar Network ; September 2015",
+  }),
 }));
 
 import * as freighterApi from "@stellar/freighter-api";
@@ -169,7 +175,7 @@ describe("connectFreighter — error paths", () => {
 
     const adapter = new StellarWalletAdapter();
     await expect(adapter.connectFreighter()).rejects.toThrow(
-      /Freighter extension is not installed/
+      /Freighter extension is not installed/,
     );
   });
 
@@ -181,7 +187,9 @@ describe("connectFreighter — error paths", () => {
     });
 
     const adapter = new StellarWalletAdapter();
-    await expect(adapter.connectFreighter()).rejects.toThrow(/Could not reach Freighter/);
+    await expect(adapter.connectFreighter()).rejects.toThrow(
+      /Could not reach Freighter/,
+    );
   });
 
   it("throws user-friendly error when user declines requestAccess", async () => {
@@ -219,7 +227,7 @@ describe("connectFreighter — error paths", () => {
 
     const adapter = new StellarWalletAdapter();
     await expect(adapter.connectFreighter()).rejects.toThrow(
-      /could not retrieve your public key/i
+      /could not retrieve your public key/i,
     );
   });
 
@@ -230,7 +238,9 @@ describe("connectFreighter — error paths", () => {
     mockGetAddress.mockResolvedValueOnce({ address: "" });
 
     const adapter = new StellarWalletAdapter();
-    await expect(adapter.connectFreighter()).rejects.toThrow(/no public key was returned/i);
+    await expect(adapter.connectFreighter()).rejects.toThrow(
+      /no public key was returned/i,
+    );
   });
 
   it("does not expose internal error details in thrown message", async () => {
@@ -298,7 +308,10 @@ describe("signTransaction", () => {
     setFreighterWindow(true);
     mockIsConnected.mockResolvedValueOnce({ isConnected: true });
     mockGetAddress.mockResolvedValueOnce({ address: VALID_KEY });
-    mockSignTransaction.mockResolvedValueOnce({ signedTxXdr: SIGNED_XDR, signerAddress: VALID_KEY });
+    mockSignTransaction.mockResolvedValueOnce({
+      signedTxXdr: SIGNED_XDR,
+      signerAddress: VALID_KEY,
+    });
 
     const adapter = new StellarWalletAdapter();
     await adapter.connectFreighter();
@@ -313,7 +326,7 @@ describe("signTransaction", () => {
   it("throws when no wallet is connected", async () => {
     const adapter = new StellarWalletAdapter();
     await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
-      /No wallet connected/
+      /No wallet connected/,
     );
   });
 
@@ -329,19 +342,24 @@ describe("signTransaction", () => {
 
     const adapter = new StellarWalletAdapter();
     await adapter.connectFreighter();
-    await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(/declined/i);
+    await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
+      /declined/i,
+    );
   });
 
   it("throws when signedTxXdr is empty with no error", async () => {
     setFreighterWindow(true);
     mockIsConnected.mockResolvedValueOnce({ isConnected: true });
     mockGetAddress.mockResolvedValueOnce({ address: VALID_KEY });
-    mockSignTransaction.mockResolvedValueOnce({ signedTxXdr: "", signerAddress: "" });
+    mockSignTransaction.mockResolvedValueOnce({
+      signedTxXdr: "",
+      signerAddress: "",
+    });
 
     const adapter = new StellarWalletAdapter();
     await adapter.connectFreighter();
     await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
-      /empty signed transaction/i
+      /empty signed transaction/i,
     );
   });
 
@@ -349,7 +367,10 @@ describe("signTransaction", () => {
     setFreighterWindow(true);
     mockIsConnected.mockResolvedValueOnce({ isConnected: true });
     mockGetAddress.mockResolvedValueOnce({ address: VALID_KEY });
-    mockSignTransaction.mockResolvedValueOnce({ signedTxXdr: SIGNED_XDR, signerAddress: VALID_KEY });
+    mockSignTransaction.mockResolvedValueOnce({
+      signedTxXdr: SIGNED_XDR,
+      signerAddress: VALID_KEY,
+    });
 
     const adapter = new StellarWalletAdapter();
     await adapter.connectFreighter();
@@ -359,7 +380,7 @@ describe("signTransaction", () => {
       expect.any(String),
       expect.objectContaining({
         networkPassphrase: "Public Global Stellar Network ; September 2015",
-      })
+      }),
     );
   });
 });

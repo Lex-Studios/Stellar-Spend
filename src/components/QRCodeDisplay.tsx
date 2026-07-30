@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { QRCodeData } from '@/types/qrcode';
-import { qrCodeService } from '@/lib/services/qrcode-service';
+import { useState, useRef } from "react";
+import { QRCodeData } from "@/types/qrcode";
+import { qrCodeService } from "@/lib/services/qrcode-service";
 
 interface QRCodeDisplayProps {
   data: QRCodeData;
@@ -10,8 +10,12 @@ interface QRCodeDisplayProps {
   showDownload?: boolean;
 }
 
-export function QRCodeDisplay({ data, size = 200, showDownload = true }: QRCodeDisplayProps) {
-  const [format, setFormat] = useState<'svg' | 'png'>('svg');
+export function QRCodeDisplay({
+  data,
+  size = 200,
+  showDownload = true,
+}: QRCodeDisplayProps) {
+  const [format, setFormat] = useState<"svg" | "png">("svg");
   const svgRef = useRef<HTMLDivElement>(null);
 
   const qrData = qrCodeService.generateQRData(data);
@@ -20,9 +24,9 @@ export function QRCodeDisplay({ data, size = 200, showDownload = true }: QRCodeD
   const handleDownload = async () => {
     try {
       const svg = svgPattern;
-      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const blob = new Blob([svg], { type: "image/svg+xml" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `transaction-${data.transactionId}.svg`;
       document.body.appendChild(link);
@@ -30,14 +34,14 @@ export function QRCodeDisplay({ data, size = 200, showDownload = true }: QRCodeD
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading QR code:', error);
+      console.error("Error downloading QR code:", error);
     }
   };
 
   const handleScan = () => {
     // TODO: Implement QR scanning functionality
     // Could use a library like jsQR or html5-qrcode
-    alert('QR scanning feature coming soon!');
+    alert("QR scanning feature coming soon!");
   };
 
   return (
@@ -77,7 +81,9 @@ export function QRCodeDisplay({ data, size = 200, showDownload = true }: QRCodeD
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Date</span>
-          <span className="font-semibold">{new Date(data.timestamp).toLocaleDateString()}</span>
+          <span className="font-semibold">
+            {new Date(data.timestamp).toLocaleDateString()}
+          </span>
         </div>
         {data.bankName && (
           <div className="flex justify-between">
@@ -99,7 +105,7 @@ export function QRCodeDisplay({ data, size = 200, showDownload = true }: QRCodeD
           onClick={() => {
             const qrData = qrCodeService.generateQRData(data);
             navigator.clipboard.writeText(qrData);
-            alert('QR data copied to clipboard');
+            alert("QR data copied to clipboard");
           }}
           className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
         >

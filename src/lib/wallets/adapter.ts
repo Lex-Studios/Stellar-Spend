@@ -2,7 +2,7 @@
  * Wallet Adapter Pattern - Base interface for all wallet implementations
  */
 
-export type WalletType = 'freighter' | 'lobstr' | 'custom';
+export type WalletType = "freighter" | "lobstr" | "custom";
 
 export interface WalletAdapter {
   readonly type: WalletType;
@@ -31,28 +31,34 @@ export interface WalletError extends Error {
 }
 
 export class WalletConnectionError extends Error implements WalletError {
-  code = 'WALLET_CONNECTION_ERROR';
+  code = "WALLET_CONNECTION_ERROR";
 
-  constructor(message: string, public originalError?: unknown) {
+  constructor(
+    message: string,
+    public originalError?: unknown,
+  ) {
     super(message);
-    this.name = 'WalletConnectionError';
+    this.name = "WalletConnectionError";
   }
 }
 
 export class WalletSigningError extends Error implements WalletError {
-  code = 'WALLET_SIGNING_ERROR';
+  code = "WALLET_SIGNING_ERROR";
 
-  constructor(message: string, public originalError?: unknown) {
+  constructor(
+    message: string,
+    public originalError?: unknown,
+  ) {
     super(message);
-    this.name = 'WalletSigningError';
+    this.name = "WalletSigningError";
   }
 }
 
 export class WalletNotAvailableError extends Error implements WalletError {
-  code = 'WALLET_NOT_AVAILABLE';
+  code = "WALLET_NOT_AVAILABLE";
 
   constructor(walletType: WalletType) {
     super(`${walletType} wallet is not available`);
-    this.name = 'WalletNotAvailableError';
+    this.name = "WalletNotAvailableError";
   }
 }

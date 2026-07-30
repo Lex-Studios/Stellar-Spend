@@ -19,7 +19,7 @@ autoscaling:
   maxReplicas: 3
 
 podDisruptionBudget:
-  enabled: false   # single replica in staging; PDB would block rolling updates
+  enabled: false # single replica in staging; PDB would block rolling updates
 
 env:
   NODE_ENV: production

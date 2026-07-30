@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const PercentageSchema = z.number().min(0).max(1);
 
@@ -19,13 +19,24 @@ export const FeatureFlagSchema = z.object({
 
   providers: z.object({
     paycrestV2: z.union([z.boolean(), GradualRolloutSchema]).default(false),
-    allbridgeV2: GradualRolloutSchema.default({ enabled: false, percentage: 0 }),
+    allbridgeV2: GradualRolloutSchema.default({
+      enabled: false,
+      percentage: 0,
+    }),
   }),
 
   experiments: z.object({
-    newQuoteEngine: GradualRolloutSchema.default({ enabled: false, percentage: 0 }),
-    instantSettlement: z.union([z.boolean(), GradualRolloutSchema]).default(false),
-    batchPayouts: GradualRolloutSchema.default({ enabled: false, percentage: 0 }),
+    newQuoteEngine: GradualRolloutSchema.default({
+      enabled: false,
+      percentage: 0,
+    }),
+    instantSettlement: z
+      .union([z.boolean(), GradualRolloutSchema])
+      .default(false),
+    batchPayouts: GradualRolloutSchema.default({
+      enabled: false,
+      percentage: 0,
+    }),
     webhookV2: z.boolean().default(false),
   }),
 });
@@ -54,16 +65,16 @@ export const DEFAULT_FLAGS: FeatureFlags = {
 
 export function resolveGradualRollback(
   flag: boolean | z.infer<typeof GradualRolloutSchema>,
-  userId?: string
+  userId?: string,
 ): boolean {
-  if (typeof flag === 'boolean') return flag;
+  if (typeof flag === "boolean") return flag;
   if (!flag.enabled) return false;
   if (flag.percentage >= 1) return true;
   if (flag.percentage <= 0) return false;
   if (!userId) return false;
 
   let hash = 0;
-  const seed = flag.seed ?? 'default';
+  const seed = flag.seed ?? "default";
   const key = `${seed}:${userId}`;
   for (let i = 0; i < key.length; i++) {
     hash = ((hash << 5) - hash + key.charCodeAt(i)) | 0;

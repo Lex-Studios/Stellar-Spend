@@ -2,7 +2,7 @@
  * Freighter Wallet Adapter
  */
 
-import * as freighterApi from '@stellar/freighter-api';
+import * as freighterApi from "@stellar/freighter-api";
 import {
   WalletAdapter,
   WalletConnection,
@@ -10,15 +10,15 @@ import {
   WalletConnectionError,
   WalletSigningError,
   WalletNotAvailableError,
-} from './adapter';
+} from "./adapter";
 
 export class FreighterAdapter implements WalletAdapter {
-  readonly type = 'freighter' as const;
-  readonly name = 'Freighter';
+  readonly type = "freighter" as const;
+  readonly name = "Freighter";
   private publicKey: string | null = null;
 
   get isAvailable(): boolean {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === "undefined") return false;
     try {
       return freighterApi.isConnected();
     } catch {
@@ -28,7 +28,7 @@ export class FreighterAdapter implements WalletAdapter {
 
   async connect(): Promise<WalletConnection> {
     if (!this.isAvailable) {
-      throw new WalletNotAvailableError('freighter');
+      throw new WalletNotAvailableError("freighter");
     }
 
     try {
@@ -36,13 +36,13 @@ export class FreighterAdapter implements WalletAdapter {
       this.publicKey = publicKey;
       return {
         publicKey,
-        walletType: 'freighter',
+        walletType: "freighter",
         isConnected: true,
       };
     } catch (error) {
       throw new WalletConnectionError(
-        this.friendlyError(error, 'Failed to connect to Freighter wallet'),
-        error
+        this.friendlyError(error, "Failed to connect to Freighter wallet"),
+        error,
       );
     }
   }
@@ -53,7 +53,9 @@ export class FreighterAdapter implements WalletAdapter {
 
   async signTransaction(xdr: string, opts: SignOptions): Promise<string> {
     if (!this.publicKey) {
-      throw new WalletSigningError('Wallet not connected. Please connect first.');
+      throw new WalletSigningError(
+        "Wallet not connected. Please connect first.",
+      );
     }
 
     try {
@@ -63,8 +65,8 @@ export class FreighterAdapter implements WalletAdapter {
       return result;
     } catch (error) {
       throw new WalletSigningError(
-        this.friendlyError(error, 'Failed to sign transaction with Freighter'),
-        error
+        this.friendlyError(error, "Failed to sign transaction with Freighter"),
+        error,
       );
     }
   }
@@ -79,20 +81,20 @@ export class FreighterAdapter implements WalletAdapter {
 
   private friendlyError(raw: unknown, fallback: string): string {
     if (!raw) return fallback;
-    if (typeof raw === 'object' && 'message' in raw) {
-      const msg = String((raw as { message: unknown }).message ?? '');
+    if (typeof raw === "object" && "message" in raw) {
+      const msg = String((raw as { message: unknown }).message ?? "");
       if (/user declined|rejected|denied/i.test(msg))
-        return 'Connection request was declined. Please approve it in your wallet and try again.';
+        return "Connection request was declined. Please approve it in your wallet and try again.";
       if (/not connected|not installed/i.test(msg))
-        return 'Freighter extension is not installed or unavailable. Please install it and try again.';
+        return "Freighter extension is not installed or unavailable. Please install it and try again.";
       if (/timeout/i.test(msg))
-        return 'The wallet did not respond in time. Please try again.';
+        return "The wallet did not respond in time. Please try again.";
       if (/testnet|mainnet/i.test(msg))
-        return 'Freighter is set to Testnet. Please switch to Mainnet.';
+        return "Freighter is set to Testnet. Please switch to Mainnet.";
       if (/locked/i.test(msg))
-        return 'Freighter wallet is locked. Please unlock it.';
+        return "Freighter wallet is locked. Please unlock it.";
       if (/invalid.*network|wrong.*network/i.test(msg))
-        return 'Wrong network selected. Please switch networks in Freighter.';
+        return "Wrong network selected. Please switch networks in Freighter.";
     }
     return fallback;
   }

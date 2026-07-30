@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useMemo, useState, useCallback } from 'react';
-import { buildProgressSteps, STATE_VARIANTS } from '@/data/stellaramp';
-import type { WalletFlowState } from '@/types/stellaramp';
+import { useMemo, useState, useCallback } from "react";
+import { buildProgressSteps, STATE_VARIANTS } from "@/data/stellaramp";
+import type { WalletFlowState } from "@/types/stellaramp";
 
 /**
  * useWalletFlow
- * 
+ *
  * Manages the UI-related state machine for the wallet connection flow.
  * Returns the current state, progress steps, and UI variant data.
  */
-export function useWalletFlow(initialState: WalletFlowState = 'pre_connect') {
+export function useWalletFlow(initialState: WalletFlowState = "pre_connect") {
   const [state, setState] = useState<WalletFlowState>(initialState);
 
   // Derive the UI variant based on the current state.
@@ -22,9 +22,9 @@ export function useWalletFlow(initialState: WalletFlowState = 'pre_connect') {
   const steps = useMemo(() => buildProgressSteps(variant), [variant]);
 
   // State transition helpers for cleaner consumption
-  const setPreConnect = useCallback(() => setState('pre_connect'), []);
-  const setConnecting = useCallback(() => setState('connecting'), []);
-  const setConnected = useCallback(() => setState('connected'), []);
+  const setPreConnect = useCallback(() => setState("pre_connect"), []);
+  const setConnecting = useCallback(() => setState("connecting"), []);
+  const setConnected = useCallback(() => setState("connected"), []);
 
   return {
     state,

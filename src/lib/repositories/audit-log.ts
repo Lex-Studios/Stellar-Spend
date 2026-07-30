@@ -1,4 +1,4 @@
-import type { Repository } from './base';
+import type { Repository } from "./base";
 
 export interface AuditLog {
   id: string;
@@ -9,7 +9,7 @@ export interface AuditLog {
   changes?: Record<string, { before: unknown; after: unknown }>;
   ipAddress?: string;
   userAgent?: string;
-  status: 'success' | 'failure';
+  status: "success" | "failure";
   error?: string;
   createdAt: number;
 }

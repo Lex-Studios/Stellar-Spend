@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   encryptData,
   decryptData,
@@ -14,12 +14,12 @@ import {
   encryptLogEntry,
   encryptBackupData,
   decryptBackupData,
-} from './encryption';
+} from "./encryption";
 
-describe('Encryption Module', () => {
-  describe('encryptData and decryptData', () => {
-    it('should encrypt and decrypt string data', () => {
-      const plaintext = 'Hello, World!';
+describe("Encryption Module", () => {
+  describe("encryptData and decryptData", () => {
+    it("should encrypt and decrypt string data", () => {
+      const plaintext = "Hello, World!";
       const encrypted = encryptData(plaintext);
       const decrypted = decryptData(encrypted);
 
@@ -27,8 +27,8 @@ describe('Encryption Module', () => {
       expect(decrypted).toBe(plaintext);
     });
 
-    it('should encrypt and decrypt buffer data', () => {
-      const plaintext = Buffer.from('Hello, World!');
+    it("should encrypt and decrypt buffer data", () => {
+      const plaintext = Buffer.from("Hello, World!");
       const encrypted = encryptData(plaintext);
       const decrypted = decryptData(encrypted);
 
@@ -36,8 +36,8 @@ describe('Encryption Module', () => {
       expect(decrypted).toBe(plaintext.toString());
     });
 
-    it('should produce different ciphertexts for same plaintext', () => {
-      const plaintext = 'Hello, World!';
+    it("should produce different ciphertexts for same plaintext", () => {
+      const plaintext = "Hello, World!";
       const encrypted1 = encryptData(plaintext);
       const encrypted2 = encryptData(plaintext);
 
@@ -46,50 +46,50 @@ describe('Encryption Module', () => {
       expect(decryptData(encrypted2)).toBe(plaintext);
     });
 
-    it('should handle empty strings', () => {
-      const plaintext = '';
+    it("should handle empty strings", () => {
+      const plaintext = "";
       const encrypted = encryptData(plaintext);
       const decrypted = decryptData(encrypted);
 
       expect(decrypted).toBe(plaintext);
     });
 
-    it('should handle large data', () => {
-      const plaintext = 'x'.repeat(10000);
+    it("should handle large data", () => {
+      const plaintext = "x".repeat(10000);
       const encrypted = encryptData(plaintext);
       const decrypted = decryptData(encrypted);
 
       expect(decrypted).toBe(plaintext);
     });
 
-    it('should throw on invalid encrypted data', () => {
-      expect(() => decryptData('invalid-base64-data')).toThrow();
+    it("should throw on invalid encrypted data", () => {
+      expect(() => decryptData("invalid-base64-data")).toThrow();
     });
 
-    it('should throw on tampered data', () => {
-      const plaintext = 'Hello, World!';
+    it("should throw on tampered data", () => {
+      const plaintext = "Hello, World!";
       const encrypted = encryptData(plaintext);
-      const tampered = Buffer.from(encrypted, 'base64');
+      const tampered = Buffer.from(encrypted, "base64");
       tampered[tampered.length - 1] ^= 0xff; // Flip bits
-      const tamperedEncrypted = tampered.toString('base64');
+      const tamperedEncrypted = tampered.toString("base64");
 
       expect(() => decryptData(tamperedEncrypted)).toThrow();
     });
   });
 
-  describe('encryptObject and decryptObject', () => {
-    it('should encrypt and decrypt objects', () => {
-      const obj = { name: 'John', age: 30, email: 'john@example.com' };
+  describe("encryptObject and decryptObject", () => {
+    it("should encrypt and decrypt objects", () => {
+      const obj = { name: "John", age: 30, email: "john@example.com" };
       const encrypted = encryptObject(obj);
       const decrypted = decryptObject(encrypted);
 
       expect(decrypted).toEqual(obj);
     });
 
-    it('should handle nested objects', () => {
+    it("should handle nested objects", () => {
       const obj = {
-        user: { name: 'John', address: { city: 'NYC' } },
-        tags: ['tag1', 'tag2'],
+        user: { name: "John", address: { city: "NYC" } },
+        tags: ["tag1", "tag2"],
       };
       const encrypted = encryptObject(obj);
       const decrypted = decryptObject(encrypted);
@@ -97,8 +97,8 @@ describe('Encryption Module', () => {
       expect(decrypted).toEqual(obj);
     });
 
-    it('should handle null and undefined values', () => {
-      const obj = { a: null, b: undefined, c: 'value' };
+    it("should handle null and undefined values", () => {
+      const obj = { a: null, b: undefined, c: "value" };
       const encrypted = encryptObject(obj);
       const decrypted = decryptObject(encrypted);
 
@@ -106,61 +106,61 @@ describe('Encryption Module', () => {
     });
   });
 
-  describe('hashData and verifyHash', () => {
-    it('should hash string data', () => {
-      const data = 'Hello, World!';
+  describe("hashData and verifyHash", () => {
+    it("should hash string data", () => {
+      const data = "Hello, World!";
       const hash = hashData(data);
 
       expect(hash).toHaveLength(64); // SHA-256 hex is 64 chars
       expect(hash).toMatch(/^[a-f0-9]{64}$/);
     });
 
-    it('should hash buffer data', () => {
-      const data = Buffer.from('Hello, World!');
+    it("should hash buffer data", () => {
+      const data = Buffer.from("Hello, World!");
       const hash = hashData(data);
 
       expect(hash).toHaveLength(64);
     });
 
-    it('should produce same hash for same data', () => {
-      const data = 'Hello, World!';
+    it("should produce same hash for same data", () => {
+      const data = "Hello, World!";
       const hash1 = hashData(data);
       const hash2 = hashData(data);
 
       expect(hash1).toBe(hash2);
     });
 
-    it('should produce different hashes for different data', () => {
-      const hash1 = hashData('Hello');
-      const hash2 = hashData('World');
+    it("should produce different hashes for different data", () => {
+      const hash1 = hashData("Hello");
+      const hash2 = hashData("World");
 
       expect(hash1).not.toBe(hash2);
     });
 
-    it('should verify correct hash', () => {
-      const data = 'Hello, World!';
+    it("should verify correct hash", () => {
+      const data = "Hello, World!";
       const hash = hashData(data);
 
       expect(verifyHash(data, hash)).toBe(true);
     });
 
-    it('should reject incorrect hash', () => {
-      const data = 'Hello, World!';
-      const wrongHash = hashData('Different data');
+    it("should reject incorrect hash", () => {
+      const data = "Hello, World!";
+      const wrongHash = hashData("Different data");
 
       expect(verifyHash(data, wrongHash)).toBe(false);
     });
   });
 
-  describe('generateEncryptionKey', () => {
-    it('should generate a valid encryption key', () => {
+  describe("generateEncryptionKey", () => {
+    it("should generate a valid encryption key", () => {
       const key = generateEncryptionKey();
 
       expect(key).toHaveLength(64); // 32 bytes in hex
       expect(key).toMatch(/^[a-f0-9]{64}$/);
     });
 
-    it('should generate different keys', () => {
+    it("should generate different keys", () => {
       const key1 = generateEncryptionKey();
       const key2 = generateEncryptionKey();
 
@@ -168,47 +168,47 @@ describe('Encryption Module', () => {
     });
   });
 
-  describe('encryptSensitiveFields and decryptSensitiveFields', () => {
-    it('should encrypt specified sensitive fields', () => {
+  describe("encryptSensitiveFields and decryptSensitiveFields", () => {
+    it("should encrypt specified sensitive fields", () => {
       const obj = {
-        name: 'John',
-        password: 'secret123',
-        email: 'john@example.com',
+        name: "John",
+        password: "secret123",
+        email: "john@example.com",
       };
 
-      const encrypted = encryptSensitiveFields(obj, ['password']);
+      const encrypted = encryptSensitiveFields(obj, ["password"]);
 
-      expect(encrypted.name).toBe('John');
-      expect(encrypted.email).toBe('john@example.com');
+      expect(encrypted.name).toBe("John");
+      expect(encrypted.email).toBe("john@example.com");
       expect(encrypted.password).toBeUndefined();
       expect(encrypted.password_encrypted).toBeDefined();
-      expect(encrypted.password_encrypted).not.toBe('secret123');
+      expect(encrypted.password_encrypted).not.toBe("secret123");
     });
 
-    it('should decrypt sensitive fields', () => {
+    it("should decrypt sensitive fields", () => {
       const obj = {
-        name: 'John',
-        password: 'secret123',
-        email: 'john@example.com',
+        name: "John",
+        password: "secret123",
+        email: "john@example.com",
       };
 
-      const encrypted = encryptSensitiveFields(obj, ['password']);
-      const decrypted = decryptSensitiveFields(encrypted, ['password']);
+      const encrypted = encryptSensitiveFields(obj, ["password"]);
+      const decrypted = decryptSensitiveFields(encrypted, ["password"]);
 
-      expect(decrypted.password).toBe('secret123');
-      expect(decrypted.name).toBe('John');
-      expect(decrypted.email).toBe('john@example.com');
+      expect(decrypted.password).toBe("secret123");
+      expect(decrypted.name).toBe("John");
+      expect(decrypted.email).toBe("john@example.com");
     });
 
-    it('should handle multiple sensitive fields', () => {
+    it("should handle multiple sensitive fields", () => {
       const obj = {
-        name: 'John',
-        password: 'secret123',
-        apiKey: 'key456',
-        email: 'john@example.com',
+        name: "John",
+        password: "secret123",
+        apiKey: "key456",
+        email: "john@example.com",
       };
 
-      const encrypted = encryptSensitiveFields(obj, ['password', 'apiKey']);
+      const encrypted = encryptSensitiveFields(obj, ["password", "apiKey"]);
 
       expect(encrypted.password).toBeUndefined();
       expect(encrypted.apiKey).toBeUndefined();
@@ -216,27 +216,27 @@ describe('Encryption Module', () => {
       expect(encrypted.apiKey_encrypted).toBeDefined();
     });
 
-    it('should handle missing sensitive fields', () => {
-      const obj = { name: 'John', email: 'john@example.com' };
-      const encrypted = encryptSensitiveFields(obj, ['password']);
+    it("should handle missing sensitive fields", () => {
+      const obj = { name: "John", email: "john@example.com" };
+      const encrypted = encryptSensitiveFields(obj, ["password"]);
 
-      expect(encrypted.name).toBe('John');
+      expect(encrypted.name).toBe("John");
       expect(encrypted.password_encrypted).toBeUndefined();
     });
   });
 
-  describe('encryptLogEntry', () => {
-    it('should hash sensitive fields in log entries', () => {
+  describe("encryptLogEntry", () => {
+    it("should hash sensitive fields in log entries", () => {
       const entry = {
-        action: 'login',
-        password: 'secret123',
-        token: 'abc123',
+        action: "login",
+        password: "secret123",
+        token: "abc123",
         timestamp: Date.now(),
       };
 
       const encrypted = encryptLogEntry(entry);
 
-      expect(encrypted.action).toBe('login');
+      expect(encrypted.action).toBe("login");
       expect(encrypted.timestamp).toBe(entry.timestamp);
       expect(encrypted.password).toBeUndefined();
       expect(encrypted.token).toBeUndefined();
@@ -244,25 +244,25 @@ describe('Encryption Module', () => {
       expect(encrypted.token_hash).toBeDefined();
     });
 
-    it('should not hash non-sensitive fields', () => {
+    it("should not hash non-sensitive fields", () => {
       const entry = {
-        action: 'login',
-        userId: '123',
+        action: "login",
+        userId: "123",
         timestamp: Date.now(),
       };
 
       const encrypted = encryptLogEntry(entry);
 
-      expect(encrypted.action).toBe('login');
-      expect(encrypted.userId).toBe('123');
+      expect(encrypted.action).toBe("login");
+      expect(encrypted.userId).toBe("123");
     });
   });
 
-  describe('encryptBackupData and decryptBackupData', () => {
-    it('should encrypt and decrypt backup data', () => {
+  describe("encryptBackupData and decryptBackupData", () => {
+    it("should encrypt and decrypt backup data", () => {
       const data = {
-        transactions: [{ id: '1', amount: 100 }],
-        user: { name: 'John' },
+        transactions: [{ id: "1", amount: 100 }],
+        user: { name: "John" },
       };
 
       const encrypted = encryptBackupData(data);
@@ -271,8 +271,8 @@ describe('Encryption Module', () => {
       expect(decrypted).toEqual(data);
     });
 
-    it('should include version and timestamp in backup', () => {
-      const data = { test: 'data' };
+    it("should include version and timestamp in backup", () => {
+      const data = { test: "data" };
       const encrypted = encryptBackupData(data);
       const backup = JSON.parse(encrypted);
 
@@ -282,15 +282,15 @@ describe('Encryption Module', () => {
       expect(backup.checksum).toBeDefined();
     });
 
-    it('should verify backup integrity', () => {
-      const data = { test: 'data' };
+    it("should verify backup integrity", () => {
+      const data = { test: "data" };
       const encrypted = encryptBackupData(data);
       const backup = JSON.parse(encrypted);
 
       // Tamper with encrypted data
-      backup.encrypted = Buffer.from(backup.encrypted, 'base64')
+      backup.encrypted = Buffer.from(backup.encrypted, "base64")
         .slice(0, -1)
-        .toString('base64');
+        .toString("base64");
 
       const tampered = JSON.stringify(backup);
       const decrypted = decryptBackupData(tampered);
@@ -298,17 +298,17 @@ describe('Encryption Module', () => {
       expect(decrypted).toBeNull();
     });
 
-    it('should reject invalid backup format', () => {
-      const decrypted = decryptBackupData('invalid json');
+    it("should reject invalid backup format", () => {
+      const decrypted = decryptBackupData("invalid json");
       expect(decrypted).toBeNull();
     });
 
-    it('should reject unsupported backup version', () => {
+    it("should reject unsupported backup version", () => {
       const backup = JSON.stringify({
         version: 2,
         timestamp: Date.now(),
-        encrypted: 'data',
-        checksum: 'hash',
+        encrypted: "data",
+        checksum: "hash",
       });
 
       const decrypted = decryptBackupData(backup);
@@ -316,7 +316,7 @@ describe('Encryption Module', () => {
     });
   });
 
-  describe('encryptLocalStorageData and decryptLocalStorageData', () => {
+  describe("encryptLocalStorageData and decryptLocalStorageData", () => {
     beforeEach(() => {
       // Mock localStorage
       const store: Record<string, string> = {};
@@ -336,9 +336,9 @@ describe('Encryption Module', () => {
       } as Storage;
     });
 
-    it('should encrypt and decrypt localStorage data', () => {
-      const key = 'testKey';
-      const value = { name: 'John', age: 30 };
+    it("should encrypt and decrypt localStorage data", () => {
+      const key = "testKey";
+      const value = { name: "John", age: 30 };
 
       encryptLocalStorageData(key, value);
       const decrypted = decryptLocalStorageData(key);
@@ -346,24 +346,24 @@ describe('Encryption Module', () => {
       expect(decrypted).toEqual(value);
     });
 
-    it('should remove unencrypted version after encryption', () => {
-      const key = 'testKey';
-      localStorage.setItem(key, 'unencrypted');
+    it("should remove unencrypted version after encryption", () => {
+      const key = "testKey";
+      localStorage.setItem(key, "unencrypted");
 
-      encryptLocalStorageData(key, 'encrypted');
+      encryptLocalStorageData(key, "encrypted");
 
       expect(localStorage.getItem(key)).toBeNull();
       expect(localStorage.getItem(`encrypted_${key}`)).toBeDefined();
     });
 
-    it('should return null for non-existent keys', () => {
-      const decrypted = decryptLocalStorageData('nonExistent');
+    it("should return null for non-existent keys", () => {
+      const decrypted = decryptLocalStorageData("nonExistent");
       expect(decrypted).toBeNull();
     });
 
-    it('should handle string values', () => {
-      const key = 'testKey';
-      const value = 'test string';
+    it("should handle string values", () => {
+      const key = "testKey";
+      const value = "test string";
 
       encryptLocalStorageData(key, value);
       const decrypted = decryptLocalStorageData(key);
@@ -371,9 +371,9 @@ describe('Encryption Module', () => {
       expect(decrypted).toBe(value);
     });
 
-    it('should fallback to unencrypted data for migration', () => {
-      const key = 'testKey';
-      const value = { name: 'John' };
+    it("should fallback to unencrypted data for migration", () => {
+      const key = "testKey";
+      const value = { name: "John" };
       localStorage.setItem(key, JSON.stringify(value));
 
       const decrypted = decryptLocalStorageData(key);

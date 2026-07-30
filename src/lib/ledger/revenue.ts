@@ -1,5 +1,5 @@
-import { pool } from '@/lib/db/client';
-import type { RevenueSummary } from './types';
+import { pool } from "@/lib/db/client";
+import type { RevenueSummary } from "./types";
 
 export async function getRevenueSummary(
   startDate?: number,
@@ -18,13 +18,14 @@ export async function getRevenueSummary(
     params.push(endDate);
   }
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const where =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const totalResult = await pool.query(
     `SELECT
        COALESCE(SUM(CASE WHEN entry_type = 'credit' THEN amount::numeric ELSE 0 END), 0) AS total_revenue
      FROM ledger_entries ${where}`,
-    params
+    params,
   );
 
   const byCurrencyResult = await pool.query(
@@ -32,7 +33,7 @@ export async function getRevenueSummary(
        COALESCE(SUM(CASE WHEN entry_type = 'credit' THEN amount::numeric ELSE 0 END), 0) AS total
      FROM ledger_entries ${where}
      GROUP BY currency`,
-    params
+    params,
   );
 
   const byPeriodResult = await pool.query(
@@ -44,7 +45,7 @@ export async function getRevenueSummary(
      GROUP BY period
      ORDER BY period DESC
      LIMIT 24`,
-    params
+    params,
   );
 
   const feeBreakdownResult = await pool.query(
@@ -53,18 +54,18 @@ export async function getRevenueSummary(
        COALESCE(SUM(CASE WHEN entry_type = 'credit' THEN amount::numeric ELSE 0 END), 0) AS total
      FROM ledger_entries ${where}
      GROUP BY account_id`,
-    params
+    params,
   );
 
   const breakdown: Record<string, string> = {};
-  let totalPayoutFees = '0';
-  let totalBridgeFees = '0';
+  let totalPayoutFees = "0";
+  let totalBridgeFees = "0";
   for (const row of feeBreakdownResult.rows) {
     const accountId = row.account_id as string;
     const total = row.total.toString();
-    if (accountId === 'revenue_fees') breakdown.fees = total;
-    if (accountId === 'revenue_bridge_fees') totalBridgeFees = total;
-    if (accountId === 'revenue_payout_fees') totalPayoutFees = total;
+    if (accountId === "revenue_fees") breakdown.fees = total;
+    if (accountId === "revenue_bridge_fees") totalBridgeFees = total;
+    if (accountId === "revenue_payout_fees") totalPayoutFees = total;
   }
 
   const byCurrency: Record<string, string> = {};
@@ -74,11 +75,11 @@ export async function getRevenueSummary(
 
   return {
     totalRevenue: totalResult.rows[0].total_revenue.toString(),
-    totalFees: breakdown.fees ?? '0',
+    totalFees: breakdown.fees ?? "0",
     totalPayoutFees,
     totalBridgeFees,
     byCurrency,
-    byPeriod: byPeriodResult.rows.map(r => ({
+    byPeriod: byPeriodResult.rows.map((r) => ({
       period: r.period as string,
       amount: r.amount.toString(),
       count: Number(r.count),

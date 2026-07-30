@@ -48,21 +48,23 @@ export const viewport: Viewport = {
 
 const themeInitScript = `(function(){try{var s=localStorage.getItem('theme');var t=s;if(!t){if(window.matchMedia('(prefers-contrast: more)').matches){t='high-contrast';}else if(window.matchMedia('(prefers-color-scheme: dark)').matches){t='dark';}else{t='light';}}document.documentElement.setAttribute('data-theme',t);document.documentElement.style.colorScheme=t==='light'?'light':'dark';}catch(e){}})();`;
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className={`${ibmPlexMono.variable} ${spaceGrotesk.variable} font-ibm-plex-mono`}>
+      <body
+        className={`${ibmPlexMono.variable} ${spaceGrotesk.variable} font-ibm-plex-mono`}
+      >
         <I18nProvider>
           <HtmlDirSync />
           <ThemeProvider>
             <ToastProvider>
               <OfflineBanner />
-              <ErrorBoundary>
-                {children}
-              </ErrorBoundary>
+              <ErrorBoundary>{children}</ErrorBoundary>
               <ToastContainer />
               <ServiceWorkerRegistration />
               <PWAInstallPrompt />

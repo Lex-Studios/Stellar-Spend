@@ -1,23 +1,23 @@
-import { eventBus } from '@/lib/events/bus';
-import { getSubscriptionsByEvent } from './subscription-store';
-import { enqueue, attempt, markDelivered, markFailed } from './dispatcher';
-import { logDelivery } from './delivery-log';
-import { subscriptionRateLimiter } from './subscription-rate-limiter';
-import { scheduleNext, hasRemainingAttempts } from './retry-scheduler';
-import { updateRecord } from './delivery-store';
-import type { WebhookEvent } from './subscription-types';
-import { logger } from '@/lib/logger';
+import { eventBus } from "@/lib/events/bus";
+import { getSubscriptionsByEvent } from "./subscription-store";
+import { enqueue, attempt, markDelivered, markFailed } from "./dispatcher";
+import { logDelivery } from "./delivery-log";
+import { subscriptionRateLimiter } from "./subscription-rate-limiter";
+import { scheduleNext, hasRemainingAttempts } from "./retry-scheduler";
+import { updateRecord } from "./delivery-store";
+import type { WebhookEvent } from "./subscription-types";
+import { logger } from "@/lib/logger";
 
 export function subscribeEventBus() {
   const events: WebhookEvent[] = [
-    'transaction.created',
-    'transaction.completed',
-    'transaction.failed',
-    'payout.initiated',
-    'payout.completed',
-    'payout.failed',
-    'bridge.initiated',
-    'bridge.completed',
+    "transaction.created",
+    "transaction.completed",
+    "transaction.failed",
+    "payout.initiated",
+    "payout.completed",
+    "payout.failed",
+    "bridge.initiated",
+    "bridge.completed",
   ];
 
   for (const event of events) {
@@ -26,12 +26,19 @@ export function subscribeEventBus() {
         const subscriptions = await getSubscriptionsByEvent(event);
         if (subscriptions.length === 0) return;
 
-        const payloadBody = JSON.stringify({ event, data: eventData.data, timestamp: eventData.timestamp });
+        const payloadBody = JSON.stringify({
+          event,
+          data: eventData.data,
+          timestamp: eventData.timestamp,
+        });
 
         for (const sub of subscriptions) {
-          const rateCheck = await subscriptionRateLimiter.check(sub.id, sub.rateLimitMaxPerMinute);
+          const rateCheck = await subscriptionRateLimiter.check(
+            sub.id,
+            sub.rateLimitMaxPerMinute,
+          );
           if (!rateCheck.allowed) {
-            logger.warn('webhook.rate_limited', {
+            logger.warn("webhook.rate_limited", {
               subscriptionId: sub.id,
               event,
               endpointUrl: sub.endpointUrl,
@@ -40,8 +47,8 @@ export function subscribeEventBus() {
           }
 
           const record = await enqueue(
-            { headers: {}, body: payloadBody, source: 'event-bus' },
-            sub.endpointUrl
+            { headers: {}, body: payloadBody, source: "event-bus" },
+            sub.endpointUrl,
           );
 
           const result = await attempt(record, sub.signingSecret);
@@ -54,7 +61,7 @@ export function subscribeEventBus() {
             responseStatus: result.httpStatus ?? null,
             responseBody: null,
             durationMs: result.durationMs,
-            status: result.success ? 'delivered' : 'failed',
+            status: result.success ? "delivered" : "failed",
             attemptCount: 1,
           });
 
@@ -65,12 +72,13 @@ export function subscribeEventBus() {
           } else {
             const scheduled = await scheduleNext(record);
             await updateRecord(record.id, {
-              nextAttemptAt: scheduled.nextAttemptAt as unknown as string | null,
+              nextAttemptAt: scheduled.nextAttemptAt as unknown as
+                string | null,
             });
           }
         }
       } catch (err) {
-        logger.error('webhook.event_dispatch_error', {
+        logger.error("webhook.event_dispatch_error", {
           event,
           error: err instanceof Error ? err.message : String(err),
         });

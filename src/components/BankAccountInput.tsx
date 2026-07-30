@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { validateBankField, type BankFieldType, type ValidationResult } from "@/lib/bank-validation";
+import {
+  validateBankField,
+  type BankFieldType,
+  type ValidationResult,
+} from "@/lib/bank-validation";
 
 interface BankFieldProps {
   type: BankFieldType;
@@ -12,13 +16,35 @@ interface BankFieldProps {
   disabled?: boolean;
 }
 
-const DEFAULTS: Record<BankFieldType, { label: string; placeholder: string; maxLength: number }> = {
-  account: { label: "Account Number", placeholder: "e.g. 0123456789", maxLength: 20 },
-  routing: { label: "Routing Number (ABA)", placeholder: "9-digit ABA number", maxLength: 9 },
-  iban: { label: "IBAN", placeholder: "e.g. GB29NWBK60161331926819", maxLength: 34 },
+const DEFAULTS: Record<
+  BankFieldType,
+  { label: string; placeholder: string; maxLength: number }
+> = {
+  account: {
+    label: "Account Number",
+    placeholder: "e.g. 0123456789",
+    maxLength: 20,
+  },
+  routing: {
+    label: "Routing Number (ABA)",
+    placeholder: "9-digit ABA number",
+    maxLength: 9,
+  },
+  iban: {
+    label: "IBAN",
+    placeholder: "e.g. GB29NWBK60161331926819",
+    maxLength: 34,
+  },
 };
 
-export function BankField({ type, value, onChange, label, placeholder, disabled }: BankFieldProps) {
+export function BankField({
+  type,
+  value,
+  onChange,
+  label,
+  placeholder,
+  disabled,
+}: BankFieldProps) {
   const [touched, setTouched] = useState(false);
   const [result, setResult] = useState<ValidationResult>({ valid: true });
 
@@ -29,7 +55,7 @@ export function BankField({ type, value, onChange, label, placeholder, disabled 
       onChange(raw);
       if (touched) setResult(validateBankField(type, raw));
     },
-    [type, touched, onChange]
+    [type, touched, onChange],
   );
 
   const handleBlur = useCallback(() => {
@@ -43,8 +69,8 @@ export function BankField({ type, value, onChange, label, placeholder, disabled 
   const borderColor = showError
     ? "#ef4444"
     : showSuccess
-    ? "#22c55e"
-    : "var(--line)";
+      ? "#22c55e"
+      : "var(--line)";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -92,12 +118,18 @@ export function BankField({ type, value, onChange, label, placeholder, disabled 
           }}
         />
         {showSuccess && (
-          <span style={{ color: "#22c55e", fontSize: 14, flexShrink: 0 }} aria-hidden>
+          <span
+            style={{ color: "#22c55e", fontSize: 14, flexShrink: 0 }}
+            aria-hidden
+          >
             ✓
           </span>
         )}
         {showError && (
-          <span style={{ color: "#ef4444", fontSize: 14, flexShrink: 0 }} aria-hidden>
+          <span
+            style={{ color: "#ef4444", fontSize: 14, flexShrink: 0 }}
+            aria-hidden
+          >
             ✕
           </span>
         )}
@@ -154,7 +186,13 @@ export function BankAccountInput({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {/* Mode tabs */}
-      <div style={{ display: "flex", gap: 0, borderBottom: "1px solid var(--line)" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 0,
+          borderBottom: "1px solid var(--line)",
+        }}
+      >
         {(["local", "us", "iban"] as BankMode[]).map((m) => (
           <button
             key={m}
@@ -163,7 +201,10 @@ export function BankAccountInput({
               fontSize: 11,
               padding: "6px 14px",
               border: "none",
-              borderBottom: mode === m ? "2px solid var(--accent)" : "2px solid transparent",
+              borderBottom:
+                mode === m
+                  ? "2px solid var(--accent)"
+                  : "2px solid transparent",
               color: mode === m ? "var(--accent)" : "var(--muted)",
               background: "none",
               cursor: "pointer",

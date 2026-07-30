@@ -51,18 +51,25 @@ function WalletButton({
   const label = isConnecting
     ? "CONNECTING..."
     : isConnected && walletAddress
-    ? truncateAddress(walletAddress)
-    : "CONNECT WALLET";
+      ? truncateAddress(walletAddress)
+      : "CONNECT WALLET";
 
   const disabled = isConnecting;
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {isConnected && walletType && (
-        <span className="text-xs text-slate-500 tracking-widest hidden sm:inline">{walletType.toUpperCase()}</span>
+        <span className="text-xs text-slate-500 tracking-widest hidden sm:inline">
+          {walletType.toUpperCase()}
+        </span>
       )}
       {isConnected && walletAddress && (
-        <CopyButton text={walletAddress} label="" className="text-xs" keyboardShortcut="w" />
+        <CopyButton
+          text={walletAddress}
+          label=""
+          className="text-xs"
+          keyboardShortcut="w"
+        />
       )}
       <button
         onClick={isConnected ? onDisconnect : onOpenModal}
@@ -73,7 +80,7 @@ function WalletButton({
           "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a962] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]",
           "border-[#c9a962] bg-[#0a0a0a] text-[#c9a962]",
           !disabled && "hover:bg-[#c9a962] hover:text-[#0a0a0a]",
-          disabled && "opacity-60 cursor-not-allowed"
+          disabled && "opacity-60 cursor-not-allowed",
         )}
       >
         {label}
@@ -99,10 +106,14 @@ export function Header({
 }: HeaderProps) {
   const { rate, flash } = useFxRate();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [connectingWallet, setConnectingWallet] = useState<WalletType | null>(null);
-  
+  const [connectingWallet, setConnectingWallet] = useState<WalletType | null>(
+    null,
+  );
+
   // Load notifications
-  const notificationCenter = useNotificationCenter(isConnected ? walletAddress || null : null);
+  const notificationCenter = useNotificationCenter(
+    isConnected ? walletAddress || null : null,
+  );
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -133,7 +144,10 @@ export function Header({
 
   return (
     <>
-      <header className="w-full px-6 py-5 flex items-start justify-between gap-6 max-[720px]:flex-col max-[720px]:items-start" role="banner">
+      <header
+        className="w-full px-6 py-5 flex items-start justify-between gap-6 max-[720px]:flex-col max-[720px]:items-start"
+        role="banner"
+      >
         {/* Left: title + subtitle + FX chip */}
         <div className="flex flex-col gap-1">
           <h1
@@ -142,13 +156,15 @@ export function Header({
           >
             STELLAR-SPEND
           </h1>
-          <p className="text-xs text-[#777777] tracking-widest uppercase">{subtitle}</p>
+          <p className="text-xs text-[#777777] tracking-widest uppercase">
+            {subtitle}
+          </p>
           <span
             aria-live="polite"
             aria-label="Live FX rate"
             className={cn(
               "mt-1 inline-block self-start px-2 py-0.5 text-[10px] tracking-widest uppercase border border-[#c9a962]/40 text-[#c9a962] transition-colors duration-300",
-              flash && "bg-[#c9a962]/20"
+              flash && "bg-[#c9a962]/20",
             )}
           >
             {rate != null
@@ -166,7 +182,7 @@ export function Header({
               aria-label="Open help"
               className={cn(
                 "p-2 text-[#777777] hover:text-[#c9a962] transition-colors",
-                "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]"
+                "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
               )}
               title="Help & Documentation (Shift + ?)"
             >
@@ -209,7 +225,9 @@ export function Header({
           {isConnected && (
             <div className="flex flex-col items-end gap-0.5 max-[720px]:items-start">
               {isBalanceLoading ? (
-                <span className="text-xs text-[#777777] tracking-widest">loading...</span>
+                <span className="text-xs text-[#777777] tracking-widest">
+                  loading...
+                </span>
               ) : (
                 <>
                   <span className="text-xs text-[#c9a962] tracking-wider">

@@ -39,7 +39,11 @@ export function QuoteDisplaySkeleton() {
         {/* Payout total */}
         <div className="flex items-end justify-between gap-4">
           <Skeleton width={80} height={12} aria-label="Loading total label…" />
-          <Skeleton width={120} height={24} aria-label="Loading payout total…" />
+          <Skeleton
+            width={120}
+            height={24}
+            aria-label="Loading payout total…"
+          />
         </div>
       </div>
     </div>

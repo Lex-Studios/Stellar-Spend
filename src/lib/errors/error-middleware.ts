@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { ApplicationError, isApplicationError } from './custom-errors';
-import { ErrorLogger } from './error-logger';
+import { NextRequest, NextResponse } from "next/server";
+import { ApplicationError, isApplicationError } from "./custom-errors";
+import { ErrorLogger } from "./error-logger";
 
 export interface ErrorMiddlewareOptions {
   includeStackTrace?: boolean;
@@ -12,7 +12,7 @@ export function createErrorMiddleware(options: ErrorMiddlewareOptions = {}) {
 
   return async (
     request: NextRequest,
-    handler: (req: NextRequest) => Promise<NextResponse>
+    handler: (req: NextRequest) => Promise<NextResponse>,
   ): Promise<NextResponse> => {
     try {
       return await handler(request);
@@ -20,9 +20,11 @@ export function createErrorMiddleware(options: ErrorMiddlewareOptions = {}) {
       const context = {
         endpoint: request.nextUrl.pathname,
         method: request.method,
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
-        userAgent: request.headers.get('user-agent') || undefined,
-        requestId: request.headers.get('x-request-id') || undefined,
+        ipAddress:
+          request.headers.get("x-forwarded-for") ||
+          request.headers.get("x-real-ip"),
+        userAgent: request.headers.get("user-agent") || undefined,
+        requestId: request.headers.get("x-request-id") || undefined,
       };
 
       if (logErrors) {
@@ -34,7 +36,10 @@ export function createErrorMiddleware(options: ErrorMiddlewareOptions = {}) {
   };
 }
 
-export function formatErrorResponse(error: unknown, includeStackTrace: boolean = false): NextResponse {
+export function formatErrorResponse(
+  error: unknown,
+  includeStackTrace: boolean = false,
+): NextResponse {
   if (isApplicationError(error)) {
     const response: Record<string, unknown> = {
       error: error.code,
@@ -54,8 +59,8 @@ export function formatErrorResponse(error: unknown, includeStackTrace: boolean =
 
   if (error instanceof Error) {
     const response: Record<string, unknown> = {
-      error: 'INTERNAL_SERVER_ERROR',
-      message: includeStackTrace ? error.message : 'Internal server error',
+      error: "INTERNAL_SERVER_ERROR",
+      message: includeStackTrace ? error.message : "Internal server error",
     };
 
     if (includeStackTrace) {
@@ -67,10 +72,10 @@ export function formatErrorResponse(error: unknown, includeStackTrace: boolean =
 
   return NextResponse.json(
     {
-      error: 'INTERNAL_SERVER_ERROR',
-      message: 'An unexpected error occurred',
+      error: "INTERNAL_SERVER_ERROR",
+      message: "An unexpected error occurred",
     },
-    { status: 500 }
+    { status: 500 },
   );
 }
 
@@ -79,7 +84,7 @@ export function formatErrorResponse(error: unknown, includeStackTrace: boolean =
  */
 export function withErrorHandling(
   handler: (req: NextRequest) => Promise<NextResponse>,
-  options: ErrorMiddlewareOptions = {}
+  options: ErrorMiddlewareOptions = {},
 ) {
   return async (req: NextRequest): Promise<NextResponse> => {
     const middleware = createErrorMiddleware(options);

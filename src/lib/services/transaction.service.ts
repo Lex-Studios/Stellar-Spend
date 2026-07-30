@@ -1,5 +1,5 @@
-import { dal } from '@/lib/db/dal';
-import type { Transaction } from '@/lib/transaction-storage';
+import { dal } from "@/lib/db/dal";
+import type { Transaction } from "@/lib/transaction-storage";
 
 export interface TransactionFilter {
   status?: string;
@@ -13,14 +13,16 @@ export interface TransactionFilter {
 export class TransactionService {
   async getTransaction(id: string): Promise<Transaction | null> {
     if (!id) {
-      throw new Error('Transaction ID is required');
+      throw new Error("Transaction ID is required");
     }
     return dal.getById(id);
   }
 
-  async getTransactionByPayoutOrderId(orderId: string): Promise<Transaction | null> {
+  async getTransactionByPayoutOrderId(
+    orderId: string,
+  ): Promise<Transaction | null> {
     if (!orderId) {
-      throw new Error('Order ID is required');
+      throw new Error("Order ID is required");
     }
     return dal.getByPayoutOrderId(orderId);
   }
@@ -34,13 +36,16 @@ export class TransactionService {
     return [];
   }
 
-  async updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction | null> {
+  async updateTransaction(
+    id: string,
+    updates: Partial<Transaction>,
+  ): Promise<Transaction | null> {
     if (!id) {
-      throw new Error('Transaction ID is required');
+      throw new Error("Transaction ID is required");
     }
 
     if (!updates || Object.keys(updates).length === 0) {
-      throw new Error('No updates provided');
+      throw new Error("No updates provided");
     }
 
     await dal.update(id, updates);
@@ -49,7 +54,7 @@ export class TransactionService {
 
   async deleteTransaction(id: string): Promise<boolean> {
     if (!id) {
-      throw new Error('Transaction ID is required');
+      throw new Error("Transaction ID is required");
     }
 
     // Delete logic would go here
@@ -69,7 +74,7 @@ export class TransactionService {
       completed: 0,
       failed: 0,
       pending: 0,
-      totalAmount: '0',
+      totalAmount: "0",
     };
   }
 }

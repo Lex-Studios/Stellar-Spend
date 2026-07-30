@@ -23,7 +23,9 @@ describe("Skeleton", () => {
 
   it("uses custom aria-label when provided", () => {
     render(<Skeleton aria-label="Loading balance…" />);
-    expect(screen.getByRole("status", { name: "Loading balance…" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "Loading balance…" }),
+    ).toBeInTheDocument();
   });
 
   it("has pointer-events: none so it does not intercept clicks", () => {

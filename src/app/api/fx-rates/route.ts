@@ -16,29 +16,44 @@ export async function GET() {
   try {
     const results = await Promise.allSettled(
       CURRENCIES.map((c) =>
-        fetch(`${PAYCREST_BASE}/${c}?network=base`, { next: { revalidate: 30 } })
+        fetch(`${PAYCREST_BASE}/${c}?network=base`, {
+          next: { revalidate: 30 },
+        })
           .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-          .then((data) => ({ currency: c, rate: parseFloat(data.rate ?? "0") }))
-      )
+          .then((data) => ({
+            currency: c,
+            rate: parseFloat(data.rate ?? "0"),
+          })),
+      ),
     );
 
     const rates: FxRate[] = results
       .filter(
         (r): r is PromiseFulfilledResult<FxRate> =>
-          r.status === "fulfilled" && !isNaN(r.value.rate) && r.value.rate > 0
+          r.status === "fulfilled" && !isNaN(r.value.rate) && r.value.rate > 0,
       )
       .map((r) => r.value);
 
     if (rates.length === 0) {
-      return NextResponse.json({ error: "No rates available" }, { status: 502 });
+      return NextResponse.json(
+        { error: "No rates available" },
+        { status: 502 },
+      );
     }
 
     return NextResponse.json(
       { rates },
-      { headers: { "Cache-Control": "public, max-age=30, stale-while-revalidate=60" } }
+      {
+        headers: {
+          "Cache-Control": "public, max-age=30, stale-while-revalidate=60",
+        },
+      },
     );
   } catch (error) {
     console.error("fx-rates error:", error);
-    return NextResponse.json({ error: "Failed to fetch rates" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch rates" },
+      { status: 500 },
+    );
   }
 }

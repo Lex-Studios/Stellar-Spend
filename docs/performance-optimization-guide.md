@@ -129,7 +129,11 @@ const rate = await getCachedRate("NGN", async () => {
 Invalidate cache when data changes:
 
 ```typescript
-import { invalidateRate, invalidateQuotes, invalidateCurrencies } from "@/lib/cache";
+import {
+  invalidateRate,
+  invalidateQuotes,
+  invalidateCurrencies,
+} from "@/lib/cache";
 
 // Invalidate specific cache
 await invalidateRate("NGN");

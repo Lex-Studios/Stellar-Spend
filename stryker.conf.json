@@ -29,11 +29,7 @@
   "timeoutMS": 5000,
   "timeoutFactor": 1.25,
   "maxConcurrentTestRunners": 4,
-  "plugins": [
-    "@stryker-mutator/typescript-checker"
-  ],
-  "checkers": [
-    "typescript"
-  ],
+  "plugins": ["@stryker-mutator/typescript-checker"],
+  "checkers": ["typescript"],
   "tsconfigFile": "tsconfig.json"
 }

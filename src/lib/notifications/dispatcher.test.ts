@@ -1,24 +1,28 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Transaction } from '@/lib/transaction-storage';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Transaction } from "@/lib/transaction-storage";
 
-vi.mock('@/lib/notifications/preferences-store', () => ({
+vi.mock("@/lib/notifications/preferences-store", () => ({
   getNotificationPreferences: vi.fn(),
   upsertNotificationPreferences: vi.fn(),
 }));
 
-vi.mock('@/lib/notifications/delivery-store', () => ({
+vi.mock("@/lib/notifications/delivery-store", () => ({
   createNotificationDelivery: vi.fn(),
   retryNotificationDelivery: vi.fn(),
   getNotificationDeliveriesForTransaction: vi.fn(),
 }));
 
-import { notifyTransactionStatusUpdate } from '@/lib/notifications/service';
-import type { ChannelAdapter, DeliveryResult, NotificationPreferences } from '@/lib/notifications/types';
-import { getNotificationPreferences } from '@/lib/notifications/preferences-store';
+import { notifyTransactionStatusUpdate } from "@/lib/notifications/service";
+import type {
+  ChannelAdapter,
+  DeliveryResult,
+  NotificationPreferences,
+} from "@/lib/notifications/types";
+import { getNotificationPreferences } from "@/lib/notifications/preferences-store";
 import {
   createNotificationDelivery,
   retryNotificationDelivery,
-} from '@/lib/notifications/delivery-store';
+} from "@/lib/notifications/delivery-store";
 
 const getPrefsMock = vi.mocked(getNotificationPreferences);
 const createDeliveryMock = vi.mocked(createNotificationDelivery);
@@ -27,26 +31,28 @@ const retryDeliveryMock = vi.mocked(retryNotificationDelivery);
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
 const baseTx: Transaction = {
-  id: 'tx_dispatch_1',
+  id: "tx_dispatch_1",
   timestamp: Date.now(),
-  userAddress: 'GUSER123',
-  amount: '50',
-  currency: 'NGN',
-  status: 'completed',
+  userAddress: "GUSER123",
+  amount: "50",
+  currency: "NGN",
+  status: "completed",
   beneficiary: {
-    institution: 'ACCESS',
-    accountIdentifier: '1234567890',
-    accountName: 'Jane Doe',
-    currency: 'NGN',
+    institution: "ACCESS",
+    accountIdentifier: "1234567890",
+    accountName: "Jane Doe",
+    currency: "NGN",
   },
 };
 
-function makePrefs(overrides: Partial<NotificationPreferences> = {}): NotificationPreferences {
+function makePrefs(
+  overrides: Partial<NotificationPreferences> = {},
+): NotificationPreferences {
   return {
-    userAddress: 'GUSER123',
-    email: 'user@example.com',
-    phoneNumber: '+2348000000000',
-    pushToken: 'push-token-abc',
+    userAddress: "GUSER123",
+    email: "user@example.com",
+    phoneNumber: "+2348000000000",
+    pushToken: "push-token-abc",
     emailEnabled: true,
     smsEnabled: false,
     pushEnabled: false,
@@ -59,19 +65,22 @@ function makePrefs(overrides: Partial<NotificationPreferences> = {}): Notificati
   };
 }
 
-function makeAdapter(channel: 'email' | 'sms' | 'push', result: DeliveryResult): ChannelAdapter {
+function makeAdapter(
+  channel: "email" | "sms" | "push",
+  result: DeliveryResult,
+): ChannelAdapter {
   return { channel, send: vi.fn().mockResolvedValue(result) };
 }
 
 function setupPrefs(prefs: NotificationPreferences) {
   getPrefsMock.mockResolvedValue(prefs);
-  createDeliveryMock.mockResolvedValue({ id: 'delivery-1' } as any);
+  createDeliveryMock.mockResolvedValue({ id: "delivery-1" } as any);
   retryDeliveryMock.mockResolvedValue(undefined);
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
-describe('dispatcher routing', () => {
+describe("dispatcher routing", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
@@ -81,15 +90,18 @@ describe('dispatcher routing', () => {
     vi.useRealTimers();
   });
 
-  it('fans out only to email when only emailEnabled is true', async () => {
+  it("fans out only to email when only emailEnabled is true", async () => {
     setupPrefs(makePrefs({ smsEnabled: false, pushEnabled: false }));
-    const emailAdapter = makeAdapter('email', { status: 'sent', providerMessageId: 'e1' });
-    const smsAdapter = makeAdapter('sms', { status: 'sent' });
-    const pushAdapter = makeAdapter('push', { status: 'sent' });
+    const emailAdapter = makeAdapter("email", {
+      status: "sent",
+      providerMessageId: "e1",
+    });
+    const smsAdapter = makeAdapter("sms", { status: "sent" });
+    const pushAdapter = makeAdapter("push", { status: "sent" });
 
     await notifyTransactionStatusUpdate(
-      { transaction: baseTx, previousStatus: 'pending', source: 'webhook' },
-      [emailAdapter, smsAdapter, pushAdapter]
+      { transaction: baseTx, previousStatus: "pending", source: "webhook" },
+      [emailAdapter, smsAdapter, pushAdapter],
     );
 
     expect(emailAdapter.send).toHaveBeenCalledOnce();
@@ -97,90 +109,92 @@ describe('dispatcher routing', () => {
     expect(pushAdapter.send).not.toHaveBeenCalled();
     expect(createDeliveryMock).toHaveBeenCalledOnce();
     expect(createDeliveryMock).toHaveBeenCalledWith(
-      expect.objectContaining({ channel: 'email', status: 'sent' })
+      expect.objectContaining({ channel: "email", status: "sent" }),
     );
   });
 
-  it('fans out to all three channels when all are enabled', async () => {
-    setupPrefs(makePrefs({ emailEnabled: true, smsEnabled: true, pushEnabled: true }));
+  it("fans out to all three channels when all are enabled", async () => {
+    setupPrefs(
+      makePrefs({ emailEnabled: true, smsEnabled: true, pushEnabled: true }),
+    );
     const adapters = [
-      makeAdapter('email', { status: 'sent' }),
-      makeAdapter('sms', { status: 'sent' }),
-      makeAdapter('push', { status: 'sent' }),
+      makeAdapter("email", { status: "sent" }),
+      makeAdapter("sms", { status: "sent" }),
+      makeAdapter("push", { status: "sent" }),
     ];
 
     await notifyTransactionStatusUpdate(
-      { transaction: baseTx, previousStatus: 'pending', source: 'webhook' },
-      adapters
+      { transaction: baseTx, previousStatus: "pending", source: "webhook" },
+      adapters,
     );
 
     for (const a of adapters) expect(a.send).toHaveBeenCalledOnce();
     expect(createDeliveryMock).toHaveBeenCalledTimes(3);
   });
 
-  it('honours per-event channelRouting override', async () => {
+  it("honours per-event channelRouting override", async () => {
     setupPrefs(
       makePrefs({
         emailEnabled: true,
         smsEnabled: true,
         pushEnabled: true,
-        channelRouting: { completed: ['push'] },
-      })
+        channelRouting: { completed: ["push"] },
+      }),
     );
-    const emailAdapter = makeAdapter('email', { status: 'sent' });
-    const pushAdapter = makeAdapter('push', { status: 'sent' });
+    const emailAdapter = makeAdapter("email", { status: "sent" });
+    const pushAdapter = makeAdapter("push", { status: "sent" });
 
     await notifyTransactionStatusUpdate(
-      { transaction: baseTx, previousStatus: 'pending', source: 'webhook' },
-      [emailAdapter, pushAdapter]
+      { transaction: baseTx, previousStatus: "pending", source: "webhook" },
+      [emailAdapter, pushAdapter],
     );
 
     expect(emailAdapter.send).not.toHaveBeenCalled();
     expect(pushAdapter.send).toHaveBeenCalledOnce();
   });
 
-  it('skips all channels when notifyOnCompleted is false', async () => {
+  it("skips all channels when notifyOnCompleted is false", async () => {
     setupPrefs(makePrefs({ notifyOnCompleted: false }));
-    const emailAdapter = makeAdapter('email', { status: 'sent' });
+    const emailAdapter = makeAdapter("email", { status: "sent" });
 
     await notifyTransactionStatusUpdate(
-      { transaction: baseTx, previousStatus: 'pending', source: 'webhook' },
-      [emailAdapter]
+      { transaction: baseTx, previousStatus: "pending", source: "webhook" },
+      [emailAdapter],
     );
 
     expect(emailAdapter.send).not.toHaveBeenCalled();
     expect(createDeliveryMock).not.toHaveBeenCalled();
   });
 
-  it('does nothing when the event is unchanged', async () => {
+  it("does nothing when the event is unchanged", async () => {
     setupPrefs(makePrefs());
-    const emailAdapter = makeAdapter('email', { status: 'sent' });
+    const emailAdapter = makeAdapter("email", { status: "sent" });
 
     await notifyTransactionStatusUpdate(
-      { transaction: baseTx, previousStatus: 'completed', source: 'webhook' },
-      [emailAdapter]
+      { transaction: baseTx, previousStatus: "completed", source: "webhook" },
+      [emailAdapter],
     );
 
     expect(emailAdapter.send).not.toHaveBeenCalled();
     expect(createDeliveryMock).not.toHaveBeenCalled();
   });
 
-  it('records a skipped delivery when adapter is missing for a routed channel', async () => {
-    setupPrefs(makePrefs({ channelRouting: { completed: ['sms'] } }));
+  it("records a skipped delivery when adapter is missing for a routed channel", async () => {
+    setupPrefs(makePrefs({ channelRouting: { completed: ["sms"] } }));
 
     await notifyTransactionStatusUpdate(
-      { transaction: baseTx, previousStatus: 'pending', source: 'webhook' },
-      [] // no adapters
+      { transaction: baseTx, previousStatus: "pending", source: "webhook" },
+      [], // no adapters
     );
 
     expect(createDeliveryMock).toHaveBeenCalledOnce();
     expect(createDeliveryMock).toHaveBeenCalledWith(
-      expect.objectContaining({ channel: 'sms', status: 'skipped' })
+      expect.objectContaining({ channel: "sms", status: "skipped" }),
     );
   });
 });
 
-describe('retry logic', () => {
+describe("retry logic", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
@@ -190,20 +204,20 @@ describe('retry logic', () => {
     vi.useRealTimers();
   });
 
-  it('retries a failed delivery and logs each attempt', async () => {
+  it("retries a failed delivery and logs each attempt", async () => {
     setupPrefs(makePrefs({ smsEnabled: false, pushEnabled: false }));
 
     const sendMock = vi
       .fn()
-      .mockResolvedValueOnce({ status: 'failed', errorMessage: 'timeout' })
-      .mockResolvedValueOnce({ status: 'failed', errorMessage: 'timeout' })
-      .mockResolvedValueOnce({ status: 'sent', providerMessageId: 'ok' });
+      .mockResolvedValueOnce({ status: "failed", errorMessage: "timeout" })
+      .mockResolvedValueOnce({ status: "failed", errorMessage: "timeout" })
+      .mockResolvedValueOnce({ status: "sent", providerMessageId: "ok" });
 
-    const emailAdapter: ChannelAdapter = { channel: 'email', send: sendMock };
+    const emailAdapter: ChannelAdapter = { channel: "email", send: sendMock };
 
     const dispatchPromise = notifyTransactionStatusUpdate(
-      { transaction: baseTx, previousStatus: 'pending', source: 'webhook' },
-      [emailAdapter]
+      { transaction: baseTx, previousStatus: "pending", source: "webhook" },
+      [emailAdapter],
     );
 
     await vi.runAllTimersAsync();
@@ -213,21 +227,23 @@ describe('retry logic', () => {
     expect(createDeliveryMock).toHaveBeenCalledOnce();
     expect(retryDeliveryMock).toHaveBeenCalledTimes(2);
     expect(retryDeliveryMock).toHaveBeenLastCalledWith(
-      'delivery-1',
-      expect.objectContaining({ status: 'sent' }),
-      3
+      "delivery-1",
+      expect.objectContaining({ status: "sent" }),
+      3,
     );
   });
 
-  it('stops retrying after MAX_ATTEMPTS and logs final failure', async () => {
+  it("stops retrying after MAX_ATTEMPTS and logs final failure", async () => {
     setupPrefs(makePrefs({ smsEnabled: false, pushEnabled: false }));
 
-    const sendMock = vi.fn().mockResolvedValue({ status: 'failed', errorMessage: 'always fails' });
-    const emailAdapter: ChannelAdapter = { channel: 'email', send: sendMock };
+    const sendMock = vi
+      .fn()
+      .mockResolvedValue({ status: "failed", errorMessage: "always fails" });
+    const emailAdapter: ChannelAdapter = { channel: "email", send: sendMock };
 
     const dispatchPromise = notifyTransactionStatusUpdate(
-      { transaction: baseTx, previousStatus: 'pending', source: 'webhook' },
-      [emailAdapter]
+      { transaction: baseTx, previousStatus: "pending", source: "webhook" },
+      [emailAdapter],
     );
 
     await vi.runAllTimersAsync();
@@ -236,14 +252,14 @@ describe('retry logic', () => {
     expect(sendMock).toHaveBeenCalledTimes(3); // MAX_ATTEMPTS = 3
     expect(retryDeliveryMock).toHaveBeenCalledTimes(2);
     expect(retryDeliveryMock).toHaveBeenLastCalledWith(
-      'delivery-1',
-      expect.objectContaining({ status: 'failed' }),
-      3
+      "delivery-1",
+      expect.objectContaining({ status: "failed" }),
+      3,
     );
   });
 });
 
-describe('localization', () => {
+describe("localization", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
@@ -253,14 +269,16 @@ describe('localization', () => {
     vi.useRealTimers();
   });
 
-  it('passes user locale to the template builder', async () => {
-    setupPrefs(makePrefs({ locale: 'fr', smsEnabled: false, pushEnabled: false }));
-    const sendMock = vi.fn().mockResolvedValue({ status: 'sent' });
-    const emailAdapter: ChannelAdapter = { channel: 'email', send: sendMock };
+  it("passes user locale to the template builder", async () => {
+    setupPrefs(
+      makePrefs({ locale: "fr", smsEnabled: false, pushEnabled: false }),
+    );
+    const sendMock = vi.fn().mockResolvedValue({ status: "sent" });
+    const emailAdapter: ChannelAdapter = { channel: "email", send: sendMock };
 
     const dispatchPromise = notifyTransactionStatusUpdate(
-      { transaction: baseTx, previousStatus: 'pending', source: 'webhook' },
-      [emailAdapter]
+      { transaction: baseTx, previousStatus: "pending", source: "webhook" },
+      [emailAdapter],
     );
 
     await vi.runAllTimersAsync();

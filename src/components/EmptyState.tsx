@@ -24,7 +24,7 @@ export function EmptyState({
     <div
       className={cn(
         "flex flex-col items-center justify-center py-12 px-4 text-center",
-        className
+        className,
       )}
       role="status"
       aria-label={title}
@@ -44,7 +44,7 @@ export function EmptyState({
           className={cn(
             "text-[10px] tracking-widest uppercase text-[#c9a962] border border-[#c9a962] px-4 py-2 min-h-[44px] flex items-center",
             "hover:bg-[#c9a962] hover:text-[#0a0a0a] transition-colors duration-150",
-            "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]"
+            "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
           )}
         >
           {action.label}

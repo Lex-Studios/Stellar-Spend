@@ -137,7 +137,7 @@ export function getRateLimitConfig(endpoint: string): RateLimitConfig | null {
 export function generateRateLimitKey(
   endpoint: string,
   identifier: string,
-  isAuthenticated: boolean
+  isAuthenticated: boolean,
 ): string {
   const prefix = isAuthenticated ? "auth" : "anon";
   return `ratelimit:${prefix}:${endpoint}:${identifier}`;
@@ -150,7 +150,7 @@ export async function checkRateLimit(
   store: RateLimitStore,
   endpoint: string,
   identifier: string,
-  isAuthenticated: boolean
+  isAuthenticated: boolean,
 ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
   const config = getRateLimitConfig(endpoint);
   if (!config) {

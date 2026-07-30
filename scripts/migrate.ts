@@ -13,14 +13,14 @@
  *   DATABASE_URL  PostgreSQL connection string
  */
 
-import fs from 'fs';
-import path from 'path';
-import { Client } from 'pg';
+import fs from "fs";
+import path from "path";
+import { Client } from "pg";
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
-const MIGRATIONS_DIR = path.resolve(__dirname, '../migrations');
-const MIGRATIONS_TABLE = 'schema_migrations';
+const MIGRATIONS_DIR = path.resolve(__dirname, "../migrations");
+const MIGRATIONS_TABLE = "schema_migrations";
 const MIGRATION_FILE_PATTERN = /^(\d{3})_.+\.sql$/;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ function loadMigrationFiles(dir: string): MigrationFile[] {
 
   const files = fs
     .readdirSync(dir)
-    .filter((f) => MIGRATION_FILE_PATTERN.test(f) && !f.endsWith('.down.sql'))
+    .filter((f) => MIGRATION_FILE_PATTERN.test(f) && !f.endsWith(".down.sql"))
     .sort();
 
   const seen = new Set<string>();
@@ -64,7 +64,7 @@ function loadMigrationFiles(dir: string): MigrationFile[] {
 
     migrations.push({
       version,
-      name: file.replace('.sql', ''),
+      name: file.replace(".sql", ""),
       filePath: path.join(dir, file),
     });
   }
@@ -77,7 +77,7 @@ function validateMigrations(migrations: MigrationFile[]): void {
   for (let i = 0; i < versions.length; i++) {
     if (versions[i] !== i + 1) {
       throw new Error(
-        `Migration sequence gap detected: expected ${String(i + 1).padStart(3, '0')}, got ${migrations[i].version}`
+        `Migration sequence gap detected: expected ${String(i + 1).padStart(3, "0")}, got ${migrations[i].version}`,
       );
     }
   }
@@ -98,21 +98,29 @@ async function ensureMigrationsTable(client: Client): Promise<void> {
 
 async function getAppliedVersions(client: Client): Promise<Set<string>> {
   const result = await client.query<{ version: string }>(
-    `SELECT version FROM ${MIGRATIONS_TABLE} ORDER BY version`
+    `SELECT version FROM ${MIGRATIONS_TABLE} ORDER BY version`,
   );
   return new Set(result.rows.map((r) => r.version));
 }
 
-async function recordMigration(client: Client, migration: MigrationFile): Promise<void> {
+async function recordMigration(
+  client: Client,
+  migration: MigrationFile,
+): Promise<void> {
   await client.query(
     `INSERT INTO ${MIGRATIONS_TABLE} (version, name, applied_at) VALUES ($1, $2, $3)
      ON CONFLICT (version) DO NOTHING`,
-    [migration.version, migration.name, Date.now()]
+    [migration.version, migration.name, Date.now()],
   );
 }
 
-async function removeMigrationRecord(client: Client, version: string): Promise<void> {
-  await client.query(`DELETE FROM ${MIGRATIONS_TABLE} WHERE version = $1`, [version]);
+async function removeMigrationRecord(
+  client: Client,
+  version: string,
+): Promise<void> {
+  await client.query(`DELETE FROM ${MIGRATIONS_TABLE} WHERE version = $1`, [
+    version,
+  ]);
 }
 
 // ── Commands ──────────────────────────────────────────────────────────────────
@@ -124,27 +132,29 @@ async function runMigrations(client: Client, dryRun: boolean): Promise<void> {
   const pending = migrations.filter((m) => !applied.has(m.version));
 
   if (pending.length === 0) {
-    log('No pending migrations.');
+    log("No pending migrations.");
     return;
   }
 
-  log(`${pending.length} pending migration(s)${dryRun ? ' (DRY RUN)' : ''}:`);
+  log(`${pending.length} pending migration(s)${dryRun ? " (DRY RUN)" : ""}:`);
 
   for (const migration of pending) {
     log(`  → ${migration.name}`);
 
     if (dryRun) continue;
 
-    const sql = fs.readFileSync(migration.filePath, 'utf8');
-    await client.query('BEGIN');
+    const sql = fs.readFileSync(migration.filePath, "utf8");
+    await client.query("BEGIN");
     try {
       await client.query(sql);
       await recordMigration(client, migration);
-      await client.query('COMMIT');
+      await client.query("COMMIT");
       log(`    ✓ applied`);
     } catch (e) {
-      await client.query('ROLLBACK');
-      throw new Error(`Migration ${migration.name} failed: ${(e as Error).message}`);
+      await client.query("ROLLBACK");
+      throw new Error(
+        `Migration ${migration.name} failed: ${(e as Error).message}`,
+      );
     }
   }
 
@@ -156,16 +166,18 @@ async function showStatus(client: Client): Promise<void> {
   const applied = await getAppliedVersions(client);
 
   log(`\nMigration status (${MIGRATIONS_DIR}):\n`);
-  log(`  ${'VERSION'.padEnd(8)} ${'STATUS'.padEnd(10)} NAME`);
-  log(`  ${'-'.repeat(60)}`);
+  log(`  ${"VERSION".padEnd(8)} ${"STATUS".padEnd(10)} NAME`);
+  log(`  ${"-".repeat(60)}`);
 
   for (const m of migrations) {
-    const status = applied.has(m.version) ? 'applied' : 'pending';
+    const status = applied.has(m.version) ? "applied" : "pending";
     log(`  ${m.version.padEnd(8)} ${status.padEnd(10)} ${m.name}`);
   }
 
   const pendingCount = migrations.filter((m) => !applied.has(m.version)).length;
-  log(`\n  ${migrations.length - pendingCount} applied, ${pendingCount} pending.`);
+  log(
+    `\n  ${migrations.length - pendingCount} applied, ${pendingCount} pending.`,
+  );
 }
 
 async function rollback(client: Client, steps: number): Promise<void> {
@@ -178,32 +190,36 @@ async function rollback(client: Client, steps: number): Promise<void> {
     .reverse();
 
   if (toRollback.length === 0) {
-    log('Nothing to roll back.');
+    log("Nothing to roll back.");
     return;
   }
 
   log(`Rolling back ${toRollback.length} migration(s):`);
 
   for (const migration of toRollback) {
-    const downPath = migration.filePath.replace('.sql', '.down.sql');
+    const downPath = migration.filePath.replace(".sql", ".down.sql");
 
     if (!fs.existsSync(downPath)) {
-      err(`No down migration found for ${migration.name} (expected ${downPath})`);
+      err(
+        `No down migration found for ${migration.name} (expected ${downPath})`,
+      );
       process.exit(1);
     }
 
-    const sql = fs.readFileSync(downPath, 'utf8');
+    const sql = fs.readFileSync(downPath, "utf8");
     log(`  ← ${migration.name}`);
 
-    await client.query('BEGIN');
+    await client.query("BEGIN");
     try {
       await client.query(sql);
       await removeMigrationRecord(client, migration.version);
-      await client.query('COMMIT');
+      await client.query("COMMIT");
       log(`    ✓ rolled back`);
     } catch (e) {
-      await client.query('ROLLBACK');
-      throw new Error(`Rollback of ${migration.name} failed: ${(e as Error).message}`);
+      await client.query("ROLLBACK");
+      throw new Error(
+        `Rollback of ${migration.name} failed: ${(e as Error).message}`,
+      );
     }
   }
 
@@ -217,17 +233,27 @@ async function notify(message: string): Promise<void> {
   if (!webhookUrl) return;
 
   try {
-    const { default: https } = await import('https');
+    const { default: https } = await import("https");
     const body = JSON.stringify({ text: message });
     const url = new URL(webhookUrl);
 
     await new Promise<void>((resolve, reject) => {
       const req = https.request(
-        { hostname: url.hostname, path: url.pathname + url.search, method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } },
-        (res) => { res.resume(); resolve(); }
+        {
+          hostname: url.hostname,
+          path: url.pathname + url.search,
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(body),
+          },
+        },
+        (res) => {
+          res.resume();
+          resolve();
+        },
       );
-      req.on('error', reject);
+      req.on("error", reject);
       req.write(body);
       req.end();
     });
@@ -240,15 +266,16 @@ async function notify(message: string): Promise<void> {
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  const dryRun = args.includes('--dry-run');
-  const statusOnly = args.includes('--status');
-  const validateOnly = args.includes('--validate');
-  const rollbackIdx = args.indexOf('--rollback');
-  const rollbackSteps = rollbackIdx !== -1 ? Number(args[rollbackIdx + 1] ?? '1') : 0;
+  const dryRun = args.includes("--dry-run");
+  const statusOnly = args.includes("--status");
+  const validateOnly = args.includes("--validate");
+  const rollbackIdx = args.indexOf("--rollback");
+  const rollbackSteps =
+    rollbackIdx !== -1 ? Number(args[rollbackIdx + 1] ?? "1") : 0;
 
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
-    err('DATABASE_URL environment variable is required.');
+    err("DATABASE_URL environment variable is required.");
     process.exit(1);
   }
 
@@ -272,14 +299,16 @@ async function main(): Promise<void> {
 
     if (rollbackSteps > 0) {
       await rollback(client, rollbackSteps);
-      await notify(`[stellar-spend] Rolled back ${rollbackSteps} migration(s).`);
+      await notify(
+        `[stellar-spend] Rolled back ${rollbackSteps} migration(s).`,
+      );
       return;
     }
 
     await runMigrations(client, dryRun);
 
     if (!dryRun) {
-      await notify('[stellar-spend] Database migrations applied successfully.');
+      await notify("[stellar-spend] Database migrations applied successfully.");
     }
   } finally {
     await client.end();

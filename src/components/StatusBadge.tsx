@@ -58,7 +58,8 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   "awaiting-signature": {
     label: "Awaiting Signature",
     tooltip: "Waiting for wallet approval.",
-    colorClasses: "bg-yellow-500/10 border border-yellow-500/40 text-yellow-400",
+    colorClasses:
+      "bg-yellow-500/10 border border-yellow-500/40 text-yellow-400",
     dotClasses: "bg-yellow-400",
     animate: true,
   },
@@ -99,7 +100,8 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   pending: {
     label: "Pending",
     tooltip: "Transaction is pending.",
-    colorClasses: "bg-yellow-500/10 border border-yellow-500/40 text-yellow-400",
+    colorClasses:
+      "bg-yellow-500/10 border border-yellow-500/40 text-yellow-400",
     dotClasses: "bg-yellow-400",
     animate: true,
   },
@@ -118,13 +120,15 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   reversed: {
     label: "Reversed",
     tooltip: "Transaction was fully reversed.",
-    colorClasses: "bg-purple-500/10 border border-purple-500/40 text-purple-400",
+    colorClasses:
+      "bg-purple-500/10 border border-purple-500/40 text-purple-400",
     dotClasses: "bg-purple-500",
   },
   partially_reversed: {
     label: "Partially Reversed",
     tooltip: "Part of the transaction was reversed.",
-    colorClasses: "bg-purple-500/10 border border-purple-500/40 text-purple-400",
+    colorClasses:
+      "bg-purple-500/10 border border-purple-500/40 text-purple-400",
     dotClasses: "bg-purple-500",
   },
 };
@@ -147,7 +151,11 @@ export interface StatusBadgeProps {
   className?: string;
 }
 
-export function StatusBadge({ status, showIcon = true, className }: StatusBadgeProps) {
+export function StatusBadge({
+  status,
+  showIcon = true,
+  className,
+}: StatusBadgeProps) {
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const config = STATUS_CONFIG[status] ?? FALLBACK_CONFIG;
 
@@ -168,7 +176,7 @@ export function StatusBadge({ status, showIcon = true, className }: StatusBadgeP
           "cursor-default select-none rounded-sm",
           "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
           config.colorClasses,
-          className
+          className,
         )}
       >
         {showIcon && (
@@ -177,7 +185,7 @@ export function StatusBadge({ status, showIcon = true, className }: StatusBadgeP
             className={cn(
               "inline-block h-1.5 w-1.5 rounded-full flex-shrink-0",
               config.dotClasses,
-              config.animate && "animate-pulse"
+              config.animate && "animate-pulse",
             )}
           />
         )}
@@ -191,7 +199,7 @@ export function StatusBadge({ status, showIcon = true, className }: StatusBadgeP
           className={cn(
             "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10",
             "px-2.5 py-1.5 text-[10px] text-white bg-[#1a1a1a] border border-[#333333]",
-            "whitespace-nowrap pointer-events-none shadow-lg"
+            "whitespace-nowrap pointer-events-none shadow-lg",
           )}
         >
           {config.tooltip}

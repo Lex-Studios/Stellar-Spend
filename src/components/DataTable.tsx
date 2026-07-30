@@ -61,8 +61,10 @@ const THEME = {
     cellText: "text-white",
     card: "border-[#222222] bg-[#111111]",
     cardLabel: "text-[#777777]",
-    accent: "text-[#c9a962] border-[#c9a962] hover:bg-[#c9a962] hover:text-[#0a0a0a] focus-visible:ring-[#c9a962]",
-    pageBtn: "border-[#333333] hover:border-[#c9a962] hover:text-[#c9a962] focus-visible:ring-[#c9a962]",
+    accent:
+      "text-[#c9a962] border-[#c9a962] hover:bg-[#c9a962] hover:text-[#0a0a0a] focus-visible:ring-[#c9a962]",
+    pageBtn:
+      "border-[#333333] hover:border-[#c9a962] hover:text-[#c9a962] focus-visible:ring-[#c9a962]",
     pageText: "text-[#777777]",
     menu: "border-[#333333] bg-[#111111]",
     menuLabel: "text-[#aaaaaa] hover:text-white",
@@ -77,11 +79,14 @@ const THEME = {
     cellText: "text-gray-900 dark:text-gray-100",
     card: "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900",
     cardLabel: "text-gray-500",
-    accent: "text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white focus-visible:ring-blue-400",
-    pageBtn: "border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:text-blue-600 focus-visible:ring-blue-400",
+    accent:
+      "text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white focus-visible:ring-blue-400",
+    pageBtn:
+      "border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:text-blue-600 focus-visible:ring-blue-400",
     pageText: "text-gray-500",
     menu: "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900",
-    menuLabel: "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white",
+    menuLabel:
+      "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white",
   },
 } as const;
 
@@ -109,16 +114,19 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   const theme = THEME[variant];
   const menuId = useId();
-  const [sort, setSort] = useState<{ key: string; direction: SortDirection } | null>(null);
+  const [sort, setSort] = useState<{
+    key: string;
+    direction: SortDirection;
+  } | null>(null);
   const [page, setPage] = useState(0);
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(
-    () => new Set(columns.filter((c) => c.hiddenByDefault).map((c) => c.key))
+    () => new Set(columns.filter((c) => c.hiddenByDefault).map((c) => c.key)),
   );
   const [showColumnMenu, setShowColumnMenu] = useState(false);
 
   const visibleColumns = useMemo(
     () => columns.filter((c) => !hiddenColumns.has(c.key)),
-    [columns, hiddenColumns]
+    [columns, hiddenColumns],
   );
 
   const sortedRows = useMemo(() => {
@@ -137,10 +145,15 @@ export function DataTable<T>({
     return sorted;
   }, [rows, sort, columns]);
 
-  const totalPages = pageSize ? Math.max(1, Math.ceil(sortedRows.length / pageSize)) : 1;
+  const totalPages = pageSize
+    ? Math.max(1, Math.ceil(sortedRows.length / pageSize))
+    : 1;
   const currentPage = Math.min(page, totalPages - 1);
   const pagedRows = pageSize
-    ? sortedRows.slice(currentPage * pageSize, currentPage * pageSize + pageSize)
+    ? sortedRows.slice(
+        currentPage * pageSize,
+        currentPage * pageSize + pageSize,
+      )
     : sortedRows;
 
   function toggleSort(key: string) {
@@ -180,7 +193,7 @@ export function DataTable<T>({
         onClick={() => toggleSort(col.key)}
         className={cn(
           "inline-flex items-center gap-1 hover:underline focus:outline-none focus-visible:ring-1",
-          theme.headerFocusRing
+          theme.headerFocusRing,
         )}
       >
         {col.header}
@@ -192,7 +205,9 @@ export function DataTable<T>({
   }
 
   const shouldVirtualize = pagedRows.length > virtualizeThreshold;
-  const gridTemplateColumns = visibleColumns.map((c) => c.width ?? "1fr").join(" ");
+  const gridTemplateColumns = visibleColumns
+    .map((c) => c.width ?? "1fr")
+    .join(" ");
 
   const columnMenu = enableColumnVisibility && (
     <div className="flex justify-end px-1 pb-2">
@@ -204,7 +219,7 @@ export function DataTable<T>({
           onClick={() => setShowColumnMenu((v) => !v)}
           className={cn(
             "text-[10px] tracking-widest uppercase border px-3 py-1.5 transition-colors duration-150 focus:outline-none focus-visible:ring-1",
-            theme.accent
+            theme.accent,
           )}
         >
           Columns
@@ -213,12 +228,18 @@ export function DataTable<T>({
           <div
             id={menuId}
             role="menu"
-            className={cn("absolute right-0 mt-1 z-20 w-48 border p-2 shadow-lg", theme.menu)}
+            className={cn(
+              "absolute right-0 mt-1 z-20 w-48 border p-2 shadow-lg",
+              theme.menu,
+            )}
           >
             {columns.map((col) => (
               <label
                 key={col.key}
-                className={cn("flex items-center gap-2 px-2 py-1.5 text-xs cursor-pointer", theme.menuLabel)}
+                className={cn(
+                  "flex items-center gap-2 px-2 py-1.5 text-xs cursor-pointer",
+                  theme.menuLabel,
+                )}
               >
                 <input
                   type="checkbox"
@@ -236,12 +257,20 @@ export function DataTable<T>({
   );
 
   const pagination = pageSize && totalPages > 1 && (
-    <div className={cn("flex items-center justify-between px-1 pt-3 text-[10px] tracking-widest uppercase", theme.pageText)}>
+    <div
+      className={cn(
+        "flex items-center justify-between px-1 pt-3 text-[10px] tracking-widest uppercase",
+        theme.pageText,
+      )}
+    >
       <button
         type="button"
         onClick={() => setPage((p) => Math.max(0, p - 1))}
         disabled={currentPage === 0}
-        className={cn("px-3 py-1.5 border disabled:opacity-40 transition-colors duration-150 focus:outline-none focus-visible:ring-1", theme.pageBtn)}
+        className={cn(
+          "px-3 py-1.5 border disabled:opacity-40 transition-colors duration-150 focus:outline-none focus-visible:ring-1",
+          theme.pageBtn,
+        )}
       >
         Previous
       </button>
@@ -252,7 +281,10 @@ export function DataTable<T>({
         type="button"
         onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
         disabled={currentPage >= totalPages - 1}
-        className={cn("px-3 py-1.5 border disabled:opacity-40 transition-colors duration-150 focus:outline-none focus-visible:ring-1", theme.pageBtn)}
+        className={cn(
+          "px-3 py-1.5 border disabled:opacity-40 transition-colors duration-150 focus:outline-none focus-visible:ring-1",
+          theme.pageBtn,
+        )}
       >
         Next
       </button>
@@ -263,11 +295,26 @@ export function DataTable<T>({
   const cardLayout = (
     <ul className="md:hidden space-y-2">
       {pagedRows.map((row) => (
-        <li key={getRowKey(row)} className={cn("border p-3 space-y-1.5", theme.card)}>
+        <li
+          key={getRowKey(row)}
+          className={cn("border p-3 space-y-1.5", theme.card)}
+        >
           {visibleColumns.map((col) => (
-            <div key={col.key} className="flex items-center justify-between gap-3 text-xs">
-              <span className={cn("text-[10px] tracking-widest uppercase", theme.cardLabel)}>{col.header}</span>
-              <span className={cn("text-right", theme.cellText)}>{col.accessor(row)}</span>
+            <div
+              key={col.key}
+              className="flex items-center justify-between gap-3 text-xs"
+            >
+              <span
+                className={cn(
+                  "text-[10px] tracking-widest uppercase",
+                  theme.cardLabel,
+                )}
+              >
+                {col.header}
+              </span>
+              <span className={cn("text-right", theme.cellText)}>
+                {col.accessor(row)}
+              </span>
             </div>
           ))}
         </li>
@@ -287,7 +334,11 @@ export function DataTable<T>({
           className={cn("hidden md:block border", theme.border)}
         >
           <div role="rowgroup" className="sticky top-0 z-10">
-            <div role="row" className={cn("grid", theme.header)} style={{ gridTemplateColumns }}>
+            <div
+              role="row"
+              className={cn("grid", theme.header)}
+              style={{ gridTemplateColumns }}
+            >
               {visibleColumns.map((col) => (
                 <div
                   key={col.key}
@@ -295,7 +346,7 @@ export function DataTable<T>({
                   aria-sort={col.sortValue ? sortAriaFor(col.key) : undefined}
                   className={cn(
                     "px-5 py-2.5 text-[10px] tracking-[0.18em] font-semibold uppercase whitespace-nowrap",
-                    alignClass(col.align)
+                    alignClass(col.align),
                   )}
                 >
                   {renderHeaderContent(col)}
@@ -307,7 +358,10 @@ export function DataTable<T>({
             <VirtualList
               items={pagedRows}
               itemHeight={rowHeight}
-              containerHeight={Math.min(maxBodyHeight, pagedRows.length * rowHeight)}
+              containerHeight={Math.min(
+                maxBodyHeight,
+                pagedRows.length * rowHeight,
+              )}
               renderItem={(row, i) => (
                 <div
                   role="row"
@@ -315,7 +369,7 @@ export function DataTable<T>({
                     "grid border-b transition-colors duration-100",
                     theme.border,
                     i % 2 === 0 ? theme.rowEven : theme.rowOdd,
-                    theme.rowHover
+                    theme.rowHover,
                   )}
                   style={{ gridTemplateColumns }}
                 >
@@ -323,7 +377,12 @@ export function DataTable<T>({
                     <div
                       key={col.key}
                       role="cell"
-                      className={cn("px-5 py-3 text-xs whitespace-nowrap flex items-center", theme.cellText, alignClass(col.align), col.className)}
+                      className={cn(
+                        "px-5 py-3 text-xs whitespace-nowrap flex items-center",
+                        theme.cellText,
+                        alignClass(col.align),
+                        col.className,
+                      )}
                     >
                       {col.accessor(row)}
                     </div>
@@ -342,8 +401,14 @@ export function DataTable<T>({
   return (
     <div className={className}>
       {columnMenu}
-      <div className="hidden md:block overflow-auto" style={{ maxHeight: maxBodyHeight }}>
-        <table className="w-full min-w-[520px] border-collapse" aria-label={caption}>
+      <div
+        className="hidden md:block overflow-auto"
+        style={{ maxHeight: maxBodyHeight }}
+      >
+        <table
+          className="w-full min-w-[520px] border-collapse"
+          aria-label={caption}
+        >
           <thead className="sticky top-0 z-10">
             <tr className={theme.header}>
               {visibleColumns.map((col) => (
@@ -353,7 +418,7 @@ export function DataTable<T>({
                   aria-sort={col.sortValue ? sortAriaFor(col.key) : undefined}
                   className={cn(
                     "px-5 py-2.5 text-[10px] tracking-[0.18em] font-semibold uppercase whitespace-nowrap",
-                    alignClass(col.align)
+                    alignClass(col.align),
                   )}
                 >
                   {renderHeaderContent(col)}
@@ -369,13 +434,18 @@ export function DataTable<T>({
                   "border-b transition-colors duration-100",
                   theme.border,
                   i % 2 === 0 ? theme.rowEven : theme.rowOdd,
-                  theme.rowHover
+                  theme.rowHover,
                 )}
               >
                 {visibleColumns.map((col) => (
                   <td
                     key={col.key}
-                    className={cn("px-5 py-3 text-xs whitespace-nowrap", theme.cellText, alignClass(col.align), col.className)}
+                    className={cn(
+                      "px-5 py-3 text-xs whitespace-nowrap",
+                      theme.cellText,
+                      alignClass(col.align),
+                      col.className,
+                    )}
                   >
                     {col.accessor(row)}
                   </td>

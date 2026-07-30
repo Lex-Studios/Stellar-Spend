@@ -1,5 +1,5 @@
-import { validateConfig, type Config } from './schema';
-import { getEnvironmentConfig } from './environments';
+import { validateConfig, type Config } from "./schema";
+import { getEnvironmentConfig } from "./environments";
 
 /**
  * Configuration manager with hot-reloading and versioning support
@@ -16,7 +16,7 @@ export class ConfigManager {
   private currentConfig: Config;
   private configHistory: ConfigVersion[] = [];
   private watchers: Set<(config: Config) => void> = new Set();
-  private version: string = '1.0.0';
+  private version: string = "1.0.0";
 
   private constructor() {
     this.currentConfig = getEnvironmentConfig();
@@ -59,7 +59,10 @@ export class ConfigManager {
   /**
    * Update specific config section
    */
-  updateSection<K extends keyof Config>(section: K, updates: Partial<Config[K]>): void {
+  updateSection<K extends keyof Config>(
+    section: K,
+    updates: Partial<Config[K]>,
+  ): void {
     const merged = {
       ...this.currentConfig,
       [section]: { ...this.currentConfig[section], ...updates },
@@ -148,7 +151,7 @@ export class ConfigManager {
       try {
         callback(config);
       } catch (error) {
-        console.error('Error in config watcher:', error);
+        console.error("Error in config watcher:", error);
       }
     });
   }
@@ -171,6 +174,8 @@ export function getConfig(): Config {
 /**
  * Get specific config section
  */
-export function getConfigSection<K extends keyof Config>(section: K): Config[K] {
+export function getConfigSection<K extends keyof Config>(
+  section: K,
+): Config[K] {
   return getConfigManager().getSection(section);
 }

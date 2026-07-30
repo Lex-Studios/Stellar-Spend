@@ -1,11 +1,11 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { ErrorHandler } from '@/lib/error-handler';
+import { NextResponse, type NextRequest } from "next/server";
+import { ErrorHandler } from "@/lib/error-handler";
 import {
   calculateInsurancePremium,
   createInsurance,
   getInsuranceStatus,
   fileClaim,
-} from '@/lib/services/insurance.service';
+} from "@/lib/services/insurance.service";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -40,19 +40,24 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   try {
     body = await request.json();
   } catch {
-    return ErrorHandler.validation('Invalid JSON body');
+    return ErrorHandler.validation("Invalid JSON body");
   }
 
   const amount = Number(body.amount);
-  const currency = typeof body.currency === 'string' ? body.currency : 'USDC';
+  const currency = typeof body.currency === "string" ? body.currency : "USDC";
 
   if (!amount || isNaN(amount) || amount <= 0) {
-    return ErrorHandler.validation('amount must be a positive number');
+    return ErrorHandler.validation("amount must be a positive number");
   }
 
   try {
     const quote = await calculateInsurancePremium(amount, currency);
-    const result = await createInsurance(id, quote.premium, quote.coverage, quote.provider);
+    const result = await createInsurance(
+      id,
+      quote.premium,
+      quote.coverage,
+      quote.provider,
+    );
     const row = (result as { rows: unknown[] }).rows?.[0] ?? null;
     return NextResponse.json({ insurance: row, quote }, { status: 201 });
   } catch (err) {
@@ -72,18 +77,20 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   try {
     body = await request.json();
   } catch {
-    return ErrorHandler.validation('Invalid JSON body');
+    return ErrorHandler.validation("Invalid JSON body");
   }
 
-  const insuranceId = typeof body.insuranceId === 'string' ? body.insuranceId : '';
-  const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
-  const evidence = typeof body.evidence === 'string' ? body.evidence.trim() : undefined;
+  const insuranceId =
+    typeof body.insuranceId === "string" ? body.insuranceId : "";
+  const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+  const evidence =
+    typeof body.evidence === "string" ? body.evidence.trim() : undefined;
 
   if (!insuranceId) {
-    return ErrorHandler.validation('insuranceId is required');
+    return ErrorHandler.validation("insuranceId is required");
   }
   if (!reason) {
-    return ErrorHandler.validation('reason is required');
+    return ErrorHandler.validation("reason is required");
   }
 
   try {

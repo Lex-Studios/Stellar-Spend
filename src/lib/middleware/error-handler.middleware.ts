@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { logger } from '../logger';
-import { ERROR_CODES, ERROR_MESSAGES, getStatusCode } from './error-codes';
+import { NextRequest, NextResponse } from "next/server";
+import { logger } from "../logger";
+import { ERROR_CODES, ERROR_MESSAGES, getStatusCode } from "./error-codes";
 
 export interface StandardErrorResponse {
   error: {
@@ -16,19 +16,19 @@ export class AppError extends Error {
   constructor(
     public code: string,
     message?: string,
-    public details?: Record<string, any>
+    public details?: Record<string, any>,
   ) {
-    super(message || ERROR_MESSAGES[code] || 'Unknown error');
-    this.name = 'AppError';
+    super(message || ERROR_MESSAGES[code] || "Unknown error");
+    this.name = "AppError";
   }
 }
 
 export function createErrorResponse(
   error: Error | AppError,
-  requestId: string
+  requestId: string,
 ): [NextResponse<StandardErrorResponse>, number] {
   let code = ERROR_CODES.INTERNAL_ERROR;
-  let message = 'Internal server error';
+  let message = "Internal server error";
   let details: Record<string, any> | undefined;
 
   if (error instanceof AppError) {
@@ -37,7 +37,7 @@ export function createErrorResponse(
     details = error.details;
   } else if (error instanceof SyntaxError) {
     code = ERROR_CODES.INVALID_INPUT;
-    message = 'Invalid JSON in request body';
+    message = "Invalid JSON in request body";
   }
 
   const statusCode = getStatusCode(code);
@@ -50,7 +50,9 @@ export function createErrorResponse(
   return [NextResponse.json(response, { status: statusCode }), statusCode];
 }
 
-export function errorMiddleware(handler: (req: NextRequest) => Promise<NextResponse>) {
+export function errorMiddleware(
+  handler: (req: NextRequest) => Promise<NextResponse>,
+) {
   return async (req: NextRequest) => {
     const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -60,7 +62,7 @@ export function errorMiddleware(handler: (req: NextRequest) => Promise<NextRespo
       const err = error instanceof Error ? error : new Error(String(error));
       const [response, statusCode] = createErrorResponse(err, requestId);
 
-      logger.error('API Error', {
+      logger.error("API Error", {
         requestId,
         method: req.method,
         path: req.nextUrl.pathname,

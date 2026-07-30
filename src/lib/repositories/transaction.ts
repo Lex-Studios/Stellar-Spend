@@ -1,4 +1,4 @@
-import type { Repository } from './base';
+import type { Repository } from "./base";
 
 export interface Transaction {
   id: string;
@@ -22,7 +22,7 @@ export interface Transaction {
     accountName: string;
     currency: string;
   };
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
   error?: string;
 }
 

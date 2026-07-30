@@ -1,6 +1,6 @@
-import React, { ComponentType, useState, useCallback } from 'react';
-import { ValidationService } from '@/lib/validators';
-import type { FormattedValidationError } from '@/lib/validators';
+import React, { ComponentType, useState, useCallback } from "react";
+import { ValidationService } from "@/lib/validators";
+import type { FormattedValidationError } from "@/lib/validators";
 
 export interface WithFormValidationProps {
   errors: Record<string, string>;
@@ -15,9 +15,11 @@ export interface WithFormValidationProps {
  */
 export function withFormValidation<P extends WithFormValidationProps>(
   Component: ComponentType<P>,
-  validationFn: (data: Record<string, any>) => FormattedValidationError[]
+  validationFn: (data: Record<string, any>) => FormattedValidationError[],
 ) {
-  return function ValidatedComponent(props: Omit<P, keyof WithFormValidationProps>) {
+  return function ValidatedComponent(
+    props: Omit<P, keyof WithFormValidationProps>,
+  ) {
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const validate = useCallback((data: Record<string, any>) => {
@@ -27,7 +29,7 @@ export function withFormValidation<P extends WithFormValidationProps>(
           acc[err.field] = err.message;
           return acc;
         },
-        {} as Record<string, string>
+        {} as Record<string, string>,
       );
       setErrors(errorMap);
       return validationErrors.length === 0;
@@ -56,7 +58,9 @@ export function withFormValidation<P extends WithFormValidationProps>(
 /**
  * Hook for form validation
  */
-export function useFormValidation(validationFn: (data: Record<string, any>) => FormattedValidationError[]) {
+export function useFormValidation(
+  validationFn: (data: Record<string, any>) => FormattedValidationError[],
+) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validate = useCallback((data: Record<string, any>) => {
@@ -66,7 +70,7 @@ export function useFormValidation(validationFn: (data: Record<string, any>) => F
         acc[err.field] = err.message;
         return acc;
       },
-      {} as Record<string, string>
+      {} as Record<string, string>,
     );
     setErrors(errorMap);
     return validationErrors.length === 0;

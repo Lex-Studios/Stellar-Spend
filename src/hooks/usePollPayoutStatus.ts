@@ -1,14 +1,23 @@
-'use client';
+"use client";
 
-import { useCallback } from 'react';
-import type { PayoutStatus } from '@/lib/offramp/types';
-import { TransactionStorage } from '@/lib/transaction-storage';
-import type { OfframpStep } from '@/types/stellaramp';
-import { usePollingManager, DurationExceededError, ConsecutiveErrorsExceededError } from '@/lib/polling/polling-manager';
-import type { StatusResponse } from '@/lib/polling/polling-manager';
-import { PAYOUT_CONFIG } from '@/lib/polling/backoff';
+import { useCallback } from "react";
+import type { PayoutStatus } from "@/lib/offramp/types";
+import { TransactionStorage } from "@/lib/transaction-storage";
+import type { OfframpStep } from "@/types/stellaramp";
+import {
+  usePollingManager,
+  DurationExceededError,
+  ConsecutiveErrorsExceededError,
+} from "@/lib/polling/polling-manager";
+import type { StatusResponse } from "@/lib/polling/polling-manager";
+import { PAYOUT_CONFIG } from "@/lib/polling/backoff";
 
-const TERMINAL_STATES: PayoutStatus[] = ['validated', 'settled', 'refunded', 'expired'];
+const TERMINAL_STATES: PayoutStatus[] = [
+  "validated",
+  "settled",
+  "refunded",
+  "expired",
+];
 
 interface PollPayoutStatusOptions {
   transactionId: string;
@@ -28,20 +37,27 @@ export function usePollPayoutStatus() {
   const { start } = usePollingManager(PAYOUT_CONFIG);
 
   const pollPayoutStatus = useCallback(
-    async (orderId: string, { transactionId, onSettling }: PollPayoutStatusOptions): Promise<void> => {
-      const fetchFn = async (id: string, signal: AbortSignal): Promise<StatusResponse> => {
+    async (
+      orderId: string,
+      { transactionId, onSettling }: PollPayoutStatusOptions,
+    ): Promise<void> => {
+      const fetchFn = async (
+        id: string,
+        signal: AbortSignal,
+      ): Promise<StatusResponse> => {
         const res = await fetch(`/api/offramp/status/${id}`, {
-          cache: 'no-store',
+          cache: "no-store",
           signal,
         });
 
-        const data: { status?: PayoutStatus; error?: string } = await res.json();
+        const data: { status?: PayoutStatus; error?: string } =
+          await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error ?? 'Failed to fetch payout status');
+          throw new Error(data.error ?? "Failed to fetch payout status");
         }
 
-        const status: PayoutStatus = (data.status ?? 'pending') as PayoutStatus;
+        const status: PayoutStatus = (data.status ?? "pending") as PayoutStatus;
 
         // Persist each poll result
         TransactionStorage.update(transactionId, { payoutStatus: status });
@@ -52,33 +68,35 @@ export function usePollPayoutStatus() {
       };
 
       try {
-        const result = await start(orderId, fetchFn, () => { });
+        const result = await start(orderId, fetchFn, () => {});
 
         const status = result.status as PayoutStatus;
 
-        if (status === 'validated' || status === 'settled') {
+        if (status === "validated" || status === "settled") {
           onSettling?.();
           return;
         }
 
-        if (status === 'refunded' || status === 'expired') {
+        if (status === "refunded" || status === "expired") {
           throw new Error(
-            status === 'refunded'
-              ? 'Payout was refunded. Please contact support.'
-              : 'Payout order expired. Please try again.'
+            status === "refunded"
+              ? "Payout was refunded. Please contact support."
+              : "Payout order expired. Please try again.",
           );
         }
       } catch (err) {
         if (err instanceof DurationExceededError) {
-          throw new Error('Payout polling timeout');
+          throw new Error("Payout polling timeout");
         }
         if (err instanceof ConsecutiveErrorsExceededError) {
-          throw new Error('Payout polling failed: too many consecutive network errors. Please check your connection.');
+          throw new Error(
+            "Payout polling failed: too many consecutive network errors. Please check your connection.",
+          );
         }
         throw err;
       }
     },
-    [start]
+    [start],
   );
 
   return { pollPayoutStatus };

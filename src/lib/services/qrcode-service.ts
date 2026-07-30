@@ -1,4 +1,4 @@
-import { QRCodeData, QRCodeOptions, GeneratedQRCode } from '@/types/qrcode';
+import { QRCodeData, QRCodeOptions, GeneratedQRCode } from "@/types/qrcode";
 
 export class QRCodeService {
   /**
@@ -15,7 +15,7 @@ export class QRCodeService {
     });
 
     // Return base64 encoded JSON for QR scanning
-    return Buffer.from(json).toString('base64');
+    return Buffer.from(json).toString("base64");
   }
 
   /**
@@ -34,8 +34,8 @@ export class QRCodeService {
 
     // Fixed corner finder patterns (QR standard)
     const corners = new Set([
-      0, 1, 2, 3, 4, 5, 6, 9, 15, 18, 24, 27, 33, 36, 42, 45, 46, 47, 48, 49, 50, 51, 54, 60,
-      63, 69, 72, 73, 74, 75, 76, 77, 78,
+      0, 1, 2, 3, 4, 5, 6, 9, 15, 18, 24, 27, 33, 36, 42, 45, 46, 47, 48, 49,
+      50, 51, 54, 60, 63, 69, 72, 73, 74, 75, 76, 77, 78,
     ]);
 
     let svg = `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">`;
@@ -51,7 +51,7 @@ export class QRCodeService {
       }
     }
 
-    svg += '</svg>';
+    svg += "</svg>";
     return svg;
   }
 
@@ -61,7 +61,7 @@ export class QRCodeService {
   async createQRCode(
     transactionId: string,
     data: QRCodeData,
-    options: QRCodeOptions = {}
+    options: QRCodeOptions = {},
   ): Promise<GeneratedQRCode> {
     const id = `qr_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
     const qrData = this.generateQRData(data, options);
@@ -70,7 +70,7 @@ export class QRCodeService {
       id,
       transactionId,
       qrData,
-      format: 'dataurl',
+      format: "dataurl",
       createdAt: Date.now(),
       expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
     };
@@ -92,17 +92,17 @@ export class QRCodeService {
    */
   generateDownloadableQR(
     data: QRCodeData,
-    format: 'svg' | 'png' = 'svg',
-    size: number = 200
+    format: "svg" | "png" = "svg",
+    size: number = 200,
   ): string {
-    if (format === 'svg') {
+    if (format === "svg") {
       const qrData = this.generateQRData(data);
       return this.generateSVGPattern(qrData, size);
     }
 
     // For PNG, would need canvas library
     // This is a placeholder
-    return '';
+    return "";
   }
 
   /**
@@ -110,7 +110,7 @@ export class QRCodeService {
    */
   parseQRData(qrData: string): QRCodeData | null {
     try {
-      const json = Buffer.from(qrData, 'base64').toString('utf-8');
+      const json = Buffer.from(qrData, "base64").toString("utf-8");
       const parsed = JSON.parse(json);
       return {
         transactionId: parsed.txId,

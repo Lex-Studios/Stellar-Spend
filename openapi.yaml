@@ -325,7 +325,8 @@ components:
 
     CreateOrderRequest:
       type: object
-      required: [amount, rate, token, network, reference, returnAddress, recipient]
+      required:
+        [amount, rate, token, network, reference, returnAddress, recipient]
       properties:
         amount:
           type: number
@@ -511,7 +512,6 @@ components:
 # Paths
 # ─────────────────────────────────────────────────────────────────
 paths:
-
   # ── Health ──────────────────────────────────────────────────────
   /api/health:
     get:

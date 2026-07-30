@@ -15,7 +15,10 @@ interface RateWithDir extends FxRate {
 function formatRate(rate: number): string {
   return rate >= 100
     ? rate.toLocaleString("en-US", { maximumFractionDigits: 0 })
-    : rate.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+    : rate.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4,
+      });
 }
 
 const ARROW: Record<Direction, string> = { up: "▲", down: "▼", neutral: "" };
@@ -43,11 +46,11 @@ export default function FxTicker() {
             prev === undefined || prev === rate
               ? "neutral"
               : rate > prev
-              ? "up"
-              : "down";
+                ? "up"
+                : "down";
           prevRef.current.set(currency, rate);
           return { currency, rate, dir };
-        })
+        }),
       );
       setError(false);
     } catch {

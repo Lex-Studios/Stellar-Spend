@@ -1,55 +1,55 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 /**
  * Security headers configuration
  */
 export const SECURITY_HEADERS = {
   // Prevent clickjacking attacks
-  'X-Frame-Options': 'DENY',
-  
+  "X-Frame-Options": "DENY",
+
   // Prevent MIME type sniffing
-  'X-Content-Type-Options': 'nosniff',
-  
+  "X-Content-Type-Options": "nosniff",
+
   // Enable XSS protection in older browsers
-  'X-XSS-Protection': '1; mode=block',
-  
+  "X-XSS-Protection": "1; mode=block",
+
   // Enforce HTTPS
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
-  
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+
   // Control referrer information
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+
   // Control browser features and APIs
-  'Permissions-Policy': [
-    'accelerometer=()',
-    'ambient-light-sensor=()',
-    'autoplay=()',
-    'battery=()',
-    'camera=()',
-    'cross-origin-isolated=()',
-    'display-capture=()',
-    'document-domain=()',
-    'encrypted-media=()',
-    'execution-while-not-rendered=()',
-    'execution-while-out-of-viewport=()',
-    'fullscreen=()',
-    'geolocation=()',
-    'gyroscope=()',
-    'magnetometer=()',
-    'microphone=()',
-    'midi=()',
-    'navigation-override=()',
-    'payment=()',
-    'picture-in-picture=()',
-    'publickey-credentials-get=()',
-    'sync-xhr=()',
-    'usb=()',
-    'vr=()',
-    'xr-spatial-tracking=()',
-  ].join(', '),
-  
+  "Permissions-Policy": [
+    "accelerometer=()",
+    "ambient-light-sensor=()",
+    "autoplay=()",
+    "battery=()",
+    "camera=()",
+    "cross-origin-isolated=()",
+    "display-capture=()",
+    "document-domain=()",
+    "encrypted-media=()",
+    "execution-while-not-rendered=()",
+    "execution-while-out-of-viewport=()",
+    "fullscreen=()",
+    "geolocation=()",
+    "gyroscope=()",
+    "magnetometer=()",
+    "microphone=()",
+    "midi=()",
+    "navigation-override=()",
+    "payment=()",
+    "picture-in-picture=()",
+    "publickey-credentials-get=()",
+    "sync-xhr=()",
+    "usb=()",
+    "vr=()",
+    "xr-spatial-tracking=()",
+  ].join(", "),
+
   // Content Security Policy
-  'Content-Security-Policy': [
+  "Content-Security-Policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdn.segment.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -59,7 +59,7 @@ export const SECURITY_HEADERS = {
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-  ].join('; '),
+  ].join("; "),
 } as const;
 
 /**
@@ -69,18 +69,20 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
   Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
     response.headers.set(key, value);
   });
-  
+
   // Additional headers
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
-  
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+
   return response;
 }
 
 /**
  * Middleware to apply security headers to all responses
  */
-export function securityHeadersMiddleware(response: NextResponse): NextResponse {
+export function securityHeadersMiddleware(
+  response: NextResponse,
+): NextResponse {
   return addSecurityHeaders(response);
 }

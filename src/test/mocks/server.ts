@@ -1,20 +1,20 @@
-import { setupServer } from 'msw/node';
+import { setupServer } from "msw/node";
 import {
   paycrestHandlers,
   allbridgeHandlers,
   stellarHandlers,
   offrampHandlers,
-} from './handlers';
+} from "./handlers";
 
 export const server = setupServer(
   ...paycrestHandlers,
   ...allbridgeHandlers,
   ...stellarHandlers,
-  ...offrampHandlers
+  ...offrampHandlers,
 );
 
 // Enable API mocking before all tests
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 
 // Reset handlers after each test
 afterEach(() => server.resetHandlers());

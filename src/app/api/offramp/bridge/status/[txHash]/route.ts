@@ -1,10 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { env } from '@/lib/env';
-import { extractErrorMessage } from '@/lib/offramp/utils/errors';
-import { get, set, isFresh } from '@/lib/polling/status-cache';
-import type { BridgeStatus } from '@/lib/offramp/types';
+import { NextRequest, NextResponse } from "next/server";
+import { env } from "@/lib/env";
+import { extractErrorMessage } from "@/lib/offramp/utils/errors";
+import { get, set, isFresh } from "@/lib/polling/status-cache";
+import type { BridgeStatus } from "@/lib/offramp/types";
 
-const BRIDGE_TERMINAL_STATES: BridgeStatus[] = ['completed', 'failed', 'expired'];
+const BRIDGE_TERMINAL_STATES: BridgeStatus[] = [
+  "completed",
+  "failed",
+  "expired",
+];
 
 /**
  * GET /api/offramp/bridge/status/[txHash]
@@ -25,7 +29,7 @@ const BRIDGE_TERMINAL_STATES: BridgeStatus[] = ['completed', 'failed', 'expired'
  */
 export async function GET(
   _req: NextRequest,
-  { params }: { params: Promise<{ txHash: string }> }
+  { params }: { params: Promise<{ txHash: string }> },
 ) {
   const { txHash } = await params;
 
@@ -45,19 +49,20 @@ export async function GET(
 
   try {
     // Initialize Allbridge SDK
-    const { AllbridgeCoreSdk, nodeRpcUrlsDefault } = await import('@allbridge/bridge-core-sdk');
+    const { AllbridgeCoreSdk, nodeRpcUrlsDefault } =
+      await import("@allbridge/bridge-core-sdk");
 
     const sdk = new AllbridgeCoreSdk({ ...nodeRpcUrlsDefault });
 
     // Get transfer status from Allbridge
     let transferStatus: any;
     try {
-      transferStatus = await sdk.getTransferStatus('SRB', txHash);
+      transferStatus = await sdk.getTransferStatus("SRB", txHash);
     } catch (error) {
       // Handle 404 gracefully - return pending status
       const message = extractErrorMessage(error);
-      if (message.includes('404') || message.includes('not found')) {
-        const status: BridgeStatus = 'pending';
+      if (message.includes("404") || message.includes("not found")) {
+        const status: BridgeStatus = "pending";
         const entry = {
           status,
           raw: { receiveAmount: undefined },
@@ -79,7 +84,7 @@ export async function GET(
             txHash,
             receiveAmount: raw?.receiveAmount,
             cachedAt: cached.cachedAt,
-            upstreamError: message || 'Failed to fetch bridge status',
+            upstreamError: message || "Failed to fetch bridge status",
           },
         });
       }
@@ -88,17 +93,20 @@ export async function GET(
     }
 
     // Map Allbridge status to BridgeStatus type
-    let status: BridgeStatus = 'pending';
+    let status: BridgeStatus = "pending";
     if (transferStatus?.status) {
       const allbridgeStatus = transferStatus.status.toLowerCase();
-      if (allbridgeStatus.includes('completed') || allbridgeStatus.includes('success')) {
-        status = 'completed';
-      } else if (allbridgeStatus.includes('failed')) {
-        status = 'failed';
-      } else if (allbridgeStatus.includes('expired')) {
-        status = 'expired';
-      } else if (allbridgeStatus.includes('processing')) {
-        status = 'processing';
+      if (
+        allbridgeStatus.includes("completed") ||
+        allbridgeStatus.includes("success")
+      ) {
+        status = "completed";
+      } else if (allbridgeStatus.includes("failed")) {
+        status = "failed";
+      } else if (allbridgeStatus.includes("expired")) {
+        status = "expired";
+      } else if (allbridgeStatus.includes("processing")) {
+        status = "processing";
       }
     }
 
@@ -121,7 +129,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Bridge status error:', error);
+    console.error("Bridge status error:", error);
     const message = extractErrorMessage(error);
 
     // Return stale cache entry with upstreamError if available
@@ -133,14 +141,14 @@ export async function GET(
           txHash,
           receiveAmount: raw?.receiveAmount,
           cachedAt: cached.cachedAt,
-          upstreamError: message || 'Failed to fetch bridge status',
+          upstreamError: message || "Failed to fetch bridge status",
         },
       });
     }
 
     return NextResponse.json(
-      { error: message || 'Failed to fetch bridge status' },
-      { status: 500 }
+      { error: message || "Failed to fetch bridge status" },
+      { status: 500 },
     );
   }
 }

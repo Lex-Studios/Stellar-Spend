@@ -3,7 +3,11 @@
  */
 
 export interface IQuoteService {
-  getQuote(amount: string, currency: string, feeMethod: string): Promise<QuoteResult>;
+  getQuote(
+    amount: string,
+    currency: string,
+    feeMethod: string,
+  ): Promise<QuoteResult>;
   validateAmount(amount: string): boolean;
 }
 
@@ -42,7 +46,7 @@ export interface BuildTxParams {
   amount: string;
   fromAddress: string;
   toAddress: string;
-  feePaymentMethod: 'stablecoin' | 'native';
+  feePaymentMethod: "stablecoin" | "native";
 }
 
 export interface BuildTxResult {
@@ -59,17 +63,17 @@ export interface TokenInfo {
 
 export interface SubmitTxResult {
   txHash: string;
-  status: 'pending' | 'confirmed' | 'failed';
+  status: "pending" | "confirmed" | "failed";
 }
 
 export interface BridgeStatus {
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
   progress: number;
   estimatedTime: number;
 }
 
 export interface GasFeeOption {
-  method: 'stablecoin' | 'native';
+  method: "stablecoin" | "native";
   amount: string;
   symbol: string;
 }
@@ -88,21 +92,21 @@ export interface BeneficiaryInfo {
 
 export interface PayoutOrder {
   orderId: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: "pending" | "processing" | "completed" | "failed";
   amount: string;
   currency: string;
 }
 
 export interface PayoutStatus {
   orderId: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  status: "pending" | "processing" | "completed" | "failed";
   progress: number;
   estimatedTime: number;
 }
 
 export interface ExecutePayoutResult {
   txHash: string;
-  status: 'pending' | 'confirmed' | 'failed';
+  status: "pending" | "confirmed" | "failed";
 }
 
 export interface WalletConnection {

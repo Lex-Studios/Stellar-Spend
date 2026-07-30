@@ -8,7 +8,13 @@ export async function POST(request: NextRequest) {
     // Web Vitals payload: { name, value, rating?, url?, ts? }
     if (typeof body.name === "string" && typeof body.value === "number") {
       const { name, value, rating, url, ts } = body;
-      recordVital({ name, value, rating: rating ?? "unknown", url: url ?? "/", timestamp: ts ?? Date.now() });
+      recordVital({
+        name,
+        value,
+        rating: rating ?? "unknown",
+        url: url ?? "/",
+        timestamp: ts ?? Date.now(),
+      });
       return new NextResponse(null, { status: 204 });
     }
 
@@ -17,8 +23,11 @@ export async function POST(request: NextRequest) {
       if (body.category === "Funnel") {
         recordFunnelEvent({
           action: body.action,
-          sessionId: typeof body.sessionId === "string" ? body.sessionId : undefined,
-          timestamp: body.timestamp ? new Date(body.timestamp).getTime() : Date.now(),
+          sessionId:
+            typeof body.sessionId === "string" ? body.sessionId : undefined,
+          timestamp: body.timestamp
+            ? new Date(body.timestamp).getTime()
+            : Date.now(),
         });
       }
       return new NextResponse(null, { status: 204 });

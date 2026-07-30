@@ -14,7 +14,10 @@ export interface Shortcut {
   hint?: string;
 }
 
-export type ShortcutOverrides = Record<string, { key: string; ctrl?: boolean; shift?: boolean }>;
+export type ShortcutOverrides = Record<
+  string,
+  { key: string; ctrl?: boolean; shift?: boolean }
+>;
 
 const STORAGE_KEY = "stellar_spend_shortcut_overrides";
 
@@ -27,7 +30,10 @@ function loadOverrides(): ShortcutOverrides {
   }
 }
 
-export function saveShortcutOverride(id: string, override: { key: string; ctrl?: boolean; shift?: boolean }) {
+export function saveShortcutOverride(
+  id: string,
+  override: { key: string; ctrl?: boolean; shift?: boolean },
+) {
   const overrides = loadOverrides();
   overrides[id] = override;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
@@ -56,7 +62,8 @@ export function useKeyboardShortcuts(shortcuts: Shortcut[], enabled = true) {
       const overrides = loadOverrides();
 
       for (const shortcut of shortcuts) {
-        const id = shortcut.key + String(shortcut.ctrl) + String(shortcut.shift);
+        const id =
+          shortcut.key + String(shortcut.ctrl) + String(shortcut.shift);
         const override = overrides[id];
         const effectiveKey = override?.key ?? shortcut.key;
         const effectiveCtrl = override?.ctrl ?? shortcut.ctrl;
@@ -73,7 +80,7 @@ export function useKeyboardShortcuts(shortcuts: Shortcut[], enabled = true) {
         }
       }
     },
-    [enabled, shortcuts]
+    [enabled, shortcuts],
   );
 
   useEffect(() => {
@@ -87,7 +94,10 @@ export function useKeyboardShortcuts(shortcuts: Shortcut[], enabled = true) {
  * Returns a data attribute object to attach shortcut hints to elements.
  * Usage: <button {...shortcutHint('Ctrl+N')}>New</button>
  */
-export function shortcutHint(label: string): { "data-shortcut-hint": string; title: string } {
+export function shortcutHint(label: string): {
+  "data-shortcut-hint": string;
+  title: string;
+} {
   return { "data-shortcut-hint": label, title: label };
 }
 
@@ -164,7 +174,10 @@ export function useAppShortcuts({
 export function useShortcutCustomizer() {
   const [overrides, setOverrides] = useState<ShortcutOverrides>(loadOverrides);
 
-  const save = (id: string, override: { key: string; ctrl?: boolean; shift?: boolean }) => {
+  const save = (
+    id: string,
+    override: { key: string; ctrl?: boolean; shift?: boolean },
+  ) => {
     saveShortcutOverride(id, override);
     setOverrides(loadOverrides());
   };

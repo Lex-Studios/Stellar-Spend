@@ -17,105 +17,123 @@ const ACCEPT_HEADER_RE = /application\/vnd\.stellarspend\.(v\d+)\+json/;
 const MIGRATION_GUIDE_URL = "/docs/api-migration-v1";
 
 function resolveVersionFromHeaders(request: NextRequest): string | null {
-    // X-API-Version header takes precedence over Accept header
-    const xApiVersion = request.headers.get("x-api-version");
-    if (xApiVersion && xApiVersion.trim() !== "") {
-        const normalised = /^\d+$/.test(xApiVersion.trim())
-            ? `v${xApiVersion.trim()}`
-            : xApiVersion.trim();
-        return normalised;
-    }
+  // X-API-Version header takes precedence over Accept header
+  const xApiVersion = request.headers.get("x-api-version");
+  if (xApiVersion && xApiVersion.trim() !== "") {
+    const normalised = /^\d+$/.test(xApiVersion.trim())
+      ? `v${xApiVersion.trim()}`
+      : xApiVersion.trim();
+    return normalised;
+  }
 
-    // Accept header
-    const accept = request.headers.get("accept");
-    if (accept) {
-        const match = ACCEPT_HEADER_RE.exec(accept);
-        if (match) {
-            return match[1];
-        }
+  // Accept header
+  const accept = request.headers.get("accept");
+  if (accept) {
+    const match = ACCEPT_HEADER_RE.exec(accept);
+    if (match) {
+      return match[1];
     }
+  }
 
-    return null;
+  return null;
 }
 
-function addLegacyDeprecationHeaders(response: NextResponse, legacyPath: string): NextResponse {
-    // v1 is currently supported, so legacy routes are deprecated (pointing to v1 successor)
-    // Use a fixed deprecation date — when v1 was introduced
-    response.headers.set("Deprecation", "2025-01-01");
-    response.headers.set("Sunset", "2026-01-01");
-    response.headers.set(
-        "Link",
-        `</api/v1/${legacyPath.replace(/^\//, "")}>; rel="successor-version", <${MIGRATION_GUIDE_URL}>; rel="deprecation"`
-    );
-    return response;
+function addLegacyDeprecationHeaders(
+  response: NextResponse,
+  legacyPath: string,
+): NextResponse {
+  // v1 is currently supported, so legacy routes are deprecated (pointing to v1 successor)
+  // Use a fixed deprecation date — when v1 was introduced
+  response.headers.set("Deprecation", "2025-01-01");
+  response.headers.set("Sunset", "2026-01-01");
+  response.headers.set(
+    "Link",
+    `</api/v1/${legacyPath.replace(/^\//, "")}>; rel="successor-version", <${MIGRATION_GUIDE_URL}>; rel="deprecation"`,
+  );
+  return response;
 }
 
 export function middleware(request: NextRequest): NextResponse {
-    const start = Date.now();
-    const { pathname } = request.nextUrl;
+  const start = Date.now();
+  const { pathname } = request.nextUrl;
 
-    function respond(response: NextResponse): NextResponse {
-        const durationMs = Date.now() - start;
-        recordApiTiming({
-            route: pathname.replace(/\/[0-9a-f-]{8,}/gi, '/:id'), // normalise IDs
-            method: request.method,
-            durationMs,
-            statusCode: response.status,
-            timestamp: start,
-        });
-        const requestId = request.headers.get('x-request-id') ?? crypto.randomUUID();
-        const log = logger.withContext({ requestId });
-        const level = response.status >= 500 ? 'error' : response.status >= 400 ? 'warn' : 'info';
-        log[level]('http.request', { method: request.method, path: pathname, status: response.status, durationMs });
-        response.headers.set('X-Request-Id', requestId);
-        return addSecurityHeaders(response);
+  function respond(response: NextResponse): NextResponse {
+    const durationMs = Date.now() - start;
+    recordApiTiming({
+      route: pathname.replace(/\/[0-9a-f-]{8,}/gi, "/:id"), // normalise IDs
+      method: request.method,
+      durationMs,
+      statusCode: response.status,
+      timestamp: start,
+    });
+    const requestId =
+      request.headers.get("x-request-id") ?? crypto.randomUUID();
+    const log = logger.withContext({ requestId });
+    const level =
+      response.status >= 500
+        ? "error"
+        : response.status >= 400
+          ? "warn"
+          : "info";
+    log[level]("http.request", {
+      method: request.method,
+      path: pathname,
+      status: response.status,
+      durationMs,
+    });
+    response.headers.set("X-Request-Id", requestId);
+    return addSecurityHeaders(response);
+  }
+
+  // 1. Check for versioned URL path: /api/v{n}/*
+  const versionedMatch = VERSIONED_PATH_RE.exec(pathname);
+  if (versionedMatch) {
+    const version = versionedMatch[1];
+    if (!registry.isKnown(version)) {
+      return respond(
+        NextResponse.json(
+          { error: "API version not supported" },
+          { status: 404 },
+        ),
+      );
+    }
+    // Known version — pass through, add X-API-Version header
+    const response = NextResponse.next();
+    response.headers.set("X-API-Version", version.replace(/^v/, ""));
+    return respond(response);
+  }
+
+  // 2. Check for unversioned /api/* paths with version headers
+  const unversionedMatch = UNVERSIONED_API_RE.exec(pathname);
+  if (unversionedMatch) {
+    const subpath = unversionedMatch[1] ?? "";
+    const version = resolveVersionFromHeaders(request);
+    if (version !== null) {
+      if (!registry.isKnown(version)) {
+        const supported = registry.getAll().map((e) => e.version);
+        return respond(
+          NextResponse.json(
+            { error: "Unsupported API version", supported },
+            { status: 400 },
+          ),
+        );
+      }
+      // Rewrite URL to versioned equivalent
+      const url = request.nextUrl.clone();
+      url.pathname = `/api/${version}/${subpath}`;
+      return respond(NextResponse.rewrite(url));
     }
 
-    // 1. Check for versioned URL path: /api/v{n}/*
-    const versionedMatch = VERSIONED_PATH_RE.exec(pathname);
-    if (versionedMatch) {
-        const version = versionedMatch[1];
-        if (!registry.isKnown(version)) {
-            return respond(NextResponse.json(
-                { error: "API version not supported" },
-                { status: 404 }
-            ));
-        }
-        // Known version — pass through, add X-API-Version header
-        const response = NextResponse.next();
-        response.headers.set("X-API-Version", version.replace(/^v/, ""));
-        return respond(response);
-    }
+    // Legacy route with no version headers — add deprecation headers
+    const response = NextResponse.next();
+    addLegacyDeprecationHeaders(response, subpath);
+    return respond(response);
+  }
 
-    // 2. Check for unversioned /api/* paths with version headers
-    const unversionedMatch = UNVERSIONED_API_RE.exec(pathname);
-    if (unversionedMatch) {
-        const subpath = unversionedMatch[1] ?? "";
-        const version = resolveVersionFromHeaders(request);
-        if (version !== null) {
-            if (!registry.isKnown(version)) {
-                const supported = registry.getAll().map((e) => e.version);
-                return respond(NextResponse.json(
-                    { error: "Unsupported API version", supported },
-                    { status: 400 }
-                ));
-            }
-            // Rewrite URL to versioned equivalent
-            const url = request.nextUrl.clone();
-            url.pathname = `/api/${version}/${subpath}`;
-            return respond(NextResponse.rewrite(url));
-        }
-
-        // Legacy route with no version headers — add deprecation headers
-        const response = NextResponse.next();
-        addLegacyDeprecationHeaders(response, subpath);
-        return respond(response);
-    }
-
-    // 3. Pass through all other requests unchanged
-    return respond(NextResponse.next());
+  // 3. Pass through all other requests unchanged
+  return respond(NextResponse.next());
 }
 
 export const config = {
-    matcher: ["/api/:path*"],
+  matcher: ["/api/:path*"],
 };

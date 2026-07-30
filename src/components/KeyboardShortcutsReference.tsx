@@ -11,25 +11,65 @@ export interface KeyboardShortcut {
 
 const KEYBOARD_SHORTCUTS: KeyboardShortcut[] = [
   // Navigation
-  { keys: ["Tab"], description: "Move to next focusable element", category: "navigation" },
-  { keys: ["Shift", "Tab"], description: "Move to previous focusable element", category: "navigation" },
-  { keys: ["Escape"], description: "Close modal or dialog", category: "navigation" },
-  { keys: ["Enter"], description: "Activate button or submit form", category: "navigation" },
-  { keys: ["Space"], description: "Toggle checkbox or activate button", category: "navigation" },
+  {
+    keys: ["Tab"],
+    description: "Move to next focusable element",
+    category: "navigation",
+  },
+  {
+    keys: ["Shift", "Tab"],
+    description: "Move to previous focusable element",
+    category: "navigation",
+  },
+  {
+    keys: ["Escape"],
+    description: "Close modal or dialog",
+    category: "navigation",
+  },
+  {
+    keys: ["Enter"],
+    description: "Activate button or submit form",
+    category: "navigation",
+  },
+  {
+    keys: ["Space"],
+    description: "Toggle checkbox or activate button",
+    category: "navigation",
+  },
 
   // Form
   { keys: ["Alt", "A"], description: "Focus amount input", category: "form" },
-  { keys: ["Alt", "C"], description: "Focus currency selector", category: "form" },
+  {
+    keys: ["Alt", "C"],
+    description: "Focus currency selector",
+    category: "form",
+  },
   { keys: ["Alt", "B"], description: "Focus bank selector", category: "form" },
 
   // Transaction
-  { keys: ["Ctrl", "Enter"], description: "Submit transaction", category: "transaction" },
-  { keys: ["Ctrl", "Z"], description: "Undo last action", category: "transaction" },
-  { keys: ["Ctrl", "Y"], description: "Redo last action", category: "transaction" },
+  {
+    keys: ["Ctrl", "Enter"],
+    description: "Submit transaction",
+    category: "transaction",
+  },
+  {
+    keys: ["Ctrl", "Z"],
+    description: "Undo last action",
+    category: "transaction",
+  },
+  {
+    keys: ["Ctrl", "Y"],
+    description: "Redo last action",
+    category: "transaction",
+  },
 
   // General
   { keys: ["?"], description: "Show keyboard shortcuts", category: "general" },
-  { keys: ["Ctrl", "K"], description: "Open command palette", category: "general" },
+  {
+    keys: ["Ctrl", "K"],
+    description: "Open command palette",
+    category: "general",
+  },
 ];
 
 interface KeyboardShortcutsModalProps {
@@ -37,12 +77,22 @@ interface KeyboardShortcutsModalProps {
   onClose: () => void;
 }
 
-export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsModalProps) {
-  const [selectedCategory, setSelectedCategory] = useState<KeyboardShortcut["category"] | "all">("all");
+export function KeyboardShortcutsModal({
+  isOpen,
+  onClose,
+}: KeyboardShortcutsModalProps) {
+  const [selectedCategory, setSelectedCategory] = useState<
+    KeyboardShortcut["category"] | "all"
+  >("all");
 
   if (!isOpen) return null;
 
-  const categories: Array<KeyboardShortcut["category"]> = ["navigation", "form", "transaction", "general"];
+  const categories: Array<KeyboardShortcut["category"]> = [
+    "navigation",
+    "form",
+    "transaction",
+    "general",
+  ];
   const filteredShortcuts =
     selectedCategory === "all"
       ? KEYBOARD_SHORTCUTS
@@ -58,7 +108,10 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-6">
-          <h2 id="shortcuts-title" className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2
+            id="shortcuts-title"
+            className="text-2xl font-bold text-gray-900 dark:text-white"
+          >
             Keyboard Shortcuts
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -75,7 +128,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
                 "px-3 py-1 rounded-full text-sm font-medium transition-colors",
                 selectedCategory === "all"
                   ? "bg-blue-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
+                  : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600",
               )}
             >
               All
@@ -88,7 +141,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
                   "px-3 py-1 rounded-full text-sm font-medium transition-colors capitalize",
                   selectedCategory === cat
                     ? "bg-blue-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600",
                 )}
               >
                 {cat}
@@ -108,12 +161,16 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
                       {key}
                     </kbd>
                     {keyIdx < shortcut.keys.length - 1 && (
-                      <span className="text-gray-500 dark:text-gray-400 text-sm">+</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">
+                        +
+                      </span>
                     )}
                   </div>
                 ))}
               </div>
-              <p className="text-gray-700 dark:text-gray-300 text-sm flex-1 pt-1">{shortcut.description}</p>
+              <p className="text-gray-700 dark:text-gray-300 text-sm flex-1 pt-1">
+                {shortcut.description}
+              </p>
             </div>
           ))}
         </div>

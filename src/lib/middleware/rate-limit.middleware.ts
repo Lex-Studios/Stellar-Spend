@@ -12,12 +12,12 @@ const rateLimitStore = new InMemoryRateLimitStore();
 export async function rateLimitMiddleware(
   request: NextRequest,
   endpoint: string,
-  isAuthenticated: boolean = false
+  isAuthenticated: boolean = false,
 ): Promise<NextResponse | null> {
   try {
     // Get client identifier (IP address or user ID)
     const identifier = isAuthenticated
-      ? (request.headers.get("x-user-id") || getClientIp(request) || "unknown")
+      ? request.headers.get("x-user-id") || getClientIp(request) || "unknown"
       : getClientIp(request) || "unknown";
 
     // Check rate limit
@@ -25,7 +25,7 @@ export async function rateLimitMiddleware(
       rateLimitStore,
       endpoint,
       identifier,
-      isAuthenticated
+      isAuthenticated,
     );
 
     // Add rate limit headers to response
@@ -51,10 +51,12 @@ export async function rateLimitMiddleware(
           status: 429,
           headers: {
             ...responseHeaders,
-            "Retry-After": Math.ceil((resetTime - Date.now()) / 1000).toString(),
+            "Retry-After": Math.ceil(
+              (resetTime - Date.now()) / 1000,
+            ).toString(),
             "Content-Type": "application/json",
           },
-        }
+        },
       );
     }
 
@@ -82,7 +84,10 @@ function getClientIp(request: NextRequest): string | null {
  * Reset rate limit for a specific endpoint and identifier
  * Useful for testing or administrative purposes
  */
-export async function resetRateLimit(endpoint: string, identifier: string): Promise<void> {
+export async function resetRateLimit(
+  endpoint: string,
+  identifier: string,
+): Promise<void> {
   const key = `ratelimit:anon:${endpoint}:${identifier}`;
   await rateLimitStore.reset(key);
 }
@@ -93,7 +98,7 @@ export async function resetRateLimit(endpoint: string, identifier: string): Prom
 export async function getRateLimitStatus(
   endpoint: string,
   identifier: string,
-  isAuthenticated: boolean = false
+  isAuthenticated: boolean = false,
 ): Promise<{ current: number; limit: number | null }> {
   const key = `ratelimit:${isAuthenticated ? "auth" : "anon"}:${endpoint}:${identifier}`;
   const current = await rateLimitStore.get(key);

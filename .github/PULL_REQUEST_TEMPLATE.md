@@ -20,6 +20,7 @@ Closes #<!-- issue number(s) -->
 ## Checklist
 
 ### Code quality
+
 - [ ] My code follows the project's TypeScript and React conventions
 - [ ] No `any` types introduced without justification
 - [ ] No secrets, credentials, or PII committed
@@ -27,6 +28,7 @@ Closes #<!-- issue number(s) -->
 - [ ] Type-check passes — `npx tsc --noEmit`
 
 ### Tests
+
 - [ ] Unit tests added / updated for new or changed logic
 - [ ] Integration tests added / updated if an API route changed
 - [ ] All existing tests pass — `npm test`
@@ -34,17 +36,20 @@ Closes #<!-- issue number(s) -->
 - [ ] Mutation score not degraded for touched modules
 
 ### Documentation
+
 - [ ] Inline JSDoc / comments updated where relevant
 - [ ] `docs/` updated if architecture, configuration, or user-facing behavior changed
 - [ ] `CHANGELOG` entry added (if public-facing change)
 
 ### Accessibility (UI changes only)
+
 - [ ] New interactive elements have accessible labels (`aria-label` / `aria-labelledby`)
 - [ ] Focus management is correct (modals, drawers trap focus)
 - [ ] Color contrast meets WCAG AA
 - [ ] Keyboard navigation tested
 
 ### Security
+
 - [ ] No environment variables with `NEXT_PUBLIC_` prefix contain secrets
 - [ ] User input is validated and sanitized
 - [ ] No new dependencies with unusual names (potential typosquatting)

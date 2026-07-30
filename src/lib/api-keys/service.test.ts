@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const poolQueryMock = vi.fn();
 
-vi.mock('@/lib/db/client', () => ({
+vi.mock("@/lib/db/client", () => ({
   pool: {
     query: poolQueryMock,
   },
@@ -13,27 +13,27 @@ import {
   checkApiKeyRateLimit,
   createApiKey,
   isValidAdminToken,
-} from '@/lib/api-keys/service';
+} from "@/lib/api-keys/service";
 
-describe('api key service', () => {
+describe("api key service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.API_KEY_ADMIN_TOKEN = 'admin-secret';
+    process.env.API_KEY_ADMIN_TOKEN = "admin-secret";
   });
 
-  it('validates the admin token', () => {
-    expect(isValidAdminToken('admin-secret')).toBe(true);
-    expect(isValidAdminToken('wrong-secret')).toBe(false);
+  it("validates the admin token", () => {
+    expect(isValidAdminToken("admin-secret")).toBe(true);
+    expect(isValidAdminToken("wrong-secret")).toBe(false);
   });
 
-  it('creates a plaintext key and stores only hashed metadata', async () => {
+  it("creates a plaintext key and stores only hashed metadata", async () => {
     poolQueryMock.mockResolvedValueOnce({
       rows: [
         {
-          id: 'key_1',
-          name: 'Partner',
-          key_prefix: 'abc123',
-          status: 'active',
+          id: "key_1",
+          name: "Partner",
+          key_prefix: "abc123",
+          status: "active",
           rate_limit_max_requests: 120,
           rate_limit_window_ms: 60000,
           usage_count: 0,
@@ -43,27 +43,27 @@ describe('api key service', () => {
       ],
     });
 
-    const result = await createApiKey({ name: 'Partner', rateLimitMaxRequests: 120 });
+    const result = await createApiKey({
+      name: "Partner",
+      rateLimitMaxRequests: 120,
+    });
 
     expect(result.plaintextKey).toMatch(/^ssp_live_/);
-    expect(result.status).toBe('active');
+    expect(result.status).toBe("active");
     expect(poolQueryMock).toHaveBeenCalledWith(
-      expect.stringContaining('INSERT INTO api_keys'),
-      expect.arrayContaining([
-        'Partner',
-        120,
-      ])
+      expect.stringContaining("INSERT INTO api_keys"),
+      expect.arrayContaining(["Partner", 120]),
     );
   });
 
-  it('authenticates only active, non-expired keys', async () => {
+  it("authenticates only active, non-expired keys", async () => {
     poolQueryMock.mockResolvedValueOnce({
       rows: [
         {
-          id: 'key_1',
-          name: 'Partner',
-          key_prefix: 'abc123',
-          status: 'active',
+          id: "key_1",
+          name: "Partner",
+          key_prefix: "abc123",
+          status: "active",
           rate_limit_max_requests: 60,
           rate_limit_window_ms: 60000,
           usage_count: 2,
@@ -74,16 +74,16 @@ describe('api key service', () => {
       ],
     });
 
-    const authenticated = await authenticateApiKey('ssp_live_abc.def');
-    expect(authenticated?.id).toBe('key_1');
+    const authenticated = await authenticateApiKey("ssp_live_abc.def");
+    expect(authenticated?.id).toBe("key_1");
 
     poolQueryMock.mockResolvedValueOnce({
       rows: [
         {
-          id: 'key_2',
-          name: 'Old Partner',
-          key_prefix: 'def456',
-          status: 'revoked',
+          id: "key_2",
+          name: "Old Partner",
+          key_prefix: "def456",
+          status: "revoked",
           rate_limit_max_requests: 60,
           rate_limit_window_ms: 60000,
           usage_count: 0,
@@ -93,16 +93,16 @@ describe('api key service', () => {
       ],
     });
 
-    const revoked = await authenticateApiKey('ssp_live_def.ghi');
+    const revoked = await authenticateApiKey("ssp_live_def.ghi");
     expect(revoked).toBeNull();
   });
 
-  it('enforces per-key rate limits in memory', () => {
+  it("enforces per-key rate limits in memory", () => {
     const apiKey = {
-      id: 'key_1',
-      name: 'Partner',
-      keyPrefix: 'abc123',
-      status: 'active' as const,
+      id: "key_1",
+      name: "Partner",
+      keyPrefix: "abc123",
+      status: "active" as const,
       rateLimitMaxRequests: 1,
       rateLimitWindowMs: 60_000,
       usageCount: 0,

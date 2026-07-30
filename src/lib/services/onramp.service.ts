@@ -1,6 +1,9 @@
-import { v4 as uuidv4 } from 'uuid';
-import { onrampProviderRegistry } from '@/lib/onramp/adapters/provider-registry';
-import { bridgeFromBaseToStellar, pollBridgeStatus } from '@/lib/onramp/utils/bridge';
+import { v4 as uuidv4 } from "uuid";
+import { onrampProviderRegistry } from "@/lib/onramp/adapters/provider-registry";
+import {
+  bridgeFromBaseToStellar,
+  pollBridgeStatus,
+} from "@/lib/onramp/utils/bridge";
 import type {
   OnrampQuoteRequest,
   OnrampQuoteResponse,
@@ -8,7 +11,7 @@ import type {
   OnrampOrderResponse,
   OnrampOrderStatus,
   OnrampState,
-} from '@/lib/onramp/types';
+} from "@/lib/onramp/types";
 
 interface OnrampRecord {
   id: string;
@@ -36,16 +39,19 @@ export class OnrampService {
   async getQuote(request: OnrampQuoteRequest): Promise<OnrampQuoteResponse> {
     const providers = onrampProviderRegistry.getProvidersForCorridor(
       request.fiatCurrency,
-      request.destinationToken
+      request.destinationToken,
     );
 
     if (providers.length === 0) {
-      throw new Error(`No provider available for ${request.fiatCurrency} → ${request.destinationToken}`);
+      throw new Error(
+        `No provider available for ${request.fiatCurrency} → ${request.destinationToken}`,
+      );
     }
 
-    const providerName = request.provider && providers.includes(request.provider)
-      ? request.provider
-      : providers[0];
+    const providerName =
+      request.provider && providers.includes(request.provider)
+        ? request.provider
+        : providers[0];
 
     const adapter = onrampProviderRegistry.getProvider(providerName);
     if (!adapter) throw new Error(`Provider ${providerName} not found`);
@@ -54,12 +60,18 @@ export class OnrampService {
       fiatAmount: request.fiatAmount,
       fiatCurrency: request.fiatCurrency,
       destinationToken: request.destinationToken,
-      destinationNetwork: 'stellar',
+      destinationNetwork: "stellar",
     });
 
-    const bridgeFee = (parseFloat(providerQuote.destinationAmount) * 0.005).toFixed(6);
-    const totalFee = (parseFloat(providerQuote.fee) + parseFloat(bridgeFee)).toFixed(6);
-    const destinationAmount = (parseFloat(providerQuote.destinationAmount) - parseFloat(bridgeFee)).toFixed(6);
+    const bridgeFee = (
+      parseFloat(providerQuote.destinationAmount) * 0.005
+    ).toFixed(6);
+    const totalFee = (
+      parseFloat(providerQuote.fee) + parseFloat(bridgeFee)
+    ).toFixed(6);
+    const destinationAmount = (
+      parseFloat(providerQuote.destinationAmount) - parseFloat(bridgeFee)
+    ).toFixed(6);
 
     return {
       quoteId: uuidv4(),
@@ -86,7 +98,7 @@ export class OnrampService {
       fiatCurrency: request.fiatCurrency,
       destinationAmount: request.destinationAmount,
       destinationToken: request.destinationToken,
-      destinationNetwork: 'stellar',
+      destinationNetwork: "stellar",
       destinationAddress: request.destinationAddress,
       reference: `onramp_${uuidv4()}`,
     });
@@ -97,7 +109,7 @@ export class OnrampService {
     const record: OnrampRecord = {
       id: orderId,
       quoteId: request.quoteId,
-      state: 'order_created',
+      state: "order_created",
       fiatAmount: request.fiatAmount,
       fiatCurrency: request.fiatCurrency,
       destinationAmount: request.destinationAmount,
@@ -116,7 +128,7 @@ export class OnrampService {
 
     return {
       orderId,
-      status: 'order_created',
+      status: "order_created",
       depositAddress: providerOrder.depositAddress,
       depositNetwork: providerOrder.depositNetwork,
       depositAmount: providerOrder.depositAmount,
@@ -139,7 +151,7 @@ export class OnrampService {
     return {
       orderId: record.id,
       status: record.state,
-      bridgeStatus: record.bridgeTxHash ? 'pending' : undefined,
+      bridgeStatus: record.bridgeTxHash ? "pending" : undefined,
       txHash: record.bridgeTxHash,
       error: record.error,
       createdAt: new Date(record.createdAt).toISOString(),
@@ -151,20 +163,20 @@ export class OnrampService {
     const record = records.get(orderId);
     if (!record) throw new Error(`Order ${orderId} not found`);
 
-    record.state = 'deposit_confirmed';
+    record.state = "deposit_confirmed";
     record.updatedAt = Date.now();
 
     const bridgeResult = await bridgeFromBaseToStellar({
       amount: record.destinationAmount,
-      sourceToken: 'USDC',
-      destinationToken: 'USDC',
+      sourceToken: "USDC",
+      destinationToken: "USDC",
       destinationAddress: record.destinationAddress,
-      sourceChain: 'base',
-      destinationChain: 'stellar',
+      sourceChain: "base",
+      destinationChain: "stellar",
     });
 
     record.bridgeTxHash = bridgeResult.txHash;
-    record.state = 'bridge_pending';
+    record.state = "bridge_pending";
     record.updatedAt = Date.now();
   }
 
@@ -172,7 +184,7 @@ export class OnrampService {
     const record = records.get(orderId);
     if (!record) throw new Error(`Order ${orderId} not found`);
 
-    record.state = 'bridge_completed';
+    record.state = "bridge_completed";
     record.updatedAt = Date.now();
   }
 
@@ -180,31 +192,34 @@ export class OnrampService {
     const record = records.get(orderId);
     if (!record) throw new Error(`Order ${orderId} not found`);
 
-    if (record.state === 'bridge_pending' && record.bridgeTxHash) {
+    if (record.state === "bridge_pending" && record.bridgeTxHash) {
       const status = await pollBridgeStatus(record.bridgeTxHash);
-      if (status.status === 'completed') {
-        record.state = 'completed';
+      if (status.status === "completed") {
+        record.state = "completed";
         record.updatedAt = Date.now();
-      } else if (status.status === 'failed') {
-        record.state = 'failed';
-        record.error = 'Bridge transfer failed';
+      } else if (status.status === "failed") {
+        record.state = "failed";
+        record.error = "Bridge transfer failed";
         record.updatedAt = Date.now();
       }
     }
   }
 
-  async handleWebhook(payload: { event: string; data: Record<string, unknown> }): Promise<void> {
+  async handleWebhook(payload: {
+    event: string;
+    data: Record<string, unknown>;
+  }): Promise<void> {
     const orderId = payload.data.orderId as string;
-    if (!orderId) throw new Error('No orderId in webhook payload');
+    if (!orderId) throw new Error("No orderId in webhook payload");
 
     switch (payload.event) {
-      case 'deposit.confirmed':
+      case "deposit.confirmed":
         await this.handleDepositConfirmed(orderId);
         break;
-      case 'deposit.failed':
-        this.failOrder(orderId, 'Deposit failed');
+      case "deposit.failed":
+        this.failOrder(orderId, "Deposit failed");
         break;
-      case 'bridge.completed':
+      case "bridge.completed":
         await this.handleBridgeCompleted(orderId);
         break;
       default:
@@ -215,7 +230,7 @@ export class OnrampService {
   private failOrder(orderId: string, error: string): void {
     const record = records.get(orderId);
     if (record) {
-      record.state = 'failed';
+      record.state = "failed";
       record.error = error;
       record.updatedAt = Date.now();
     }

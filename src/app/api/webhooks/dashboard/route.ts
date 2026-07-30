@@ -1,7 +1,17 @@
 import { getRecordsByStatus } from "../../../../lib/webhook/delivery-store";
-import { list as listDLQ, replay as replayDLQ } from "../../../../lib/webhook/dlq";
-import { attempt, markDelivered, markFailed } from "../../../../lib/webhook/dispatcher";
-import { hasRemainingAttempts, scheduleNext } from "../../../../lib/webhook/retry-scheduler";
+import {
+  list as listDLQ,
+  replay as replayDLQ,
+} from "../../../../lib/webhook/dlq";
+import {
+  attempt,
+  markDelivered,
+  markFailed,
+} from "../../../../lib/webhook/dispatcher";
+import {
+  hasRemainingAttempts,
+  scheduleNext,
+} from "../../../../lib/webhook/retry-scheduler";
 import { updateRecord } from "../../../../lib/webhook/delivery-store";
 
 export async function GET(request: Request) {
@@ -16,9 +26,7 @@ export async function GET(request: Request) {
 
     if (view === "deliveries") {
       const status = (searchParams.get("status") ?? "pending") as
-        | "pending"
-        | "delivered"
-        | "failed";
+        "pending" | "delivered" | "failed";
       const records = await getRecordsByStatus(status);
       return Response.json({ deliveries: records, count: records.length });
     }
@@ -46,10 +54,7 @@ export async function GET(request: Request) {
       })),
     });
   } catch (err) {
-    return Response.json(
-      { error: (err as Error).message },
-      { status: 500 },
-    );
+    return Response.json({ error: (err as Error).message }, { status: 500 });
   }
 }
 
@@ -87,7 +92,10 @@ export async function POST(request: Request) {
       const records = await getRecordsByStatus("pending");
       const record = records.find((r) => r.id === deliveryId);
       if (!record) {
-        return Response.json({ error: "Pending delivery not found" }, { status: 404 });
+        return Response.json(
+          { error: "Pending delivery not found" },
+          { status: 404 },
+        );
       }
 
       const result = await attempt(record);
@@ -99,7 +107,9 @@ export async function POST(request: Request) {
 
       if (result.retryable && hasRemainingAttempts(record)) {
         const scheduled = await scheduleNext(record);
-        await updateRecord(record.id, { nextAttemptAt: scheduled.nextAttemptAt });
+        await updateRecord(record.id, {
+          nextAttemptAt: scheduled.nextAttemptAt,
+        });
         return Response.json({ success: false, scheduled: true, result });
       }
 

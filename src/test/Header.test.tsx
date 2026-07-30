@@ -28,29 +28,38 @@ const baseProps = {
   onDisconnect: vi.fn(),
 };
 
-function renderHeader(props: Partial<typeof baseProps> & Record<string, unknown> = {}) {
+function renderHeader(
+  props: Partial<typeof baseProps> & Record<string, unknown> = {},
+) {
   return render(
     <ToastProvider>
       <Header {...baseProps} {...props} />
-    </ToastProvider>
+    </ToastProvider>,
   );
 }
 
 describe("Header — wallet button", () => {
   it("renders CONNECT WALLET button when disconnected", () => {
     renderHeader();
-    expect(screen.getByRole("button", { name: /connect wallet/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /connect wallet/i }),
+    ).toBeInTheDocument();
   });
 
   it("renders truncated address when connected", () => {
-    renderHeader({ isConnected: true, walletAddress: "GCFXABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890" });
+    renderHeader({
+      isConnected: true,
+      walletAddress: "GCFXABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890",
+    });
     const button = screen.getByRole("button", { name: /disconnect wallet/i });
     expect(button.textContent).toMatch(/GCFX/);
   });
 
   it("renders CONNECTING... when connecting", () => {
     renderHeader({ isConnecting: true });
-    expect(screen.getByRole("button", { name: /connect wallet/i })).toHaveTextContent("CONNECTING...");
+    expect(
+      screen.getByRole("button", { name: /connect wallet/i }),
+    ).toHaveTextContent("CONNECTING...");
   });
 
   it("shows balance lines when connected", () => {
@@ -67,20 +76,30 @@ describe("Header — wallet button", () => {
   it("calls onConnect when button clicked (disconnected state)", async () => {
     const onConnect = vi.fn();
     renderHeader({ onConnect });
-    await userEvent.click(screen.getByRole("button", { name: /connect wallet/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /connect wallet/i }),
+    );
     expect(onConnect).toHaveBeenCalledOnce();
   });
 
   it("calls onDisconnect when button clicked (connected state)", async () => {
     const onDisconnect = vi.fn();
-    renderHeader({ isConnected: true, walletAddress: "GCFX1234", onDisconnect });
-    await userEvent.click(screen.getByRole("button", { name: /disconnect wallet/i }));
+    renderHeader({
+      isConnected: true,
+      walletAddress: "GCFX1234",
+      onDisconnect,
+    });
+    await userEvent.click(
+      screen.getByRole("button", { name: /disconnect wallet/i }),
+    );
     expect(onDisconnect).toHaveBeenCalledOnce();
   });
 
   it("button is disabled when isConnecting", () => {
     renderHeader({ isConnecting: true });
-    expect(screen.getByRole("button", { name: /connect wallet/i })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /connect wallet/i }),
+    ).toBeDisabled();
   });
 });
 
@@ -116,11 +135,15 @@ describe("Header — balance skeleton", () => {
 
   it("shows CONNECTING... label while isConnecting", () => {
     renderHeader({ isConnecting: true });
-    expect(screen.getByRole("button", { name: /connect wallet/i })).toHaveTextContent("CONNECTING...");
+    expect(
+      screen.getByRole("button", { name: /connect wallet/i }),
+    ).toHaveTextContent("CONNECTING...");
   });
 
   it("button is disabled while connecting", () => {
     renderHeader({ isConnecting: true });
-    expect(screen.getByRole("button", { name: /connect wallet/i })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /connect wallet/i }),
+    ).toBeDisabled();
   });
 });

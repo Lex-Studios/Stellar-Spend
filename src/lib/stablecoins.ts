@@ -18,26 +18,28 @@ export interface StablecoinConfig {
 
 export const SUPPORTED_STABLECOINS: StablecoinConfig[] = [
   {
-    symbol: 'USDC',
-    name: 'USD Coin',
+    symbol: "USDC",
+    name: "USD Coin",
     decimals: 6,
-    allbridgeSymbol: 'USDC',
+    allbridgeSymbol: "USDC",
     bridgeFeePercent: 0.5,
     active: true,
   },
   {
-    symbol: 'USDT',
-    name: 'Tether USD',
+    symbol: "USDT",
+    name: "Tether USD",
     decimals: 6,
-    allbridgeSymbol: 'USDT',
+    allbridgeSymbol: "USDT",
     bridgeFeePercent: 0.5,
     active: true,
   },
 ];
 
-export function getStablecoinConfig(symbol: string): StablecoinConfig | undefined {
+export function getStablecoinConfig(
+  symbol: string,
+): StablecoinConfig | undefined {
   return SUPPORTED_STABLECOINS.find(
-    (s) => s.symbol === symbol.toUpperCase() && s.active
+    (s) => s.symbol === symbol.toUpperCase() && s.active,
   );
 }
 
@@ -53,9 +55,12 @@ export function isSupportedStablecoin(symbol: string): boolean {
  * Calculate the bridge fee for a given stablecoin and amount.
  * Returns the fee as a string with 6 decimal places.
  */
-export function calculateStablecoinBridgeFee(symbol: string, amount: string): string {
+export function calculateStablecoinBridgeFee(
+  symbol: string,
+  amount: string,
+): string {
   const config = getStablecoinConfig(symbol);
   const amountNum = parseFloat(amount);
-  if (!config || isNaN(amountNum) || amountNum <= 0) return '0';
+  if (!config || isNaN(amountNum) || amountNum <= 0) return "0";
   return ((amountNum * config.bridgeFeePercent) / 100).toFixed(6);
 }

@@ -2,7 +2,7 @@ import type {
   NotificationContext,
   NotificationTemplate,
   TransactionNotificationEvent,
-} from '@/lib/notifications/types';
+} from "@/lib/notifications/types";
 
 interface TemplateStrings {
   completedSubject: string;
@@ -15,25 +15,26 @@ interface TemplateStrings {
 
 const templateStrings: Record<string, TemplateStrings> = {
   en: {
-    completedSubject: 'Transaction completed',
-    completedMessage: 'Your payout has been settled successfully.',
-    failedSubject: 'Transaction failed',
-    failedMessage: (e) => e || 'Please review the transaction details.',
-    pendingSubject: 'Transaction update',
-    pendingMessage: 'Your payout is still being processed.',
+    completedSubject: "Transaction completed",
+    completedMessage: "Your payout has been settled successfully.",
+    failedSubject: "Transaction failed",
+    failedMessage: (e) => e || "Please review the transaction details.",
+    pendingSubject: "Transaction update",
+    pendingMessage: "Your payout is still being processed.",
   },
   fr: {
-    completedSubject: 'Transaction terminée',
-    completedMessage: 'Votre paiement a été réglé avec succès.',
-    failedSubject: 'Transaction échouée',
-    failedMessage: (e) => e || 'Veuillez vérifier les détails de la transaction.',
-    pendingSubject: 'Mise à jour de transaction',
-    pendingMessage: 'Votre paiement est toujours en cours de traitement.',
+    completedSubject: "Transaction terminée",
+    completedMessage: "Votre paiement a été réglé avec succès.",
+    failedSubject: "Transaction échouée",
+    failedMessage: (e) =>
+      e || "Veuillez vérifier les détails de la transaction.",
+    pendingSubject: "Mise à jour de transaction",
+    pendingMessage: "Votre paiement est toujours en cours de traitement.",
   },
 };
 
 function strings(locale?: string): TemplateStrings {
-  return templateStrings[locale ?? 'en'] ?? templateStrings['en'];
+  return templateStrings[locale ?? "en"] ?? templateStrings["en"];
 }
 
 function amountLabel(amount: string, currency: string): string {
@@ -42,12 +43,13 @@ function amountLabel(amount: string, currency: string): string {
 
 function baseMessage(context: NotificationContext): string {
   const tx = context.transaction;
-  const beneficiary = tx.beneficiary.accountName || tx.beneficiary.accountIdentifier;
+  const beneficiary =
+    tx.beneficiary.accountName || tx.beneficiary.accountIdentifier;
   return `Transaction ${tx.id} for ${amountLabel(tx.amount, tx.currency)} to ${beneficiary}.`;
 }
 
 export function deriveNotificationEvent(
-  context: NotificationContext
+  context: NotificationContext,
 ): TransactionNotificationEvent | null {
   const current = context.transaction.status;
   if (
@@ -56,15 +58,16 @@ export function deriveNotificationEvent(
   ) {
     return null;
   }
-  if (current === 'completed') return 'completed';
-  if (current === 'failed') return 'failed';
-  if (current === 'pending' && context.transaction.payoutStatus === 'pending') return 'pending';
+  if (current === "completed") return "completed";
+  if (current === "failed") return "failed";
+  if (current === "pending" && context.transaction.payoutStatus === "pending")
+    return "pending";
   return null;
 }
 
 export function buildNotificationTemplate(
   context: NotificationContext,
-  locale?: string
+  locale?: string,
 ): NotificationTemplate | null {
   const event = deriveNotificationEvent(context);
   if (!event) return null;
@@ -72,24 +75,24 @@ export function buildNotificationTemplate(
   const s = strings(locale);
   const base = baseMessage(context);
 
-  if (event === 'completed') {
+  if (event === "completed") {
     return {
-      templateId: 'transaction-completed-v1',
+      templateId: "transaction-completed-v1",
       subject: `${s.completedSubject}: ${context.transaction.id}`,
       message: `${base} Status: completed. ${s.completedMessage}`,
     };
   }
 
-  if (event === 'failed') {
+  if (event === "failed") {
     return {
-      templateId: 'transaction-failed-v1',
+      templateId: "transaction-failed-v1",
       subject: `${s.failedSubject}: ${context.transaction.id}`,
-      message: `${base} Status: failed. ${s.failedMessage(context.transaction.error ?? '')}`,
+      message: `${base} Status: failed. ${s.failedMessage(context.transaction.error ?? "")}`,
     };
   }
 
   return {
-    templateId: 'transaction-pending-v1',
+    templateId: "transaction-pending-v1",
     subject: `${s.pendingSubject}: ${context.transaction.id}`,
     message: `${base} Status: pending. ${s.pendingMessage}`,
   };

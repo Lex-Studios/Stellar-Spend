@@ -1,14 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
-import { TransactionReceipt, type ReceiptData } from "@/components/TransactionReceipt";
+import {
+  TransactionReceipt,
+  type ReceiptData,
+} from "@/components/TransactionReceipt";
 import { I18nProvider } from "@/lib/i18n/provider";
 
 function renderReceipt(props: React.ComponentProps<typeof TransactionReceipt>) {
   return render(
     <I18nProvider>
       <TransactionReceipt {...props} />
-    </I18nProvider>
+    </I18nProvider>,
   );
 }
 
@@ -73,13 +76,17 @@ describe("TransactionReceipt", () => {
   it("calls onClose when close button is clicked", async () => {
     const onClose = vi.fn();
     renderReceipt({ data: mockReceipt, onClose });
-    await userEvent.click(screen.getByRole("button", { name: /close receipt/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /close receipt/i }),
+    );
     expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("does not render close button when onClose is not provided", () => {
     renderReceipt({ data: mockReceipt });
-    expect(screen.queryByRole("button", { name: /close receipt/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /close receipt/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders Print and Share buttons", () => {
@@ -101,7 +108,10 @@ describe("TransactionReceipt", () => {
   it("links to the Stellar explorer for the transaction hash", () => {
     renderReceipt({ data: mockReceipt });
     const link = screen.getByRole("link", { name: /view on explorer/i });
-    expect(link).toHaveAttribute("href", `https://stellar.expert/explorer/public/tx/${mockReceipt.txHash}`);
+    expect(link).toHaveAttribute(
+      "href",
+      `https://stellar.expert/explorer/public/tx/${mockReceipt.txHash}`,
+    );
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });
@@ -110,10 +120,14 @@ describe("TransactionReceipt", () => {
     renderReceipt({ data: mockReceipt });
     expect(screen.queryByText("Transaction QR Code")).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: /show verification qr/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /show verification qr/i }),
+    );
     expect(screen.getByText("Transaction QR Code")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: /hide verification qr/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /hide verification qr/i }),
+    );
     expect(screen.queryByText("Transaction QR Code")).not.toBeInTheDocument();
   });
 });

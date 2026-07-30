@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { logger } from '../logger';
+import { NextRequest, NextResponse } from "next/server";
+import { logger } from "../logger";
 
 export interface RequestLogEntry {
   requestId: string;
@@ -17,10 +17,12 @@ export interface RequestLogEntry {
  * - Emits a structured `http.request` log entry with correlation ID
  * - Propagates the requestId back to the caller via X-Request-Id response header
  */
-export function requestLoggingMiddleware(handler: (req: NextRequest) => Promise<NextResponse>) {
+export function requestLoggingMiddleware(
+  handler: (req: NextRequest) => Promise<NextResponse>,
+) {
   return async (req: NextRequest): Promise<NextResponse> => {
     const requestId =
-      req.headers.get('x-request-id') ??
+      req.headers.get("x-request-id") ??
       `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 
     const startTime = Date.now();
@@ -31,12 +33,16 @@ export function requestLoggingMiddleware(handler: (req: NextRequest) => Promise<
       response = await handler(req);
     } catch (err) {
       const durationMs = Date.now() - startTime;
-      log.error('http.request', {
-        method: req.method,
-        path: req.nextUrl.pathname,
-        status: 500,
-        durationMs,
-      }, err);
+      log.error(
+        "http.request",
+        {
+          method: req.method,
+          path: req.nextUrl.pathname,
+          status: 500,
+          durationMs,
+        },
+        err,
+      );
       throw err;
     }
 
@@ -51,16 +57,16 @@ export function requestLoggingMiddleware(handler: (req: NextRequest) => Promise<
     };
 
     if (status >= 500) {
-      log.error('http.request', entry);
+      log.error("http.request", entry);
     } else if (status >= 400) {
-      log.warn('http.request', entry);
+      log.warn("http.request", entry);
     } else {
-      log.info('http.request', entry);
+      log.info("http.request", entry);
     }
 
     // Propagate correlation ID to caller
     const headers = new Headers(response.headers);
-    headers.set('x-request-id', requestId);
+    headers.set("x-request-id", requestId);
 
     return new NextResponse(response.body, {
       status: response.status,

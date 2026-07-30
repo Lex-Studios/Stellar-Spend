@@ -109,7 +109,10 @@ export class IPWhitelistService {
     }));
   }
 
-  async isIPWhitelisted(userAddress: string, ipAddress: string): Promise<boolean> {
+  async isIPWhitelisted(
+    userAddress: string,
+    ipAddress: string,
+  ): Promise<boolean> {
     const result = await pool.query(
       `SELECT id FROM ip_whitelist
        WHERE user_address = $1 AND is_active = true
@@ -153,7 +156,10 @@ export class IPWhitelistService {
     return parts[0] * 16777216 + parts[1] * 65536 + parts[2] * 256 + parts[3];
   }
 
-  private async updateLastUsed(userAddress: string, ipAddress: string): Promise<void> {
+  private async updateLastUsed(
+    userAddress: string,
+    ipAddress: string,
+  ): Promise<void> {
     await pool.query(
       `UPDATE ip_whitelist SET last_used_at = $1
        WHERE user_address = $2 AND ip_address = $3`,
@@ -187,7 +193,15 @@ export class IPWhitelistService {
     await pool.query(
       `INSERT INTO ip_violations (id, user_address, ip_address, violation_type, severity, details, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [id, userAddress, ipAddress, violationType, severity, details || null, now],
+      [
+        id,
+        userAddress,
+        ipAddress,
+        violationType,
+        severity,
+        details || null,
+        now,
+      ],
     );
 
     logger.warn(`IP violation logged`, {

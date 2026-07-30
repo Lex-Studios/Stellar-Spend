@@ -1,4 +1,9 @@
-import { ClientError, withRetry, type ClientConfig, type RetryOptions } from './base';
+import {
+  ClientError,
+  withRetry,
+  type ClientConfig,
+  type RetryOptions,
+} from "./base";
 
 export interface AllbridgeClientConfig extends ClientConfig {
   sorobanRpcUrl: string;
@@ -37,7 +42,7 @@ export class AllbridgeClient {
       const response = await fetch(url, {
         ...options,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...options.headers,
         },
         signal: controller.signal,
@@ -52,9 +57,9 @@ export class AllbridgeClient {
 
       if (!response.ok) {
         throw new ClientError(
-          data?.message || response.statusText || 'Unknown error',
+          data?.message || response.statusText || "Unknown error",
           response.status,
-          data
+          data,
         );
       }
 
@@ -64,11 +69,11 @@ export class AllbridgeClient {
         throw error;
       }
 
-      if (error.name === 'AbortError') {
-        throw new ClientError('Request timeout', 504);
+      if (error.name === "AbortError") {
+        throw new ClientError("Request timeout", 504);
       }
 
-      throw new ClientError(error.message || 'Network error', 502);
+      throw new ClientError(error.message || "Network error", 502);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -78,32 +83,36 @@ export class AllbridgeClient {
     sourceChain: string,
     destinationChain: string,
     token: string,
-    amount: string
+    amount: string,
   ): Promise<BridgeQuote> {
     return withRetry(
       () =>
         this.fetch(
-          `${this.sorobanRpcUrl}/quote?sourceChain=${sourceChain}&destinationChain=${destinationChain}&token=${token}&amount=${amount}`
+          `${this.sorobanRpcUrl}/quote?sourceChain=${sourceChain}&destinationChain=${destinationChain}&token=${token}&amount=${amount}`,
         ),
-      this.retryOptions
+      this.retryOptions,
     );
   }
 
-  async getTransactionStatus(txHash: string): Promise<{ status: string; hash: string }> {
+  async getTransactionStatus(
+    txHash: string,
+  ): Promise<{ status: string; hash: string }> {
     return withRetry(
       () => this.fetch(`${this.horizonUrl}/transactions/${txHash}`),
-      this.retryOptions
+      this.retryOptions,
     );
   }
 
-  async submitTransaction(xdr: string): Promise<{ hash: string; status: string }> {
+  async submitTransaction(
+    xdr: string,
+  ): Promise<{ hash: string; status: string }> {
     return withRetry(
       () =>
         this.fetch(`${this.horizonUrl}/transactions`, {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({ tx: xdr }),
         }),
-      this.retryOptions
+      this.retryOptions,
     );
   }
 }

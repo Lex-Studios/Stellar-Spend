@@ -1,6 +1,10 @@
 export interface DepositProviderAdapter {
-  getQuote(request: OnrampProviderQuoteRequest): Promise<OnrampProviderQuoteResponse>;
-  createOrder(request: OnrampProviderOrderRequest): Promise<OnrampProviderOrderResponse>;
+  getQuote(
+    request: OnrampProviderQuoteRequest,
+  ): Promise<OnrampProviderQuoteResponse>;
+  createOrder(
+    request: OnrampProviderOrderRequest,
+  ): Promise<OnrampProviderOrderResponse>;
   getOrderStatus(orderId: string): Promise<{ status: string; txHash?: string }>;
   getHealth(): Promise<{ ok: boolean; latencyMs: number }>;
   getCapabilities(): OnrampProviderCapabilities;

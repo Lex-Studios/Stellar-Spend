@@ -7,9 +7,9 @@ export type ServiceFactory<T> = () => T | Promise<T>;
 export type ServiceProvider<T> = T | ServiceFactory<T>;
 
 export enum ServiceLifetime {
-  SINGLETON = 'singleton',
-  TRANSIENT = 'transient',
-  SCOPED = 'scoped',
+  SINGLETON = "singleton",
+  TRANSIENT = "transient",
+  SCOPED = "scoped",
 }
 
 export interface ServiceRegistration<T> {
@@ -34,14 +34,20 @@ export class DIContainer {
   /**
    * Register a transient service (new instance each time)
    */
-  registerTransient<T>(key: string | symbol, provider: ServiceProvider<T>): void {
+  registerTransient<T>(
+    key: string | symbol,
+    provider: ServiceProvider<T>,
+  ): void {
     this.services.set(key, { provider, lifetime: ServiceLifetime.TRANSIENT });
   }
 
   /**
    * Register a singleton service (single instance for app lifetime)
    */
-  registerSingleton<T>(key: string | symbol, provider: ServiceProvider<T>): void {
+  registerSingleton<T>(
+    key: string | symbol,
+    provider: ServiceProvider<T>,
+  ): void {
     this.services.set(key, { provider, lifetime: ServiceLifetime.SINGLETON });
   }
 
@@ -62,7 +68,10 @@ export class DIContainer {
     }
 
     // Return cached singleton
-    if (registration.lifetime === ServiceLifetime.SINGLETON && this.instances.has(key)) {
+    if (
+      registration.lifetime === ServiceLifetime.SINGLETON &&
+      this.instances.has(key)
+    ) {
       return this.instances.get(key) as T;
     }
 
@@ -76,7 +85,7 @@ export class DIContainer {
 
     // Create new instance
     let instance: T;
-    if (typeof registration.provider === 'function') {
+    if (typeof registration.provider === "function") {
       instance = await registration.provider();
     } else {
       instance = registration.provider as T;
@@ -105,7 +114,10 @@ export class DIContainer {
     }
 
     // Return cached singleton
-    if (registration.lifetime === ServiceLifetime.SINGLETON && this.instances.has(key)) {
+    if (
+      registration.lifetime === ServiceLifetime.SINGLETON &&
+      this.instances.has(key)
+    ) {
       return this.instances.get(key) as T;
     }
 
@@ -119,10 +131,12 @@ export class DIContainer {
 
     // Create new instance
     let instance: T;
-    if (typeof registration.provider === 'function') {
+    if (typeof registration.provider === "function") {
       const result = (registration.provider as any)();
       if (result instanceof Promise) {
-        throw new Error(`Cannot resolve async service synchronously: ${String(key)}`);
+        throw new Error(
+          `Cannot resolve async service synchronously: ${String(key)}`,
+        );
       }
       instance = result;
     } else {
@@ -183,7 +197,9 @@ export class DIContainer {
       try {
         await this.resolve(key);
       } catch (error) {
-        errors.push(`Failed to resolve ${String(key)}: ${error instanceof Error ? error.message : String(error)}`);
+        errors.push(
+          `Failed to resolve ${String(key)}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
     return { valid: errors.length === 0, errors };

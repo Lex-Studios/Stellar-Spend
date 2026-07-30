@@ -1,5 +1,5 @@
-import * as StellarSdk from '@stellar/stellar-sdk';
-import { randomBytes } from 'crypto';
+import * as StellarSdk from "@stellar/stellar-sdk";
+import { randomBytes } from "crypto";
 
 /**
  * Convert float amount to on-chain integer representation
@@ -8,17 +8,18 @@ import { randomBytes } from 'crypto';
  * Convert float amount to on-chain integer representation
  */
 export function floatToInt(amount: string, decimals: number): string {
-  const [intPartRaw, fracPartRaw = ''] = amount.split('.');
-  const intPart = intPartRaw || '0';
+  const [intPartRaw, fracPartRaw = ""] = amount.split(".");
+  const intPart = intPartRaw || "0";
   let fracPart = fracPartRaw;
 
   if (fracPart.length > decimals) {
     fracPart = fracPart.substring(0, decimals);
   } else {
-    fracPart = fracPart.padEnd(decimals, '0');
+    fracPart = fracPart.padEnd(decimals, "0");
   }
 
-  const result = BigInt(intPart) * (BigInt(10) ** BigInt(decimals)) + BigInt(fracPart);
+  const result =
+    BigInt(intPart) * BigInt(10) ** BigInt(decimals) + BigInt(fracPart);
   return result.toString();
 }
 
@@ -26,8 +27,8 @@ export function floatToInt(amount: string, decimals: number): string {
  * Encode EVM address as 32-byte buffer (left-pad 20-byte address)
  */
 function encodeEvmAddress(address: string): Buffer {
-  const cleanAddress = address.startsWith('0x') ? address.slice(2) : address;
-  const addressBuffer = Buffer.from(cleanAddress, 'hex');
+  const cleanAddress = address.startsWith("0x") ? address.slice(2) : address;
+  const addressBuffer = Buffer.from(cleanAddress, "hex");
   const paddedBuffer = Buffer.alloc(32);
   addressBuffer.copy(paddedBuffer, 12); // Left-pad with 12 zeros
   return paddedBuffer;
@@ -37,10 +38,10 @@ function encodeEvmAddress(address: string): Buffer {
  * Encode token address as 32-byte buffer
  */
 function encodeTokenAddress(address: string): Buffer {
-  const cleanAddress = address.startsWith('0x') ? address.slice(2) : address;
-  const buffer = Buffer.from(cleanAddress, 'hex');
+  const cleanAddress = address.startsWith("0x") ? address.slice(2) : address;
+  const buffer = Buffer.from(cleanAddress, "hex");
   if (buffer.length === 32) return buffer;
-  
+
   const paddedBuffer = Buffer.alloc(32);
   buffer.copy(paddedBuffer, 32 - buffer.length); // Right-align
   return paddedBuffer;
@@ -70,7 +71,7 @@ interface BuildSwapAndBridgeTxParams {
  * Build Soroban swap_and_bridge transaction
  */
 export async function buildSwapAndBridgeTx(
-  params: BuildSwapAndBridgeTxParams
+  params: BuildSwapAndBridgeTxParams,
 ): Promise<string> {
   const {
     rpcUrl,
@@ -111,13 +112,13 @@ export async function buildSwapAndBridgeTx(
 
   // Create invokeHostFunction operation
   const operation = contract.call(
-    'swap_and_bridge',
-    ...spec.funcArgsToScVals('swap_and_bridge', {
+    "swap_and_bridge",
+    ...spec.funcArgsToScVals("swap_and_bridge", {
       amount: amountInt,
       recipient: recipientBuffer,
       receive_token: receiveTokenBuffer,
       nonce,
-    })
+    }),
   );
 
   // Build transaction
@@ -126,10 +127,7 @@ export async function buildSwapAndBridgeTx(
     networkPassphrase: StellarSdk.Networks.PUBLIC,
   });
 
-  const tx = txBuilder
-    .addOperation(operation)
-    .setTimeout(300)
-    .build();
+  const tx = txBuilder.addOperation(operation).setTimeout(300).build();
 
   // Simulate transaction
   const simulationResponse = await rpcServer.simulateTransaction(tx);
@@ -145,7 +143,7 @@ export async function buildSwapAndBridgeTx(
       if (entry.credentials?.address) {
         const oldExp = entry.credentials.address.signatureExpirationLedger;
         const newExp = latestLedger + 500;
-        
+
         console.log(`Extending auth expiration: old=${oldExp}, new=${newExp}`);
         entry.credentials.address.signatureExpirationLedger = newExp;
       }
@@ -153,14 +151,18 @@ export async function buildSwapAndBridgeTx(
   }
 
   // Assemble transaction with modified auth entries
-  const assembledTx = StellarSdk.rpc.assembleTransaction(tx, simulationResponse).build();
+  const assembledTx = StellarSdk.rpc
+    .assembleTransaction(tx, simulationResponse)
+    .build();
 
   // Apply bumped fee: (baseFee + minResourceFee) * 1.5
   const originalFee = parseInt(tx.fee);
-  const simMinFee = parseInt(simulationResponse.minResourceFee || '0');
+  const simMinFee = parseInt(simulationResponse.minResourceFee || "0");
   const targetFee = Math.ceil((originalFee + simMinFee) * 1.5);
 
-  console.log(`[Fee Bump] originalFee: ${originalFee}, simMinFee: ${simMinFee}, targetFee: ${targetFee}`);
+  console.log(
+    `[Fee Bump] originalFee: ${originalFee}, simMinFee: ${simMinFee}, targetFee: ${targetFee}`,
+  );
 
   // Mutate the assembled tx fee
   (assembledTx as any)._fee = targetFee.toString();
@@ -168,4 +170,3 @@ export async function buildSwapAndBridgeTx(
   // Return base64 XDR
   return assembledTx.toXDR();
 }
-

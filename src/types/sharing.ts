@@ -23,4 +23,5 @@ export interface ShareSettings {
   expirationDays?: number;
 }
 
-export type SharePlatform = 'twitter' | 'facebook' | 'linkedin' | 'email' | 'copy';
+export type SharePlatform =
+  "twitter" | "facebook" | "linkedin" | "email" | "copy";

@@ -22,7 +22,9 @@ export function FunnelChart({ data }: FunnelChartProps) {
         return (
           <div key={step.step}>
             <div className="flex items-center gap-3 text-sm">
-              <span className="w-36 shrink-0 text-gray-400 truncate">{step.label}</span>
+              <span className="w-36 shrink-0 text-gray-400 truncate">
+                {step.label}
+              </span>
               <div className="flex-1 bg-gray-800 rounded-sm h-7 relative overflow-hidden">
                 <div
                   className="h-full bg-blue-600 rounded-sm transition-all duration-500"

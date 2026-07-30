@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const whitelistedIPs = await ipWhitelistService.getWhitelistedIPs(userAddress);
+    const whitelistedIPs =
+      await ipWhitelistService.getWhitelistedIPs(userAddress);
     return NextResponse.json({ ips: whitelistedIPs });
   } catch (error) {
     logger.error("Failed to fetch whitelisted IPs", { error });
@@ -90,10 +91,7 @@ export async function DELETE(request: NextRequest) {
     const entryId = searchParams.get("id");
 
     if (!entryId) {
-      return NextResponse.json(
-        { error: "Entry ID required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Entry ID required" }, { status: 400 });
     }
 
     await ipWhitelistService.removeIPEntry(userAddress, entryId);

@@ -20,6 +20,7 @@ const pool = new Pool({
 ```
 
 **Benefits:**
+
 - Reuses database connections instead of creating new ones
 - Reduces connection overhead
 - Improves response times
@@ -41,7 +42,12 @@ import { queryCache } from "@/lib/db/query-cache";
 const cached = queryCache.get("SELECT * FROM users WHERE id = $1", [userId]);
 
 // Set cache entry with 5-minute TTL
-queryCache.set("SELECT * FROM users WHERE id = $1", userData, [userId], 5 * 60 * 1000);
+queryCache.set(
+  "SELECT * FROM users WHERE id = $1",
+  userData,
+  [userId],
+  5 * 60 * 1000,
+);
 
 // Invalidate related cache entries
 queryCache.invalidate("SELECT.*FROM users");
@@ -56,6 +62,7 @@ Added indexes on frequently queried columns to speed up lookups:
 - **Covering indexes**: To support index-only scans
 
 **Key indexes:**
+
 - `idx_transactions_user_address`: Fast user transaction lookups
 - `idx_transactions_status`: Fast status-based queries
 - `idx_transactions_user_status`: Composite index for user + status queries
@@ -76,7 +83,9 @@ export const pool: Pick<Pool, "query"> = {
   query: async (...args: Parameters<Pool["query"]>) => {
     const start = Date.now();
     try {
-      return await (_pool.query as (...a: unknown[]) => Promise<unknown>)(...args);
+      return await (_pool.query as (...a: unknown[]) => Promise<unknown>)(
+        ...args,
+      );
     } finally {
       recordDbQuery({
         query: sql,
@@ -89,6 +98,7 @@ export const pool: Pick<Pool, "query"> = {
 ```
 
 **Benefits:**
+
 - Identifies slow queries
 - Tracks query performance over time
 - Helps identify optimization opportunities
@@ -114,13 +124,14 @@ Use LIMIT and OFFSET to avoid fetching unnecessary data:
 ```typescript
 const result = await pool.query(
   "SELECT * FROM transactions WHERE user_id = $1 LIMIT $2 OFFSET $3",
-  [userId, pageSize, offset]
+  [userId, pageSize, offset],
 );
 ```
 
 #### Use Appropriate Indexes
 
 When adding new queries, consider adding indexes on:
+
 - Columns used in WHERE clauses
 - Columns used in JOIN conditions
 - Columns used in ORDER BY clauses

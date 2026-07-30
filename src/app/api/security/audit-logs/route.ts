@@ -16,7 +16,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const logs = await auditLoggingService.getUserAuditLogs(userAddress, limit, offset);
+    const logs = await auditLoggingService.getUserAuditLogs(
+      userAddress,
+      limit,
+      offset,
+    );
     return NextResponse.json({ logs });
   } catch (error) {
     logger.error("Failed to fetch audit logs", { error });

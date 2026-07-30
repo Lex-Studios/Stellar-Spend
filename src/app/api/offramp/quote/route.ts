@@ -1,22 +1,26 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { env } from '@/lib/env';
-import { validateAmount } from '@/lib/offramp/utils/validation';
-import { fetchPaycrestQuote, buildQuote, calculateBridgeAmount } from '@/lib/offramp/utils/quote-fetcher';
-import { ErrorHandler } from '@/lib/error-handler';
-import { withAllbridgeTimeout } from '@/lib/offramp/utils/timeout';
-import { isSupportedCurrency } from '@/lib/currencies';
-import { screenAddress } from '@/lib/compliance-screening';
+import { NextResponse, type NextRequest } from "next/server";
+import { env } from "@/lib/env";
+import { validateAmount } from "@/lib/offramp/utils/validation";
+import {
+  fetchPaycrestQuote,
+  buildQuote,
+  calculateBridgeAmount,
+} from "@/lib/offramp/utils/quote-fetcher";
+import { ErrorHandler } from "@/lib/error-handler";
+import { withAllbridgeTimeout } from "@/lib/offramp/utils/timeout";
+import { isSupportedCurrency } from "@/lib/currencies";
+import { screenAddress } from "@/lib/compliance-screening";
 
 export const maxDuration = 20;
 
-const STABLECOIN_FEE = '0.5';
+const STABLECOIN_FEE = "0.5";
 
 // Client sends "USDC" | "XLM"; build-tx route uses "stablecoin" | "native"
-const FEE_METHOD_MAP: Record<string, 'stablecoin' | 'native'> = {
-  USDC: 'stablecoin',
-  stablecoin: 'stablecoin',
-  XLM: 'native',
-  native: 'native',
+const FEE_METHOD_MAP: Record<string, "stablecoin" | "native"> = {
+  USDC: "stablecoin",
+  stablecoin: "stablecoin",
+  XLM: "native",
+  native: "native",
 };
 
 export async function POST(request: NextRequest) {
@@ -27,53 +31,65 @@ export async function POST(request: NextRequest) {
     if (sourceAddress) {
       const screeningResult = await screenAddress({
         address: sourceAddress,
-        addressType: 'stellar',
+        addressType: "stellar",
         amount: parseFloat(amount),
         currency,
       });
-      if (screeningResult.verdict === 'deny') {
+      if (screeningResult.verdict === "deny") {
         return NextResponse.json(
-          { error: 'Source address blocked by compliance screening', screening: screeningResult },
+          {
+            error: "Source address blocked by compliance screening",
+            screening: screeningResult,
+          },
           { status: 403 },
         );
       }
     }
 
-    if (!validateAmount(String(amount ?? ''))) {
+    if (!validateAmount(String(amount ?? ""))) {
       return NextResponse.json(
-        { error: 'Invalid amount: must be a positive number' },
-        { status: 400 }
+        { error: "Invalid amount: must be a positive number" },
+        { status: 400 },
       );
     }
 
-    if (!currency || typeof currency !== 'string') {
-      return NextResponse.json({ error: 'currency is required' }, { status: 400 });
+    if (!currency || typeof currency !== "string") {
+      return NextResponse.json(
+        { error: "currency is required" },
+        { status: 400 },
+      );
     }
 
     if (!isSupportedCurrency(currency)) {
-      return NextResponse.json({ error: `Unsupported currency: ${currency}` }, { status: 400 });
+      return NextResponse.json(
+        { error: `Unsupported currency: ${currency}` },
+        { status: 400 },
+      );
     }
 
     const normalizedFee = FEE_METHOD_MAP[feeMethod];
     if (!normalizedFee) {
       return NextResponse.json(
         { error: 'feeMethod must be "USDC", "XLM", "stablecoin", or "native"' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const bridgeAmount = normalizedFee === 'stablecoin'
-      ? calculateBridgeAmount(String(amount), 'stablecoin', STABLECOIN_FEE)
-      : String(amount);
+    const bridgeAmount =
+      normalizedFee === "stablecoin"
+        ? calculateBridgeAmount(String(amount), "stablecoin", STABLECOIN_FEE)
+        : String(amount);
 
     // Initialize Allbridge SDK
     let receiveAmount: string;
     try {
-      const { AllbridgeCoreSdk, nodeRpcUrlsDefault } = await import('@allbridge/bridge-core-sdk');
+      const { AllbridgeCoreSdk, nodeRpcUrlsDefault } =
+        await import("@allbridge/bridge-core-sdk");
 
       const sdk = new AllbridgeCoreSdk({
         ...nodeRpcUrlsDefault,
-        sorobanNetworkPassphrase: 'Public Global Stellar Network ; September 2015',
+        sorobanNetworkPassphrase:
+          "Public Global Stellar Network ; September 2015",
         ...(env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL && {
           sorobanRpc: env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL,
         }),
@@ -86,39 +102,66 @@ export async function POST(request: NextRequest) {
 
       for (const [, chain] of Object.entries(chainDetails)) {
         const c = chain as any;
-        if (c.name?.toLowerCase().includes('stellar') || c.name?.toLowerCase().includes('soroban')) stellarChain = c;
-        if (c.name?.toLowerCase().includes('ethereum') || c.name?.toLowerCase().includes('base')) baseChain = c;
+        if (
+          c.name?.toLowerCase().includes("stellar") ||
+          c.name?.toLowerCase().includes("soroban")
+        )
+          stellarChain = c;
+        if (
+          c.name?.toLowerCase().includes("ethereum") ||
+          c.name?.toLowerCase().includes("base")
+        )
+          baseChain = c;
       }
 
-      if (!stellarChain || !baseChain) throw new Error('Chain details unavailable');
+      if (!stellarChain || !baseChain)
+        throw new Error("Chain details unavailable");
 
-      const stellarUsdc = stellarChain.tokens.find((t: any) => t.symbol === 'USDC');
-      const baseUsdc = baseChain.tokens.find((t: any) => t.symbol === 'USDC');
+      const stellarUsdc = stellarChain.tokens.find(
+        (t: any) => t.symbol === "USDC",
+      );
+      const baseUsdc = baseChain.tokens.find((t: any) => t.symbol === "USDC");
 
-      if (!stellarUsdc || !baseUsdc) throw new Error('USDC token not found');
+      if (!stellarUsdc || !baseUsdc) throw new Error("USDC token not found");
 
-      receiveAmount = await sdk.getAmountToBeReceived(bridgeAmount, stellarUsdc, baseUsdc);
+      receiveAmount = await sdk.getAmountToBeReceived(
+        bridgeAmount,
+        stellarUsdc,
+        baseUsdc,
+      );
     } catch {
-      return NextResponse.json({ error: 'Bridge quote unavailable' }, { status: 502 });
+      return NextResponse.json(
+        { error: "Bridge quote unavailable" },
+        { status: 502 },
+      );
     }
 
     // Fetch Paycrest FX rate
     let rate: number;
     let destinationAmount: string;
     try {
-      ({ rate, destinationAmount } = await fetchPaycrestQuote(receiveAmount, currency));
+      ({ rate, destinationAmount } = await fetchPaycrestQuote(
+        receiveAmount,
+        currency,
+      ));
     } catch {
-      return NextResponse.json({ error: 'FX rate unavailable' }, { status: 502 });
+      return NextResponse.json(
+        { error: "FX rate unavailable" },
+        { status: 502 },
+      );
     }
 
-    const quote = buildQuote(destinationAmount, rate, currency, '0', '0', 300);
+    const quote = buildQuote(destinationAmount, rate, currency, "0", "0", 300);
     return NextResponse.json(quote);
   } catch (error) {
-    console.error('Quote fetch error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    if (message.includes('Invalid') || message.includes('less than')) {
+    console.error("Quote fetch error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (message.includes("Invalid") || message.includes("less than")) {
       return NextResponse.json({ error: message }, { status: 400 });
     }
-    return NextResponse.json({ error: 'Failed to generate quote' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to generate quote" },
+      { status: 500 },
+    );
   }
 }

@@ -165,7 +165,7 @@ const signature = generateSignature(
   "/api/offramp/quote",
   '{"amount":"100"}',
   "1234567890000",
-  "secret"
+  "secret",
 );
 
 // Verify signature
@@ -175,7 +175,7 @@ const result = verifySignature(
   '{"amount":"100"}',
   "1234567890000",
   signature,
-  "secret"
+  "secret",
 );
 
 console.log(result.valid); // true
@@ -185,7 +185,7 @@ const headers = createSignedRequestHeaders(
   "POST",
   "/api/offramp/quote",
   '{"amount":"100"}',
-  "secret"
+  "secret",
 );
 ```
 

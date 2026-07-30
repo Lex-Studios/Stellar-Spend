@@ -1,25 +1,32 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ShareSettings } from '@/types/sharing';
+import { useState } from "react";
+import { ShareSettings } from "@/types/sharing";
 
 interface ShareSettingsProps {
   onSave: (settings: ShareSettings) => Promise<void>;
   initialSettings?: ShareSettings;
 }
 
-export function ShareSettingsComponent({ onSave, initialSettings }: ShareSettingsProps) {
-  const [allowSharing, setAllowSharing] = useState(initialSettings?.allowSharing ?? true);
-  const [expirationDays, setExpirationDays] = useState(initialSettings?.expirationDays ?? 30);
+export function ShareSettingsComponent({
+  onSave,
+  initialSettings,
+}: ShareSettingsProps) {
+  const [allowSharing, setAllowSharing] = useState(
+    initialSettings?.allowSharing ?? true,
+  );
+  const [expirationDays, setExpirationDays] = useState(
+    initialSettings?.expirationDays ?? 30,
+  );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const shareableFields = ['amount', 'currency', 'status', 'timestamp'];
+  const shareableFields = ["amount", "currency", "status", "timestamp"];
 
   const handleSave = async () => {
     setLoading(true);
-    setError('');
+    setError("");
     setSuccess(false);
 
     try {
@@ -31,7 +38,7 @@ export function ShareSettingsComponent({ onSave, initialSettings }: ShareSetting
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save settings');
+      setError(err instanceof Error ? err.message : "Failed to save settings");
     } finally {
       setLoading(false);
     }
@@ -81,14 +88,18 @@ export function ShareSettingsComponent({ onSave, initialSettings }: ShareSetting
       </div>
 
       {error && <div className="text-red-600 text-sm">{error}</div>}
-      {success && <div className="text-green-600 text-sm">Settings saved successfully</div>}
+      {success && (
+        <div className="text-green-600 text-sm">
+          Settings saved successfully
+        </div>
+      )}
 
       <button
         onClick={handleSave}
         disabled={loading}
         className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
       >
-        {loading ? 'Saving...' : 'Save Settings'}
+        {loading ? "Saving..." : "Save Settings"}
       </button>
     </div>
   );

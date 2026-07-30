@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: "20"
 
 # ── Stage 1: Lint ─────────────────────────────────────────────────────────────
 jobs:
@@ -354,7 +354,7 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4
         with:
-          version: 'v3.14.0'
+          version: "v3.14.0"
 
       - name: Lint chart (default values)
         run: helm lint helm/stellar-spend

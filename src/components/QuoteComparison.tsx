@@ -25,7 +25,10 @@ interface QuoteComparisonProps {
 
 function StarRating({ rating }: { rating: number }) {
   return (
-    <span style={{ display: "inline-flex", gap: 2 }} aria-label={`${rating} out of 5 stars`}>
+    <span
+      style={{ display: "inline-flex", gap: 2 }}
+      aria-label={`${rating} out of 5 stars`}
+    >
       {[1, 2, 3, 4, 5].map((s) => (
         <span
           key={s}
@@ -47,12 +50,18 @@ function formatTime(seconds: number): string {
   return `~${mins}m`;
 }
 
-export function QuoteComparison({ quotes, selectedId, onSelect, isLoading }: QuoteComparisonProps) {
+export function QuoteComparison({
+  quotes,
+  selectedId,
+  onSelect,
+  isLoading,
+}: QuoteComparisonProps) {
   const [sortBy, setSortBy] = useState<"rate" | "fee" | "time">("rate");
 
   const sorted = [...quotes].sort((a, b) => {
     if (sortBy === "rate") return b.rate - a.rate;
-    if (sortBy === "fee") return parseFloat(a.totalFee) - parseFloat(b.totalFee);
+    if (sortBy === "fee")
+      return parseFloat(a.totalFee) - parseFloat(b.totalFee);
     return a.estimatedTime - b.estimatedTime;
   });
 
@@ -92,7 +101,11 @@ export function QuoteComparison({ quotes, selectedId, onSelect, isLoading }: Quo
               textTransform: "capitalize",
             }}
           >
-            {opt === "rate" ? "Best Rate" : opt === "fee" ? "Lowest Fee" : "Fastest"}
+            {opt === "rate"
+              ? "Best Rate"
+              : opt === "fee"
+                ? "Lowest Fee"
+                : "Fastest"}
           </button>
         ))}
       </div>
@@ -134,7 +147,9 @@ export function QuoteComparison({ quotes, selectedId, onSelect, isLoading }: Quo
               padding: "10px 12px",
               border: "1px solid",
               borderColor: isSelected ? "var(--accent)" : "var(--line)",
-              background: isSelected ? "color-mix(in srgb, var(--accent) 8%, var(--panel))" : "var(--panel)",
+              background: isSelected
+                ? "color-mix(in srgb, var(--accent) 8%, var(--panel))"
+                : "var(--panel)",
               cursor: "pointer",
               textAlign: "left",
               alignItems: "center",
@@ -143,7 +158,9 @@ export function QuoteComparison({ quotes, selectedId, onSelect, isLoading }: Quo
           >
             {/* Provider name + badge */}
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <span style={{ fontSize: 13, color: "var(--text)", fontWeight: 500 }}>
+              <span
+                style={{ fontSize: 13, color: "var(--text)", fontWeight: 500 }}
+              >
                 {q.provider}
               </span>
               {q.badge && (
@@ -169,12 +186,16 @@ export function QuoteComparison({ quotes, selectedId, onSelect, isLoading }: Quo
               <span style={{ fontSize: 13, color: "var(--text)" }}>
                 {parseFloat(q.destinationAmount).toLocaleString()}
               </span>
-              <span style={{ fontSize: 10, color: "var(--muted)" }}>{q.currency}</span>
+              <span style={{ fontSize: 10, color: "var(--muted)" }}>
+                {q.currency}
+              </span>
             </div>
 
             {/* Fees breakdown */}
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <span style={{ fontSize: 13, color: "var(--text)" }}>{q.totalFee} USDC</span>
+              <span style={{ fontSize: 13, color: "var(--text)" }}>
+                {q.totalFee} USDC
+              </span>
               <span style={{ fontSize: 10, color: "var(--muted)" }}>
                 Bridge: {q.bridgeFee} · Payout: {q.payoutFee}
               </span>
@@ -204,7 +225,9 @@ export function QuoteComparison({ quotes, selectedId, onSelect, isLoading }: Quo
               }}
             >
               {isSelected && (
-                <span style={{ fontSize: 8, color: "#000", lineHeight: 1 }}>✓</span>
+                <span style={{ fontSize: 8, color: "#000", lineHeight: 1 }}>
+                  ✓
+                </span>
               )}
             </div>
           </button>

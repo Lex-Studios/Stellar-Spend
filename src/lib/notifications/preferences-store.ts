@@ -1,14 +1,22 @@
-import { pool } from '@/lib/db/client';
-import type { ChannelEventRouting, NotificationPreferences } from '@/lib/notifications/types';
+import { pool } from "@/lib/db/client";
+import type {
+  ChannelEventRouting,
+  NotificationPreferences,
+} from "@/lib/notifications/types";
 
 export class NotificationPreferenceStoreError extends Error {
-  constructor(message: string, public readonly cause: unknown) {
+  constructor(
+    message: string,
+    public readonly cause: unknown,
+  ) {
     super(message);
-    this.name = 'NotificationPreferenceStoreError';
+    this.name = "NotificationPreferenceStoreError";
   }
 }
 
-function rowToPreferences(row: Record<string, unknown>): NotificationPreferences {
+function rowToPreferences(
+  row: Record<string, unknown>,
+): NotificationPreferences {
   return {
     userAddress: row.user_address as string,
     email: (row.email as string | null) ?? undefined,
@@ -20,7 +28,8 @@ function rowToPreferences(row: Record<string, unknown>): NotificationPreferences
     notifyOnPending: Boolean(row.notify_on_pending),
     notifyOnCompleted: Boolean(row.notify_on_completed),
     notifyOnFailed: Boolean(row.notify_on_failed),
-    channelRouting: (row.channel_routing as ChannelEventRouting | null) ?? undefined,
+    channelRouting:
+      (row.channel_routing as ChannelEventRouting | null) ?? undefined,
     locale: (row.locale as string | null) ?? undefined,
     createdAt: Number(row.created_at),
     updatedAt: Number(row.updated_at),
@@ -28,27 +37,27 @@ function rowToPreferences(row: Record<string, unknown>): NotificationPreferences
 }
 
 export async function getNotificationPreferences(
-  userAddress: string
+  userAddress: string,
 ): Promise<NotificationPreferences | null> {
   try {
     const result = await pool.query(
       `SELECT * FROM transaction_notification_preferences WHERE LOWER(user_address) = LOWER($1)`,
-      [userAddress]
+      [userAddress],
     );
     return result.rows[0] ? rowToPreferences(result.rows[0]) : null;
   } catch (error) {
     throw new NotificationPreferenceStoreError(
       `Failed to get notification preferences for ${userAddress}`,
-      error
+      error,
     );
   }
 }
 
 export async function upsertNotificationPreferences(
-  input: Omit<NotificationPreferences, 'createdAt' | 'updatedAt'> & {
+  input: Omit<NotificationPreferences, "createdAt" | "updatedAt"> & {
     createdAt?: number;
     updatedAt?: number;
-  }
+  },
 ): Promise<NotificationPreferences> {
   const now = Date.now();
   const createdAt = input.createdAt ?? now;
@@ -94,14 +103,14 @@ export async function upsertNotificationPreferences(
         input.locale ?? null,
         createdAt,
         updatedAt,
-      ]
+      ],
     );
 
     return rowToPreferences(result.rows[0]);
   } catch (error) {
     throw new NotificationPreferenceStoreError(
       `Failed to upsert notification preferences for ${input.userAddress}`,
-      error
+      error,
     );
   }
 }

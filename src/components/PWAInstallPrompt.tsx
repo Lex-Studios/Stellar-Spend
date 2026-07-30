@@ -9,7 +9,8 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function PWAInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
 
@@ -36,7 +37,10 @@ export default function PWAInstallPrompt() {
     window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
@@ -47,7 +51,7 @@ export default function PWAInstallPrompt() {
     try {
       await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      
+
       if (outcome === "accepted") {
         setIsInstalled(true);
       }
@@ -70,9 +74,12 @@ export default function PWAInstallPrompt() {
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 text-xl">📱</div>
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-[#c9a962] mb-1">Install Stellar-Spend</h3>
+            <h3 className="text-sm font-semibold text-[#c9a962] mb-1">
+              Install Stellar-Spend
+            </h3>
             <p className="text-xs text-[#999999] mb-3">
-              Install our app for faster access and offline support. Works on mobile and desktop.
+              Install our app for faster access and offline support. Works on
+              mobile and desktop.
             </p>
             <div className="flex gap-2">
               <button
@@ -80,7 +87,7 @@ export default function PWAInstallPrompt() {
                 className={cn(
                   "flex-1 px-3 py-2 text-xs font-semibold tracking-widest uppercase",
                   "bg-[#c9a962] text-[#0a0a0a] rounded transition-colors duration-150",
-                  "hover:bg-[#d4b982] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]"
+                  "hover:bg-[#d4b982] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
                 )}
               >
                 Install
@@ -90,7 +97,7 @@ export default function PWAInstallPrompt() {
                 className={cn(
                   "flex-1 px-3 py-2 text-xs font-semibold tracking-widest uppercase",
                   "border border-[#555555] text-[#555555] rounded transition-colors duration-150",
-                  "hover:border-[#c9a962] hover:text-[#c9a962] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#555555]"
+                  "hover:border-[#c9a962] hover:text-[#c9a962] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#555555]",
                 )}
               >
                 Later

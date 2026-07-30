@@ -54,7 +54,9 @@ export function getStepLabel(step: FunnelStep): string {
  * Build FunnelData from a map of step → count.
  * Missing steps default to 0.
  */
-export function buildFunnelData(counts: Partial<Record<FunnelStep, number>>): FunnelData {
+export function buildFunnelData(
+  counts: Partial<Record<FunnelStep, number>>,
+): FunnelData {
   const firstCount = counts[FUNNEL_STEPS[0]] ?? 0;
   const lastCount = counts[FUNNEL_STEPS[FUNNEL_STEPS.length - 1]] ?? 0;
 

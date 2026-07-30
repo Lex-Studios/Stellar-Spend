@@ -26,18 +26,25 @@ function toRecord(dispute: any): DisputeRecord {
     resolvedBy: dispute.assignedTo ?? null,
     createdAt: new Date(dispute.createdAt).toISOString(),
     updatedAt: new Date(dispute.updatedAt).toISOString(),
-    resolvedAt: dispute.resolvedAt ? new Date(dispute.resolvedAt).toISOString() : null,
+    resolvedAt: dispute.resolvedAt
+      ? new Date(dispute.resolvedAt).toISOString()
+      : null,
     evidence: [],
   };
 }
 
-export async function getDisputeById(id: string): Promise<DisputeRecord | null> {
+export async function getDisputeById(
+  id: string,
+): Promise<DisputeRecord | null> {
   const dispute = await disputeRepository.getDispute(id);
   if (!dispute) return null;
   return toRecord(dispute);
 }
 
-export async function getDisputes(options: { status?: string; limit?: number }): Promise<DisputeRecord[]> {
+export async function getDisputes(options: {
+  status?: string;
+  limit?: number;
+}): Promise<DisputeRecord[]> {
   const disputes = await disputeRepository.listDisputes(
     options.status as DisputeStatus | undefined,
     options.limit,
@@ -64,7 +71,11 @@ export async function resolveDispute(
   resolution: string,
   resolvedBy: string,
 ): Promise<DisputeRecord> {
-  const dispute = await disputeRepository.resolveDispute(id, 'resolved', resolution);
+  const dispute = await disputeRepository.resolveDispute(
+    id,
+    "resolved",
+    resolution,
+  );
   if (!dispute) throw new Error(`Dispute ${id} not found`);
   const record = toRecord(dispute);
   record.resolvedBy = resolvedBy;

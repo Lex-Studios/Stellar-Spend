@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 import {
   createBatch,
   addTransactionToBatch,
@@ -7,8 +7,8 @@ import {
   cancelBatch,
   executeBatch,
   getBatchAnalytics,
-} from '@/lib/services/batch.service';
-import { withIdempotency } from '@/lib/idempotency';
+} from "@/lib/services/batch.service";
+import { withIdempotency } from "@/lib/idempotency";
 
 export async function POST(req: NextRequest) {
   return withIdempotency(req, async () => {
@@ -16,16 +16,28 @@ export async function POST(req: NextRequest) {
       const body = await req.json();
       const { action } = body;
 
-      if (action === 'cancel') {
+      if (action === "cancel") {
         const { batchId } = body;
-        if (!batchId) return NextResponse.json({ error: 'Missing batchId' }, { status: 400 });
+        if (!batchId)
+          return NextResponse.json(
+            { error: "Missing batchId" },
+            { status: 400 },
+          );
         const result = await cancelBatch(batchId);
-        return NextResponse.json({ batchId, status: 'cancelled', result: result.rows[0] });
+        return NextResponse.json({
+          batchId,
+          status: "cancelled",
+          result: result.rows[0],
+        });
       }
 
-      if (action === 'execute') {
+      if (action === "execute") {
         const { batchId } = body;
-        if (!batchId) return NextResponse.json({ error: 'Missing batchId' }, { status: 400 });
+        if (!batchId)
+          return NextResponse.json(
+            { error: "Missing batchId" },
+            { status: 400 },
+          );
         const result = await executeBatch(batchId, async (payload) => {
           return `tx_${Date.now()}`;
         });
@@ -33,16 +45,22 @@ export async function POST(req: NextRequest) {
       }
 
       const { userId, transactions } = body;
-      const totalAmount = transactions.reduce((sum: number, t: any) => sum + (t.amount ?? 0), 0);
+      const totalAmount = transactions.reduce(
+        (sum: number, t: any) => sum + (t.amount ?? 0),
+        0,
+      );
       const batch = await createBatch(userId, totalAmount);
 
       for (const tx of transactions) {
         await addTransactionToBatch(batch.id, tx);
       }
 
-      return NextResponse.json({ batchId: batch.id, status: 'created' });
+      return NextResponse.json({ batchId: batch.id, status: "created" });
     } catch (error) {
-      return NextResponse.json({ error: 'Failed to process batch request' }, { status: 500 });
+      return NextResponse.json(
+        { error: "Failed to process batch request" },
+        { status: 500 },
+      );
     }
   });
 }
@@ -50,20 +68,20 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl;
-    const batchId = searchParams.get('batchId');
-    const view = searchParams.get('view');
-    const userId = searchParams.get('userId');
+    const batchId = searchParams.get("batchId");
+    const view = searchParams.get("view");
+    const userId = searchParams.get("userId");
 
-    if (view === 'analytics') {
+    if (view === "analytics") {
       const analytics = await getBatchAnalytics(userId ?? undefined);
       return NextResponse.json(analytics);
     }
 
     if (!batchId) {
-      return NextResponse.json({ error: 'Missing batchId' }, { status: 400 });
+      return NextResponse.json({ error: "Missing batchId" }, { status: 400 });
     }
 
-    if (view === 'progress') {
+    if (view === "progress") {
       const progress = await getBatchProgress(batchId);
       return NextResponse.json(progress);
     }
@@ -71,6 +89,9 @@ export async function GET(req: NextRequest) {
     const status = await getBatchStatus(batchId);
     return NextResponse.json(status);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to get batch status' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to get batch status" },
+      { status: 500 },
+    );
   }
 }

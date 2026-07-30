@@ -61,7 +61,7 @@ export function HelpModal({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTopic, setSelectedTopic] = useState<string | null>(
-    initialTopicId ?? null
+    initialTopicId ?? null,
   );
   const [activeCategory, setActiveCategory] = useState<string>("all");
 
@@ -128,18 +128,28 @@ export function HelpModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#333333]">
-          <h2 id="help-modal-title" className="text-lg font-semibold text-white">
+          <h2
+            id="help-modal-title"
+            className="text-lg font-semibold text-white"
+          >
             {l.title}
           </h2>
           <button
             onClick={onClose}
             className={cn(
               "text-[#777777] hover:text-white transition-colors",
-              "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]"
+              "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
             )}
             aria-label={l.closeAriaLabel}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -156,7 +166,7 @@ export function HelpModal({
                 "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
                 activeCategory === "all"
                   ? "border-[#c9a962] text-[#c9a962] bg-[#c9a962]/10"
-                  : "border-[#444444] text-[#888888] hover:border-[#666666] hover:text-[#aaaaaa]"
+                  : "border-[#444444] text-[#888888] hover:border-[#666666] hover:text-[#aaaaaa]",
               )}
             >
               {l.allCategories}
@@ -170,7 +180,7 @@ export function HelpModal({
                   "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
                   activeCategory === cat.id
                     ? "border-[#c9a962] text-[#c9a962] bg-[#c9a962]/10"
-                    : "border-[#444444] text-[#888888] hover:border-[#666666] hover:text-[#aaaaaa]"
+                    : "border-[#444444] text-[#888888] hover:border-[#666666] hover:text-[#aaaaaa]",
                 )}
               >
                 {cat.label}
@@ -194,7 +204,7 @@ export function HelpModal({
                 className={cn(
                   "w-full bg-[#0a0a0a] border border-[#333333] px-3 py-2 text-sm text-white",
                   "placeholder-[#555555] rounded",
-                  "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]"
+                  "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
                 )}
               />
             </div>
@@ -214,7 +224,7 @@ export function HelpModal({
                       "hover:bg-[#1a1a1a] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
                       selectedTopic === topic.id
                         ? "bg-[#1a1a1a] text-[#c9a962]"
-                        : "text-[#aaaaaa]"
+                        : "text-[#aaaaaa]",
                     )}
                   >
                     <div className="text-sm font-medium">{topic.title}</div>

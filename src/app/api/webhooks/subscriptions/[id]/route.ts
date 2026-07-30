@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { ErrorHandler } from '@/lib/error-handler';
+import { NextRequest, NextResponse } from "next/server";
+import { ErrorHandler } from "@/lib/error-handler";
 import {
   getSubscription,
   updateSubscription,
   deleteSubscription,
-} from '@/lib/webhook/subscription-store';
-import { requireApiKeyAdmin } from '@/app/api/api-keys/_utils';
+} from "@/lib/webhook/subscription-store";
+import { requireApiKeyAdmin } from "@/app/api/api-keys/_utils";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const unauthorized = requireApiKeyAdmin(request);
   if (unauthorized) return unauthorized;
@@ -18,11 +18,14 @@ export async function GET(
 
   try {
     const subscription = await getSubscription(id);
-    if (!subscription) return ErrorHandler.notFound('Subscription');
+    if (!subscription) return ErrorHandler.notFound("Subscription");
 
     const { signingSecret, ...safe } = subscription;
     return NextResponse.json({
-      data: { ...safe, signingSecret: signingSecret ? signingSecret.slice(0, 8) + '...' : null },
+      data: {
+        ...safe,
+        signingSecret: signingSecret ? signingSecret.slice(0, 8) + "..." : null,
+      },
     });
   } catch (error) {
     return ErrorHandler.serverError(error);
@@ -31,7 +34,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const unauthorized = requireApiKeyAdmin(request);
   if (unauthorized) return unauthorized;
@@ -42,22 +45,23 @@ export async function PUT(
   try {
     body = await request.json();
   } catch {
-    return ErrorHandler.validation('Invalid JSON body');
+    return ErrorHandler.validation("Invalid JSON body");
   }
 
   try {
     const existing = await getSubscription(id);
-    if (!existing) return ErrorHandler.notFound('Subscription');
+    if (!existing) return ErrorHandler.notFound("Subscription");
 
     const updates: Record<string, unknown> = {};
     if (body.endpointUrl !== undefined) updates.endpointUrl = body.endpointUrl;
     if (body.events !== undefined) updates.events = body.events;
     if (body.status !== undefined) updates.status = body.status;
-    if (body.rateLimitMaxPerMinute !== undefined) updates.rateLimitMaxPerMinute = body.rateLimitMaxPerMinute;
+    if (body.rateLimitMaxPerMinute !== undefined)
+      updates.rateLimitMaxPerMinute = body.rateLimitMaxPerMinute;
     if (body.description !== undefined) updates.description = body.description;
 
     const updated = await updateSubscription(id, updates as any);
-    if (!updated) return ErrorHandler.notFound('Subscription');
+    if (!updated) return ErrorHandler.notFound("Subscription");
 
     const { signingSecret, ...safe } = updated;
     return NextResponse.json({ data: safe });
@@ -68,7 +72,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const unauthorized = requireApiKeyAdmin(request);
   if (unauthorized) return unauthorized;
@@ -77,7 +81,7 @@ export async function DELETE(
 
   try {
     const deleted = await deleteSubscription(id);
-    if (!deleted) return ErrorHandler.notFound('Subscription');
+    if (!deleted) return ErrorHandler.notFound("Subscription");
     return NextResponse.json({ data: { id, deleted: true } });
   } catch (error) {
     return ErrorHandler.serverError(error);

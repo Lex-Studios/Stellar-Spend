@@ -1,22 +1,29 @@
-import { createValidationError, createValidationResult, type ValidationResult } from './types';
+import {
+  createValidationError,
+  createValidationResult,
+  type ValidationResult,
+} from "./types";
 
-export function validateAddress(address: string, chain: 'stellar' | 'base'): ValidationResult {
-  if (!address || address.trim() === '') {
+export function validateAddress(
+  address: string,
+  chain: "stellar" | "base",
+): ValidationResult {
+  if (!address || address.trim() === "") {
     return createValidationResult(false, [
-      createValidationError('address', `${chain} address is required`),
+      createValidationError("address", `${chain} address is required`),
     ]);
   }
 
-  if (chain === 'stellar') {
+  if (chain === "stellar") {
     if (!/^G[A-Z0-9]{55}$/.test(address)) {
       return createValidationResult(false, [
-        createValidationError('address', 'Invalid Stellar address format'),
+        createValidationError("address", "Invalid Stellar address format"),
       ]);
     }
-  } else if (chain === 'base') {
+  } else if (chain === "base") {
     if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
       return createValidationResult(false, [
-        createValidationError('address', 'Invalid Base address format'),
+        createValidationError("address", "Invalid Base address format"),
       ]);
     }
   }
@@ -25,15 +32,15 @@ export function validateAddress(address: string, chain: 'stellar' | 'base'): Val
 }
 
 export function validateEvmAddress(address: string): ValidationResult {
-  if (!address || address.trim() === '') {
+  if (!address || address.trim() === "") {
     return createValidationResult(false, [
-      createValidationError('address', 'EVM address is required'),
+      createValidationError("address", "EVM address is required"),
     ]);
   }
 
   if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
     return createValidationResult(false, [
-      createValidationError('address', 'Invalid EVM address format'),
+      createValidationError("address", "Invalid EVM address format"),
     ]);
   }
 
@@ -41,5 +48,5 @@ export function validateEvmAddress(address: string): ValidationResult {
 }
 
 export function sanitizeInput(input: string): string {
-  return input.trim().replace(/[^\w\s.-]/g, '');
+  return input.trim().replace(/[^\w\s.-]/g, "");
 }

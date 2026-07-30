@@ -3,9 +3,9 @@
  * Handles communication with server for transaction history synchronization
  */
 
-import type { Transaction } from './transaction-storage';
-import { SyncStorage } from './sync-storage';
-import { mergeTransactionHistories } from './transaction-merge';
+import type { Transaction } from "./transaction-storage";
+import { SyncStorage } from "./sync-storage";
+import { mergeTransactionHistories } from "./transaction-merge";
 
 export interface SyncResponse {
   success: boolean;
@@ -27,21 +27,21 @@ export interface SyncOptions {
  */
 export async function syncTransactionHistory(
   localTransactions: Transaction[],
-  options: SyncOptions
+  options: SyncOptions,
 ): Promise<SyncResponse | null> {
   const settings = SyncStorage.getSettings();
-  
+
   if (!settings.syncEnabled) {
-    console.log('Sync is disabled');
+    console.log("Sync is disabled");
     return null;
   }
 
   try {
     // Step 1: Fetch server history
     const serverTransactions = await fetchServerHistory(options.userAddress);
-    
+
     if (!serverTransactions) {
-      console.error('Failed to fetch server history');
+      console.error("Failed to fetch server history");
       return null;
     }
 
@@ -49,27 +49,31 @@ export async function syncTransactionHistory(
     const mergeResult = mergeTransactionHistories(
       localTransactions,
       serverTransactions,
-      settings.conflictResolutionStrategy
+      settings.conflictResolutionStrategy,
     );
 
     // Step 3: Upload merged/local-only transactions
     const queue = SyncStorage.getQueue();
-    const toUpload = localTransactions.filter(tx =>
-      queue.some(q => q.transactionId === tx.id) ||
-      mergeResult.merged.some(m => m.id === tx.id && m.id === tx.id)
+    const toUpload = localTransactions.filter(
+      (tx) =>
+        queue.some((q) => q.transactionId === tx.id) ||
+        mergeResult.merged.some((m) => m.id === tx.id && m.id === tx.id),
     );
 
     if (toUpload.length > 0) {
-      const uploadSuccess = await uploadTransactions(toUpload, options.userAddress);
+      const uploadSuccess = await uploadTransactions(
+        toUpload,
+        options.userAddress,
+      );
       if (!uploadSuccess) {
-        console.error('Failed to upload transactions');
+        console.error("Failed to upload transactions");
         return null;
       }
     }
 
     // Step 4: Update local metadata
     const metadata = SyncStorage.getAllMetadata();
-    mergeResult.merged.forEach(tx => {
+    mergeResult.merged.forEach((tx) => {
       const existing = metadata[tx.id];
       SyncStorage.setMetadata(tx.id, {
         transactionId: tx.id,
@@ -82,7 +86,7 @@ export async function syncTransactionHistory(
     });
 
     // Step 5: Mark conflicts
-    mergeResult.conflicts.forEach(conflict => {
+    mergeResult.conflicts.forEach((conflict) => {
       const existing = metadata[conflict.transactionId];
       SyncStorage.setMetadata(conflict.transactionId, {
         transactionId: conflict.transactionId,
@@ -101,14 +105,14 @@ export async function syncTransactionHistory(
     return {
       success: true,
       synced: mergeResult.merged,
-      conflicts: mergeResult.conflicts.map(c => ({
+      conflicts: mergeResult.conflicts.map((c) => ({
         transactionId: c.transactionId,
         reason: c.reason,
       })),
       timestamp: Date.now(),
     };
   } catch (error) {
-    console.error('Sync error:', error);
+    console.error("Sync error:", error);
     return null;
   }
 }
@@ -116,25 +120,30 @@ export async function syncTransactionHistory(
 /**
  * Fetch server transaction history for a user
  */
-async function fetchServerHistory(userAddress: string): Promise<Transaction[] | null> {
+async function fetchServerHistory(
+  userAddress: string,
+): Promise<Transaction[] | null> {
   try {
-    const response = await fetch(`/api/v1/sync/history?wallet=${encodeURIComponent(userAddress)}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `/api/v1/sync/history?wallet=${encodeURIComponent(userAddress)}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
       },
-      credentials: 'include',
-    });
+    );
 
     if (!response.ok) {
-      console.error('Failed to fetch server history:', response.status);
+      console.error("Failed to fetch server history:", response.status);
       return null;
     }
 
     const data = await response.json();
     return data.transactions || [];
   } catch (error) {
-    console.error('Error fetching server history:', error);
+    console.error("Error fetching server history:", error);
     return null;
   }
 }
@@ -144,15 +153,15 @@ async function fetchServerHistory(userAddress: string): Promise<Transaction[] | 
  */
 async function uploadTransactions(
   transactions: Transaction[],
-  userAddress: string
+  userAddress: string,
 ): Promise<boolean> {
   try {
     const response = await fetch(`/api/v1/sync/history`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      credentials: 'include',
+      credentials: "include",
       body: JSON.stringify({
         wallet: userAddress,
         transactions,
@@ -161,13 +170,13 @@ async function uploadTransactions(
     });
 
     if (!response.ok) {
-      console.error('Failed to upload transactions:', response.status);
+      console.error("Failed to upload transactions:", response.status);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error uploading transactions:', error);
+    console.error("Error uploading transactions:", error);
     return false;
   }
 }
@@ -183,7 +192,9 @@ export function getSyncStatus(): {
 } {
   const settings = SyncStorage.getSettings();
   const metadata = SyncStorage.getAllMetadata();
-  const conflictCount = Object.values(metadata).filter(m => m.conflict).length;
+  const conflictCount = Object.values(metadata).filter(
+    (m) => m.conflict,
+  ).length;
 
   return {
     enabled: settings.syncEnabled,

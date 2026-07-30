@@ -15,7 +15,7 @@ export function buildContext(request: Request): GraphQLContext {
   // Decode userId from token (placeholder — replace with real JWT decode)
   let userId: string | undefined;
   let isPremium = false;
-  let role: 'user' | 'admin' | 'ops' | undefined;
+  let role: "user" | "admin" | "ops" | undefined;
 
   if (isAuthenticated) {
     // In production: verify JWT and extract claims

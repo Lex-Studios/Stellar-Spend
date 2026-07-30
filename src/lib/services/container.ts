@@ -1,8 +1,8 @@
-import { QuoteService } from './quote.service';
-import { BridgeService } from './bridge.service';
-import { PayoutService } from './payout.service';
-import { WebhookService } from './webhook.service';
-import { TransactionService } from './transaction.service';
+import { QuoteService } from "./quote.service";
+import { BridgeService } from "./bridge.service";
+import { PayoutService } from "./payout.service";
+import { WebhookService } from "./webhook.service";
+import { TransactionService } from "./transaction.service";
 
 /**
  * Dependency Injection Container
@@ -24,11 +24,11 @@ export class ServiceContainer {
   }
 
   private registerDefaultServices(): void {
-    this.register('quote', new QuoteService());
-    this.register('bridge', new BridgeService());
-    this.register('payout', new PayoutService());
-    this.register('webhook', new WebhookService());
-    this.register('transaction', new TransactionService());
+    this.register("quote", new QuoteService());
+    this.register("bridge", new BridgeService());
+    this.register("payout", new PayoutService());
+    this.register("webhook", new WebhookService());
+    this.register("transaction", new TransactionService());
   }
 
   register<T>(name: string, service: T): void {
@@ -44,23 +44,23 @@ export class ServiceContainer {
   }
 
   getQuoteService(): QuoteService {
-    return this.get<QuoteService>('quote');
+    return this.get<QuoteService>("quote");
   }
 
   getBridgeService(): BridgeService {
-    return this.get<BridgeService>('bridge');
+    return this.get<BridgeService>("bridge");
   }
 
   getPayoutService(): PayoutService {
-    return this.get<PayoutService>('payout');
+    return this.get<PayoutService>("payout");
   }
 
   getWebhookService(): WebhookService {
-    return this.get<WebhookService>('webhook');
+    return this.get<WebhookService>("webhook");
   }
 
   getTransactionService(): TransactionService {
-    return this.get<TransactionService>('transaction');
+    return this.get<TransactionService>("transaction");
   }
 
   reset(): void {

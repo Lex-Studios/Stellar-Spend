@@ -23,6 +23,7 @@ These tags enable cost tracking and allocation across departments.
 ### AWS Cost Explorer
 
 Access via AWS Console:
+
 1. Navigate to Cost Management → Cost Explorer
 2. Filter by tag: `Project = stellar-spend`
 3. View costs by service, region, and time period
@@ -125,6 +126,7 @@ aws ec2 describe-addresses \
 ### Unused NAT Gateways
 
 Monitor data transfer:
+
 - If < 1 GB/day: Consider removing
 - Cost: $32/month + data transfer
 
@@ -159,11 +161,11 @@ aws ec2 describe-spot-price-history \
 
 Analyze utilization and downsize:
 
-| Current | Recommended | Monthly Savings |
-|---------|-------------|-----------------|
-| t3.large | t3.medium | $20-30 |
-| db.t3.large | db.t3.medium | $50-70 |
-| 500GB EBS | 250GB EBS | $10-15 |
+| Current     | Recommended  | Monthly Savings |
+| ----------- | ------------ | --------------- |
+| t3.large    | t3.medium    | $20-30          |
+| db.t3.large | db.t3.medium | $50-70          |
+| 500GB EBS   | 250GB EBS    | $10-15          |
 
 ### 4. Data Transfer Optimization
 
@@ -192,6 +194,7 @@ aws cloudwatch get-dashboard \
 ```
 
 **Metrics**:
+
 - Estimated monthly charges
 - EC2 utilization
 - RDS utilization
@@ -210,6 +213,7 @@ aws lambda invoke \
 ```
 
 **Recommendations**:
+
 - EC2 downsizing
 - RDS downsizing
 - Unused resource cleanup
@@ -242,12 +246,12 @@ aws lambda invoke \
 
 ### Targets
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Monthly Cost | < $5,000 | TBD |
-| Cost per Transaction | < $0.01 | TBD |
-| Resource Utilization | > 60% | TBD |
-| Unused Resources | 0 | TBD |
+| Metric               | Target   | Current |
+| -------------------- | -------- | ------- |
+| Monthly Cost         | < $5,000 | TBD     |
+| Cost per Transaction | < $0.01  | TBD     |
+| Resource Utilization | > 60%    | TBD     |
+| Unused Resources     | 0        | TBD     |
 
 ## Cost Allocation
 

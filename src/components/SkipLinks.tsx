@@ -59,7 +59,7 @@ export function SkipLinks() {
 /**
  * Utility class for screen reader only content
  * Add to your globals.css:
- * 
+ *
  * .sr-only {
  *   position: absolute;
  *   width: 1px;
@@ -71,7 +71,7 @@ export function SkipLinks() {
  *   white-space: nowrap;
  *   border-width: 0;
  * }
- * 
+ *
  * .focus-within\:not-sr-only:focus-within {
  *   position: static;
  *   width: auto;

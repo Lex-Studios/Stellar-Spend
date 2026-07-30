@@ -1,40 +1,42 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Wallet connect flow', () => {
-  test('connects wallet with mock Freighter', async ({ page }) => {
-    await page.goto('/');
+test.describe("Wallet connect flow", () => {
+  test("connects wallet with mock Freighter", async ({ page }) => {
+    await page.goto("/");
 
     // Mock Freighter API
     await page.addInitScript(() => {
       (window as any).freighter = {
         isConnected: async () => true,
-        getPublicKey: async () => 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
+        getPublicKey: async () =>
+          "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
         signTransaction: async (xdr: string) => xdr,
       };
     });
 
     // Mock Horizon API for balance
-    await page.route('**/accounts/*', async (route) => {
+    await page.route("**/accounts/*", async (route) => {
       await route.fulfill({
         status: 200,
-        contentType: 'application/json',
+        contentType: "application/json",
         body: JSON.stringify({
           balances: [
             {
-              asset_code: 'USDC',
-              asset_issuer: 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
-              balance: '1000.0000000',
+              asset_code: "USDC",
+              asset_issuer:
+                "GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5",
+              balance: "1000.0000000",
             },
             {
-              asset_type: 'native',
-              balance: '50.0000000',
+              asset_type: "native",
+              balance: "50.0000000",
             },
           ],
         }),
       });
     });
 
-    const connectButton = page.getByRole('button', { name: /connect wallet/i });
+    const connectButton = page.getByRole("button", { name: /connect wallet/i });
     await connectButton.click();
 
     // Verify wallet address appears

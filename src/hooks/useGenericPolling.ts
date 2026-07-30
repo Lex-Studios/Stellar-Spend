@@ -1,9 +1,13 @@
-'use client';
+"use client";
 
-import { useCallback } from 'react';
-import { usePollingManager, DurationExceededError, ConsecutiveErrorsExceededError } from '@/lib/polling/polling-manager';
-import type { StatusResponse } from '@/lib/polling/polling-manager';
-import type { PollingConfig } from '@/lib/polling/backoff';
+import { useCallback } from "react";
+import {
+  usePollingManager,
+  DurationExceededError,
+  ConsecutiveErrorsExceededError,
+} from "@/lib/polling/polling-manager";
+import type { StatusResponse } from "@/lib/polling/polling-manager";
+import type { PollingConfig } from "@/lib/polling/backoff";
 
 export interface UsePollingOptions<T> {
   config: PollingConfig;
@@ -35,18 +39,21 @@ export function useGenericPolling<T extends string>({
     async (
       endpoint: string,
       options: PollStatusOptions,
-      parseResponse: (data: any) => T
+      parseResponse: (data: any) => T,
     ): Promise<void> => {
-      const fetchFn = async (id: string, signal: AbortSignal): Promise<StatusResponse> => {
+      const fetchFn = async (
+        id: string,
+        signal: AbortSignal,
+      ): Promise<StatusResponse> => {
         const res = await fetch(endpoint, {
-          cache: 'no-store',
+          cache: "no-store",
           signal,
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error ?? 'Failed to fetch status');
+          throw new Error(data.error ?? "Failed to fetch status");
         }
 
         const status = parseResponse(data);
@@ -70,19 +77,21 @@ export function useGenericPolling<T extends string>({
         }
       } catch (err) {
         if (err instanceof DurationExceededError) {
-          const error = new Error('Polling timeout');
+          const error = new Error("Polling timeout");
           onError?.(error);
           throw error;
         }
         if (err instanceof ConsecutiveErrorsExceededError) {
-          const error = new Error('Too many consecutive network errors. Please check your connection.');
+          const error = new Error(
+            "Too many consecutive network errors. Please check your connection.",
+          );
           onError?.(error);
           throw error;
         }
         throw err;
       }
     },
-    [start, terminalStates, onTerminalState, onError, updateStorage]
+    [start, terminalStates, onTerminalState, onError, updateStorage],
   );
 
   return { pollStatus };

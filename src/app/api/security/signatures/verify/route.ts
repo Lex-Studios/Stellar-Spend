@@ -14,8 +14,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isValid = await transactionSigningService.verifySignature(signatureId);
-    const signature = await transactionSigningService.getSignatureStatus(signatureId);
+    const isValid =
+      await transactionSigningService.verifySignature(signatureId);
+    const signature =
+      await transactionSigningService.getSignatureStatus(signatureId);
 
     return NextResponse.json({
       signatureId,
@@ -43,8 +45,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const signature = await transactionSigningService.getSignatureStatus(signatureId);
-    const logs = await transactionSigningService.getVerificationLogs(signatureId);
+    const signature =
+      await transactionSigningService.getSignatureStatus(signatureId);
+    const logs =
+      await transactionSigningService.getVerificationLogs(signatureId);
 
     if (!signature) {
       return NextResponse.json(

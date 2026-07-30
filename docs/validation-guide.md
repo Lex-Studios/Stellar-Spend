@@ -9,41 +9,46 @@ Stellar-Spend uses Zod for centralized, type-safe validation. All validation log
 The `ValidationService` class provides static methods for all common validations:
 
 ```typescript
-import { ValidationService } from '@/lib/validators/service';
+import { ValidationService } from "@/lib/validators/service";
 
 // Validate amount
-const result = ValidationService.validateAmount('100.50');
+const result = ValidationService.validateAmount("100.50");
 if (!result.valid) {
   console.error(result.errors);
 }
 
 // Validate with constraints
-const minResult = ValidationService.validateMinAmount('50', 10);
-const rangeResult = ValidationService.validateAmountRange('100', 10, 1000);
+const minResult = ValidationService.validateMinAmount("50", 10);
+const rangeResult = ValidationService.validateAmountRange("100", 10, 1000);
 ```
 
 ## Available Validators
 
 ### Amount Validation
+
 - `validateAmount(amount)` - Basic amount validation
 - `validateMinAmount(amount, min)` - Minimum amount
 - `validateMaxAmount(amount, max)` - Maximum amount
 - `validateAmountRange(amount, min, max)` - Range validation
 
 ### Address Validation
+
 - `validateStellarAddress(address)` - Stellar address format
 - `validateBaseAddress(address)` - Base chain address format
 - `validateEvmAddress(address)` - EVM address format
 
 ### Currency Validation
+
 - `validateCurrencyCode(code)` - 3-letter currency code
 
 ### Beneficiary Validation
+
 - `validateAccountNumber(accountNumber)` - 10-digit account number
 - `validateInstitution(institution)` - Institution name
 - `validateBeneficiary(data)` - Complete beneficiary object
 
 ### Request Validation
+
 - `validateQuoteRequest(data)` - Quote request object
 - `validateBridgeTransaction(data)` - Bridge transaction object
 - `validatePayoutOrder(data)` - Payout order object
@@ -54,7 +59,7 @@ const rangeResult = ValidationService.validateAmountRange('100', 10, 1000);
 Use Zod schemas directly for custom validation:
 
 ```typescript
-import { amountSchema, stellarAddressSchema } from '@/lib/validators/schemas';
+import { amountSchema, stellarAddressSchema } from "@/lib/validators/schemas";
 
 const amount = amountSchema.parse(userInput);
 const address = stellarAddressSchema.parse(userInput);
@@ -84,7 +89,8 @@ interface FormattedValidationError {
 Extend Zod schemas with custom rules:
 
 ```typescript
-const customSchema = z.string()
-  .min(1, 'Required')
-  .refine((val) => !val.includes('invalid'), 'Contains invalid characters');
+const customSchema = z
+  .string()
+  .min(1, "Required")
+  .refine((val) => !val.includes("invalid"), "Contains invalid characters");
 ```

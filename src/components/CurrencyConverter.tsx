@@ -57,7 +57,10 @@ export default function CurrencyConverter({
         setRate(data.rate);
         if (rateUpdatedTimer.current) clearTimeout(rateUpdatedTimer.current);
         setRateUpdated(true);
-        rateUpdatedTimer.current = setTimeout(() => setRateUpdated(false), 1_500);
+        rateUpdatedTimer.current = setTimeout(
+          () => setRateUpdated(false),
+          1_500,
+        );
       }
     } catch (error) {
       console.error("Failed to fetch rate:", error);
@@ -227,16 +230,16 @@ export default function CurrencyConverter({
                 rateUpdated
                   ? "font-medium text-green-500"
                   : isStale
-                  ? "text-amber-500"
-                  : "text-gray-400 dark:text-gray-500",
+                    ? "text-amber-500"
+                    : "text-gray-400 dark:text-gray-500",
               )}
               aria-live="polite"
             >
               {rateUpdated
                 ? "Rate updated"
                 : isStale
-                ? "Rate expired"
-                : `Refreshes in ${quoteSecondsLeft}s`}
+                  ? "Rate expired"
+                  : `Refreshes in ${quoteSecondsLeft}s`}
             </span>
           </div>
         </div>
@@ -248,7 +251,8 @@ export default function CurrencyConverter({
           role="alert"
           className="mb-4 rounded border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400"
         >
-          The displayed rate has expired. A fresh rate will load automatically — wait a moment before submitting.
+          The displayed rate has expired. A fresh rate will load automatically —
+          wait a moment before submitting.
         </div>
       )}
 
@@ -269,14 +273,16 @@ export default function CurrencyConverter({
       <button
         onClick={copyResult}
         disabled={isStale || !toAmount}
-        title={isStale ? "Wait for the rate to refresh before copying" : undefined}
+        title={
+          isStale ? "Wait for the rate to refresh before copying" : undefined
+        }
         className={cn(
           "w-full rounded px-4 py-2 font-medium transition-colors",
           copied
             ? "bg-green-500 text-white"
             : isStale
-            ? "cursor-not-allowed bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
-            : "bg-blue-500 text-white hover:bg-blue-600",
+              ? "cursor-not-allowed bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+              : "bg-blue-500 text-white hover:bg-blue-600",
         )}
       >
         {copied ? "Copied!" : "Copy Result"}

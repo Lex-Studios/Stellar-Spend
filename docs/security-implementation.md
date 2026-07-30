@@ -30,7 +30,7 @@ Security headers are automatically applied to all HTTP responses via the middlew
 Headers are automatically applied in `middleware.ts`:
 
 ```typescript
-import { addSecurityHeaders } from '@/lib/security/headers';
+import { addSecurityHeaders } from "@/lib/security/headers";
 
 const response = NextResponse.next();
 return addSecurityHeaders(response);
@@ -45,42 +45,47 @@ Comprehensive input sanitization prevents injection attacks.
 ### Available Sanitization Functions
 
 #### HTML Sanitization
+
 ```typescript
-import { sanitizeHtml } from '@/lib/security/sanitization';
+import { sanitizeHtml } from "@/lib/security/sanitization";
 
 const clean = sanitizeHtml('<script>alert("xss")</script>');
 // Returns: ''
 ```
 
 #### SQL Injection Prevention
+
 ```typescript
-import { escapeSql } from '@/lib/security/sanitization';
+import { escapeSql } from "@/lib/security/sanitization";
 
 const safe = escapeSql("'; DROP TABLE users; --");
 // Returns: '\\'; DROP TABLE users; --'
 ```
 
 #### NoSQL Injection Prevention
+
 ```typescript
-import { escapeNoSql } from '@/lib/security/sanitization';
+import { escapeNoSql } from "@/lib/security/sanitization";
 
 const safe = escapeNoSql({ $ne: null });
 // Returns: { \\$ne: null }
 ```
 
 #### Command Injection Prevention
-```typescript
-import { escapeShell } from '@/lib/security/sanitization';
 
-const safe = escapeShell('$(rm -rf /)');
+```typescript
+import { escapeShell } from "@/lib/security/sanitization";
+
+const safe = escapeShell("$(rm -rf /)");
 // Returns: '$(rm -rf /)'
 ```
 
 #### URL Sanitization
-```typescript
-import { sanitizeUrl } from '@/lib/security/sanitization';
 
-const safe = sanitizeUrl('https://example.com');
+```typescript
+import { sanitizeUrl } from "@/lib/security/sanitization";
+
+const safe = sanitizeUrl("https://example.com");
 // Returns: 'https://example.com/'
 
 const unsafe = sanitizeUrl('javascript:alert("xss")');
@@ -88,35 +93,41 @@ const unsafe = sanitizeUrl('javascript:alert("xss")');
 ```
 
 #### Email Sanitization
-```typescript
-import { sanitizeEmail } from '@/lib/security/sanitization';
 
-const safe = sanitizeEmail('  USER@EXAMPLE.COM  ');
+```typescript
+import { sanitizeEmail } from "@/lib/security/sanitization";
+
+const safe = sanitizeEmail("  USER@EXAMPLE.COM  ");
 // Returns: 'user@example.com'
 ```
 
 #### Blockchain Address Sanitization
-```typescript
-import { sanitizeBlockchainAddress } from '@/lib/security/sanitization';
 
-const safe = sanitizeBlockchainAddress('0xd8dA6BF26964aF9D7eEd9e03E53415D37AA96045');
+```typescript
+import { sanitizeBlockchainAddress } from "@/lib/security/sanitization";
+
+const safe = sanitizeBlockchainAddress(
+  "0xd8dA6BF26964aF9D7eEd9e03E53415D37AA96045",
+);
 // Returns: '0xd8da6bf26964af9d7eed9e03e53415d37aa96045'
 ```
 
 #### Stellar Address Sanitization
-```typescript
-import { sanitizeStellarAddress } from '@/lib/security/sanitization';
 
-const safe = sanitizeStellarAddress('GCFX...ABCD');
+```typescript
+import { sanitizeStellarAddress } from "@/lib/security/sanitization";
+
+const safe = sanitizeStellarAddress("GCFX...ABCD");
 // Returns: 'GCFX...ABCD' or ''
 ```
 
 #### Prototype Pollution Prevention
+
 ```typescript
-import { sanitizeObjectKeys } from '@/lib/security/sanitization';
+import { sanitizeObjectKeys } from "@/lib/security/sanitization";
 
 const safe = sanitizeObjectKeys({
-  name: 'John',
+  name: "John",
   __proto__: { admin: true },
   constructor: { isAdmin: true },
 });
@@ -132,36 +143,39 @@ Automated API key rotation system with grace periods and monitoring.
 ### Configuration
 
 ```typescript
-import { performAutoRotation } from '@/lib/security/api-key-rotation';
+import { performAutoRotation } from "@/lib/security/api-key-rotation";
 
 const config = {
   rotationIntervalMs: 90 * 24 * 60 * 60 * 1000, // 90 days
-  gracePeriodMs: 7 * 24 * 60 * 60 * 1000,       // 7 days
+  gracePeriodMs: 7 * 24 * 60 * 60 * 1000, // 7 days
   enableAutoRotation: true,
-  notificationEmail: 'admin@example.com',
+  notificationEmail: "admin@example.com",
 };
 ```
 
 ### Usage
 
 #### Get Keys Needing Rotation
+
 ```typescript
-import { getKeysNeedingRotation } from '@/lib/security/api-key-rotation';
+import { getKeysNeedingRotation } from "@/lib/security/api-key-rotation";
 
 const keys = await getKeysNeedingRotation(config);
 ```
 
 #### Perform Automatic Rotation
+
 ```typescript
-import { performAutoRotation } from '@/lib/security/api-key-rotation';
+import { performAutoRotation } from "@/lib/security/api-key-rotation";
 
 const result = await performAutoRotation(config);
 console.log(`Rotated: ${result.rotatedCount}, Failed: ${result.failedCount}`);
 ```
 
 #### Get Rotation Status
+
 ```typescript
-import { getRotationStatus } from '@/lib/security/api-key-rotation';
+import { getRotationStatus } from "@/lib/security/api-key-rotation";
 
 const status = await getRotationStatus(keyId);
 console.log(`Days until rotation: ${status.daysUntilRotation}`);
@@ -169,8 +183,9 @@ console.log(`In grace period: ${status.inGracePeriod}`);
 ```
 
 #### Revoke Expired Keys
+
 ```typescript
-import { revokeExpiredRotatedKeys } from '@/lib/security/api-key-rotation';
+import { revokeExpiredRotatedKeys } from "@/lib/security/api-key-rotation";
 
 const result = await revokeExpiredRotatedKeys(config);
 console.log(`Revoked: ${result.revokedCount}`);
@@ -181,7 +196,10 @@ console.log(`Revoked: ${result.revokedCount}`);
 Add to a cron job or scheduled task:
 
 ```typescript
-import { performAutoRotation, revokeExpiredRotatedKeys } from '@/lib/security/api-key-rotation';
+import {
+  performAutoRotation,
+  revokeExpiredRotatedKeys,
+} from "@/lib/security/api-key-rotation";
 
 export async function rotationScheduledTask() {
   const config = {
@@ -221,28 +239,31 @@ ENCRYPTION_KEY="your-secure-password"
 ### Data Encryption
 
 #### Encrypt/Decrypt Strings
-```typescript
-import { encryptData, decryptData } from '@/lib/security/encryption';
 
-const plaintext = 'sensitive data';
+```typescript
+import { encryptData, decryptData } from "@/lib/security/encryption";
+
+const plaintext = "sensitive data";
 const encrypted = encryptData(plaintext);
 const decrypted = decryptData(encrypted);
 ```
 
 #### Encrypt/Decrypt Objects
-```typescript
-import { encryptObject, decryptObject } from '@/lib/security/encryption';
 
-const obj = { apiKey: 'secret', userId: '123' };
+```typescript
+import { encryptObject, decryptObject } from "@/lib/security/encryption";
+
+const obj = { apiKey: "secret", userId: "123" };
 const encrypted = encryptObject(obj);
 const decrypted = decryptObject(encrypted);
 ```
 
 #### Hash Data
-```typescript
-import { hashData, verifyHash } from '@/lib/security/encryption';
 
-const data = 'password';
+```typescript
+import { hashData, verifyHash } from "@/lib/security/encryption";
+
+const data = "password";
 const hash = hashData(data);
 const isValid = verifyHash(data, hash);
 ```
@@ -250,20 +271,23 @@ const isValid = verifyHash(data, hash);
 ### Sensitive Field Encryption
 
 ```typescript
-import { encryptSensitiveFields, decryptSensitiveFields } from '@/lib/security/encryption';
+import {
+  encryptSensitiveFields,
+  decryptSensitiveFields,
+} from "@/lib/security/encryption";
 
 const user = {
-  name: 'John',
-  password: 'secret123',
-  apiKey: 'key456',
+  name: "John",
+  password: "secret123",
+  apiKey: "key456",
 };
 
 // Encrypt sensitive fields
-const encrypted = encryptSensitiveFields(user, ['password', 'apiKey']);
+const encrypted = encryptSensitiveFields(user, ["password", "apiKey"]);
 // Result: { name: 'John', password_encrypted: '...', apiKey_encrypted: '...' }
 
 // Decrypt sensitive fields
-const decrypted = decryptSensitiveFields(encrypted, ['password', 'apiKey']);
+const decrypted = decryptSensitiveFields(encrypted, ["password", "apiKey"]);
 // Result: { name: 'John', password: 'secret123', apiKey: 'key456' }
 ```
 
@@ -283,12 +307,12 @@ const decrypted = decryptLocalStorageData('appData');
 ### Log Entry Encryption
 
 ```typescript
-import { encryptLogEntry } from '@/lib/security/encryption';
+import { encryptLogEntry } from "@/lib/security/encryption";
 
 const logEntry = {
-  action: 'login',
-  password: 'secret123',
-  token: 'abc123',
+  action: "login",
+  password: "secret123",
+  token: "abc123",
   timestamp: Date.now(),
 };
 
@@ -313,46 +337,47 @@ const restored = decryptBackupData(backup);
 ### Database Encryption
 
 #### Encrypt Table Column
-```typescript
-import { encryptTableColumn } from '@/lib/security/database-encryption';
 
-const result = await encryptTableColumn(
-  'users',
-  'email',
-  'email_encrypted'
-);
+```typescript
+import { encryptTableColumn } from "@/lib/security/database-encryption";
+
+const result = await encryptTableColumn("users", "email", "email_encrypted");
 console.log(`Encrypted: ${result.encrypted}, Failed: ${result.failed}`);
 ```
 
 #### Get Encryption Status
-```typescript
-import { getTableEncryptionStatus } from '@/lib/security/database-encryption';
 
-const status = await getTableEncryptionStatus('users', 'email_encrypted');
+```typescript
+import { getTableEncryptionStatus } from "@/lib/security/database-encryption";
+
+const status = await getTableEncryptionStatus("users", "email_encrypted");
 console.log(`Encryption: ${status.encryptionPercentage}%`);
 ```
 
 #### Rotate Encryption Keys
-```typescript
-import { rotateTableColumnEncryption } from '@/lib/security/database-encryption';
 
-const result = await rotateTableColumnEncryption('users', 'email_encrypted');
+```typescript
+import { rotateTableColumnEncryption } from "@/lib/security/database-encryption";
+
+const result = await rotateTableColumnEncryption("users", "email_encrypted");
 console.log(`Rotated: ${result.rotated}, Failed: ${result.failed}`);
 ```
 
 #### Create Encrypted Backup
-```typescript
-import { createEncryptedBackup } from '@/lib/security/database-encryption';
 
-const backup = await createEncryptedBackup('users', ['id', 'name', 'email']);
+```typescript
+import { createEncryptedBackup } from "@/lib/security/database-encryption";
+
+const backup = await createEncryptedBackup("users", ["id", "name", "email"]);
 // Save backup to secure storage
 ```
 
 #### Restore Encrypted Backup
-```typescript
-import { restoreEncryptedBackup } from '@/lib/security/database-encryption';
 
-const result = await restoreEncryptedBackup(backup, 'users');
+```typescript
+import { restoreEncryptedBackup } from "@/lib/security/database-encryption";
+
+const result = await restoreEncryptedBackup(backup, "users");
 console.log(`Restored: ${result.restored}, Failed: ${result.failed}`);
 ```
 
@@ -376,32 +401,36 @@ console.log(`Restored: ${result.restored}, Failed: ${result.failed}`);
 ### Migrating Existing Data to Encrypted Storage
 
 1. Add encrypted columns to your tables:
+
 ```sql
 ALTER TABLE users ADD COLUMN email_encrypted TEXT;
 ALTER TABLE users ADD COLUMN phone_encrypted TEXT;
 ```
 
 2. Encrypt existing data:
-```typescript
-import { encryptTableColumn } from '@/lib/security/database-encryption';
 
-await encryptTableColumn('users', 'email', 'email_encrypted');
-await encryptTableColumn('users', 'phone', 'phone_encrypted');
+```typescript
+import { encryptTableColumn } from "@/lib/security/database-encryption";
+
+await encryptTableColumn("users", "email", "email_encrypted");
+await encryptTableColumn("users", "phone", "phone_encrypted");
 ```
 
 3. Update application code to use encrypted columns
 
 4. Verify encryption status:
-```typescript
-import { getTableEncryptionStatus } from '@/lib/security/database-encryption';
 
-const status = await getTableEncryptionStatus('users', 'email_encrypted');
+```typescript
+import { getTableEncryptionStatus } from "@/lib/security/database-encryption";
+
+const status = await getTableEncryptionStatus("users", "email_encrypted");
 if (status.encryptionPercentage === 100) {
   // Safe to remove old columns
 }
 ```
 
 5. Remove old unencrypted columns (after verification):
+
 ```sql
 ALTER TABLE users DROP COLUMN email;
 ALTER TABLE users DROP COLUMN phone;
@@ -414,6 +443,7 @@ ALTER TABLE users DROP COLUMN phone;
 ### Decryption Failures
 
 If decryption fails, check:
+
 1. Encryption key is correct (ENCRYPTION_KEY env var)
 2. Data wasn't tampered with
 3. Backup of encrypted data exists
@@ -421,6 +451,7 @@ If decryption fails, check:
 ### Performance Issues
 
 If encryption/decryption is slow:
+
 1. Consider using database-level encryption instead
 2. Cache decrypted values when appropriate
 3. Use batch operations for large datasets
@@ -428,6 +459,7 @@ If encryption/decryption is slow:
 ### Key Rotation Issues
 
 If key rotation fails:
+
 1. Check database connectivity
 2. Verify old and new keys are available
 3. Review error logs for specific failures

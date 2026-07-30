@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main, develop]
   schedule:
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
 
 jobs:
   performance:
@@ -17,7 +17,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           cache: npm
 
       - name: Install dependencies
@@ -75,7 +75,7 @@ jobs:
             const fs = require('fs');
             const results = JSON.parse(fs.readFileSync('k6-results.json', 'utf8'));
             const comment = `## Performance Test Results
-            
+
             - **VUs**: ${results.metrics.vus?.value || 'N/A'}
             - **Duration**: ${results.metrics.duration?.value || 'N/A'}
             - **Requests**: ${results.metrics.http_reqs?.value || 'N/A'}

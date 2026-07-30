@@ -21,13 +21,13 @@ Two identical environments — **blue** (port 3000) and **green** (port 3001) �
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `docker-compose.blue.yml` | Blue environment (port 3000) |
-| `docker-compose.green.yml` | Green environment (port 3001) |
-| `scripts/blue-green-deploy.sh` | Deploy new version to inactive slot |
-| `scripts/rollback.sh` | Roll back to the previous slot |
-| `.active-env` | Tracks which slot is currently active (auto-managed) |
+| File                           | Purpose                                              |
+| ------------------------------ | ---------------------------------------------------- |
+| `docker-compose.blue.yml`      | Blue environment (port 3000)                         |
+| `docker-compose.green.yml`     | Green environment (port 3001)                        |
+| `scripts/blue-green-deploy.sh` | Deploy new version to inactive slot                  |
+| `scripts/rollback.sh`          | Roll back to the previous slot                       |
+| `.active-env`                  | Tracks which slot is currently active (auto-managed) |
 
 ## Deploy a New Version
 
@@ -40,6 +40,7 @@ chmod +x scripts/blue-green-deploy.sh scripts/rollback.sh
 ```
 
 The script:
+
 1. Builds the new Docker image
 2. Starts the inactive environment
 3. Runs health checks against `/api/health` (up to 10 retries × 5 s)
@@ -61,6 +62,7 @@ This starts the previously active environment, verifies it is healthy, switches 
 The scripts write the active slot name to `.active-env`. In a real production setup, integrate the traffic switch step with your load balancer:
 
 **Nginx example** — update `proxy_pass` and reload:
+
 ```nginx
 upstream stellar_spend {
     server localhost:3000;  # change to 3001 for green

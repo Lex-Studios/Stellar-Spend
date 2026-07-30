@@ -1,4 +1,10 @@
-import { Account, Keypair, Networks, Operation, TransactionBuilder } from 'stellar-sdk';
+import {
+  Account,
+  Keypair,
+  Networks,
+  Operation,
+  TransactionBuilder,
+} from "stellar-sdk";
 
 interface ResourceFeeEstimate {
   cpuInstructions: number;
@@ -44,7 +50,7 @@ export class ResourceFeeEstimator {
 
       return this.calculateFeeEstimate(simulation);
     } catch (error) {
-      console.error('Failed to estimate resource fees:', error);
+      console.error("Failed to estimate resource fees:", error);
       return this.getDefaultEstimate();
     }
   }
@@ -72,12 +78,12 @@ export class ResourceFeeEstimator {
 
     try {
       const response = await fetch(`${this.rpcUrl}/simulateTransaction`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: '1',
-          method: 'simulateTransaction',
+          jsonrpc: "2.0",
+          id: "1",
+          method: "simulateTransaction",
           params: [tx.toXDR()],
         }),
       });
@@ -85,8 +91,12 @@ export class ResourceFeeEstimator {
       const result = await response.json();
 
       if (result.error) {
-        console.error('Simulation error:', result.error);
-        return { footprint: { readBytes: 0, writeBytes: 0 }, estimatedFee: 0, error: result.error.message };
+        console.error("Simulation error:", result.error);
+        return {
+          footprint: { readBytes: 0, writeBytes: 0 },
+          estimatedFee: 0,
+          error: result.error.message,
+        };
       }
 
       const resultXdr = result.result.results?.[0];
@@ -98,18 +108,25 @@ export class ResourceFeeEstimator {
         estimatedFee: resultXdr?.minResourceFee || BASE_FEE_STROOPS,
       };
     } catch (error) {
-      console.error('Simulation request failed:', error);
-      return { footprint: { readBytes: 0, writeBytes: 0 }, estimatedFee: 0, error: String(error) };
+      console.error("Simulation request failed:", error);
+      return {
+        footprint: { readBytes: 0, writeBytes: 0 },
+        estimatedFee: 0,
+        error: String(error),
+      };
     }
   }
 
-  private calculateFeeEstimate(simulation: SimulationResult): ResourceFeeEstimate {
-    const totalBytes = simulation.footprint.readBytes + simulation.footprint.writeBytes;
+  private calculateFeeEstimate(
+    simulation: SimulationResult,
+  ): ResourceFeeEstimate {
+    const totalBytes =
+      simulation.footprint.readBytes + simulation.footprint.writeBytes;
     const storageOps = Math.ceil(totalBytes / 32);
     const cpuInstructions = Math.max(1000, storageOps * 500);
     const estimatedFeeStroops = Math.max(
       simulation.estimatedFee,
-      cpuInstructions + (storageOps * BASE_FEE_STROOPS),
+      cpuInstructions + storageOps * BASE_FEE_STROOPS,
     );
 
     return {
@@ -129,16 +146,18 @@ export class ResourceFeeEstimator {
       contractDataWrites: 0,
       contractDataReads: 0,
       estimatedFeeStroops: 1000,
-      estimatedFeeXLM: '0.0001000',
+      estimatedFeeXLM: "0.0001000",
     };
   }
 
-  optimizeStorageAccess(contractCalls: Array<{ method: string; reads: number; writes: number }>) {
+  optimizeStorageAccess(
+    contractCalls: Array<{ method: string; reads: number; writes: number }>,
+  ) {
     return contractCalls.map((call) => ({
       ...call,
       optimized: {
         batched: true,
-        cacheHint: 'prefer_local',
+        cacheHint: "prefer_local",
         parallelizable: call.writes === 0,
       },
     }));

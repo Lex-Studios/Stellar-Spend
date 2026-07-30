@@ -1,7 +1,7 @@
-import { pool } from '../db/client';
-import { rotateApiKey, getApiKeyById } from '../api-keys/service';
-import { logger } from '../logger';
-import type { ApiKeyRecord } from '../api-keys/types';
+import { pool } from "../db/client";
+import { rotateApiKey, getApiKeyById } from "../api-keys/service";
+import { logger } from "../logger";
+import type { ApiKeyRecord } from "../api-keys/types";
 
 /**
  * Configuration for API key rotation
@@ -26,7 +26,9 @@ const DEFAULT_CONFIG: RotationConfig = {
 /**
  * Get keys that need rotation
  */
-export async function getKeysNeedingRotation(config: RotationConfig = DEFAULT_CONFIG): Promise<ApiKeyRecord[]> {
+export async function getKeysNeedingRotation(
+  config: RotationConfig = DEFAULT_CONFIG,
+): Promise<ApiKeyRecord[]> {
   const rotationThreshold = Date.now() - config.rotationIntervalMs;
 
   const result = await pool.query(
@@ -38,20 +40,22 @@ export async function getKeysNeedingRotation(config: RotationConfig = DEFAULT_CO
         AND (expires_at IS NULL OR expires_at > $2)
       ORDER BY last_rotated_at ASC NULLS FIRST
     `,
-    [rotationThreshold, Date.now()]
+    [rotationThreshold, Date.now()],
   );
 
   return result.rows.map((row) => ({
     id: row.id as string,
     name: row.name as string,
     keyPrefix: row.key_prefix as string,
-    status: row.status as ApiKeyRecord['status'],
+    status: row.status as ApiKeyRecord["status"],
     scopes: JSON.parse(row.scopes as string),
     rateLimitMaxRequests: Number(row.rate_limit_max_requests),
     rateLimitWindowMs: Number(row.rate_limit_window_ms),
     usageCount: Number(row.usage_count),
     lastUsedAt: row.last_used_at ? Number(row.last_used_at) : undefined,
-    lastRotatedAt: row.last_rotated_at ? Number(row.last_rotated_at) : undefined,
+    lastRotatedAt: row.last_rotated_at
+      ? Number(row.last_rotated_at)
+      : undefined,
     revokedAt: row.revoked_at ? Number(row.revoked_at) : undefined,
     revokedReason: (row.revoked_reason as string | null) ?? undefined,
     expiresAt: row.expires_at ? Number(row.expires_at) : undefined,
@@ -64,7 +68,9 @@ export async function getKeysNeedingRotation(config: RotationConfig = DEFAULT_CO
 /**
  * Get keys in grace period (rotated but still valid)
  */
-export async function getKeysInGracePeriod(config: RotationConfig = DEFAULT_CONFIG): Promise<ApiKeyRecord[]> {
+export async function getKeysInGracePeriod(
+  config: RotationConfig = DEFAULT_CONFIG,
+): Promise<ApiKeyRecord[]> {
   const gracePeriodThreshold = Date.now() - config.gracePeriodMs;
 
   const result = await pool.query(
@@ -75,20 +81,22 @@ export async function getKeysInGracePeriod(config: RotationConfig = DEFAULT_CONF
         AND last_rotated_at > $1
       ORDER BY last_rotated_at DESC
     `,
-    [gracePeriodThreshold]
+    [gracePeriodThreshold],
   );
 
   return result.rows.map((row) => ({
     id: row.id as string,
     name: row.name as string,
     keyPrefix: row.key_prefix as string,
-    status: row.status as ApiKeyRecord['status'],
+    status: row.status as ApiKeyRecord["status"],
     scopes: JSON.parse(row.scopes as string),
     rateLimitMaxRequests: Number(row.rate_limit_max_requests),
     rateLimitWindowMs: Number(row.rate_limit_window_ms),
     usageCount: Number(row.usage_count),
     lastUsedAt: row.last_used_at ? Number(row.last_used_at) : undefined,
-    lastRotatedAt: row.last_rotated_at ? Number(row.last_rotated_at) : undefined,
+    lastRotatedAt: row.last_rotated_at
+      ? Number(row.last_rotated_at)
+      : undefined,
     revokedAt: row.revoked_at ? Number(row.revoked_at) : undefined,
     revokedReason: (row.revoked_reason as string | null) ?? undefined,
     expiresAt: row.expires_at ? Number(row.expires_at) : undefined,
@@ -101,7 +109,9 @@ export async function getKeysInGracePeriod(config: RotationConfig = DEFAULT_CONF
 /**
  * Perform automatic key rotation
  */
-export async function performAutoRotation(config: RotationConfig = DEFAULT_CONFIG): Promise<{
+export async function performAutoRotation(
+  config: RotationConfig = DEFAULT_CONFIG,
+): Promise<{
   rotatedCount: number;
   failedCount: number;
   errors: Array<{ keyId: string; error: string }>;
@@ -120,24 +130,24 @@ export async function performAutoRotation(config: RotationConfig = DEFAULT_CONFI
       const rotated = await rotateApiKey(key.id);
       if (rotated) {
         rotatedCount++;
-        logger.info('api_key_rotated', {
+        logger.info("api_key_rotated", {
           keyId: key.id,
           keyName: key.name,
           newKeyId: rotated.id,
         });
       } else {
         failedCount++;
-        errors.push({ keyId: key.id, error: 'Failed to rotate key' });
+        errors.push({ keyId: key.id, error: "Failed to rotate key" });
       }
     } catch (error) {
       failedCount++;
       errors.push({
         keyId: key.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
-      logger.error('api_key_rotation_failed', {
+      logger.error("api_key_rotation_failed", {
         keyId: key.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -148,7 +158,9 @@ export async function performAutoRotation(config: RotationConfig = DEFAULT_CONFI
 /**
  * Revoke keys that have exceeded grace period
  */
-export async function revokeExpiredRotatedKeys(config: RotationConfig = DEFAULT_CONFIG): Promise<{
+export async function revokeExpiredRotatedKeys(
+  config: RotationConfig = DEFAULT_CONFIG,
+): Promise<{
   revokedCount: number;
   errors: Array<{ keyId: string; error: string }>;
 }> {
@@ -161,7 +173,7 @@ export async function revokeExpiredRotatedKeys(config: RotationConfig = DEFAULT_
       WHERE status = 'rotated'
         AND last_rotated_at < $1
     `,
-    [gracePeriodThreshold]
+    [gracePeriodThreshold],
   );
 
   const errors: Array<{ keyId: string; error: string }> = [];
@@ -178,21 +190,21 @@ export async function revokeExpiredRotatedKeys(config: RotationConfig = DEFAULT_
               updated_at = $2
           WHERE id = $1
         `,
-        [row.id as string, Date.now()]
+        [row.id as string, Date.now()],
       );
       revokedCount++;
-      logger.info('api_key_grace_period_expired', {
+      logger.info("api_key_grace_period_expired", {
         keyId: row.id,
         keyName: row.name,
       });
     } catch (error) {
       errors.push({
         keyId: row.id as string,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
-      logger.error('api_key_grace_period_revocation_failed', {
+      logger.error("api_key_grace_period_revocation_failed", {
         keyId: row.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }
@@ -215,12 +227,20 @@ export async function getRotationStatus(keyId: string): Promise<{
 
   const config = DEFAULT_CONFIG;
   const lastRotatedAt = key.lastRotatedAt ?? key.createdAt;
-  const daysSinceRotation = (Date.now() - lastRotatedAt) / (24 * 60 * 60 * 1000);
-  const daysUntilRotation = Math.max(0, config.rotationIntervalMs / (24 * 60 * 60 * 1000) - daysSinceRotation);
+  const daysSinceRotation =
+    (Date.now() - lastRotatedAt) / (24 * 60 * 60 * 1000);
+  const daysUntilRotation = Math.max(
+    0,
+    config.rotationIntervalMs / (24 * 60 * 60 * 1000) - daysSinceRotation,
+  );
 
-  const inGracePeriod = key.status === 'rotated';
+  const inGracePeriod = key.status === "rotated";
   const daysUntilRevocation = inGracePeriod
-    ? Math.max(0, config.gracePeriodMs / (24 * 60 * 60 * 1000) - (Date.now() - (key.lastRotatedAt ?? 0)) / (24 * 60 * 60 * 1000))
+    ? Math.max(
+        0,
+        config.gracePeriodMs / (24 * 60 * 60 * 1000) -
+          (Date.now() - (key.lastRotatedAt ?? 0)) / (24 * 60 * 60 * 1000),
+      )
     : 0;
 
   return {

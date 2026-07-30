@@ -3,7 +3,9 @@ import { withSentryConfig } from "@sentry/nextjs";
 import bundleAnalyzer from "@next/bundle-analyzer";
 import { env } from "./src/lib/env";
 
-const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === "true" });
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 void env;
 
@@ -108,7 +110,9 @@ const nextConfig: NextConfig = {
               priority: 10,
               reuseExistingChunk: true,
               name(module: any) {
-                const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)?.[1];
+                const packageName = module.context.match(
+                  /[\\/]node_modules[\\/](.*?)([\\/]|$)/,
+                )?.[1];
                 return `vendor.${packageName?.replace("@", "")}`;
               },
             },

@@ -1,4 +1,8 @@
-import { createValidationError, createValidationResult, type ValidationResult } from './types';
+import {
+  createValidationError,
+  createValidationResult,
+  type ValidationResult,
+} from "./types";
 
 export interface BeneficiaryData {
   institution: string;
@@ -10,33 +14,48 @@ export interface BeneficiaryData {
 export function validateBeneficiary(data: BeneficiaryData): ValidationResult {
   const errors = [];
 
-  if (!data.institution || data.institution.trim() === '') {
-    errors.push(createValidationError('institution', 'Institution is required'));
+  if (!data.institution || data.institution.trim() === "") {
+    errors.push(
+      createValidationError("institution", "Institution is required"),
+    );
   }
 
-  if (!data.accountIdentifier || data.accountIdentifier.trim() === '') {
-    errors.push(createValidationError('accountIdentifier', 'Account identifier is required'));
+  if (!data.accountIdentifier || data.accountIdentifier.trim() === "") {
+    errors.push(
+      createValidationError(
+        "accountIdentifier",
+        "Account identifier is required",
+      ),
+    );
   } else if (!/^\d{10}$/.test(data.accountIdentifier.trim())) {
-    errors.push(createValidationError('accountIdentifier', 'Account identifier must be 10 digits'));
+    errors.push(
+      createValidationError(
+        "accountIdentifier",
+        "Account identifier must be 10 digits",
+      ),
+    );
   }
 
-  if (!data.currency || data.currency.trim() === '') {
-    errors.push(createValidationError('currency', 'Currency is required'));
+  if (!data.currency || data.currency.trim() === "") {
+    errors.push(createValidationError("currency", "Currency is required"));
   }
 
   return createValidationResult(errors.length === 0, errors);
 }
 
 export function validateAccountNumber(accountNumber: string): ValidationResult {
-  if (!accountNumber || accountNumber.trim() === '') {
+  if (!accountNumber || accountNumber.trim() === "") {
     return createValidationResult(false, [
-      createValidationError('accountNumber', 'Account number is required'),
+      createValidationError("accountNumber", "Account number is required"),
     ]);
   }
 
   if (!/^\d{10}$/.test(accountNumber.trim())) {
     return createValidationResult(false, [
-      createValidationError('accountNumber', 'Account number must be 10 digits'),
+      createValidationError(
+        "accountNumber",
+        "Account number must be 10 digits",
+      ),
     ]);
   }
 
@@ -44,9 +63,9 @@ export function validateAccountNumber(accountNumber: string): ValidationResult {
 }
 
 export function validateInstitution(institution: string): ValidationResult {
-  if (!institution || institution.trim() === '') {
+  if (!institution || institution.trim() === "") {
     return createValidationResult(false, [
-      createValidationError('institution', 'Institution is required'),
+      createValidationError("institution", "Institution is required"),
     ]);
   }
 

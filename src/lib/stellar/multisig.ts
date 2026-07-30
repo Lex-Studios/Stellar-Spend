@@ -8,7 +8,7 @@
  * Reference: https://developers.stellar.org/docs/learn/encyclopedia/signatures-multisig
  */
 
-import crypto from 'crypto';
+import crypto from "crypto";
 
 export interface MultiSigSigner {
   publicKey: string;
@@ -49,10 +49,10 @@ export interface MultiSigTransactionStatus {
 }
 
 export type MultiSigStatusCode =
-  | 'pending'       // waiting for more signatures
-  | 'ready'         // threshold met, ready to submit
-  | 'expired'       // signature collection window closed
-  | 'submitted';    // submitted to Stellar network
+  | "pending" // waiting for more signatures
+  | "ready" // threshold met, ready to submit
+  | "expired" // signature collection window closed
+  | "submitted"; // submitted to Stellar network
 
 /** Default window for collecting signatures: 24 hours */
 const DEFAULT_SIGNATURE_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -96,25 +96,36 @@ export function addPartialSignature(
   signatureExpiryMs = DEFAULT_SIGNATURE_EXPIRY_MS,
 ): MultiSigTransactionStatus {
   const entry = _store.get(transactionId);
-  if (!entry) throw new Error(`Multi-sig transaction ${transactionId} not found`);
+  if (!entry)
+    throw new Error(`Multi-sig transaction ${transactionId} not found`);
 
   if (Date.now() > entry.expiresAt) {
-    throw new Error(`Signature collection window for transaction ${transactionId} has expired`);
+    throw new Error(
+      `Signature collection window for transaction ${transactionId} has expired`,
+    );
   }
 
-  const signer = entry.config.signers.find((s) => s.publicKey === signerPublicKey);
+  const signer = entry.config.signers.find(
+    (s) => s.publicKey === signerPublicKey,
+  );
   if (!signer) {
-    throw new Error(`Signer ${signerPublicKey} is not authorised for transaction ${transactionId}`);
+    throw new Error(
+      `Signer ${signerPublicKey} is not authorised for transaction ${transactionId}`,
+    );
   }
 
-  const alreadySigned = entry.partialSignatures.some((p) => p.signerPublicKey === signerPublicKey);
+  const alreadySigned = entry.partialSignatures.some(
+    (p) => p.signerPublicKey === signerPublicKey,
+  );
   if (alreadySigned) {
-    throw new Error(`Signer ${signerPublicKey} has already submitted a signature for transaction ${transactionId}`);
+    throw new Error(
+      `Signer ${signerPublicKey} has already submitted a signature for transaction ${transactionId}`,
+    );
   }
 
   const now = Date.now();
   const partial: PartialSignature = {
-    id: `sig_${crypto.randomBytes(8).toString('hex')}`,
+    id: `sig_${crypto.randomBytes(8).toString("hex")}`,
     transactionId,
     signerPublicKey,
     signatureXdr,
@@ -136,13 +147,21 @@ export function addPartialSignature(
  * Verifies that all collected partial signatures are still within their expiry
  * window and removes any that have expired. Re-computes accumulated weight.
  */
-export function pruneExpiredSignatures(transactionId: string): MultiSigTransactionStatus {
+export function pruneExpiredSignatures(
+  transactionId: string,
+): MultiSigTransactionStatus {
   const entry = _store.get(transactionId);
-  if (!entry) throw new Error(`Multi-sig transaction ${transactionId} not found`);
+  if (!entry)
+    throw new Error(`Multi-sig transaction ${transactionId} not found`);
 
   const now = Date.now();
-  entry.partialSignatures = entry.partialSignatures.filter((p) => now <= p.expiresAt);
-  entry.accumulatedWeight = entry.partialSignatures.reduce((sum, p) => sum + p.weight, 0);
+  entry.partialSignatures = entry.partialSignatures.filter(
+    (p) => now <= p.expiresAt,
+  );
+  entry.accumulatedWeight = entry.partialSignatures.reduce(
+    (sum, p) => sum + p.weight,
+    0,
+  );
   entry.isReady = entry.accumulatedWeight >= entry.config.threshold;
 
   return entry;
@@ -152,19 +171,23 @@ export function pruneExpiredSignatures(transactionId: string): MultiSigTransacti
  * Returns the current status of a multi-sig transaction, including whether
  * the threshold has been met and which signers have yet to sign.
  */
-export function getMultiSigStatus(transactionId: string): MultiSigTransactionStatus | null {
+export function getMultiSigStatus(
+  transactionId: string,
+): MultiSigTransactionStatus | null {
   return _store.get(transactionId) ?? null;
 }
 
 /**
  * Returns the status code for a multi-sig transaction.
  */
-export function getMultiSigStatusCode(transactionId: string): MultiSigStatusCode {
+export function getMultiSigStatusCode(
+  transactionId: string,
+): MultiSigStatusCode {
   const entry = _store.get(transactionId);
-  if (!entry) return 'expired';
-  if (Date.now() > entry.expiresAt) return 'expired';
-  if (entry.isReady) return 'ready';
-  return 'pending';
+  if (!entry) return "expired";
+  if (Date.now() > entry.expiresAt) return "expired";
+  if (entry.isReady) return "ready";
+  return "pending";
 }
 
 /**
@@ -181,9 +204,14 @@ export function getPendingSigners(transactionId: string): MultiSigSigner[] {
  * Validates a multi-sig configuration: checks that the threshold can
  * theoretically be reached by the listed signers.
  */
-export function validateMultiSigConfig(config: MultiSigConfig): { valid: boolean; reason?: string } {
-  if (config.threshold <= 0) return { valid: false, reason: 'Threshold must be greater than 0' };
-  if (config.signers.length === 0) return { valid: false, reason: 'At least one signer is required' };
+export function validateMultiSigConfig(config: MultiSigConfig): {
+  valid: boolean;
+  reason?: string;
+} {
+  if (config.threshold <= 0)
+    return { valid: false, reason: "Threshold must be greater than 0" };
+  if (config.signers.length === 0)
+    return { valid: false, reason: "At least one signer is required" };
 
   const maxWeight = config.signers.reduce((sum, s) => sum + s.weight, 0);
   if (maxWeight < config.threshold) {
@@ -195,7 +223,10 @@ export function validateMultiSigConfig(config: MultiSigConfig): { valid: boolean
 
   const invalidSigner = config.signers.find((s) => s.weight <= 0);
   if (invalidSigner) {
-    return { valid: false, reason: `Signer ${invalidSigner.publicKey} has an invalid weight (${invalidSigner.weight})` };
+    return {
+      valid: false,
+      reason: `Signer ${invalidSigner.publicKey} has an invalid weight (${invalidSigner.weight})`,
+    };
   }
 
   return { valid: true };

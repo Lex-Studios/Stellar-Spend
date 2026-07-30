@@ -19,19 +19,29 @@ describe("ProgressSteps", () => {
   });
 
   it("active step has gold background class when not connected", () => {
-    const { container } = render(<ProgressSteps isConnected={false} isConnecting={false} />);
-    const step1 = screen.getByText("CONNECT WALLET").closest("div[class*='p-6']");
+    const { container } = render(
+      <ProgressSteps isConnected={false} isConnecting={false} />,
+    );
+    const step1 = screen
+      .getByText("CONNECT WALLET")
+      .closest("div[class*='p-6']");
     expect(step1?.className).toContain("bg-[#c9a962]");
   });
 
   it("active step has gold background class when connecting", () => {
-    const { container } = render(<ProgressSteps isConnected={false} isConnecting={true} />);
-    const step2 = screen.getByText("SIGNATURE PENDING").closest("div[class*='p-6']");
+    const { container } = render(
+      <ProgressSteps isConnected={false} isConnecting={true} />,
+    );
+    const step2 = screen
+      .getByText("SIGNATURE PENDING")
+      .closest("div[class*='p-6']");
     expect(step2?.className).toContain("bg-[#c9a962]");
   });
 
   it("active step has gold background class when connected", () => {
-    const { container } = render(<ProgressSteps isConnected={true} isConnecting={false} />);
+    const { container } = render(
+      <ProgressSteps isConnected={true} isConnecting={false} />,
+    );
     const step3 = screen.getByText("₦ PAYOUT").closest("div[class*='p-6']");
     expect(step3?.className).toContain("bg-[#c9a962]");
   });

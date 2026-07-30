@@ -23,12 +23,12 @@ and explains everything you need to contribute effectively.
 
 ### Prerequisites
 
-| Tool | Minimum version | Install |
-|---|---|---|
-| Node.js | 20.x | [nodejs.org](https://nodejs.org) |
-| npm | 10.x | bundled with Node.js |
-| PostgreSQL | 14+ | [postgresql.org](https://postgresql.org) or Docker |
-| Git | any | [git-scm.com](https://git-scm.com) |
+| Tool       | Minimum version | Install                                            |
+| ---------- | --------------- | -------------------------------------------------- |
+| Node.js    | 20.x            | [nodejs.org](https://nodejs.org)                   |
+| npm        | 10.x            | bundled with Node.js                               |
+| PostgreSQL | 14+             | [postgresql.org](https://postgresql.org) or Docker |
+| Git        | any             | [git-scm.com](https://git-scm.com)                 |
 
 ### Step 1 — Clone and install
 
@@ -46,19 +46,19 @@ cp .env.example .env.local
 
 Open `.env.local` and fill in the required values. The minimum set to run locally:
 
-| Variable | Where to get it |
-|---|---|
-| `PAYCREST_API_KEY` | [Paycrest dashboard](https://paycrest.io) → API credentials |
-| `PAYCREST_WEBHOOK_SECRET` | Paycrest dashboard → Webhook settings |
-| `BASE_PRIVATE_KEY` | Your Base wallet private key (use a dev wallet — never a production key) |
-| `BASE_RETURN_ADDRESS` | Public address matching your `BASE_PRIVATE_KEY` |
-| `BASE_RPC_URL` | `https://mainnet.base.org` or your RPC provider URL |
-| `STELLAR_SOROBAN_RPC_URL` | `https://soroban-rpc.mainnet.stellar.gateway.fm` |
-| `STELLAR_HORIZON_URL` | `https://horizon.stellar.org` |
-| `DATABASE_URL` | `postgresql://user:password@localhost:5432/stellar_spend` |
-| `NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL` | Same as `STELLAR_SOROBAN_RPC_URL` |
-| `NEXT_PUBLIC_BASE_RETURN_ADDRESS` | Same as `BASE_RETURN_ADDRESS` |
-| `NEXT_PUBLIC_STELLAR_USDC_ISSUER` | Circle's Stellar USDC issuer (see [Stellar USDC docs](https://www.circle.com/en/usdc-multichain/stellar)) |
+| Variable                              | Where to get it                                                                                           |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `PAYCREST_API_KEY`                    | [Paycrest dashboard](https://paycrest.io) → API credentials                                               |
+| `PAYCREST_WEBHOOK_SECRET`             | Paycrest dashboard → Webhook settings                                                                     |
+| `BASE_PRIVATE_KEY`                    | Your Base wallet private key (use a dev wallet — never a production key)                                  |
+| `BASE_RETURN_ADDRESS`                 | Public address matching your `BASE_PRIVATE_KEY`                                                           |
+| `BASE_RPC_URL`                        | `https://mainnet.base.org` or your RPC provider URL                                                       |
+| `STELLAR_SOROBAN_RPC_URL`             | `https://soroban-rpc.mainnet.stellar.gateway.fm`                                                          |
+| `STELLAR_HORIZON_URL`                 | `https://horizon.stellar.org`                                                                             |
+| `DATABASE_URL`                        | `postgresql://user:password@localhost:5432/stellar_spend`                                                 |
+| `NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL` | Same as `STELLAR_SOROBAN_RPC_URL`                                                                         |
+| `NEXT_PUBLIC_BASE_RETURN_ADDRESS`     | Same as `BASE_RETURN_ADDRESS`                                                                             |
+| `NEXT_PUBLIC_STELLAR_USDC_ISSUER`     | Circle's Stellar USDC issuer (see [Stellar USDC docs](https://www.circle.com/en/usdc-multichain/stellar)) |
 
 > **Security:** Variables prefixed `NEXT_PUBLIC_` are bundled into the browser.  
 > Never add `PAYCREST_API_KEY` or `BASE_PRIVATE_KEY` with the `NEXT_PUBLIC_` prefix.
@@ -128,17 +128,17 @@ Beneficiary's bank account
 
 ### Tech stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 15, App Router, TypeScript |
-| Styling | Tailwind CSS v4 |
-| Bridge | `@allbridge/bridge-core-sdk` |
+| Layer          | Technology                                       |
+| -------------- | ------------------------------------------------ |
+| Framework      | Next.js 15, App Router, TypeScript               |
+| Styling        | Tailwind CSS v4                                  |
+| Bridge         | `@allbridge/bridge-core-sdk`                     |
 | Stellar wallet | `@stellar/freighter-api`, `@stellar/stellar-sdk` |
-| EVM (Base) | `viem` |
-| Database | PostgreSQL (`pg`) |
-| Testing | Vitest, React Testing Library, Playwright |
-| Error tracking | Sentry |
-| Deployment | Vercel / Docker / Kubernetes |
+| EVM (Base)     | `viem`                                           |
+| Database       | PostgreSQL (`pg`)                                |
+| Testing        | Vitest, React Testing Library, Playwright        |
+| Error tracking | Sentry                                           |
+| Deployment     | Vercel / Docker / Kubernetes                     |
 
 ---
 
@@ -146,44 +146,44 @@ Beneficiary's bank account
 
 ### Configuration & Environment
 
-| File | Purpose |
-|---|---|
-| `.env.example` | Template for all environment variables with documentation |
+| File             | Purpose                                                                |
+| ---------------- | ---------------------------------------------------------------------- |
+| `.env.example`   | Template for all environment variables with documentation              |
 | `src/lib/env.ts` | Validates all required env vars at startup; exports typed `env` object |
-| `next.config.ts` | Next.js configuration (headers, rewrites, bundle analyzer) |
-| `middleware.ts` | Edge middleware for CORS, rate limiting on all routes |
+| `next.config.ts` | Next.js configuration (headers, rewrites, bundle analyzer)             |
+| `middleware.ts`  | Edge middleware for CORS, rate limiting on all routes                  |
 
 ### API Routes
 
 All API routes live under `src/app/api/`. Routes follow Next.js App Router conventions
 — each `route.ts` file exports HTTP method handlers (`GET`, `POST`, etc.).
 
-| Path | Purpose |
-|---|---|
-| `src/app/api/health/` | Health check |
-| `src/app/api/offramp/` | Core off-ramp endpoints (currencies, quote, bridge, Paycrest) |
-| `src/app/api/v1/` | Versioned API (mirrors `/api/offramp/*` with API key auth) |
-| `src/app/api/webhooks/` | Inbound Paycrest payment event webhooks |
-| `src/app/api/api-keys/` | Admin API key management |
-| `src/app/api/auth/2fa/` | Two-factor authentication |
-| `src/app/api/transactions/` | Transaction history CRUD |
-| `src/app/api/docs/` | Swagger UI (served from `/api/docs`) |
+| Path                        | Purpose                                                       |
+| --------------------------- | ------------------------------------------------------------- |
+| `src/app/api/health/`       | Health check                                                  |
+| `src/app/api/offramp/`      | Core off-ramp endpoints (currencies, quote, bridge, Paycrest) |
+| `src/app/api/v1/`           | Versioned API (mirrors `/api/offramp/*` with API key auth)    |
+| `src/app/api/webhooks/`     | Inbound Paycrest payment event webhooks                       |
+| `src/app/api/api-keys/`     | Admin API key management                                      |
+| `src/app/api/auth/2fa/`     | Two-factor authentication                                     |
+| `src/app/api/transactions/` | Transaction history CRUD                                      |
+| `src/app/api/docs/`         | Swagger UI (served from `/api/docs`)                          |
 
 ### Core Library
 
-| File / Directory | Purpose |
-|---|---|
-| `src/lib/clients/allbridge.ts` | Allbridge SDK adapter — lazy singleton, 5-min cache |
-| `src/lib/clients/paycrest.ts` | Paycrest REST adapter — typed error class (`PaycrestHttpError`) |
-| `src/lib/clients/base.ts` | Base/EVM client (`viem`) for USDC transfers |
-| `src/lib/api-versioning/` | Version negotiation (URL prefix, X-API-Version header, Accept header) |
-| `src/lib/api-keys/` | API key creation, authentication, rotation, revocation |
-| `src/lib/beneficiary-storage.ts` | localStorage-backed beneficiary store with AES-256 encryption |
-| `src/lib/error-handler.ts` | Unified HTTP error response factory |
-| `src/lib/db/client.ts` | PostgreSQL connection pool |
-| `src/lib/db/dal.ts` | Data access layer for transactions and notifications |
-| `src/lib/idempotency.ts` | Idempotency key lookup, lock, and store logic |
-| `src/lib/two-fa.ts` | TOTP generation, URI building, and verification |
+| File / Directory                 | Purpose                                                               |
+| -------------------------------- | --------------------------------------------------------------------- |
+| `src/lib/clients/allbridge.ts`   | Allbridge SDK adapter — lazy singleton, 5-min cache                   |
+| `src/lib/clients/paycrest.ts`    | Paycrest REST adapter — typed error class (`PaycrestHttpError`)       |
+| `src/lib/clients/base.ts`        | Base/EVM client (`viem`) for USDC transfers                           |
+| `src/lib/api-versioning/`        | Version negotiation (URL prefix, X-API-Version header, Accept header) |
+| `src/lib/api-keys/`              | API key creation, authentication, rotation, revocation                |
+| `src/lib/beneficiary-storage.ts` | localStorage-backed beneficiary store with AES-256 encryption         |
+| `src/lib/error-handler.ts`       | Unified HTTP error response factory                                   |
+| `src/lib/db/client.ts`           | PostgreSQL connection pool                                            |
+| `src/lib/db/dal.ts`              | Data access layer for transactions and notifications                  |
+| `src/lib/idempotency.ts`         | Idempotency key lookup, lock, and store logic                         |
+| `src/lib/two-fa.ts`              | TOTP generation, URI building, and verification                       |
 
 ### Migrations
 
@@ -192,16 +192,16 @@ Check the migration files for the schema that underpins each feature.
 
 ### Documentation
 
-| File | Purpose |
-|---|---|
-| `openapi.yaml` | OpenAPI 3.0 spec for all endpoints |
-| `docs/api.md` | Human-readable API reference |
-| `docs/adr/` | Architecture Decision Records — why things are the way they are |
-| `docs/diagrams/` | Mermaid sequence diagrams for all major flows |
-| `docs/allbridge-integration.md` | Allbridge bridge setup and troubleshooting |
-| `docs/paycrest-integration.md` | Paycrest order lifecycle and webhook handling |
-| `docs/api-migration-v1.md` | Migration guide from legacy to versioned routes |
-| `TESTING.md` | Comprehensive testing guide |
+| File                            | Purpose                                                         |
+| ------------------------------- | --------------------------------------------------------------- |
+| `openapi.yaml`                  | OpenAPI 3.0 spec for all endpoints                              |
+| `docs/api.md`                   | Human-readable API reference                                    |
+| `docs/adr/`                     | Architecture Decision Records — why things are the way they are |
+| `docs/diagrams/`                | Mermaid sequence diagrams for all major flows                   |
+| `docs/allbridge-integration.md` | Allbridge bridge setup and troubleshooting                      |
+| `docs/paycrest-integration.md`  | Paycrest order lifecycle and webhook handling                   |
+| `docs/api-migration-v1.md`      | Migration guide from legacy to versioned routes                 |
+| `TESTING.md`                    | Comprehensive testing guide                                     |
 
 ---
 
@@ -280,6 +280,7 @@ npm run test:watch  # watch mode
 ```
 
 Key patterns:
+
 - Always mock `@/lib/env` instead of setting `process.env` directly.
 - Mock `@allbridge/bridge-core-sdk` at the top of any test that touches bridge logic.
 - Clear `localStorage` in `beforeEach` for tests involving `BeneficiaryStorage`.
@@ -311,12 +312,12 @@ Wallet extensions (Freighter, Lobstr) cannot be installed in Playwright's Chromi
 
 ```ts
 // Import the handler directly — no HTTP server needed
-import { POST } from '@/app/api/offramp/quote/route';
-import { NextRequest } from 'next/server';
+import { POST } from "@/app/api/offramp/quote/route";
+import { NextRequest } from "next/server";
 
-const req = new NextRequest('http://localhost/api/offramp/quote', {
-  method: 'POST',
-  body: JSON.stringify({ amount: '100', currency: 'NGN', feeMethod: 'USDC' }),
+const req = new NextRequest("http://localhost/api/offramp/quote", {
+  method: "POST",
+  body: JSON.stringify({ amount: "100", currency: "NGN", feeMethod: "USDC" }),
 });
 const res = await POST(req);
 expect(res.status).toBe(200);
@@ -339,6 +340,7 @@ Or use the [Stellar Laboratory](https://laboratory.stellar.org/#account-creator?
 ### Adding testnet USDC trustline
 
 On testnet, USDC is issued by a different account than mainnet. Add the trustline using Stellar Laboratory:
+
 1. Go to Transaction Builder → Add Operation → Change Trust
 2. Asset code: `USDC`
 3. Asset issuer: the testnet USDC issuer (check [Stellar testnet docs](https://developers.stellar.org/docs/learn/fundamentals/stellar-data-structures/assets))
@@ -381,12 +383,12 @@ and the SDK will use the appropriate testnet bridge contracts.
 Next.js prints all `console.log` / `console.error` from API routes to the terminal running `npm run dev`.
 Key log patterns to look for:
 
-| Log prefix | Meaning |
-|---|---|
-| `Diagnostic events:` | Soroban RPC rejected a transaction — decode the XDR for details |
-| `PaycrestHttpError` | Paycrest API returned a non-2xx response — check `status` and `details` |
-| `Invalid environment configuration` | Required env vars are missing — check `.env.local` |
-| `Allbridge SDK error` | Bridge chain details fetch failed — check RPC URLs |
+| Log prefix                          | Meaning                                                                 |
+| ----------------------------------- | ----------------------------------------------------------------------- |
+| `Diagnostic events:`                | Soroban RPC rejected a transaction — decode the XDR for details         |
+| `PaycrestHttpError`                 | Paycrest API returned a non-2xx response — check `status` and `details` |
+| `Invalid environment configuration` | Required env vars are missing — check `.env.local`                      |
+| `Allbridge SDK error`               | Bridge chain details fetch failed — check RPC URLs                      |
 
 ### Request tracing
 
@@ -442,6 +444,7 @@ the whole codebase without building.
 
 **Cause:** One or more required environment variables are missing from `.env.local`.  
 **Fix:**
+
 1. Run `diff .env.example .env.local` to see which variables are missing.
 2. Fill in the missing values.
 3. Restart the dev server.
@@ -450,6 +453,7 @@ the whole codebase without building.
 
 **Cause:** PostgreSQL is not running or `DATABASE_URL` is wrong.  
 **Fix:**
+
 1. Check PostgreSQL is running: `pg_isready`
 2. Verify the connection string: `psql $DATABASE_URL -c "SELECT 1"`
 3. If using Docker: `docker compose up -d postgres`
@@ -470,6 +474,7 @@ npm run dev
 
 **Cause:** The Soroban or Horizon RPC endpoint is slow or unreachable.  
 **Fix:**
+
 1. Test the RPC endpoint directly: `curl $STELLAR_SOROBAN_RPC_URL`
 2. Try a different public RPC endpoint (see [Stellar documentation](https://developers.stellar.org/docs/data/apis/rpc/rpc-providers)).
 3. The SDK cache auto-invalidates on error — the next request will retry.
@@ -487,10 +492,10 @@ aren't set in the test environment.
 **Fix:** Mock `@/lib/env` in your test:
 
 ```ts
-vi.mock('@/lib/env', () => ({
+vi.mock("@/lib/env", () => ({
   env: {
-    server: { PAYCREST_API_KEY: 'test', /* fill required keys */ },
-    public: { NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL: 'https://test', /* ... */ },
+    server: { PAYCREST_API_KEY: "test" /* fill required keys */ },
+    public: { NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL: "https://test" /* ... */ },
   },
 }));
 ```
@@ -499,34 +504,34 @@ vi.mock('@/lib/env', () => ({
 
 ## Glossary of Stellar / Blockchain Terms
 
-| Term | Definition |
-|---|---|
-| **Stellar** | A public blockchain network optimised for fast, low-cost payments and asset issuance |
-| **Soroban** | Stellar's smart contract platform (EVM-compatible style contracts written in Rust) |
-| **XDR** | External Data Representation — the binary serialisation format used by Stellar for transactions and ledger data |
-| **Horizon** | Stellar's REST API server that indexes the ledger and provides account/transaction queries |
-| **Soroban RPC** | JSON-RPC API for submitting and querying Soroban (smart contract) transactions |
-| **USDC** | USD Coin — a fiat-backed stablecoin issued by Circle, available on Stellar and Base |
-| **XLM** | The native asset of the Stellar network (lumens), used to pay transaction fees and maintain minimum account reserves |
-| **Trustline** | A Stellar account's explicit consent to hold a specific asset (e.g., USDC). Must exist before USDC can be received |
-| **Minimum reserve** | The minimum XLM balance a Stellar account must maintain (base reserve + per-entry reserve) |
-| **G-address** | A Stellar account address starting with `G` — derived from an Ed25519 public key |
-| **Base** | An Ethereum Layer 2 chain built by Coinbase on the OP Stack. USDC is native here |
-| **EVM** | Ethereum Virtual Machine — the execution environment used by Ethereum and L2 chains like Base |
-| **viem** | A TypeScript library for interacting with EVM chains (reading contracts, sending transactions) |
-| **Allbridge** | A cross-chain bridge protocol that moves assets between blockchains (e.g., Stellar USDC → Base USDC) |
-| **Paycrest** | A fiat settlement layer that accepts stablecoin deposits and disburses local currency to bank accounts |
-| **Off-ramp** | Converting cryptocurrency to fiat currency — the opposite of an on-ramp |
-| **On-ramp** | Converting fiat currency to cryptocurrency |
-| **Idempotency** | A property of an operation where applying it multiple times produces the same result as applying it once |
-| **HMAC** | Hash-based Message Authentication Code — used to verify that a message comes from a known sender and has not been tampered with |
-| **XDR (signed)** | An XDR-encoded Stellar transaction that has been signed by the sender's private key and is ready for submission |
-| **Freighter** | A Stellar browser extension wallet (similar to MetaMask for Ethereum) |
-| **Lobstr** | Another popular Stellar wallet available as a browser extension and mobile app |
-| **Soroban contract** | A smart contract deployed on Stellar's Soroban platform — Allbridge uses one for locking USDC before bridging |
-| **ERC-20** | A standard interface for fungible tokens on EVM chains. USDC on Base is an ERC-20 token |
-| **Gas fee** | The fee paid to network validators/miners to process a transaction. On Stellar, gas is paid in XLM or sometimes USDC via Allbridge |
-| **ADR** | Architecture Decision Record — a document capturing an important architectural decision, its context, and consequences |
-| **FX rate** | Foreign exchange rate — how many units of fiat currency one unit of USDC buys (e.g., 1 USDC = 1,550 NGN) |
-| **Testnet** | A test blockchain network that uses worthless test tokens, allowing developers to test without real funds |
-| **Mainnet** | The live production blockchain network where real assets are transacted |
+| Term                 | Definition                                                                                                                         |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Stellar**          | A public blockchain network optimised for fast, low-cost payments and asset issuance                                               |
+| **Soroban**          | Stellar's smart contract platform (EVM-compatible style contracts written in Rust)                                                 |
+| **XDR**              | External Data Representation — the binary serialisation format used by Stellar for transactions and ledger data                    |
+| **Horizon**          | Stellar's REST API server that indexes the ledger and provides account/transaction queries                                         |
+| **Soroban RPC**      | JSON-RPC API for submitting and querying Soroban (smart contract) transactions                                                     |
+| **USDC**             | USD Coin — a fiat-backed stablecoin issued by Circle, available on Stellar and Base                                                |
+| **XLM**              | The native asset of the Stellar network (lumens), used to pay transaction fees and maintain minimum account reserves               |
+| **Trustline**        | A Stellar account's explicit consent to hold a specific asset (e.g., USDC). Must exist before USDC can be received                 |
+| **Minimum reserve**  | The minimum XLM balance a Stellar account must maintain (base reserve + per-entry reserve)                                         |
+| **G-address**        | A Stellar account address starting with `G` — derived from an Ed25519 public key                                                   |
+| **Base**             | An Ethereum Layer 2 chain built by Coinbase on the OP Stack. USDC is native here                                                   |
+| **EVM**              | Ethereum Virtual Machine — the execution environment used by Ethereum and L2 chains like Base                                      |
+| **viem**             | A TypeScript library for interacting with EVM chains (reading contracts, sending transactions)                                     |
+| **Allbridge**        | A cross-chain bridge protocol that moves assets between blockchains (e.g., Stellar USDC → Base USDC)                               |
+| **Paycrest**         | A fiat settlement layer that accepts stablecoin deposits and disburses local currency to bank accounts                             |
+| **Off-ramp**         | Converting cryptocurrency to fiat currency — the opposite of an on-ramp                                                            |
+| **On-ramp**          | Converting fiat currency to cryptocurrency                                                                                         |
+| **Idempotency**      | A property of an operation where applying it multiple times produces the same result as applying it once                           |
+| **HMAC**             | Hash-based Message Authentication Code — used to verify that a message comes from a known sender and has not been tampered with    |
+| **XDR (signed)**     | An XDR-encoded Stellar transaction that has been signed by the sender's private key and is ready for submission                    |
+| **Freighter**        | A Stellar browser extension wallet (similar to MetaMask for Ethereum)                                                              |
+| **Lobstr**           | Another popular Stellar wallet available as a browser extension and mobile app                                                     |
+| **Soroban contract** | A smart contract deployed on Stellar's Soroban platform — Allbridge uses one for locking USDC before bridging                      |
+| **ERC-20**           | A standard interface for fungible tokens on EVM chains. USDC on Base is an ERC-20 token                                            |
+| **Gas fee**          | The fee paid to network validators/miners to process a transaction. On Stellar, gas is paid in XLM or sometimes USDC via Allbridge |
+| **ADR**              | Architecture Decision Record — a document capturing an important architectural decision, its context, and consequences             |
+| **FX rate**          | Foreign exchange rate — how many units of fiat currency one unit of USDC buys (e.g., 1 USDC = 1,550 NGN)                           |
+| **Testnet**          | A test blockchain network that uses worthless test tokens, allowing developers to test without real funds                          |
+| **Mainnet**          | The live production blockchain network where real assets are transacted                                                            |

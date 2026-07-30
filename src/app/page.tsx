@@ -11,7 +11,10 @@ import { TransactionProgressModal } from "@/components/TransactionProgressModal"
 import { Tutorial, useTutorial } from "@/components/Tutorial";
 import { KeyboardShortcutsModal } from "@/components/KeyboardShortcutsModal";
 import { HelpModal } from "@/components/HelpModal";
-import { useKeyboardShortcuts, type Shortcut } from "@/hooks/useKeyboardShortcuts";
+import {
+  useKeyboardShortcuts,
+  type Shortcut,
+} from "@/hooks/useKeyboardShortcuts";
 import { useStellarWallet } from "@/hooks/useStellarWallet";
 import { usePollBridgeStatus } from "@/hooks/usePollBridgeStatus";
 import { usePollPayoutStatus } from "@/hooks/usePollPayoutStatus";
@@ -22,8 +25,15 @@ import type { OfframpStep } from "@/types/stellaramp";
 import type { WalletType } from "@/lib/stellar/wallet-adapter";
 
 export default function Home() {
-  const { wallet, isConnected, isConnecting, error: walletError, connect, disconnect, signTransaction } =
-    useStellarWallet();
+  const {
+    wallet,
+    isConnected,
+    isConnecting,
+    error: walletError,
+    connect,
+    disconnect,
+    signTransaction,
+  } = useStellarWallet();
 
   const { open: tutorialOpen, openTutorial, closeTutorial } = useTutorial();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -35,8 +45,12 @@ export default function Home() {
   const [modalStep, setModalStep] = useState<OfframpStep>("idle");
   const [modalError, setModalError] = useState<string | undefined>(undefined);
   const [modalTxHash, setModalTxHash] = useState<string | undefined>(undefined);
-  const [currentPayload, setCurrentPayload] = useState<OfframpPayload | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
+  const [currentPayload, setCurrentPayload] = useState<OfframpPayload | null>(
+    null,
+  );
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(
+    undefined,
+  );
   const [formResetKey, setFormResetKey] = useState(0);
 
   // Keep a ref to the current txId so polling callbacks can access it
@@ -65,17 +79,18 @@ export default function Home() {
       // 2. Generate txId and save initial transaction record
       const txId = TransactionStorage.generateId();
       txIdRef.current = txId;
-      const selectedInsurance = payload.insurance.enabled && payload.insurance.quote
-        ? {
-            id: `ins_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
-            premium: payload.insurance.quote.premium,
-            coverage: payload.insurance.quote.coverage,
-            provider: payload.insurance.quote.provider,
-            riskScore: payload.insurance.quote.riskScore,
-            status: "active" as const,
-            purchasedAt: Date.now(),
-          }
-        : undefined;
+      const selectedInsurance =
+        payload.insurance.enabled && payload.insurance.quote
+          ? {
+              id: `ins_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+              premium: payload.insurance.quote.premium,
+              coverage: payload.insurance.quote.coverage,
+              provider: payload.insurance.quote.provider,
+              riskScore: payload.insurance.quote.riskScore,
+              status: "active" as const,
+              purchasedAt: Date.now(),
+            }
+          : undefined;
 
       TransactionStorage.save({
         id: txId,
@@ -101,31 +116,35 @@ export default function Home() {
         const { sdk, tokens } = await withTimeout(
           (async () => {
             const mod = await import("@allbridge/bridge-core-sdk");
-            const sdkInstance = new mod.AllbridgeCoreSdk(mod.nodeRpcUrlsDefault);
+            const sdkInstance = new mod.AllbridgeCoreSdk(
+              mod.nodeRpcUrlsDefault,
+            );
             const tokenList = await sdkInstance.tokens();
             return { sdk: sdkInstance, tokens: tokenList };
           })(),
           15_000,
-          "Allbridge SDK init"
+          "Allbridge SDK init",
         );
 
         // Find Stellar USDC token
         const stellarUsdc = tokens.find(
           (t: { symbol: string; chainSymbol: string }) =>
-            t.symbol === "USDC" && t.chainSymbol === "STELLAR"
+            t.symbol === "USDC" && t.chainSymbol === "STELLAR",
         );
-        if (!stellarUsdc) throw new Error("Stellar USDC token not found in Allbridge SDK");
+        if (!stellarUsdc)
+          throw new Error("Stellar USDC token not found in Allbridge SDK");
 
         // 4. Get bridge quote to compute paycrestOrderAmount (15s timeout)
         const bridgeQuote = await withTimeout(
           sdk.getAmountToBeReceived(payload.amount, stellarUsdc, stellarUsdc),
           15_000,
-          "Bridge quote"
+          "Bridge quote",
         );
 
         // 5. Floor paycrestOrderAmount to 6 decimals (avoid rounding up)
         const rawAmount = parseFloat(String(bridgeQuote));
-        const paycrestOrderAmount = Math.floor(rawAmount * 1_000_000) / 1_000_000;
+        const paycrestOrderAmount =
+          Math.floor(rawAmount * 1_000_000) / 1_000_000;
 
         // 6. POST to /api/offramp/paycrest/order (20s timeout)
         const paycrestRes = await withTimeout(
@@ -142,7 +161,7 @@ export default function Home() {
             }),
           }).then((r) => r.json()),
           20_000,
-          "Paycrest order creation"
+          "Paycrest order creation",
         );
 
         if (paycrestRes.error) throw new Error(paycrestRes.error);
@@ -168,7 +187,7 @@ export default function Home() {
             }),
           }).then((r) => r.json()),
           30_000,
-          "Bridge build-tx"
+          "Bridge build-tx",
         );
 
         if (buildTxRes.error) throw new Error(buildTxRes.error);
@@ -187,7 +206,7 @@ export default function Home() {
             body: JSON.stringify({ signedXdr }),
           }).then((r) => r.json()),
           15_000,
-          "Bridge submit"
+          "Bridge submit",
         );
 
         if (submitRes.error) throw new Error(submitRes.error);
@@ -204,13 +223,18 @@ export default function Home() {
             pollAttempts++;
             await new Promise<void>((r) => setTimeout(r, 3_000));
 
-            const statusRes = await fetch(`/api/offramp/bridge/tx-status/${txHash}`, {
-              cache: "no-store",
-            }).then((r) => r.json());
+            const statusRes = await fetch(
+              `/api/offramp/bridge/tx-status/${txHash}`,
+              {
+                cache: "no-store",
+              },
+            ).then((r) => r.json());
 
             if (statusRes.status === "SUCCESS") break;
             if (statusRes.status === "FAILED") {
-              throw new Error("Stellar transaction failed on-chain. Please try again.");
+              throw new Error(
+                "Stellar transaction failed on-chain. Please try again.",
+              );
             }
           }
         }
@@ -241,15 +265,20 @@ export default function Home() {
         setFormResetKey((k) => k + 1);
       } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : "An unexpected error occurred. Please try again.";
+          err instanceof Error
+            ? err.message
+            : "An unexpected error occurred. Please try again.";
         setModalError(message);
         setModalStep("error");
         if (txIdRef.current) {
-          TransactionStorage.update(txIdRef.current, { status: "failed", error: message });
+          TransactionStorage.update(txIdRef.current, {
+            status: "failed",
+            error: message,
+          });
         }
       }
     },
-    [isConnected, wallet, signTransaction, pollBridgeStatus, pollPayoutStatus]
+    [isConnected, wallet, signTransaction, pollBridgeStatus, pollPayoutStatus],
   );
 
   // ---------------------------------------------------------------------------
@@ -258,18 +287,21 @@ export default function Home() {
   // openWalletModal is stored in a ref so FormCard can trigger it without re-renders
   const openWalletModalRef = useRef<(() => void) | null>(null);
 
-  const handleConnect = useCallback(async (walletType?: WalletType) => {
-    // If no wallet type specified and modal opener is available, open the modal
-    if (!walletType && openWalletModalRef.current) {
-      openWalletModalRef.current();
-      return;
-    }
-    try {
-      await connect(walletType);
-    } catch {
-      // error is surfaced via useStellarWallet's error state
-    }
-  }, [connect]);
+  const handleConnect = useCallback(
+    async (walletType?: WalletType) => {
+      // If no wallet type specified and modal opener is available, open the modal
+      if (!walletType && openWalletModalRef.current) {
+        openWalletModalRef.current();
+        return;
+      }
+      try {
+        await connect(walletType);
+      } catch {
+        // error is surfaced via useStellarWallet's error state
+      }
+    },
+    [connect],
+  );
 
   const handleDisconnect = useCallback(() => {
     disconnect();
@@ -340,11 +372,15 @@ export default function Home() {
         Skip to main content
       </a>
 
-      <TransactionProgressModal 
+      <TransactionProgressModal
         step={modalStep}
         errorMessage={modalError}
         txHash={modalTxHash}
-        onClose={() => { setModalStep("idle"); setModalError(undefined); setModalTxHash(undefined); }}
+        onClose={() => {
+          setModalStep("idle");
+          setModalError(undefined);
+          setModalTxHash(undefined);
+        }}
       />
 
       <Header
@@ -356,10 +392,15 @@ export default function Home() {
         onConnect={handleConnect}
         onDisconnect={handleDisconnect}
         onHelpOpen={() => setHelpOpen(true)}
-        onModalRef={(openModal) => { openWalletModalRef.current = openModal; }}
+        onModalRef={(openModal) => {
+          openWalletModalRef.current = openModal;
+        }}
       />
 
-      <section id="main-content" className="border border-[#333333] px-4 py-6 sm:px-8 sm:py-8 overflow-hidden mt-6">
+      <section
+        id="main-content"
+        className="border border-[#333333] px-4 py-6 sm:px-8 sm:py-8 overflow-hidden mt-6"
+      >
         <div className="grid grid-cols-1 min-[1100px]:grid-cols-[1fr_370px] gap-6 w-full">
           <div data-testid="FormCard">
             <FormCard

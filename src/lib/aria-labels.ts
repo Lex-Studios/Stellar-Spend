@@ -24,7 +24,8 @@ export const ariaLabels = {
   editTransaction: "Edit transaction details",
   copyToClipboard: "Copy to clipboard",
   closeModal: "Close dialog",
-  toggleTheme: (current: string, next: string) => `Switch to ${next} mode. Current theme: ${current}`,
+  toggleTheme: (current: string, next: string) =>
+    `Switch to ${next} mode. Current theme: ${current}`,
 
   // Status
   loadingIndicator: "Loading",
@@ -51,14 +52,16 @@ export const ariaLabels = {
   fxRateChart: "Exchange rate chart",
   transactionVolumeChart: (currency: string, amount: string) =>
     `Transaction volume chart: ${amount} in ${currency}`,
-  progressBar: (percent: number, label: string) => `${label}: ${percent}% complete`,
+  progressBar: (percent: number, label: string) =>
+    `${label}: ${percent}% complete`,
   statusIndicator: (status: string) => `Status: ${status}`,
 
   // Images (#397)
   walletLogo: (walletName: string) => `${walletName} wallet logo`,
   currencyFlag: (currency: string) => `${currency} currency flag`,
   qrCode: (content: string) => `QR code for ${content}`,
-  architectureDiagram: "Stellar-Spend architecture diagram showing the transaction flow from user wallet through Allbridge bridge to Paycrest payout",
+  architectureDiagram:
+    "Stellar-Spend architecture diagram showing the transaction flow from user wallet through Allbridge bridge to Paycrest payout",
 
   // Icons with meaning (#397)
   successIcon: "Success",
@@ -76,8 +79,10 @@ export const ariaDescriptions = {
   payoutFee: "Fee charged by the payout provider for bank settlement",
   estimatedTime: "Approximate time for the transaction to complete",
   feeMethod: "Choose to pay fees in XLM (native) or USDC (stablecoin)",
-  highContrastMode: "High contrast mode increases color contrast for better visibility",
-  qrCodeScan: "Scan this QR code with your mobile device to share transaction details",
+  highContrastMode:
+    "High contrast mode increases color contrast for better visibility",
+  qrCodeScan:
+    "Scan this QR code with your mobile device to share transaction details",
 };
 
 export const ariaLive = {

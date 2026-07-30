@@ -1,11 +1,11 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Wallet Connection Flow', () => {
+test.describe("Wallet Connection Flow", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:3001');
+    await page.goto("http://localhost:3001");
   });
 
-  test('should connect with Freighter wallet', async ({ page }) => {
+  test("should connect with Freighter wallet", async ({ page }) => {
     // Click connect button
     await page.click('button:has-text("Connect Wallet")');
     await page.waitForSelector('[data-testid="wallet-modal"]');
@@ -18,10 +18,10 @@ test.describe('Wallet Connection Flow', () => {
 
     // Verify connected state
     const walletButton = await page.locator('[data-testid="wallet-button"]');
-    expect(walletButton).toContainText('Connected');
+    expect(walletButton).toContainText("Connected");
   });
 
-  test('should connect with Lobstr wallet', async ({ page }) => {
+  test("should connect with Lobstr wallet", async ({ page }) => {
     // Click connect button
     await page.click('button:has-text("Connect Wallet")');
     await page.waitForSelector('[data-testid="wallet-modal"]');
@@ -34,10 +34,10 @@ test.describe('Wallet Connection Flow', () => {
 
     // Verify connected state
     const walletButton = await page.locator('[data-testid="wallet-button"]');
-    expect(walletButton).toContainText('Connected');
+    expect(walletButton).toContainText("Connected");
   });
 
-  test('should auto-detect wallet', async ({ page }) => {
+  test("should auto-detect wallet", async ({ page }) => {
     // Click connect button
     await page.click('button:has-text("Connect Wallet")');
     await page.waitForSelector('[data-testid="wallet-modal"]');
@@ -52,10 +52,10 @@ test.describe('Wallet Connection Flow', () => {
     // Should connect to available wallet
     await page.waitForNavigation();
     const walletButton = await page.locator('[data-testid="wallet-button"]');
-    expect(walletButton).toContainText('Connected');
+    expect(walletButton).toContainText("Connected");
   });
 
-  test('should display wallet address', async ({ page }) => {
+  test("should display wallet address", async ({ page }) => {
     // Connect wallet
     await page.click('button:has-text("Connect Wallet")');
     await page.waitForSelector('[data-testid="wallet-modal"]');
@@ -67,11 +67,13 @@ test.describe('Wallet Connection Flow', () => {
     await page.waitForSelector('[data-testid="wallet-details"]');
 
     // Verify address is displayed
-    const address = await page.locator('[data-testid="wallet-address"]').textContent();
+    const address = await page
+      .locator('[data-testid="wallet-address"]')
+      .textContent();
     expect(address).toMatch(/^G[A-Z0-9]{55}$/); // Stellar address format
   });
 
-  test('should display wallet balance', async ({ page }) => {
+  test("should display wallet balance", async ({ page }) => {
     // Connect wallet
     await page.click('button:has-text("Connect Wallet")');
     await page.waitForSelector('[data-testid="wallet-modal"]');
@@ -83,27 +85,33 @@ test.describe('Wallet Connection Flow', () => {
     await page.waitForSelector('[data-testid="wallet-details"]');
 
     // Verify balance is displayed
-    const balance = await page.locator('[data-testid="wallet-balance"]').textContent();
+    const balance = await page
+      .locator('[data-testid="wallet-balance"]')
+      .textContent();
     expect(balance).toMatch(/\d+(\.\d+)?/); // Should be a number
   });
 
-  test('should handle wallet connection error', async ({ page }) => {
+  test("should handle wallet connection error", async ({ page }) => {
     // Click connect button
     await page.click('button:has-text("Connect Wallet")');
     await page.waitForSelector('[data-testid="wallet-modal"]');
 
     // Try to connect with unavailable wallet
-    const unavailableButton = await page.locator('button:has-text("Unavailable")').first();
+    const unavailableButton = await page
+      .locator('button:has-text("Unavailable")')
+      .first();
     if (await unavailableButton.isVisible()) {
       await unavailableButton.click();
 
       // Should show error message
-      const error = await page.locator('[data-testid="error-message"]').textContent();
-      expect(error).toContain('not installed');
+      const error = await page
+        .locator('[data-testid="error-message"]')
+        .textContent();
+      expect(error).toContain("not installed");
     }
   });
 
-  test('should allow wallet switching', async ({ page }) => {
+  test("should allow wallet switching", async ({ page }) => {
     // Connect with first wallet
     await page.click('button:has-text("Connect Wallet")');
     await page.waitForSelector('[data-testid="wallet-modal"]');
@@ -112,7 +120,7 @@ test.describe('Wallet Connection Flow', () => {
 
     // Verify connected
     let walletButton = await page.locator('[data-testid="wallet-button"]');
-    expect(walletButton).toContainText('Connected');
+    expect(walletButton).toContainText("Connected");
 
     // Disconnect
     await page.click('[data-testid="wallet-button"]');
@@ -126,6 +134,6 @@ test.describe('Wallet Connection Flow', () => {
 
     // Verify connected with new wallet
     walletButton = await page.locator('[data-testid="wallet-button"]');
-    expect(walletButton).toContainText('Connected');
+    expect(walletButton).toContainText("Connected");
   });
 });

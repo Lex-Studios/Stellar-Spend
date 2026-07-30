@@ -1,4 +1,4 @@
-import type { AuditLogRepository, AuditLog } from '../audit-log';
+import type { AuditLogRepository, AuditLog } from "../audit-log";
 
 export class InMemoryAuditLogRepository implements AuditLogRepository {
   private logs: Map<string, AuditLog> = new Map();
@@ -32,7 +32,10 @@ export class InMemoryAuditLogRepository implements AuditLogRepository {
     return limit ? logs.slice(0, limit) : logs;
   }
 
-  async getByResource(resource: string, resourceId: string): Promise<AuditLog[]> {
+  async getByResource(
+    resource: string,
+    resourceId: string,
+  ): Promise<AuditLog[]> {
     return Array.from(this.logs.values())
       .filter((l) => l.resource === resource && l.resourceId === resourceId)
       .sort((a, b) => b.createdAt - a.createdAt);

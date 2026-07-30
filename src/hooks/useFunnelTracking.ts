@@ -25,26 +25,23 @@ function getSessionId(): string {
 export function useFunnelTracking() {
   const sessionRef = useRef<FunnelSession | null>(null);
 
-  const getOrCreateSession = useCallback(
-    (step: FunnelStep): FunnelSession => {
-      if (step === "wallet_connect" || !sessionRef.current) {
-        const session: FunnelSession = {
-          sessionId: getSessionId(),
-          startedAt: Date.now(),
-          steps: [],
-        };
-        sessionRef.current = session;
-        try {
-          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-        } catch {
-          // sessionStorage unavailable (SSR / private mode)
-        }
-        return session;
+  const getOrCreateSession = useCallback((step: FunnelStep): FunnelSession => {
+    if (step === "wallet_connect" || !sessionRef.current) {
+      const session: FunnelSession = {
+        sessionId: getSessionId(),
+        startedAt: Date.now(),
+        steps: [],
+      };
+      sessionRef.current = session;
+      try {
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+      } catch {
+        // sessionStorage unavailable (SSR / private mode)
       }
-      return sessionRef.current;
-    },
-    []
-  );
+      return session;
+    }
+    return sessionRef.current;
+  }, []);
 
   const trackStep = useCallback(
     (step: FunnelStep, metadata?: Record<string, unknown>) => {
@@ -68,7 +65,7 @@ export function useFunnelTracking() {
       if (typeof navigator !== "undefined" && navigator.sendBeacon) {
         navigator.sendBeacon(
           "/api/monitoring/vitals",
-          new Blob([JSON.stringify(payload)], { type: "application/json" })
+          new Blob([JSON.stringify(payload)], { type: "application/json" }),
         );
       } else {
         fetch("/api/monitoring/vitals", {
@@ -79,7 +76,7 @@ export function useFunnelTracking() {
         }).catch(() => {});
       }
     },
-    [getOrCreateSession]
+    [getOrCreateSession],
   );
 
   return { trackStep };

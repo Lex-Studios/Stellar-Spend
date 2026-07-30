@@ -27,7 +27,15 @@ Requirements:
 • A Stellar wallet with USDC balance
 • Enough XLM for network fees (if paying gas in XLM)
 • Your wallet must be on Mainnet (not Testnet)`,
-    keywords: ["start", "begin", "first time", "setup", "how to", "new user", "quick start"],
+    keywords: [
+      "start",
+      "begin",
+      "first time",
+      "setup",
+      "how to",
+      "new user",
+      "quick start",
+    ],
   },
   {
     id: "what-is-stellar-spend",
@@ -47,7 +55,14 @@ How it works:
 4. Your beneficiary receives local currency (NGN, KES, GHS, …)
 
 Supported stablecoins: USDC, USDT (Stellar-issued)`,
-    keywords: ["what is", "about", "non-custodial", "how it works", "overview", "introduction"],
+    keywords: [
+      "what is",
+      "about",
+      "non-custodial",
+      "how it works",
+      "overview",
+      "introduction",
+    ],
   },
 
   // ── 2. WALLET ──────────────────────────────────────────────────────────────
@@ -76,7 +91,16 @@ Troubleshooting:
 • "Extension not installed" — install the extension and refresh
 • "Wrong network" — switch to Mainnet in wallet settings
 • Connection lost — click the wallet address to reconnect`,
-    keywords: ["wallet", "connect", "freighter", "lobstr", "extension", "walletconnect", "disconnect", "pairing"],
+    keywords: [
+      "wallet",
+      "connect",
+      "freighter",
+      "lobstr",
+      "extension",
+      "walletconnect",
+      "disconnect",
+      "pairing",
+    ],
   },
   {
     id: "wallet-balance",
@@ -92,7 +116,15 @@ If you see "Insufficient XLM balance for native gas fee":
 • Reduce the transfer amount slightly
 
 USDC balance shown in the app is your Stellar USDC (not Base USDC). Make sure you have the USDC trustline established on your Stellar account.`,
-    keywords: ["balance", "reserve", "xlm", "minimum", "trustline", "insufficient", "xlm reserve"],
+    keywords: [
+      "balance",
+      "reserve",
+      "xlm",
+      "minimum",
+      "trustline",
+      "insufficient",
+      "xlm reserve",
+    ],
   },
 
   // ── 3. SENDING MONEY ───────────────────────────────────────────────────────
@@ -123,7 +155,17 @@ Step 4 — Review & Confirm
 Step 5 — Wait for Settlement
 • Typical time: 5–15 minutes
 • Track progress in the status bar or visit /history`,
-    keywords: ["send", "transfer", "convert", "offramp", "off-ramp", "fiat", "bank", "step by step", "how to send"],
+    keywords: [
+      "send",
+      "transfer",
+      "convert",
+      "offramp",
+      "off-ramp",
+      "fiat",
+      "bank",
+      "step by step",
+      "how to send",
+    ],
   },
   {
     id: "dual-input-mode",
@@ -140,7 +182,15 @@ Dual input is useful when:
 • You want to send your full USDC balance (enter in USDC mode)
 
 Note: The displayed fiat amount is an estimate based on the live rate. Final settlement may vary by ±0.5% due to rate fluctuations during bridge confirmation.`,
-    keywords: ["dual input", "fiat amount", "crypto amount", "switch", "toggle", "usdc input", "fiat input"],
+    keywords: [
+      "dual input",
+      "fiat amount",
+      "crypto amount",
+      "switch",
+      "toggle",
+      "usdc input",
+      "fiat input",
+    ],
   },
 
   // ── 4. FEES ────────────────────────────────────────────────────────────────
@@ -167,7 +217,18 @@ Total fees are shown on the quote screen before you confirm. The "You receive" a
 
 FAQ — Why does my payout differ from the displayed amount?
 Minor rate changes during bridge processing (< 1 minute) may cause small differences. Rates are locked at bridge submission, not at quote time.`,
-    keywords: ["fee", "cost", "charge", "gas", "bridge fee", "platform fee", "network fee", "0.35", "how much", "price"],
+    keywords: [
+      "fee",
+      "cost",
+      "charge",
+      "gas",
+      "bridge fee",
+      "platform fee",
+      "network fee",
+      "0.35",
+      "how much",
+      "price",
+    ],
   },
   {
     id: "gas-fee-options",
@@ -186,7 +247,14 @@ USDC method:
 • Useful when XLM is low
 
 Recommendation: Use USDC fee if your XLM balance is near the minimum reserve.`,
-    keywords: ["gas fee", "xlm fee", "usdc fee", "fee method", "gas payment", "stablecoin fee"],
+    keywords: [
+      "gas fee",
+      "xlm fee",
+      "usdc fee",
+      "fee method",
+      "gas payment",
+      "stablecoin fee",
+    ],
   },
 
   // ── 5. CURRENCIES & BANKS ──────────────────────────────────────────────────
@@ -205,7 +273,20 @@ Recommendation: Use USDC fee if your XLM balance is near the minimum reserve.`,
 Each currency supports specific banks and mobile money operators. Select your currency to see the available institutions.
 
 To request a new corridor, open an issue on the project repository or contact support.`,
-    keywords: ["currency", "country", "fiat", "ngn", "kes", "ghs", "zar", "nigeria", "kenya", "ghana", "south africa", "corridor"],
+    keywords: [
+      "currency",
+      "country",
+      "fiat",
+      "ngn",
+      "kes",
+      "ghs",
+      "zar",
+      "nigeria",
+      "kenya",
+      "ghana",
+      "south africa",
+      "corridor",
+    ],
   },
   {
     id: "bank-verification",
@@ -225,7 +306,14 @@ Common verification errors:
 • Name mismatch — verify you selected the correct bank and entered the right number
 
 Important: Always confirm the displayed account name before sending funds. Transactions to the wrong account cannot be reversed once the bridge has settled.`,
-    keywords: ["bank", "verification", "account number", "account name", "verify", "beneficiary"],
+    keywords: [
+      "bank",
+      "verification",
+      "account number",
+      "account name",
+      "verify",
+      "beneficiary",
+    ],
   },
 
   // ── 6. STATUS & TRACKING ───────────────────────────────────────────────────
@@ -248,7 +336,17 @@ Where to track:
 • Email / push notification (if notifications are enabled)
 
 If status is stuck for more than 30 minutes, see the Troubleshooting section or contact support.`,
-    keywords: ["status", "track", "progress", "pending", "bridging", "settling", "processing", "complete", "history"],
+    keywords: [
+      "status",
+      "track",
+      "progress",
+      "pending",
+      "bridging",
+      "settling",
+      "processing",
+      "complete",
+      "history",
+    ],
   },
   {
     id: "transaction-history",
@@ -266,7 +364,15 @@ Features:
 Transaction data is stored locally in your browser (localStorage) and optionally synced to the server if you enable account sync.
 
 Note: Clearing browser data or switching devices will remove locally stored history unless sync is enabled.`,
-    keywords: ["history", "transactions", "past", "export", "receipt", "filter", "records"],
+    keywords: [
+      "history",
+      "transactions",
+      "past",
+      "export",
+      "receipt",
+      "filter",
+      "records",
+    ],
   },
 
   // ── 7. REFUNDS & FAILURES ──────────────────────────────────────────────────
@@ -294,7 +400,16 @@ To request a refund manually:
 2. Click the transaction
 3. Click "Request Refund" if eligible
 4. Provide the reason and submit`,
-    keywords: ["refund", "failed", "failure", "error", "money back", "return", "stuck", "reversed"],
+    keywords: [
+      "refund",
+      "failed",
+      "failure",
+      "error",
+      "money back",
+      "return",
+      "stuck",
+      "reversed",
+    ],
   },
   {
     id: "faq-timing",
@@ -319,7 +434,17 @@ If your transfer is stuck for more than 30 minutes at "Bridging":
 • Check the Allbridge status page
 • Check Stellar.Expert for the transaction hash
 • Contact support if the transaction is not visible on-chain`,
-    keywords: ["slow", "delay", "time", "how long", "30 minutes", "stuck", "congestion", "weekend", "timing"],
+    keywords: [
+      "slow",
+      "delay",
+      "time",
+      "how long",
+      "30 minutes",
+      "stuck",
+      "congestion",
+      "weekend",
+      "timing",
+    ],
   },
 
   // ── 8. SECURITY ────────────────────────────────────────────────────────────
@@ -344,7 +469,16 @@ What you should do:
 • Enable 2FA in Settings → Security if available
 
 We will NEVER ask for your seed phrase or private key.`,
-    keywords: ["security", "safe", "private key", "seed phrase", "protection", "2fa", "non-custodial", "audit"],
+    keywords: [
+      "security",
+      "safe",
+      "private key",
+      "seed phrase",
+      "protection",
+      "2fa",
+      "non-custodial",
+      "audit",
+    ],
   },
 
   // ── 9. FAQs ────────────────────────────────────────────────────────────────
@@ -362,7 +496,14 @@ Example for a 100 USDC transfer to NGN:
 • Final NGN payout: 96.75 × current USDC/NGN rate
 
 You always see the full breakdown before confirming.`,
-    keywords: ["fee deducted", "where fees", "fee breakdown", "total fee", "net amount", "example"],
+    keywords: [
+      "fee deducted",
+      "where fees",
+      "fee breakdown",
+      "total fee",
+      "net amount",
+      "example",
+    ],
   },
   {
     id: "faq-minimum",
@@ -396,7 +537,14 @@ Tier 2 (full KYC):
 • Requires government-issued ID
 
 KYC is handled in Settings → KYC & Limits. Verification is fast (usually < 5 minutes).`,
-    keywords: ["kyc", "identity", "verification", "limit", "tier", "know your customer"],
+    keywords: [
+      "kyc",
+      "identity",
+      "verification",
+      "limit",
+      "tier",
+      "know your customer",
+    ],
   },
 
   // ── 10. TROUBLESHOOTING ────────────────────────────────────────────────────
@@ -431,7 +579,17 @@ Transaction shows "Complete" but bank not credited:
 → Contact support with your transaction hash
 
 For further help: support@stellar-spend.io`,
-    keywords: ["troubleshoot", "fix", "error", "problem", "issue", "not working", "support", "help", "contact"],
+    keywords: [
+      "troubleshoot",
+      "fix",
+      "error",
+      "problem",
+      "issue",
+      "not working",
+      "support",
+      "help",
+      "contact",
+    ],
   },
 ];
 

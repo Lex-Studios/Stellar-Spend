@@ -1,16 +1,16 @@
-import type { DeliveryStatus } from './types';
+import type { DeliveryStatus } from "./types";
 
 export type WebhookEvent =
-  | 'transaction.created'
-  | 'transaction.completed'
-  | 'transaction.failed'
-  | 'payout.initiated'
-  | 'payout.completed'
-  | 'payout.failed'
-  | 'bridge.initiated'
-  | 'bridge.completed';
+  | "transaction.created"
+  | "transaction.completed"
+  | "transaction.failed"
+  | "payout.initiated"
+  | "payout.completed"
+  | "payout.failed"
+  | "bridge.initiated"
+  | "bridge.completed";
 
-export type SubscriptionStatus = 'active' | 'paused' | 'disabled';
+export type SubscriptionStatus = "active" | "paused" | "disabled";
 
 export interface WebhookSubscription {
   id: string;

@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const sessions = await sessionManagementService.getUserSessions(userAddress);
+    const sessions =
+      await sessionManagementService.getUserSessions(userAddress);
     return NextResponse.json({ sessions });
   } catch (error) {
     logger.error("Failed to fetch sessions", { error });

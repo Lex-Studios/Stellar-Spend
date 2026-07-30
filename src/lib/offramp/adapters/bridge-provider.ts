@@ -1,4 +1,4 @@
-import type { TokenInfo, BridgeTransferRequest, BridgeStatus } from '../types';
+import type { TokenInfo, BridgeTransferRequest, BridgeStatus } from "../types";
 
 export interface BridgeHealth {
   ok: boolean;
@@ -13,7 +13,12 @@ export interface BridgeProviderAdapter {
     estimatedTime: number;
   }>;
   buildSendTx(request: BridgeTransferRequest): Promise<unknown>;
-  getTransferStatus(transferId: string): Promise<{ status: BridgeStatus; txHash?: string }>;
-  getAverageTransferTime(sourceToken: TokenInfo, destinationToken: TokenInfo): number;
+  getTransferStatus(
+    transferId: string,
+  ): Promise<{ status: BridgeStatus; txHash?: string }>;
+  getAverageTransferTime(
+    sourceToken: TokenInfo,
+    destinationToken: TokenInfo,
+  ): number;
   getHealth(): Promise<BridgeHealth>;
 }

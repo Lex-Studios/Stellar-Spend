@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { useI18n } from './provider';
-import { Language } from './types';
+import React from "react";
+import { useI18n } from "./provider";
+import { Language } from "./types";
 
 const LANGUAGE_LABELS: Record<Language, string> = {
-  en: 'EN',
-  es: 'ES',
-  fr: 'FR',
-  zh: '中文',
-  ar: 'AR',
-  pt: 'PT',
-  sw: 'SW',
+  en: "EN",
+  es: "ES",
+  fr: "FR",
+  zh: "中文",
+  ar: "AR",
+  pt: "PT",
+  sw: "SW",
 };
 
 export function LanguageSelector() {

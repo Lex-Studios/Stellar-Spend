@@ -152,9 +152,13 @@ export function useBatchUpdate<T extends Record<string, unknown>>(
  * Memoize object/array props to prevent unnecessary re-renders.
  * Compares by value instead of reference.
  */
-export function useMemoizedValue<T>(value: T, isEqual?: (a: T, b: T) => boolean): T {
+export function useMemoizedValue<T>(
+  value: T,
+  isEqual?: (a: T, b: T) => boolean,
+): T {
   const ref = React.useRef<T>(value);
-  const defaultIsEqual = (a: T, b: T) => JSON.stringify(a) === JSON.stringify(b);
+  const defaultIsEqual = (a: T, b: T) =>
+    JSON.stringify(a) === JSON.stringify(b);
   const compare = isEqual || defaultIsEqual;
 
   if (!compare(ref.current, value)) {
@@ -172,7 +176,8 @@ export function useLazyComponent<P extends object>(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   fallback: ReactNode = null,
 ): React.ComponentType<P> | null {
-  const [Component, setComponent] = React.useState<React.ComponentType<P> | null>(null);
+  const [Component, setComponent] =
+    React.useState<React.ComponentType<P> | null>(null);
 
   React.useEffect(() => {
     importFn().then((module) => setComponent(() => module.default));

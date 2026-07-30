@@ -1,20 +1,20 @@
-import type { 
-  PayoutOrderRequest, 
-  PayoutOrderResponse, 
-  PayoutStatus 
-} from '../types';
-import type { PayoutProviderAdapter, PayoutHealth } from './payout-provider';
+import type {
+  PayoutOrderRequest,
+  PayoutOrderResponse,
+  PayoutStatus,
+} from "../types";
+import type { PayoutProviderAdapter, PayoutHealth } from "./payout-provider";
 
 const PAYCREST_STATUS_MAP: Record<string, PayoutStatus> = {
-  'payment_order.pending':   'pending',
-  'payment_order.validated': 'validated',
-  'payment_order.settled':   'settled',
-  'payment_order.refunded':  'refunded',
-  'payment_order.expired':   'expired',
+  "payment_order.pending": "pending",
+  "payment_order.validated": "validated",
+  "payment_order.settled": "settled",
+  "payment_order.refunded": "refunded",
+  "payment_order.expired": "expired",
 };
 
 export function mapPaycrestStatus(webhookStatus: string): PayoutStatus {
-  return PAYCREST_STATUS_MAP[webhookStatus] ?? 'pending';
+  return PAYCREST_STATUS_MAP[webhookStatus] ?? "pending";
 }
 
 export class PaycrestHttpError extends Error {
@@ -23,7 +23,7 @@ export class PaycrestHttpError extends Error {
 
   constructor(message: string, status: number, details?: unknown) {
     super(message);
-    this.name = 'PaycrestHttpError';
+    this.name = "PaycrestHttpError";
     this.status = status;
     this.details = details;
     // Restore correct prototype chain for instanceof checks across transpilation boundaries
@@ -32,7 +32,7 @@ export class PaycrestHttpError extends Error {
 }
 
 export class PaycrestAdapter implements PayoutProviderAdapter {
-  private apiUrl = 'https://api.paycrest.io/v1';
+  private apiUrl = "https://api.paycrest.io/v1";
 
   constructor(private apiKey: string) {}
 
@@ -48,8 +48,8 @@ export class PaycrestAdapter implements PayoutProviderAdapter {
       const response = await fetch(url, {
         ...options,
         headers: {
-          'API-Key': this.apiKey,
-          'Content-Type': 'application/json',
+          "API-Key": this.apiKey,
+          "Content-Type": "application/json",
           ...options.headers,
         },
         signal: controller.signal,
@@ -64,9 +64,9 @@ export class PaycrestAdapter implements PayoutProviderAdapter {
 
       if (!response.ok) {
         throw new PaycrestHttpError(
-          data?.message || response.statusText || 'Unknown error',
+          data?.message || response.statusText || "Unknown error",
           response.status,
-          data
+          data,
         );
       }
 
@@ -76,13 +76,13 @@ export class PaycrestAdapter implements PayoutProviderAdapter {
       if (error instanceof PaycrestHttpError) {
         throw error;
       }
-      
-      if (error.name === 'AbortError') {
-        throw new PaycrestHttpError('Request timeout', 504);
+
+      if (error.name === "AbortError") {
+        throw new PaycrestHttpError("Request timeout", 504);
       }
-      
+
       // Map network errors to 502
-      throw new PaycrestHttpError(error.message || 'Network error', 502);
+      throw new PaycrestHttpError(error.message || "Network error", 502);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -92,8 +92,8 @@ export class PaycrestAdapter implements PayoutProviderAdapter {
    * Implement createOrder(request: PayoutOrderRequest)
    */
   async createOrder(request: PayoutOrderRequest): Promise<PayoutOrderResponse> {
-    return this.fetch('/sender/orders', {
-      method: 'POST',
+    return this.fetch("/sender/orders", {
+      method: "POST",
       body: JSON.stringify(request),
     });
   }
@@ -101,11 +101,13 @@ export class PaycrestAdapter implements PayoutProviderAdapter {
   /**
    * Implement getOrderStatus(orderId: string)
    */
-  async getOrderStatus(orderId: string): Promise<{ status: PayoutStatus; id: string }> {
+  async getOrderStatus(
+    orderId: string,
+  ): Promise<{ status: PayoutStatus; id: string }> {
     const response = await this.fetch(`/sender/orders/${orderId}`, {
-      method: 'GET',
+      method: "GET",
     });
-    
+
     // Map response status to PayoutStatus type
     return {
       status: response.status as PayoutStatus,
@@ -114,33 +116,44 @@ export class PaycrestAdapter implements PayoutProviderAdapter {
   }
 
   // PayoutProviderAdapter requirements
-  async getCurrencies(): Promise<Array<{ code: string; name: string; symbol: string }>> {
-    return this.fetch('/sender/currencies');
+  async getCurrencies(): Promise<
+    Array<{ code: string; name: string; symbol: string }>
+  > {
+    return this.fetch("/sender/currencies");
   }
 
-  async getInstitutions(currency: string): Promise<Array<{ code: string; name: string }>> {
+  async getInstitutions(
+    currency: string,
+  ): Promise<Array<{ code: string; name: string }>> {
     return this.fetch(`/sender/institutions/${currency}`);
   }
 
-  async verifyAccount(institution: string, accountIdentifier: string): Promise<string> {
+  async verifyAccount(
+    institution: string,
+    accountIdentifier: string,
+  ): Promise<string> {
     try {
-      const response = await this.fetch('/sender/verify-account', {
-        method: 'POST',
+      const response = await this.fetch("/sender/verify-account", {
+        method: "POST",
         body: JSON.stringify({ institution, accountIdentifier }),
       });
-      return response?.accountName || response?.data || '';
+      return response?.accountName || response?.data || "";
     } catch {
-      return '';
+      return "";
     }
   }
 
   async getHealth(): Promise<PayoutHealth> {
     const start = Date.now();
     try {
-      await this.fetch('/sender/currencies');
+      await this.fetch("/sender/currencies");
       return { ok: true, latencyMs: Date.now() - start };
     } catch (err) {
-      return { ok: false, latencyMs: Date.now() - start, error: err instanceof Error ? err.message : 'Unknown error' };
+      return {
+        ok: false,
+        latencyMs: Date.now() - start,
+        error: err instanceof Error ? err.message : "Unknown error",
+      };
     }
   }
 
@@ -148,19 +161,20 @@ export class PaycrestAdapter implements PayoutProviderAdapter {
     token: string,
     amount: string,
     currency: string,
-    options?: { network?: string; providerId?: string }
+    options?: { network?: string; providerId?: string },
   ): Promise<number> {
     const queryParams = new URLSearchParams();
-    if (options?.network) queryParams.set('network', options.network);
-    if (options?.providerId) queryParams.set('provider_id', options.providerId);
+    if (options?.network) queryParams.set("network", options.network);
+    if (options?.providerId) queryParams.set("provider_id", options.providerId);
 
     const qs = queryParams.toString();
     const response = await this.fetch(
-      `/rates/${encodeURIComponent(token)}/${encodeURIComponent(amount)}/${encodeURIComponent(currency)}${qs ? `?${qs}` : ''}`
+      `/rates/${encodeURIComponent(token)}/${encodeURIComponent(amount)}/${encodeURIComponent(currency)}${qs ? `?${qs}` : ""}`,
     );
 
     const rate = parseFloat(String(response?.data ?? response));
-    if (!isFinite(rate)) throw new Error(`Invalid rate received: ${JSON.stringify(response)}`);
+    if (!isFinite(rate))
+      throw new Error(`Invalid rate received: ${JSON.stringify(response)}`);
     return rate;
   }
 }

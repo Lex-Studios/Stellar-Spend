@@ -27,7 +27,9 @@ export function InputField({
 }: InputFieldProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em" }}>
+      <label
+        style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em" }}
+      >
         {label}
       </label>
       <div
@@ -62,7 +64,13 @@ export function InputField({
         {isLoadingSuffix ? (
           <Skeleton width={72} height={14} aria-label="Loading quote…" />
         ) : suffix ? (
-          <span style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap" }}>
+          <span
+            style={{
+              fontSize: 12,
+              color: "var(--muted)",
+              whiteSpace: "nowrap",
+            }}
+          >
             {suffix}
           </span>
         ) : null}

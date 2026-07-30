@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/cn";
-import { TransactionStorage, type Transaction } from "@/lib/transaction-storage";
+import {
+  TransactionStorage,
+  type Transaction,
+} from "@/lib/transaction-storage";
 
 interface TransactionNotesAndTagsProps {
   transaction: Transaction;
@@ -28,7 +31,9 @@ export default function TransactionNotesAndTags({
   const [tags, setTags] = useState(transaction.tags || []);
   const [newTagName, setNewTagName] = useState("");
   const [selectedColor, setSelectedColor] = useState(TAG_COLORS[0]);
-  const [allTags, setAllTags] = useState<Array<{ name: string; color: string; count: number }>>([]);
+  const [allTags, setAllTags] = useState<
+    Array<{ name: string; color: string; count: number }>
+  >([]);
   const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -78,11 +83,16 @@ export default function TransactionNotesAndTags({
   const filteredSuggestions = allTags.filter(
     (tag) =>
       tag.name.toLowerCase().includes(newTagName.toLowerCase()) &&
-      !tags.some((t) => t.name === tag.name)
+      !tags.some((t) => t.name === tag.name),
   );
 
   return (
-    <div className={cn("space-y-4 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900", className)}>
+    <div
+      className={cn(
+        "space-y-4 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900",
+        className,
+      )}
+    >
       {/* Notes Section */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">

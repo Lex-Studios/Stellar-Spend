@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { env } from '@/lib/env';
+import { NextResponse } from "next/server";
+import { env } from "@/lib/env";
 
 export const maxDuration = 10;
 
@@ -9,18 +9,21 @@ interface PaycrestHttpError extends Error {
 
 class PaycrestAdapter {
   private apiKey: string;
-  private apiUrl = 'https://api.paycrest.io/v1';
+  private apiUrl = "https://api.paycrest.io/v1";
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
 
-  async verifyAccount(institution: string, accountIdentifier: string): Promise<string> {
+  async verifyAccount(
+    institution: string,
+    accountIdentifier: string,
+  ): Promise<string> {
     const response = await fetch(`${this.apiUrl}/verify-account`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'API-Key': this.apiKey,
+        "Content-Type": "application/json",
+        "API-Key": this.apiKey,
       },
       body: JSON.stringify({ institution, accountIdentifier }),
     });
@@ -28,12 +31,19 @@ class PaycrestAdapter {
     const data = await response.json();
 
     if (!response.ok) {
-      const error = new Error(data?.message ?? `Verification failed: ${response.status}`) as PaycrestHttpError;
+      const error = new Error(
+        data?.message ?? `Verification failed: ${response.status}`,
+      ) as PaycrestHttpError;
       error.status = response.status;
       throw error;
     }
 
-    return data.accountName ?? data.data?.accountName ?? data.data?.account_name ?? String(data.data ?? '');
+    return (
+      data.accountName ??
+      data.data?.accountName ??
+      data.data?.account_name ??
+      String(data.data ?? "")
+    );
   }
 }
 
@@ -44,24 +54,30 @@ export async function POST(request: Request) {
 
     if (!institution || !accountIdentifier) {
       return NextResponse.json(
-        { error: 'institution and accountIdentifier are required' },
-        { status: 400 }
+        { error: "institution and accountIdentifier are required" },
+        { status: 400 },
       );
     }
 
     const paycrest = new PaycrestAdapter(env.server.PAYCREST_API_KEY);
-    const accountName = await paycrest.verifyAccount(institution, accountIdentifier);
+    const accountName = await paycrest.verifyAccount(
+      institution,
+      accountIdentifier,
+    );
 
     return NextResponse.json({ accountName });
   } catch (err: unknown) {
-    console.error('Error verifying account via Paycrest:', err);
+    console.error("Error verifying account via Paycrest:", err);
 
-    if (err instanceof Error && 'status' in err) {
+    if (err instanceof Error && "status" in err) {
       const httpError = err as PaycrestHttpError;
       const status = httpError.status >= 500 ? 502 : 400;
       return NextResponse.json({ error: err.message }, { status });
     }
 
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

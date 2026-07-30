@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { SharePreview } from '@/types/sharing';
+import { SharePreview } from "@/types/sharing";
 
 interface SharePreviewProps {
   preview: SharePreview;
@@ -8,9 +8,9 @@ interface SharePreviewProps {
 
 export function SharePreview({ preview }: SharePreviewProps) {
   const statusColors: Record<string, string> = {
-    completed: 'text-green-600',
-    pending: 'text-yellow-600',
-    failed: 'text-red-600',
+    completed: "text-green-600",
+    pending: "text-yellow-600",
+    failed: "text-red-600",
   };
 
   return (
@@ -25,7 +25,9 @@ export function SharePreview({ preview }: SharePreviewProps) {
 
         <div>
           <p className="text-sm text-gray-600">Status</p>
-          <p className={`font-semibold capitalize ${statusColors[preview.status] || 'text-gray-600'}`}>
+          <p
+            className={`font-semibold capitalize ${statusColors[preview.status] || "text-gray-600"}`}
+          >
             {preview.status}
           </p>
         </div>

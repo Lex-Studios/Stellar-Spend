@@ -30,18 +30,30 @@ export function FormCardSkeleton() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Skeleton width={60} height={10} aria-label="Loading label…" />
-          <Skeleton width="100%" height={42} aria-label="Loading currency select…" />
+          <Skeleton
+            width="100%"
+            height={42}
+            aria-label="Loading currency select…"
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <Skeleton width={120} height={10} aria-label="Loading label…" />
-          <Skeleton width="100%" height={42} aria-label="Loading bank select…" />
+          <Skeleton
+            width="100%"
+            height={42}
+            aria-label="Loading bank select…"
+          />
         </div>
       </div>
 
       {/* Account number */}
       <div className="flex flex-col gap-1.5">
         <Skeleton width={110} height={10} aria-label="Loading label…" />
-        <Skeleton width="100%" height={42} aria-label="Loading account number input…" />
+        <Skeleton
+          width="100%"
+          height={42}
+          aria-label="Loading account number input…"
+        />
       </div>
 
       {/* Account name */}

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { cn } from '@/lib/cn';
+import { useState } from "react";
+import { cn } from "@/lib/cn";
 
 interface FavoriteButtonProps {
   transactionId: string;
@@ -26,15 +26,15 @@ export function FavoriteButton({
     onToggle?.(next);
 
     try {
-      const res = await fetch('/api/transactions/favorites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/transactions/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transactionId, isFavorite: next }),
       });
-      if (!res.ok) throw new Error('Request failed');
+      if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
       // Reconcile with server truth in case it differs.
-      if (typeof data.isFavorite === 'boolean' && data.isFavorite !== next) {
+      if (typeof data.isFavorite === "boolean" && data.isFavorite !== next) {
         setFavorite(data.isFavorite);
         onToggle?.(data.isFavorite);
       }
@@ -42,7 +42,9 @@ export function FavoriteButton({
       // Rollback on failure.
       setFavorite(previous);
       onToggle?.(previous);
-      setError(err instanceof Error ? err.message : 'Failed to update favorite');
+      setError(
+        err instanceof Error ? err.message : "Failed to update favorite",
+      );
     }
   };
 
@@ -52,17 +54,17 @@ export function FavoriteButton({
         type="button"
         onClick={handleToggle}
         className={cn(
-          'p-1 transition-colors',
+          "p-1 transition-colors",
           favorite
-            ? 'text-yellow-500 hover:text-yellow-600'
-            : 'text-[#666666] hover:text-[#999999]'
+            ? "text-yellow-500 hover:text-yellow-600"
+            : "text-[#666666] hover:text-[#999999]",
         )}
-        title={favorite ? 'Remove from favorites' : 'Add to favorites'}
+        title={favorite ? "Remove from favorites" : "Add to favorites"}
         aria-pressed={favorite}
-        aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'}
+        aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
       >
         <span className="text-lg" aria-hidden="true">
-          {favorite ? '★' : '☆'}
+          {favorite ? "★" : "☆"}
         </span>
       </button>
       {error && (

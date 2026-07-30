@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 import {
   calculateInsurancePremium,
   createInsurance,
@@ -8,29 +8,36 @@ import {
   rejectClaim,
   processInsurancePayout,
   getInsuranceAnalytics,
-} from '@/lib/services/insurance.service';
-import { withIdempotency } from '@/lib/idempotency';
+} from "@/lib/services/insurance.service";
+import { withIdempotency } from "@/lib/idempotency";
 
 export async function GET(req: NextRequest) {
   try {
-    const transactionId = req.nextUrl.searchParams.get('transactionId');
-    const analytics = req.nextUrl.searchParams.get('analytics');
+    const transactionId = req.nextUrl.searchParams.get("transactionId");
+    const analytics = req.nextUrl.searchParams.get("analytics");
 
-    if (analytics === 'true') {
+    if (analytics === "true") {
       const data = await getInsuranceAnalytics();
       return NextResponse.json({ analytics: data });
     }
 
     if (!transactionId) {
-      return NextResponse.json({ error: 'transactionId or analytics=true is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: "transactionId or analytics=true is required" },
+        { status: 400 },
+      );
     }
 
     const result = await getInsuranceStatus(transactionId);
-    return NextResponse.json({ insurance: (result as { rows: unknown[] }).rows[0] || null });
+    return NextResponse.json({
+      insurance: (result as { rows: unknown[] }).rows[0] || null,
+    });
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 },
     );
   }
 }
@@ -38,14 +45,29 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   return withIdempotency(req, async () => {
     try {
-      const { action, transactionId, insuranceId, amount, currency, includeInsurance, reason, evidence } = await req.json();
+      const {
+        action,
+        transactionId,
+        insuranceId,
+        amount,
+        currency,
+        includeInsurance,
+        reason,
+        evidence,
+      } = await req.json();
 
-      if (action === 'claim') {
+      if (action === "claim") {
         if (!insuranceId || !reason) {
-          return NextResponse.json({ error: 'Missing required fields: insuranceId, reason' }, { status: 400 });
+          return NextResponse.json(
+            { error: "Missing required fields: insuranceId, reason" },
+            { status: 400 },
+          );
         }
         const result = await fileClaim(insuranceId, reason, evidence);
-        return NextResponse.json({ success: true, claim: (result as { rows: unknown[] }).rows[0] });
+        return NextResponse.json({
+          success: true,
+          claim: (result as { rows: unknown[] }).rows[0],
+        });
       }
 
       if (!includeInsurance) {
@@ -53,11 +75,22 @@ export async function POST(req: NextRequest) {
       }
 
       if (!transactionId || !amount || !currency) {
-        return NextResponse.json({ error: 'Missing required fields: transactionId, amount, currency' }, { status: 400 });
+        return NextResponse.json(
+          { error: "Missing required fields: transactionId, amount, currency" },
+          { status: 400 },
+        );
       }
 
-      const quote = await calculateInsurancePremium(parseFloat(amount), currency);
-      const insurance = await createInsurance(transactionId, quote.premium, quote.coverage, quote.provider);
+      const quote = await calculateInsurancePremium(
+        parseFloat(amount),
+        currency,
+      );
+      const insurance = await createInsurance(
+        transactionId,
+        quote.premium,
+        quote.coverage,
+        quote.provider,
+      );
 
       return NextResponse.json({
         insurance: (insurance as { rows: unknown[] }).rows[0],
@@ -65,8 +98,13 @@ export async function POST(req: NextRequest) {
       });
     } catch (error) {
       return NextResponse.json(
-        { error: error instanceof Error ? error.message : 'Failed to process insurance request' },
-        { status: 500 }
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to process insurance request",
+        },
+        { status: 500 },
       );
     }
   });
@@ -77,32 +115,52 @@ export async function PATCH(req: NextRequest) {
     const { action, insuranceId, rejectionReason } = await req.json();
 
     if (!action || !insuranceId) {
-      return NextResponse.json({ error: 'Missing required fields: action, insuranceId' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields: action, insuranceId" },
+        { status: 400 },
+      );
     }
 
-    if (action === 'approve') {
+    if (action === "approve") {
       const result = await approveClaim(insuranceId);
-      return NextResponse.json({ success: true, insurance: (result as { rows: unknown[] }).rows[0] });
+      return NextResponse.json({
+        success: true,
+        insurance: (result as { rows: unknown[] }).rows[0],
+      });
     }
 
-    if (action === 'reject') {
+    if (action === "reject") {
       if (!rejectionReason) {
-        return NextResponse.json({ error: 'rejectionReason is required to reject a claim' }, { status: 400 });
+        return NextResponse.json(
+          { error: "rejectionReason is required to reject a claim" },
+          { status: 400 },
+        );
       }
       const result = await rejectClaim(insuranceId, rejectionReason);
-      return NextResponse.json({ success: true, insurance: (result as { rows: unknown[] }).rows[0] });
+      return NextResponse.json({
+        success: true,
+        insurance: (result as { rows: unknown[] }).rows[0],
+      });
     }
 
-    if (action === 'payout') {
+    if (action === "payout") {
       const result = await processInsurancePayout(insuranceId);
-      return NextResponse.json({ success: true, insurance: (result as { rows: unknown[] }).rows[0] });
+      return NextResponse.json({
+        success: true,
+        insurance: (result as { rows: unknown[] }).rows[0],
+      });
     }
 
-    return NextResponse.json({ error: 'action must be "approve", "reject", or "payout"' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'action must be "approve", "reject", or "payout"' },
+      { status: 400 },
+    );
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
+      {
+        error: error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 },
     );
   }
 }

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { QRCodeData } from '@/types/qrcode';
-import { qrCodeService } from '@/lib/services/qrcode-service';
-import { BrowserQRCodeReader } from '@zxing/browser';
+import { useState, useRef, useEffect } from "react";
+import { QRCodeData } from "@/types/qrcode";
+import { qrCodeService } from "@/lib/services/qrcode-service";
+import { BrowserQRCodeReader } from "@zxing/browser";
 
 interface QRScannerProps {
   onScan: (data: QRCodeData) => void;
@@ -12,14 +12,19 @@ interface QRScannerProps {
 
 export function QRScanner({ onScan, onError }: QRScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
-  const [error, setError] = useState('');
-  const [permissionStatus, setPermissionStatus] = useState<PermissionState | null>(null);
+  const [error, setError] = useState("");
+  const [permissionStatus, setPermissionStatus] =
+    useState<PermissionState | null>(null);
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [flashlightAvailable, setFlashlightAvailable] = useState(false);
   const [flashlightOn, setFlashlightOn] = useState(false);
-  const [scanHistory, setScanHistory] = useState<Array<{data: QRCodeData; timestamp: number}>>([]);
-  const [mode, setMode] = useState<'camera' | 'upload'>('upload');
-  const [selectedCameraId, setSelectedCameraId] = useState<string | undefined>(undefined);
+  const [scanHistory, setScanHistory] = useState<
+    Array<{ data: QRCodeData; timestamp: number }>
+  >([]);
+  const [mode, setMode] = useState<"camera" | "upload">("upload");
+  const [selectedCameraId, setSelectedCameraId] = useState<string | undefined>(
+    undefined,
+  );
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<BrowserQRCodeReader | null>(null);
 
@@ -28,13 +33,14 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       // If we get here, permission granted
-      setPermissionStatus('granted');
+      setPermissionStatus("granted");
       // Stop the stream as we just wanted to check permission
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
       return true;
     } catch (err) {
-      setPermissionStatus('denied');
-      const errorMsg = err instanceof Error ? err.message : 'Camera access denied';
+      setPermissionStatus("denied");
+      const errorMsg =
+        err instanceof Error ? err.message : "Camera access denied";
       setError(errorMsg);
       onError?.(errorMsg);
       return false;
@@ -43,8 +49,8 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
 
   // Start scanning with camera
   const startCameraScan = async () => {
-    setError('');
-    if (permissionStatus !== 'granted') {
+    setError("");
+    if (permissionStatus !== "granted") {
       const granted = await requestCameraPermission();
       if (!granted) return;
     }
@@ -53,14 +59,16 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
       const constraints: MediaTrackConstraints = {
         width: { ideal: 400 },
         height: { ideal: 400 },
-        facingMode: 'environment', // Prefer rear camera for scanning
+        facingMode: "environment", // Prefer rear camera for scanning
       };
 
       if (selectedCameraId) {
         constraints.deviceId = { exact: selectedCameraId };
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video: constraints });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: constraints,
+      });
       videoRef.current!.srcObject = stream;
       videoRef.current!.play();
 
@@ -82,43 +90,49 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
           setFlashlightAvailable(!!capabilities.torch);
         }
       } catch (e) {
-        console.warn('Could not check flashlight availability', e);
+        console.warn("Could not check flashlight availability", e);
       }
 
       // Start decoding
       // @ts-ignore
-      readerRef.current.decodeFromInputVideoDevice(undefined, videoRef.current!, (result, err) => {
-        if (result) {
-          const resultText = result.getText();
-          const data = qrCodeService.parseQRData(resultText);
-          if (data) {
-            // Prevent duplicate scans
-            const alreadyScanned = scanHistory.some(item => 
-              item.data.transactionId === data.transactionId && 
-              Date.now() - item.timestamp < 5000 // 5 second debounce
-            );
-            if (!alreadyScanned) {
-              onScan(data);
-              setScanHistory(prev => [
-                ...prev,
-                { data, timestamp: Date.now() }
-              ]);
+      readerRef.current.decodeFromInputVideoDevice(
+        undefined,
+        videoRef.current!,
+        (result, err) => {
+          if (result) {
+            const resultText = result.getText();
+            const data = qrCodeService.parseQRData(resultText);
+            if (data) {
+              // Prevent duplicate scans
+              const alreadyScanned = scanHistory.some(
+                (item) =>
+                  item.data.transactionId === data.transactionId &&
+                  Date.now() - item.timestamp < 5000, // 5 second debounce
+              );
+              if (!alreadyScanned) {
+                onScan(data);
+                setScanHistory((prev) => [
+                  ...prev,
+                  { data, timestamp: Date.now() },
+                ]);
+              }
+            } else {
+              const errMsg = "Invalid QR code format";
+              setError(errMsg);
+              onError?.(errMsg);
             }
-          } else {
-            const errMsg = 'Invalid QR code format';
-            setError(errMsg);
-            onError?.(errMsg);
+          } else if (err) {
+            // Ignore errors that are not permanent
+            if (!(err instanceof NotFoundException)) {
+              console.warn("QR scan error", err);
+            }
           }
-        } else if (err) {
-          // Ignore errors that are not permanent
-          if (!(err instanceof NotFoundException)) {
-            console.warn('QR scan error', err);
-          }
-        }
-        // Continue scanning
-      });
+          // Continue scanning
+        },
+      );
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to start camera';
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to start camera";
       setError(errorMsg);
       setError(errorMsg);
       onError?.(errorMsg);
@@ -134,7 +148,7 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
     if (videoRef.current) {
       const stream = videoRef.current.srcObject as MediaStream;
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
       videoRef.current.srcObject = null;
     }
@@ -161,17 +175,19 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
       await track.applyConstraints({ advanced: [{ torch: newState }] });
       setFlashlightOn(newState);
     } catch (err) {
-      console.error('Failed to toggle flashlight', err);
+      console.error("Failed to toggle flashlight", err);
     }
   };
 
   // Handle file upload (existing functionality)
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
-      setError('');
+      setError("");
       const reader = new FileReader();
 
       reader.onload = async (e) => {
@@ -180,12 +196,9 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
 
         if (data) {
           onScan(data);
-          setScanHistory(prev => [
-            ...prev,
-            { data, timestamp: Date.now() }
-          ]);
+          setScanHistory((prev) => [...prev, { data, timestamp: Date.now() }]);
         } else {
-          const err = 'Invalid QR code format';
+          const err = "Invalid QR code format";
           setError(err);
           onError?.(err);
         }
@@ -193,7 +206,8 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
 
       reader.readAsText(file);
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to scan QR code';
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to scan QR code";
       setError(errorMsg);
       onError?.(errorMsg);
     }
@@ -202,22 +216,20 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
   // Handle paste (existing functionality)
   const handlePaste = async (event: React.ClipboardEvent<HTMLDivElement>) => {
     try {
-      const text = event.clipboardData.getData('text');
+      const text = event.clipboardData.getData("text");
       const data = qrCodeService.parseQRData(text);
 
       if (data) {
         onScan(data);
-        setScanHistory(prev => [
-          ...prev,
-          { data, timestamp: Date.now() }
-        ]);
+        setScanHistory((prev) => [...prev, { data, timestamp: Date.now() }]);
       } else {
-        const err = 'Invalid QR code data in clipboard';
+        const err = "Invalid QR code data in clipboard";
         setError(err);
         onError?.(err);
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to parse clipboard data';
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to parse clipboard data";
       setError(errorMsg);
       onError?.(errorMsg);
     }
@@ -228,11 +240,13 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
     const enumerateCameras = async () => {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        const videoDevices = devices.filter(
+          (device) => device.kind === "videoinput",
+        );
         // We could store and let user select, but for simplicity we'll just use the first rear camera
         // For now, we don't implement camera selection UI, but we can add later
       } catch (err) {
-        console.error('Error enumerating cameras', err);
+        console.error("Error enumerating cameras", err);
       }
     };
 
@@ -258,21 +272,21 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
       {/* Mode toggle */}
       <div className="flex gap-2">
         <button
-          onClick={() => setMode('camera')}
-          className={`flex-1 px-4 py-2 ${mode === 'camera' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'} rounded-lg hover:${mode === 'camera' ? 'bg-blue-700' : 'bg-gray-300'}`}
+          onClick={() => setMode("camera")}
+          className={`flex-1 px-4 py-2 ${mode === "camera" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"} rounded-lg hover:${mode === "camera" ? "bg-blue-700" : "bg-gray-300"}`}
         >
           Camera Scan
         </button>
         <button
-          onClick={() => setMode('upload')}
-          className={`flex-1 px-4 py-2 ${mode === 'upload' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'} rounded-lg hover:${mode === 'upload' ? 'bg-blue-700' : 'bg-gray-300'}`}
+          onClick={() => setMode("upload")}
+          className={`flex-1 px-4 py-2 ${mode === "upload" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"} rounded-lg hover:${mode === "upload" ? "bg-blue-700" : "bg-gray-300"}`}
         >
           Upload/Paste
         </button>
       </div>
 
       {/* Camera mode */}
-      {mode === 'camera' && (
+      {mode === "camera" && (
         <>
           {/* Camera permission handling */}
           {permissionStatus === null && (
@@ -283,12 +297,13 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
               Enable Camera
             </button>
           )}
-          {permissionStatus === 'denied' && (
+          {permissionStatus === "denied" && (
             <div className="text-red-600 text-sm text-center">
-              Camera access is required for scanning. Please enable camera permissions in your browser settings.
+              Camera access is required for scanning. Please enable camera
+              permissions in your browser settings.
             </div>
           )}
-          {permissionStatus === 'granted' && (
+          {permissionStatus === "granted" && (
             <div className="relative">
               {/* Video element */}
               <video
@@ -314,22 +329,24 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
             </div>
           )}
           {/* Camera controls */}
-          {permissionStatus === 'granted' && (
+          {permissionStatus === "granted" && (
             <div className="flex gap-2 mt-2">
               <button
                 onClick={isScanning ? stopCameraScan : startCameraScan}
                 disabled={!cameraEnabled && isScanning}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
               >
-                {isScanning ? 'Stop Scanning' : 'Start Scanning'}
+                {isScanning ? "Stop Scanning" : "Start Scanning"}
               </button>
               {flashlightAvailable && (
                 <button
                   onClick={toggleFlashlight}
                   className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
-                  title={flashlightOn ? 'Turn off flashlight' : 'Turn on flashlight'}
+                  title={
+                    flashlightOn ? "Turn off flashlight" : "Turn on flashlight"
+                  }
                 >
-                  {flashlightOn ? 'Flashlight On' : 'Flashlight Off'}
+                  {flashlightOn ? "Flashlight On" : "Flashlight Off"}
                 </button>
               )}
             </div>
@@ -338,7 +355,7 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
       )}
 
       {/* Upload/Paste mode */}
-      {mode === 'upload' && (
+      {mode === "upload" && (
         <>
           <div>
             <h3 className="text-lg font-semibold mb-2">Scan QR Code</h3>
@@ -349,7 +366,7 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
 
           <div className="flex gap-2">
             <button
-              onClick={() => document.getElementById('file-input')?.click()}
+              onClick={() => document.getElementById("file-input")?.click()}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Upload QR Image
@@ -398,7 +415,7 @@ export function QRScanner({ onScan, onError }: QRScannerProps) {
       )}
 
       {/* Supported formats info (only in upload mode) */}
-      {mode === 'upload' && (
+      {mode === "upload" && (
         <div className="text-xs text-gray-500 bg-white p-3 rounded border mt-4">
           <p className="font-semibold mb-1">Supported formats:</p>
           <ul className="list-disc list-inside space-y-1">

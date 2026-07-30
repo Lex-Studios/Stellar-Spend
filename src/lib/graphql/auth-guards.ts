@@ -19,9 +19,9 @@ export function requireAuth(ctx: GraphQLContext): void {
   }
 }
 
-export function requireRole(ctx: GraphQLContext, role: 'admin' | 'ops'): void {
+export function requireRole(ctx: GraphQLContext, role: "admin" | "ops"): void {
   requireAuth(ctx);
-  if (ctx.role !== role && ctx.role !== 'admin') {
+  if (ctx.role !== role && ctx.role !== "admin") {
     throw new GraphQLError(`Forbidden: requires ${role} role`, {
       code: "FORBIDDEN",
       httpStatus: 403,
@@ -36,10 +36,10 @@ export const MAX_DEPTH = 7;
 
 export function validateQueryDepth(fieldNames: string[], depth = 0): void {
   if (depth > MAX_DEPTH) {
-    throw new GraphQLError(
-      `Query exceeds maximum depth of ${MAX_DEPTH}`,
-      { code: "QUERY_TOO_DEEP", httpStatus: 400 },
-    );
+    throw new GraphQLError(`Query exceeds maximum depth of ${MAX_DEPTH}`, {
+      code: "QUERY_TOO_DEEP",
+      httpStatus: 400,
+    });
   }
 }
 

@@ -1,4 +1,9 @@
-import { ClientError, withRetry, type ClientConfig, type RetryOptions } from './base';
+import {
+  ClientError,
+  withRetry,
+  type ClientConfig,
+  type RetryOptions,
+} from "./base";
 
 export interface PaycrestClientConfig extends ClientConfig {
   apiKey: string;
@@ -27,7 +32,7 @@ export class PaycrestClient {
   private retryOptions: RetryOptions;
 
   constructor(config: PaycrestClientConfig) {
-    this.apiUrl = config.apiUrl || 'https://api.paycrest.io/v1';
+    this.apiUrl = config.apiUrl || "https://api.paycrest.io/v1";
     this.apiKey = config.apiKey;
     this.timeout = config.timeout || 15000;
     this.retryOptions = {
@@ -46,8 +51,8 @@ export class PaycrestClient {
       const response = await fetch(url, {
         ...options,
         headers: {
-          'API-Key': this.apiKey,
-          'Content-Type': 'application/json',
+          "API-Key": this.apiKey,
+          "Content-Type": "application/json",
           ...options.headers,
         },
         signal: controller.signal,
@@ -62,9 +67,9 @@ export class PaycrestClient {
 
       if (!response.ok) {
         throw new ClientError(
-          data?.message || response.statusText || 'Unknown error',
+          data?.message || response.statusText || "Unknown error",
           response.status,
-          data
+          data,
         );
       }
 
@@ -74,11 +79,11 @@ export class PaycrestClient {
         throw error;
       }
 
-      if (error.name === 'AbortError') {
-        throw new ClientError('Request timeout', 504);
+      if (error.name === "AbortError") {
+        throw new ClientError("Request timeout", 504);
       }
 
-      throw new ClientError(error.message || 'Network error', 502);
+      throw new ClientError(error.message || "Network error", 502);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -87,48 +92,57 @@ export class PaycrestClient {
   async createOrder(request: PayoutOrderRequest): Promise<PayoutOrderResponse> {
     return withRetry(
       () =>
-        this.fetch('/sender/orders', {
-          method: 'POST',
+        this.fetch("/sender/orders", {
+          method: "POST",
           body: JSON.stringify(request),
         }),
-      this.retryOptions
+      this.retryOptions,
     );
   }
 
-  async getOrderStatus(orderId: string): Promise<{ status: string; id: string }> {
+  async getOrderStatus(
+    orderId: string,
+  ): Promise<{ status: string; id: string }> {
     return withRetry(
       () =>
         this.fetch(`/sender/orders/${orderId}`, {
-          method: 'GET',
+          method: "GET",
         }),
-      this.retryOptions
+      this.retryOptions,
     );
   }
 
-  async getCurrencies(): Promise<Array<{ code: string; name: string; symbol: string }>> {
-    return withRetry(() => this.fetch('/sender/currencies'), this.retryOptions);
+  async getCurrencies(): Promise<
+    Array<{ code: string; name: string; symbol: string }>
+  > {
+    return withRetry(() => this.fetch("/sender/currencies"), this.retryOptions);
   }
 
-  async getInstitutions(currency: string): Promise<Array<{ code: string; name: string }>> {
+  async getInstitutions(
+    currency: string,
+  ): Promise<Array<{ code: string; name: string }>> {
     return withRetry(
       () => this.fetch(`/sender/institutions/${currency}`),
-      this.retryOptions
+      this.retryOptions,
     );
   }
 
-  async verifyAccount(institution: string, accountIdentifier: string): Promise<string> {
+  async verifyAccount(
+    institution: string,
+    accountIdentifier: string,
+  ): Promise<string> {
     try {
       const response = await withRetry(
         () =>
-          this.fetch('/sender/verify-account', {
-            method: 'POST',
+          this.fetch("/sender/verify-account", {
+            method: "POST",
             body: JSON.stringify({ institution, accountIdentifier }),
           }),
-        this.retryOptions
+        this.retryOptions,
       );
-      return response?.accountName || response?.data || '';
+      return response?.accountName || response?.data || "";
     } catch {
-      return '';
+      return "";
     }
   }
 
@@ -136,23 +150,24 @@ export class PaycrestClient {
     token: string,
     amount: string,
     currency: string,
-    options?: { network?: string; providerId?: string }
+    options?: { network?: string; providerId?: string },
   ): Promise<number> {
     const queryParams = new URLSearchParams();
-    if (options?.network) queryParams.set('network', options.network);
-    if (options?.providerId) queryParams.set('provider_id', options.providerId);
+    if (options?.network) queryParams.set("network", options.network);
+    if (options?.providerId) queryParams.set("provider_id", options.providerId);
 
     const qs = queryParams.toString();
     const response = await withRetry(
       () =>
         this.fetch(
-          `/rates/${encodeURIComponent(token)}/${encodeURIComponent(amount)}/${encodeURIComponent(currency)}${qs ? `?${qs}` : ''}`
+          `/rates/${encodeURIComponent(token)}/${encodeURIComponent(amount)}/${encodeURIComponent(currency)}${qs ? `?${qs}` : ""}`,
         ),
-      this.retryOptions
+      this.retryOptions,
     );
 
     const rate = parseFloat(String(response?.data ?? response));
-    if (!isFinite(rate)) throw new Error(`Invalid rate received: ${JSON.stringify(response)}`);
+    if (!isFinite(rate))
+      throw new Error(`Invalid rate received: ${JSON.stringify(response)}`);
     return rate;
   }
 }

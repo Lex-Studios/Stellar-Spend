@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateRequestSignature, ReplayAttackPrevention } from "@/lib/request-signing";
+import {
+  validateRequestSignature,
+  ReplayAttackPrevention,
+} from "@/lib/request-signing";
 import { logger } from "@/lib/logger";
 
 // Global replay attack prevention instance
@@ -12,7 +15,7 @@ const replayPrevention = new ReplayAttackPrevention();
 export async function requestSigningMiddleware(
   request: NextRequest,
   secret: string,
-  skipPaths: string[] = []
+  skipPaths: string[] = [],
 ): Promise<NextResponse | null> {
   try {
     const path = new URL(request.url).pathname;
@@ -45,7 +48,7 @@ export async function requestSigningMiddleware(
       path,
       body,
       headers,
-      secret
+      secret,
     );
 
     if (!valid) {
@@ -63,7 +66,7 @@ export async function requestSigningMiddleware(
         {
           status: 401,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -84,7 +87,7 @@ export async function requestSigningMiddleware(
         {
           status: 401,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -106,7 +109,7 @@ export async function requestSigningMiddleware(
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }

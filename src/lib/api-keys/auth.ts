@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { ErrorHandler } from '@/lib/error-handler';
+import { NextRequest, NextResponse } from "next/server";
+import { ErrorHandler } from "@/lib/error-handler";
 import {
   authenticateApiKey,
   checkApiKeyRateLimit,
   recordApiKeyUsage,
-} from '@/lib/api-keys/service';
-import type { ApiKeyRecord } from '@/lib/api-keys/types';
-import { getClientIp } from '@/lib/offramp/utils/rate-limiter';
-import { enforceScope } from '@/lib/middleware/scope-enforcement.middleware';
+} from "@/lib/api-keys/service";
+import type { ApiKeyRecord } from "@/lib/api-keys/types";
+import { getClientIp } from "@/lib/offramp/utils/rate-limiter";
+import { enforceScope } from "@/lib/middleware/scope-enforcement.middleware";
 
 function extractApiKey(request: NextRequest): string | null {
-  const xApiKey = request.headers.get('x-api-key');
+  const xApiKey = request.headers.get("x-api-key");
   if (xApiKey) return xApiKey;
 
-  const authorization = request.headers.get('authorization');
+  const authorization = request.headers.get("authorization");
   if (!authorization) return null;
   const match = authorization.match(/^Bearer\s+(.+)$/i);
   return match?.[1] ?? null;
@@ -21,16 +21,16 @@ function extractApiKey(request: NextRequest): string | null {
 
 export async function withApiKeyAuth(
   request: NextRequest,
-  handler: (apiKey: ApiKeyRecord) => Promise<NextResponse>
+  handler: (apiKey: ApiKeyRecord) => Promise<NextResponse>,
 ): Promise<NextResponse> {
   const rawKey = extractApiKey(request);
   if (!rawKey) {
-    return ErrorHandler.unauthorized('API key is required');
+    return ErrorHandler.unauthorized("API key is required");
   }
 
   const apiKey = await authenticateApiKey(rawKey);
   if (!apiKey) {
-    return ErrorHandler.unauthorized('Invalid API key');
+    return ErrorHandler.unauthorized("Invalid API key");
   }
 
   const rateLimit = checkApiKeyRateLimit(apiKey);
@@ -45,13 +45,13 @@ export async function withApiKeyAuth(
     });
 
     const response = NextResponse.json(
-      { error: 'API key rate limit exceeded' },
-      { status: 429 }
+      { error: "API key rate limit exceeded" },
+      { status: 429 },
     );
     if (rateLimit.retryAfter) {
-      response.headers.set('Retry-After', String(rateLimit.retryAfter));
+      response.headers.set("Retry-After", String(rateLimit.retryAfter));
     }
-    response.headers.set('X-API-Key-Id', apiKey.id);
+    response.headers.set("X-API-Key-Id", apiKey.id);
     return response;
   }
 
@@ -64,13 +64,13 @@ export async function withApiKeyAuth(
       statusCode: 403,
       limited: false,
       ipAddress: getClientIp(request),
-      metadata: { reason: 'insufficient_scope' },
+      metadata: { reason: "insufficient_scope" },
     });
     return scopeCheck;
   }
 
   const response = await handler(apiKey);
-  response.headers.set('X-API-Key-Id', apiKey.id);
+  response.headers.set("X-API-Key-Id", apiKey.id);
 
   await recordApiKeyUsage({
     apiKeyId: apiKey.id,

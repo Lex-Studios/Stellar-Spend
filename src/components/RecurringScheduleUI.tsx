@@ -49,7 +49,13 @@ export default function RecurringScheduleUI({ userAddress }: Props) {
     setForm((prev) => ({ ...prev, [k]: v }));
 
   const handleCreate = () => {
-    if (!form.label || !form.amount || !form.institution || !form.accountIdentifier) return;
+    if (
+      !form.label ||
+      !form.amount ||
+      !form.institution ||
+      !form.accountIdentifier
+    )
+      return;
     const schedule: RecurringSchedule = {
       id: RecurringStorage.generateId(),
       createdAt: Date.now(),
@@ -67,12 +73,23 @@ export default function RecurringScheduleUI({ userAddress }: Props) {
       nextRunAt: computeNextRunAt(Date.now(), form.frequency),
       paused: false,
       executionCount: 0,
-      maxExecutions: form.maxExecutions ? parseInt(form.maxExecutions) : undefined,
+      maxExecutions: form.maxExecutions
+        ? parseInt(form.maxExecutions)
+        : undefined,
     };
     RecurringStorage.save(schedule);
     setSchedules(RecurringStorage.getByUser(userAddress));
     setShowForm(false);
-    setForm({ label: "", amount: "", currency: "NGN", frequency: "weekly", institution: "", accountIdentifier: "", accountName: "", maxExecutions: "" });
+    setForm({
+      label: "",
+      amount: "",
+      currency: "NGN",
+      frequency: "weekly",
+      institution: "",
+      accountIdentifier: "",
+      accountName: "",
+      maxExecutions: "",
+    });
   };
 
   const togglePause = (s: RecurringSchedule) => {
@@ -108,18 +125,42 @@ export default function RecurringScheduleUI({ userAddress }: Props) {
         <div className="border border-[#333333] p-4 space-y-3 bg-[#0a0a0a]">
           <div className="grid grid-cols-2 gap-3">
             {[
-              { key: "label", label: "Label", placeholder: "e.g. Monthly rent" },
+              {
+                key: "label",
+                label: "Label",
+                placeholder: "e.g. Monthly rent",
+              },
               { key: "amount", label: "Amount (USDC)", placeholder: "100.00" },
-              { key: "institution", label: "Bank / Institution", placeholder: "GTBank" },
-              { key: "accountIdentifier", label: "Account Number", placeholder: "0123456789" },
-              { key: "accountName", label: "Account Name", placeholder: "John Doe" },
-              { key: "maxExecutions", label: "Max Executions (optional)", placeholder: "∞" },
+              {
+                key: "institution",
+                label: "Bank / Institution",
+                placeholder: "GTBank",
+              },
+              {
+                key: "accountIdentifier",
+                label: "Account Number",
+                placeholder: "0123456789",
+              },
+              {
+                key: "accountName",
+                label: "Account Name",
+                placeholder: "John Doe",
+              },
+              {
+                key: "maxExecutions",
+                label: "Max Executions (optional)",
+                placeholder: "∞",
+              },
             ].map(({ key, label, placeholder }) => (
               <div key={key} className="flex flex-col gap-1">
-                <label className="text-[10px] text-[#777777] uppercase tracking-widest">{label}</label>
+                <label className="text-[10px] text-[#777777] uppercase tracking-widest">
+                  {label}
+                </label>
                 <input
                   value={form[key as keyof typeof form]}
-                  onChange={(e) => setField(key as keyof typeof form, e.target.value)}
+                  onChange={(e) =>
+                    setField(key as keyof typeof form, e.target.value)
+                  }
                   placeholder={placeholder}
                   className={cn(
                     "bg-[#111111] border border-[#333333] px-3 py-2 text-xs text-white",
@@ -132,7 +173,9 @@ export default function RecurringScheduleUI({ userAddress }: Props) {
 
           <div className="flex gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-[#777777] uppercase tracking-widest">Frequency</label>
+              <label className="text-[10px] text-[#777777] uppercase tracking-widest">
+                Frequency
+              </label>
               <select
                 value={form.frequency}
                 onChange={(e) => setField("frequency", e.target.value)}
@@ -144,14 +187,18 @@ export default function RecurringScheduleUI({ userAddress }: Props) {
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] text-[#777777] uppercase tracking-widest">Currency</label>
+              <label className="text-[10px] text-[#777777] uppercase tracking-widest">
+                Currency
+              </label>
               <select
                 value={form.currency}
                 onChange={(e) => setField("currency", e.target.value)}
                 className="bg-[#111111] border border-[#333333] px-3 py-2 text-xs text-white focus:outline-none focus:border-[#c9a962]"
               >
                 {["NGN", "KES", "GHS", "ZAR", "USD"].map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
             </div>
@@ -171,7 +218,9 @@ export default function RecurringScheduleUI({ userAddress }: Props) {
 
       {/* Schedule list */}
       {schedules.length === 0 ? (
-        <p className="text-xs text-[#555555] text-center py-4">No recurring schedules yet</p>
+        <p className="text-xs text-[#555555] text-center py-4">
+          No recurring schedules yet
+        </p>
       ) : (
         <div className="space-y-2">
           {schedules.map((s) => (
@@ -183,16 +232,26 @@ export default function RecurringScheduleUI({ userAddress }: Props) {
               )}
             >
               <div className="space-y-0.5 min-w-0">
-                <div className="text-xs text-white font-medium truncate">{s.label}</div>
+                <div className="text-xs text-white font-medium truncate">
+                  {s.label}
+                </div>
                 <div className="text-[10px] text-[#777777]">
-                  {s.amount} USDC · {FREQ_LABELS[s.frequency]} · {s.beneficiary.institution}
+                  {s.amount} USDC · {FREQ_LABELS[s.frequency]} ·{" "}
+                  {s.beneficiary.institution}
                 </div>
                 <div className="text-[10px] text-[#555555]">
                   Next: {formatDate(s.nextRunAt)} · Runs: {s.executionCount}
                   {s.maxExecutions ? `/${s.maxExecutions}` : ""}
                 </div>
                 {s.lastResult && (
-                  <div className={cn("text-[10px]", s.lastResult.status === "success" ? "text-green-400" : "text-red-400")}>
+                  <div
+                    className={cn(
+                      "text-[10px]",
+                      s.lastResult.status === "success"
+                        ? "text-green-400"
+                        : "text-red-400",
+                    )}
+                  >
                     Last: {s.lastResult.status}
                     {s.lastResult.error ? ` — ${s.lastResult.error}` : ""}
                   </div>

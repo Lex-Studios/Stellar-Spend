@@ -15,7 +15,10 @@ export interface CacheClient {
 // ─── In-Memory Fallback ───────────────────────────────────────────────────────
 
 class InMemoryCache implements CacheClient {
-  private store = new Map<string, { value: string; expiresAt: number | null }>();
+  private store = new Map<
+    string,
+    { value: string; expiresAt: number | null }
+  >();
 
   async get(key: string): Promise<string | null> {
     const entry = this.store.get(key);
@@ -114,7 +117,9 @@ export function getCacheClient(): CacheClient {
       },
     };
   } catch {
-    console.warn("[cache] ioredis not available — using in-memory cache fallback");
+    console.warn(
+      "[cache] ioredis not available — using in-memory cache fallback",
+    );
     _client = new InMemoryCache();
   }
 

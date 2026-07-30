@@ -52,7 +52,10 @@ export function buildCSPHeader(directives: CSPDirectives): string {
 /**
  * Validate CSP header syntax
  */
-export function validateCSPHeader(header: string): { valid: boolean; errors: string[] } {
+export function validateCSPHeader(header: string): {
+  valid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   // Check for common CSP syntax issues
@@ -71,8 +74,13 @@ export function validateCSPHeader(header: string): { valid: boolean; errors: str
     }
 
     // Check for common mistakes
-    if (directive.includes("'unsafe-inline'") && directive.includes("'nonce-")) {
-      errors.push("Cannot use both 'unsafe-inline' and nonce in the same directive");
+    if (
+      directive.includes("'unsafe-inline'") &&
+      directive.includes("'nonce-")
+    ) {
+      errors.push(
+        "Cannot use both 'unsafe-inline' and nonce in the same directive",
+      );
     }
   }
 
@@ -85,12 +93,18 @@ export function validateCSPHeader(header: string): { valid: boolean; errors: str
 /**
  * Get CSP directives for specific environment
  */
-export function getCSPDirectivesForEnvironment(env: "development" | "production"): CSPDirectives {
+export function getCSPDirectivesForEnvironment(
+  env: "development" | "production",
+): CSPDirectives {
   const directives = { ...CSP_DIRECTIVES };
 
   if (env === "development") {
     // Allow localhost for development
-    directives["connect-src"] = [...directives["connect-src"], "http://localhost:*", "ws://localhost:*"];
+    directives["connect-src"] = [
+      ...directives["connect-src"],
+      "http://localhost:*",
+      "ws://localhost:*",
+    ];
   }
 
   return directives;

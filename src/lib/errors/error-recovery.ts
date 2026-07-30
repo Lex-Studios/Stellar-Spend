@@ -1,4 +1,8 @@
-import { ApplicationError, TimeoutError, ExternalServiceError } from './custom-errors';
+import {
+  ApplicationError,
+  TimeoutError,
+  ExternalServiceError,
+} from "./custom-errors";
 
 export interface RetryConfig {
   maxAttempts: number;
@@ -20,7 +24,7 @@ export class ErrorRecovery {
    */
   static async retry<T>(
     fn: () => Promise<T>,
-    config: Partial<RetryConfig> = {}
+    config: Partial<RetryConfig> = {},
   ): Promise<T> {
     const finalConfig = { ...DEFAULT_RETRY_CONFIG, ...config };
     let lastError: Error | undefined;
@@ -35,19 +39,24 @@ export class ErrorRecovery {
         // Don't retry on validation or authorization errors
         if (
           error instanceof ApplicationError &&
-          (error.statusCode === 400 || error.statusCode === 401 || error.statusCode === 403)
+          (error.statusCode === 400 ||
+            error.statusCode === 401 ||
+            error.statusCode === 403)
         ) {
           throw error;
         }
 
         if (attempt < finalConfig.maxAttempts) {
           await new Promise((resolve) => setTimeout(resolve, delay));
-          delay = Math.min(delay * finalConfig.backoffMultiplier, finalConfig.maxDelayMs);
+          delay = Math.min(
+            delay * finalConfig.backoffMultiplier,
+            finalConfig.maxDelayMs,
+          );
         }
       }
     }
 
-    throw lastError || new Error('Max retry attempts exceeded');
+    throw lastError || new Error("Max retry attempts exceeded");
   }
 
   /**
@@ -69,27 +78,27 @@ export class ErrorRecovery {
     options: {
       failureThreshold: number;
       resetTimeoutMs: number;
-    } = { failureThreshold: 5, resetTimeoutMs: 60000 }
+    } = { failureThreshold: 5, resetTimeoutMs: 60000 },
   ) {
     let failureCount = 0;
     let lastFailureTime: number | null = null;
-    let state: 'closed' | 'open' | 'half-open' = 'closed';
+    let state: "closed" | "open" | "half-open" = "closed";
 
     return async (): Promise<T> => {
       // Check if circuit should reset
-      if (state === 'open' && lastFailureTime) {
+      if (state === "open" && lastFailureTime) {
         if (Date.now() - lastFailureTime > options.resetTimeoutMs) {
-          state = 'half-open';
+          state = "half-open";
           failureCount = 0;
         } else {
-          throw new Error('Circuit breaker is open');
+          throw new Error("Circuit breaker is open");
         }
       }
 
       try {
         const result = await fn();
-        if (state === 'half-open') {
-          state = 'closed';
+        if (state === "half-open") {
+          state = "closed";
           failureCount = 0;
         }
         return result;
@@ -98,7 +107,7 @@ export class ErrorRecovery {
         lastFailureTime = Date.now();
 
         if (failureCount >= options.failureThreshold) {
-          state = 'open';
+          state = "open";
         }
 
         throw error;
@@ -109,11 +118,20 @@ export class ErrorRecovery {
   /**
    * Timeout wrapper for promises
    */
-  static async withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  static async withTimeout<T>(
+    promise: Promise<T>,
+    timeoutMs: number,
+  ): Promise<T> {
     return Promise.race([
       promise,
       new Promise<T>((_, reject) =>
-        setTimeout(() => reject(new TimeoutError(`Operation timed out after ${timeoutMs}ms`)), timeoutMs)
+        setTimeout(
+          () =>
+            reject(
+              new TimeoutError(`Operation timed out after ${timeoutMs}ms`),
+            ),
+          timeoutMs,
+        ),
       ),
     ]);
   }

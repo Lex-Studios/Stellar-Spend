@@ -16,8 +16,19 @@ const rows: Row[] = [
 ];
 
 const columns: DataTableColumn<Row>[] = [
-  { key: "name", header: "Name", sortValue: (r) => r.name, accessor: (r) => r.name },
-  { key: "score", header: "Score", align: "right", sortValue: (r) => r.score, accessor: (r) => r.score },
+  {
+    key: "name",
+    header: "Name",
+    sortValue: (r) => r.name,
+    accessor: (r) => r.name,
+  },
+  {
+    key: "score",
+    header: "Score",
+    align: "right",
+    sortValue: (r) => r.score,
+    accessor: (r) => r.score,
+  },
 ];
 
 function getTable() {
@@ -26,7 +37,14 @@ function getTable() {
 
 describe("DataTable", () => {
   it("renders all rows and column headers", () => {
-    render(<DataTable columns={columns} rows={rows} getRowKey={(r) => r.id} caption="Test rows" />);
+    render(
+      <DataTable
+        columns={columns}
+        rows={rows}
+        getRowKey={(r) => r.id}
+        caption="Test rows"
+      />,
+    );
     const table = getTable();
     expect(within(table).getByText("Name")).toBeInTheDocument();
     expect(within(table).getByText("Score")).toBeInTheDocument();
@@ -43,7 +61,7 @@ describe("DataTable", () => {
         getRowKey={(r) => r.id}
         caption="Test rows"
         emptyState={<p>Nothing here</p>}
-      />
+      />,
     );
     expect(screen.getByText("Nothing here")).toBeInTheDocument();
   });
@@ -57,7 +75,7 @@ describe("DataTable", () => {
         caption="Test rows"
         isLoading
         loadingState={<p>Loading…</p>}
-      />
+      />,
     );
     expect(screen.getByText("Loading…")).toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
@@ -65,7 +83,14 @@ describe("DataTable", () => {
 
   it("sorts rows ascending then descending on header activation, and is keyboard operable", async () => {
     const user = userEvent.setup();
-    render(<DataTable columns={columns} rows={rows} getRowKey={(r) => r.id} caption="Test rows" />);
+    render(
+      <DataTable
+        columns={columns}
+        rows={rows}
+        getRowKey={(r) => r.id}
+        caption="Test rows"
+      />,
+    );
 
     const nameHeaderButton = screen.getByRole("button", { name: /name/i });
     nameHeaderButton.focus();
@@ -82,7 +107,14 @@ describe("DataTable", () => {
 
   it("exposes aria-sort on the active sorted column", async () => {
     const user = userEvent.setup();
-    render(<DataTable columns={columns} rows={rows} getRowKey={(r) => r.id} caption="Test rows" />);
+    render(
+      <DataTable
+        columns={columns}
+        rows={rows}
+        getRowKey={(r) => r.id}
+        caption="Test rows"
+      />,
+    );
 
     const nameHeader = screen.getByRole("columnheader", { name: /name/i });
     expect(nameHeader).toHaveAttribute("aria-sort", "none");
@@ -93,7 +125,15 @@ describe("DataTable", () => {
 
   it("paginates rows when pageSize is set", async () => {
     const user = userEvent.setup();
-    render(<DataTable columns={columns} rows={rows} getRowKey={(r) => r.id} caption="Test rows" pageSize={2} />);
+    render(
+      <DataTable
+        columns={columns}
+        rows={rows}
+        getRowKey={(r) => r.id}
+        caption="Test rows"
+        pageSize={2}
+      />,
+    );
 
     expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
     expect(within(getTable()).getAllByRole("row")).toHaveLength(3); // header + 2 rows
@@ -112,7 +152,7 @@ describe("DataTable", () => {
         getRowKey={(r) => r.id}
         caption="Test rows"
         enableColumnVisibility
-      />
+      />,
     );
 
     expect(within(getTable()).getByText("Score")).toBeInTheDocument();
@@ -138,17 +178,24 @@ describe("DataTable", () => {
         caption="Test rows"
         virtualizeThreshold={5}
         rowHeight={32}
-      />
+      />,
     );
 
-    expect(screen.getByRole("table", { name: /test rows/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("table", { name: /test rows/i }),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole("columnheader")).toHaveLength(2);
     expect(screen.getAllByRole("row").length).toBeGreaterThan(0);
   });
 
   it("matches the snapshot for a basic render", () => {
     const { asFragment } = render(
-      <DataTable columns={columns} rows={rows} getRowKey={(r) => r.id} caption="Test rows" />
+      <DataTable
+        columns={columns}
+        rows={rows}
+        getRowKey={(r) => r.id}
+        caption="Test rows"
+      />,
     );
     expect(asFragment()).toMatchSnapshot();
   });

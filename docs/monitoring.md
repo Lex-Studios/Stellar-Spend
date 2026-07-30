@@ -22,39 +22,40 @@ This guide explains how to monitor Stellar-Spend in production, interpret metric
 
 Stellar-Spend uses a layered observability stack:
 
-| Layer | Tool | Purpose |
-|---|---|---|
-| Error tracking | Sentry | Capture and alert on exceptions |
-| Structured logging | Custom logger (`src/lib/logger.ts`) | Searchable JSON logs shipped to CloudWatch |
-| Application metrics | `src/lib/performance.ts` | In-process API and DB timing, Web Vitals |
-| Uptime and alerting | `src/lib/monitoring.ts` | Uptime checks, alert threshold evaluation |
-| User journey tracking | `src/lib/funnel.ts` + `src/hooks/useFunnelTracking.ts` | Conversion funnel visibility |
+| Layer                 | Tool                                                   | Purpose                                    |
+| --------------------- | ------------------------------------------------------ | ------------------------------------------ |
+| Error tracking        | Sentry                                                 | Capture and alert on exceptions            |
+| Structured logging    | Custom logger (`src/lib/logger.ts`)                    | Searchable JSON logs shipped to CloudWatch |
+| Application metrics   | `src/lib/performance.ts`                               | In-process API and DB timing, Web Vitals   |
+| Uptime and alerting   | `src/lib/monitoring.ts`                                | Uptime checks, alert threshold evaluation  |
+| User journey tracking | `src/lib/funnel.ts` + `src/hooks/useFunnelTracking.ts` | Conversion funnel visibility               |
 
 ---
 
 ## Sentry Integration
 
 Sentry is the primary error tracking and alerting tool. Configuration lives in:
+
 - **Client:** `sentry.client.config.ts`
 - **Server:** `sentry.server.config.ts`
 - **Edge:** `sentry.edge.config.ts`
 
 ### Environment Variables
 
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_SENTRY_DSN` | Sentry project DSN (client + server) |
-| `SENTRY_DSN` | Sentry project DSN (server-only) |
-| `NEXT_PUBLIC_SENTRY_RELEASE` | Release identifier (e.g., git SHA) — set during CI |
-| `NEXT_PUBLIC_ENV` | Environment name: `production`, `staging`, `development` |
-| `SENTRY_AUTH_TOKEN` | Used by CI to upload source maps |
+| Variable                     | Description                                              |
+| ---------------------------- | -------------------------------------------------------- |
+| `NEXT_PUBLIC_SENTRY_DSN`     | Sentry project DSN (client + server)                     |
+| `SENTRY_DSN`                 | Sentry project DSN (server-only)                         |
+| `NEXT_PUBLIC_SENTRY_RELEASE` | Release identifier (e.g., git SHA) — set during CI       |
+| `NEXT_PUBLIC_ENV`            | Environment name: `production`, `staging`, `development` |
+| `SENTRY_AUTH_TOKEN`          | Used by CI to upload source maps                         |
 
 ### Sampling Rates
 
 | Environment | Traces Sample Rate | Session Replay (normal) | Session Replay (on error) |
-|---|---|---|---|
-| Production | 10% | 1% | 100% |
-| Development | 100% | 1% | 100% |
+| ----------- | ------------------ | ----------------------- | ------------------------- |
+| Production  | 10%                | 1%                      | 100%                      |
+| Development | 100%               | 1%                      | 100%                      |
 
 Adjust `tracesSampleRate` in production if transaction volume is high and Sentry costs become a concern.
 
@@ -86,7 +87,7 @@ Both client and server configs redact sensitive fields before sending events to 
 Use the helpers in `src/lib/monitoring.ts`:
 
 ```typescript
-import { captureTransactionError, captureQueueAlert } from '@/lib/monitoring';
+import { captureTransactionError, captureQueueAlert } from "@/lib/monitoring";
 
 // Capture an exception with transaction context
 captureTransactionError(error, {
@@ -96,7 +97,7 @@ captureTransactionError(error, {
 });
 
 // Capture a queue depth warning
-captureQueueAlert('Queue depth exceeded warning threshold', {
+captureQueueAlert("Queue depth exceeded warning threshold", {
   depth: queue.length,
   threshold: ALERT_THRESHOLDS.queueDepthWarn,
 });
@@ -110,9 +111,9 @@ Session replay is enabled in the client config using:
 
 ```typescript
 Sentry.replayIntegration({
-  maskAllText: true,   // Masks all text content in replays
+  maskAllText: true, // Masks all text content in replays
   blockAllMedia: true, // Prevents images/video from being captured
-})
+});
 ```
 
 These privacy settings ensure user data is not captured in replays. Do not disable them in production.
@@ -148,16 +149,17 @@ All logs are emitted as JSON with consistent fields:
 
 ### Log Levels
 
-| Level | Usage |
-|---|---|
+| Level   | Usage                                                              |
+| ------- | ------------------------------------------------------------------ |
 | `error` | Unhandled exceptions, failed transactions, external service errors |
-| `warn` | Rate limit hits, validation failures, retried operations |
-| `info` | Normal application events (session creation, transaction creation) |
-| `debug` | Detailed trace data (development only — disabled in production) |
+| `warn`  | Rate limit hits, validation failures, retried operations           |
+| `info`  | Normal application events (session creation, transaction creation) |
+| `debug` | Detailed trace data (development only — disabled in production)    |
 
 ### CloudWatch Setup (AWS)
 
 1. Configure your Next.js deployment to forward `stdout` / `stderr` to a CloudWatch log group. On ECS/Fargate this happens automatically via the `awslogs` log driver:
+
    ```json
    {
      "logDriver": "awslogs",
@@ -174,6 +176,7 @@ All logs are emitted as JSON with consistent fields:
 ### Useful CloudWatch Log Insights Queries
 
 **Count errors in the last hour:**
+
 ```
 fields @timestamp, level, message
 | filter level = "error"
@@ -182,6 +185,7 @@ fields @timestamp, level, message
 ```
 
 **Failed transactions in the last 24 hours:**
+
 ```
 fields @timestamp, message, transactionId, userAddress
 | filter message like "Transaction failed"
@@ -190,6 +194,7 @@ fields @timestamp, message, transactionId, userAddress
 ```
 
 **Session creation rate:**
+
 ```
 fields @timestamp, message
 | filter message like "Session created"
@@ -200,13 +205,13 @@ fields @timestamp, message
 
 Create CloudWatch metric filters for the following log patterns to drive dashboard widgets and alarms:
 
-| Metric Name | Log Filter Pattern | Unit |
-|---|---|---|
-| `ErrorCount` | `{ $.level = "error" }` | Count |
-| `SessionCreationRate` | `{ $.message = "Session created" }` | Count |
-| `TransactionFailures` | `{ $.message = "Transaction failed" }` | Count |
-| `RateLimitHits` | `{ $.message = "Rate limit exceeded" }` | Count |
-| `IPViolations` | `{ $.message = "IP violation" }` | Count |
+| Metric Name           | Log Filter Pattern                      | Unit  |
+| --------------------- | --------------------------------------- | ----- |
+| `ErrorCount`          | `{ $.level = "error" }`                 | Count |
+| `SessionCreationRate` | `{ $.message = "Session created" }`     | Count |
+| `TransactionFailures` | `{ $.message = "Transaction failed" }`  | Count |
+| `RateLimitHits`       | `{ $.message = "Rate limit exceeded" }` | Count |
+| `IPViolations`        | `{ $.message = "IP violation" }`        | Count |
 
 ---
 
@@ -223,12 +228,13 @@ All metrics are stored in module-level circular buffers that survive across requ
 ### API Timing Metrics
 
 **Recording a timing:**
+
 ```typescript
-import { recordApiTiming } from '@/lib/performance';
+import { recordApiTiming } from "@/lib/performance";
 
 recordApiTiming({
-  route: '/api/transactions',
-  method: 'POST',
+  route: "/api/transactions",
+  method: "POST",
   durationMs: 245,
   statusCode: 200,
   timestamp: Date.now(),
@@ -236,8 +242,9 @@ recordApiTiming({
 ```
 
 **Retrieving metrics:**
+
 ```typescript
-import { getApiMetrics } from '@/lib/performance';
+import { getApiMetrics } from "@/lib/performance";
 
 const metrics = getApiMetrics();
 // metrics.overall       → { p50, p95, p99, avg, min, max, count }
@@ -249,19 +256,21 @@ const metrics = getApiMetrics();
 ### Database Query Metrics
 
 **Recording a query:**
+
 ```typescript
-import { recordDbQuery } from '@/lib/performance';
+import { recordDbQuery } from "@/lib/performance";
 
 recordDbQuery({
-  query: 'SELECT * FROM transactions WHERE user_address = $1',
+  query: "SELECT * FROM transactions WHERE user_address = $1",
   durationMs: 12,
   timestamp: Date.now(),
 });
 ```
 
 **Retrieving metrics:**
+
 ```typescript
-import { getDbMetrics } from '@/lib/performance';
+import { getDbMetrics } from "@/lib/performance";
 
 const metrics = getDbMetrics();
 // metrics.overall → { p50, p95, p99, avg, min, max, count }
@@ -272,16 +281,17 @@ const metrics = getDbMetrics();
 
 Thresholds are defined in `PERF_THRESHOLDS`:
 
-| Threshold | Value | Meaning |
-|---|---|---|
-| `apiP95WarnMs` | 2,000 ms | API p95 latency warning level |
+| Threshold          | Value    | Meaning                        |
+| ------------------ | -------- | ------------------------------ |
+| `apiP95WarnMs`     | 2,000 ms | API p95 latency warning level  |
 | `apiP95CriticalMs` | 5,000 ms | API p95 latency critical level |
-| `dbP95WarnMs` | 500 ms | DB p95 latency warning level |
-| `dbP95CriticalMs` | 2,000 ms | DB p95 latency critical level |
+| `dbP95WarnMs`      | 500 ms   | DB p95 latency warning level   |
+| `dbP95CriticalMs`  | 2,000 ms | DB p95 latency critical level  |
 
 **Checking alert state:**
+
 ```typescript
-import { getPerfAlerts } from '@/lib/performance';
+import { getPerfAlerts } from "@/lib/performance";
 
 const alerts = getPerfAlerts();
 // alerts.apiLatency → 'ok' | 'warn' | 'critical'
@@ -293,7 +303,11 @@ Expose these via the `/api/metrics` endpoint and poll from your monitoring syste
 ### Uptime Tracking
 
 ```typescript
-import { recordUptimeCheck, getUptimePercent, getAvgLatencyMs } from '@/lib/monitoring';
+import {
+  recordUptimeCheck,
+  getUptimePercent,
+  getAvgLatencyMs,
+} from "@/lib/monitoring";
 
 // Record a health check result
 recordUptimeCheck(true, 45); // ok=true, latencyMs=45
@@ -314,41 +328,49 @@ const avgLatency = getAvgLatencyMs(); // e.g., 52
 Create a dashboard with the following panels. The exact tool (CloudWatch, Datadog, Grafana) is deployment-dependent.
 
 #### Panel 1: Uptime & Availability
+
 - **Metric:** `uptimePercent` from `getDashboardMetrics()`
 - **Visualisation:** Single stat with thresholds (green ≥99%, yellow ≥95%, red <95%)
 - **Refresh:** 1 minute
 
 #### Panel 2: API Latency Percentiles
+
 - **Metrics:** p50, p95, p99 from `getApiMetrics().overall`
 - **Visualisation:** Time-series line chart
 - **Alert lines:** Warn at 2,000 ms, critical at 5,000 ms (p95)
 
 #### Panel 3: Error Rate
+
 - **Metric:** `errorRate` from `getApiMetrics()` (multiply by 100 for percentage)
 - **Visualisation:** Time-series bar chart
 - **Alert:** > 5% error rate triggers P2 alert
 
 #### Panel 4: Database Query Latency
+
 - **Metrics:** p50, p95, p99 from `getDbMetrics().overall`
 - **Visualisation:** Time-series line chart
 - **Alert lines:** Warn at 500 ms, critical at 2,000 ms (p95)
 
 #### Panel 5: Transaction Volume
+
 - **Metric:** Transaction creation count from CloudWatch log filter
 - **Visualisation:** Time-series bar chart
 - **Breakdown:** Success vs. failure
 
 #### Panel 6: Queue Depth
+
 - **Metric:** Priority queue depth (from `captureQueueAlert` events in Sentry)
 - **Visualisation:** Time-series gauge
 - **Alert lines:** Warn at 50, critical at 200
 
 #### Panel 7: Funnel Conversion
+
 - **Metric:** `getFunnelCounts()` step counts
 - **Visualisation:** Funnel chart or bar chart
 - **Steps:** `wallet_connect` → `amount_enter` → `beneficiary_enter` → `quote_view` → `transaction_submit` → `transaction_complete`
 
 #### Panel 8: Web Vitals
+
 - **Metrics:** LCP p75, FID p75, CLS p75 from `getVitalsMetrics()`
 - **Visualisation:** Single stats with Core Web Vitals thresholds (green/yellow/red)
 
@@ -358,14 +380,19 @@ Expose metrics for external scraping by creating a protected API route:
 
 ```typescript
 // src/app/api/metrics/route.ts
-import { getApiMetrics, getDbMetrics, getVitalsMetrics, getFunnelCounts } from '@/lib/performance';
-import { getDashboardMetrics, getPerfAlerts } from '@/lib/monitoring';
+import {
+  getApiMetrics,
+  getDbMetrics,
+  getVitalsMetrics,
+  getFunnelCounts,
+} from "@/lib/performance";
+import { getDashboardMetrics, getPerfAlerts } from "@/lib/monitoring";
 
 export async function GET(request: Request) {
   // Protect with admin token
-  const auth = request.headers.get('Authorization');
+  const auth = request.headers.get("Authorization");
   if (auth !== `Bearer ${process.env.API_KEY_ADMIN_TOKEN}`) {
-    return new Response('Unauthorized', { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
 
   return Response.json({
@@ -387,21 +414,21 @@ export async function GET(request: Request) {
 
 Alert thresholds are defined in `src/lib/monitoring.ts` (`ALERT_THRESHOLDS`):
 
-| Alert | Threshold | Severity | Description | Runbook |
-|---|---|---|---|---|
-| Error rate critical | ≥ 10 errors/min | P1 | Immediate action required | [RB-004](./runbooks/high-error-rate.md) |
-| Error rate warning | ≥ 3 errors/min | P2 | Investigate within 30 minutes | [RB-004](./runbooks/high-error-rate.md) |
-| API latency warning | p95 ≥ 3,000 ms | P2 | User experience degraded | [RB-004](./runbooks/high-error-rate.md) |
-| API latency critical | p95 ≥ 8,000 ms | P1 | Users experiencing failures | [RB-004](./runbooks/high-error-rate.md) |
-| Queue depth warning | ≥ 50 items | P2 | Processing backlog building | [RB-004](./runbooks/high-error-rate.md) |
-| Queue depth critical | ≥ 200 items | P1 | Severe processing backlog | [RB-004](./runbooks/high-error-rate.md) |
-| Uptime below 99% | < 99% over last 100 checks | P2 | Availability SLA at risk | [RB-004](./runbooks/high-error-rate.md) |
-| Uptime below 95% | < 95% over last 100 checks | P1 | Availability SLA breached | [RB-004](./runbooks/high-error-rate.md) |
-| Bridge stuck | Pending > 20 min | P1 | Funds in-flight | [RB-001](./runbooks/stuck-bridge.md) |
-| Provider unavailable | 5 consecutive failures | P1 | No new transactions | [RB-002](./runbooks/provider-outage.md) |
-| DB unhealthy | RDS health check failing | P1 | Full outage | [RB-003](./runbooks/database-failover.md) |
-| DB replication lag | Replica lag > 5 min | P1 | RPO at risk | [RB-003](./runbooks/database-failover.md) |
-| Backup failed | Scheduled job failed | P2 | Recovery point degraded | [RB-005](./runbooks/backup-failure.md) |
+| Alert                | Threshold                  | Severity | Description                   | Runbook                                   |
+| -------------------- | -------------------------- | -------- | ----------------------------- | ----------------------------------------- |
+| Error rate critical  | ≥ 10 errors/min            | P1       | Immediate action required     | [RB-004](./runbooks/high-error-rate.md)   |
+| Error rate warning   | ≥ 3 errors/min             | P2       | Investigate within 30 minutes | [RB-004](./runbooks/high-error-rate.md)   |
+| API latency warning  | p95 ≥ 3,000 ms             | P2       | User experience degraded      | [RB-004](./runbooks/high-error-rate.md)   |
+| API latency critical | p95 ≥ 8,000 ms             | P1       | Users experiencing failures   | [RB-004](./runbooks/high-error-rate.md)   |
+| Queue depth warning  | ≥ 50 items                 | P2       | Processing backlog building   | [RB-004](./runbooks/high-error-rate.md)   |
+| Queue depth critical | ≥ 200 items                | P1       | Severe processing backlog     | [RB-004](./runbooks/high-error-rate.md)   |
+| Uptime below 99%     | < 99% over last 100 checks | P2       | Availability SLA at risk      | [RB-004](./runbooks/high-error-rate.md)   |
+| Uptime below 95%     | < 95% over last 100 checks | P1       | Availability SLA breached     | [RB-004](./runbooks/high-error-rate.md)   |
+| Bridge stuck         | Pending > 20 min           | P1       | Funds in-flight               | [RB-001](./runbooks/stuck-bridge.md)      |
+| Provider unavailable | 5 consecutive failures     | P1       | No new transactions           | [RB-002](./runbooks/provider-outage.md)   |
+| DB unhealthy         | RDS health check failing   | P1       | Full outage                   | [RB-003](./runbooks/database-failover.md) |
+| DB replication lag   | Replica lag > 5 min        | P1       | RPO at risk                   | [RB-003](./runbooks/database-failover.md) |
+| Backup failed        | Scheduled job failed       | P2       | Recovery point degraded       | [RB-005](./runbooks/backup-failure.md)    |
 
 ## Notifications & Integrations
 
@@ -441,31 +468,32 @@ terraform apply plan.tfplan
 
 Keep your webhook/URL values secret and store them in a secure variable store or CI secrets.
 
-
 ### Performance Thresholds (`performance.ts`)
 
-| Alert | Threshold | Severity |
-|---|---|---|
-| API p95 latency | ≥ 2,000 ms | Warning |
+| Alert           | Threshold  | Severity |
+| --------------- | ---------- | -------- |
+| API p95 latency | ≥ 2,000 ms | Warning  |
 | API p95 latency | ≥ 5,000 ms | Critical |
-| DB p95 latency | ≥ 500 ms | Warning |
-| DB p95 latency | ≥ 2,000 ms | Critical |
+| DB p95 latency  | ≥ 500 ms   | Warning  |
+| DB p95 latency  | ≥ 2,000 ms | Critical |
 
 ### Escalation Policy
 
-| Severity | Response Time | Owner | Escalation |
-|---|---|---|---|
-| **P1 — Critical** | 15 minutes | On-call engineer | Escalate to engineering lead at 30 min |
-| **P2 — Warning** | 30 minutes | On-call engineer | Escalate to P1 if unresolved in 2 hours |
-| **P3 — Info** | Next business day | Development team | No escalation required |
+| Severity          | Response Time     | Owner            | Escalation                              |
+| ----------------- | ----------------- | ---------------- | --------------------------------------- |
+| **P1 — Critical** | 15 minutes        | On-call engineer | Escalate to engineering lead at 30 min  |
+| **P2 — Warning**  | 30 minutes        | On-call engineer | Escalate to P1 if unresolved in 2 hours |
+| **P3 — Info**     | Next business day | Development team | No escalation required                  |
 
 ### Setting Up Alerts
 
 **Sentry Alerts:**
+
 1. In Sentry: Project → Alerts → Create Alert Rule
 2. Configure: "When `event.level:error` count > 10 in 1 minute, notify #incidents Slack channel"
 
 **CloudWatch Alarms:**
+
 ```bash
 aws cloudwatch put-metric-alarm \
   --alarm-name "stellar-spend-error-rate-p1" \
@@ -488,27 +516,27 @@ Stellar-Spend tracks user journey steps through the offramp flow using funnel ev
 
 The conversion funnel covers these steps in order:
 
-| Step | Event Action | Description |
-|---|---|---|
-| 1 | `wallet_connect` | User connects their Stellar wallet |
-| 2 | `amount_enter` | User enters the send amount |
-| 3 | `currency_select` | User selects the destination currency |
-| 4 | `beneficiary_enter` | User enters beneficiary account details |
-| 5 | `quote_view` | User views the rate quote |
-| 6 | `transaction_submit` | User submits the transaction |
-| 7 | `bridge_initiated` | Bridge transfer is initiated |
-| 8 | `payout_initiated` | Paycrest payout order is created |
-| 9 | `transaction_complete` | Transaction reaches `completed` status |
+| Step | Event Action           | Description                             |
+| ---- | ---------------------- | --------------------------------------- |
+| 1    | `wallet_connect`       | User connects their Stellar wallet      |
+| 2    | `amount_enter`         | User enters the send amount             |
+| 3    | `currency_select`      | User selects the destination currency   |
+| 4    | `beneficiary_enter`    | User enters beneficiary account details |
+| 5    | `quote_view`           | User views the rate quote               |
+| 6    | `transaction_submit`   | User submits the transaction            |
+| 7    | `bridge_initiated`     | Bridge transfer is initiated            |
+| 8    | `payout_initiated`     | Paycrest payout order is created        |
+| 9    | `transaction_complete` | Transaction reaches `completed` status  |
 
 ### Recording Events
 
 Events are recorded automatically via the `useFunnelTracking` hook. To record a server-side funnel event:
 
 ```typescript
-import { recordFunnelEvent } from '@/lib/performance';
+import { recordFunnelEvent } from "@/lib/performance";
 
 recordFunnelEvent({
-  action: 'transaction_complete',
+  action: "transaction_complete",
   sessionId: session.id,
   timestamp: Date.now(),
 });
@@ -517,7 +545,7 @@ recordFunnelEvent({
 ### Retrieving Funnel Counts
 
 ```typescript
-import { getFunnelCounts } from '@/lib/performance';
+import { getFunnelCounts } from "@/lib/performance";
 
 const counts = getFunnelCounts();
 // {
@@ -532,12 +560,14 @@ const counts = getFunnelCounts();
 ### Interpreting Funnel Metrics
 
 **Conversion rate calculation:**
+
 ```
 Overall Conversion Rate = (transaction_complete / wallet_connect) × 100
 Step Drop-off Rate = ((step_n - step_n+1) / step_n) × 100
 ```
 
 **Key drop-off points to watch:**
+
 - `quote_view → transaction_submit`: High drop-off here may indicate the rate/fee is too high
 - `transaction_submit → payout_initiated`: Drop-off here indicates technical errors during submission
 - `payout_initiated → transaction_complete`: Drop-off here indicates Paycrest payout failures
@@ -552,19 +582,19 @@ Web Vitals are collected via the `useWebVitals` hook (`src/hooks/useWebVitals.ts
 
 ### Collected Metrics
 
-| Metric | Full Name | Good | Needs Improvement | Poor |
-|---|---|---|---|---|
-| `LCP` | Largest Contentful Paint | ≤ 2.5s | ≤ 4.0s | > 4.0s |
-| `FID` | First Input Delay | ≤ 100ms | ≤ 300ms | > 300ms |
-| `CLS` | Cumulative Layout Shift | ≤ 0.1 | ≤ 0.25 | > 0.25 |
-| `FCP` | First Contentful Paint | ≤ 1.8s | ≤ 3.0s | > 3.0s |
-| `TTFB` | Time to First Byte | ≤ 800ms | ≤ 1.8s | > 1.8s |
-| `INP` | Interaction to Next Paint | ≤ 200ms | ≤ 500ms | > 500ms |
+| Metric | Full Name                 | Good    | Needs Improvement | Poor    |
+| ------ | ------------------------- | ------- | ----------------- | ------- |
+| `LCP`  | Largest Contentful Paint  | ≤ 2.5s  | ≤ 4.0s            | > 4.0s  |
+| `FID`  | First Input Delay         | ≤ 100ms | ≤ 300ms           | > 300ms |
+| `CLS`  | Cumulative Layout Shift   | ≤ 0.1   | ≤ 0.25            | > 0.25  |
+| `FCP`  | First Contentful Paint    | ≤ 1.8s  | ≤ 3.0s            | > 3.0s  |
+| `TTFB` | Time to First Byte        | ≤ 800ms | ≤ 1.8s            | > 1.8s  |
+| `INP`  | Interaction to Next Paint | ≤ 200ms | ≤ 500ms           | > 500ms |
 
 ### Retrieving Web Vitals Data
 
 ```typescript
-import { getVitalsMetrics } from '@/lib/performance';
+import { getVitalsMetrics } from "@/lib/performance";
 
 const vitals = getVitalsMetrics();
 // vitals.byName = {
@@ -583,11 +613,11 @@ Aim for all Core Web Vitals to be in the **"Good"** range at the 75th percentile
 The `useWebVitals` hook forwards metrics to both the in-process store and optionally to an analytics endpoint. To also send to Google Analytics 4:
 
 ```typescript
-import { useWebVitals } from '@/hooks/useWebVitals';
+import { useWebVitals } from "@/hooks/useWebVitals";
 
 useWebVitals(({ name, value, rating }) => {
-  gtag('event', name, {
-    value: Math.round(name === 'CLS' ? value * 1000 : value),
+  gtag("event", name, {
+    value: Math.round(name === "CLS" ? value * 1000 : value),
     metric_rating: rating,
   });
 });
@@ -600,6 +630,7 @@ useWebVitals(({ name, value, rating }) => {
 ### High API Latency (p95 > 2,000 ms)
 
 **Diagnosis steps:**
+
 1. Check `getApiMetrics().byRoute` to identify which routes are slow
 2. Check `getDbMetrics().slowest` to see if slow DB queries are the cause
 3. Review Sentry Performance traces for the slow routes
@@ -607,24 +638,26 @@ useWebVitals(({ name, value, rating }) => {
 
 **Common causes and fixes:**
 
-| Symptom | Likely Cause | Fix |
-|---|---|---|
-| All routes slow equally | Database overloaded or connection pool exhausted | Increase pool size; optimise slow queries |
-| Specific route slow | Missing index on a query in that route | Add index (see [Database Schema](./database-schema.md)) |
-| Intermittent spikes | External service (Paycrest/Allbridge) slow | Implement circuit breaker; add retry with backoff |
-| Increasing over time | Memory pressure in Node.js process | Check for memory leaks; increase container memory |
+| Symptom                 | Likely Cause                                     | Fix                                                     |
+| ----------------------- | ------------------------------------------------ | ------------------------------------------------------- |
+| All routes slow equally | Database overloaded or connection pool exhausted | Increase pool size; optimise slow queries               |
+| Specific route slow     | Missing index on a query in that route           | Add index (see [Database Schema](./database-schema.md)) |
+| Intermittent spikes     | External service (Paycrest/Allbridge) slow       | Implement circuit breaker; add retry with backoff       |
+| Increasing over time    | Memory pressure in Node.js process               | Check for memory leaks; increase container memory       |
 
 ---
 
 ### High Error Rate (> 5%)
 
 **Diagnosis steps:**
+
 1. Open Sentry Issues dashboard, filter to `environment:production` and last 1 hour
 2. Group errors by fingerprint — identify the dominant error type
 3. Check `getApiMetrics().errorRate` via the `/api/metrics` endpoint
 4. Review CloudWatch logs with `filter level = "error"`
 
 **Common causes:**
+
 - Database connection failures → check `DATABASE_URL` and PostgreSQL health
 - External API timeouts → check Paycrest/Allbridge/Stellar status pages
 - Schema mismatch → check if latest migrations have been applied
@@ -635,6 +668,7 @@ useWebVitals(({ name, value, rating }) => {
 ### Slow Database Queries
 
 **Diagnosis steps:**
+
 1. Check `getDbMetrics().slowest` for the 10 slowest recent queries
 2. Run `EXPLAIN ANALYSE` on the slow query in a read replica
 3. Check PostgreSQL `pg_stat_statements` for query statistics:
@@ -646,6 +680,7 @@ useWebVitals(({ name, value, rating }) => {
    ```
 
 **Common fixes:**
+
 - Add the missing index identified by `EXPLAIN ANALYSE`
 - Rewrite the query to use existing indexes (avoid `LIKE '%search%'` on unindexed columns)
 - Increase `work_mem` for sort-heavy queries
@@ -656,12 +691,14 @@ useWebVitals(({ name, value, rating }) => {
 ### Funnel Drop-off Spike
 
 **Diagnosis steps:**
+
 1. Compare `getFunnelCounts()` for the current period with the previous period
 2. Identify which step has the largest unexpected drop-off
 3. Check for errors at that step in Sentry and CloudWatch logs
 4. Test the flow manually in a staging environment
 
 **Common causes:**
+
 - New validation error introduced in a recent deployment
 - External service (Paycrest) rejecting more orders than usual
 - UI bug preventing users from completing a form step
@@ -671,18 +708,19 @@ useWebVitals(({ name, value, rating }) => {
 ### Web Vitals Degradation
 
 **Diagnosis steps:**
+
 1. Check `getVitalsMetrics()` for the affected metric
 2. Use Sentry Performance or Lighthouse CI for page-level analysis
 3. Check if a recent deploy introduced a large JavaScript bundle or new above-the-fold resource
 
 **Common fixes:**
 
-| Metric | Fix |
-|---|---|
-| LCP degraded | Lazy-load below-the-fold images; preload the LCP image; use CDN |
-| CLS increased | Set explicit `width` and `height` on images; avoid inserting content above the fold |
-| FID/INP increased | Move heavy JavaScript off the main thread; defer non-critical scripts |
-| TTFB increased | Enable Vercel Edge caching; move to a region closer to your users |
+| Metric            | Fix                                                                                 |
+| ----------------- | ----------------------------------------------------------------------------------- |
+| LCP degraded      | Lazy-load below-the-fold images; preload the LCP image; use CDN                     |
+| CLS increased     | Set explicit `width` and `height` on images; avoid inserting content above the fold |
+| FID/INP increased | Move heavy JavaScript off the main thread; defer non-critical scripts               |
+| TTFB increased    | Enable Vercel Edge caching; move to a region closer to your users                   |
 
 ---
 

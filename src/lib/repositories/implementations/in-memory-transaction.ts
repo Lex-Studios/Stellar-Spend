@@ -1,4 +1,4 @@
-import type { TransactionRepository, Transaction } from '../transaction';
+import type { TransactionRepository, Transaction } from "../transaction";
 
 export class InMemoryTransactionRepository implements TransactionRepository {
   private transactions: Map<string, Transaction> = new Map();
@@ -28,7 +28,7 @@ export class InMemoryTransactionRepository implements TransactionRepository {
 
   async getByUser(userAddress: string): Promise<Transaction[]> {
     return Array.from(this.transactions.values()).filter(
-      (t) => t.userAddress === userAddress
+      (t) => t.userAddress === userAddress,
     );
   }
 

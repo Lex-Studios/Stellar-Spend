@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface ScheduledTransaction {
   id: string;
@@ -16,9 +16,9 @@ interface SchedulingUIProps {
 
 export function SchedulingUI({ userId }: SchedulingUIProps) {
   const [scheduled, setScheduled] = useState<ScheduledTransaction[]>([]);
-  const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState('NGN');
-  const [scheduledFor, setScheduledFor] = useState('');
+  const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState("NGN");
+  const [scheduledFor, setScheduledFor] = useState("");
 
   useEffect(() => {
     fetchScheduled();
@@ -30,7 +30,7 @@ export function SchedulingUI({ userId }: SchedulingUIProps) {
       const data = await res.json();
       setScheduled(data.scheduled || []);
     } catch (error) {
-      console.error('Failed to fetch scheduled transactions', error);
+      console.error("Failed to fetch scheduled transactions", error);
     }
   };
 
@@ -38,36 +38,36 @@ export function SchedulingUI({ userId }: SchedulingUIProps) {
     if (!amount || !scheduledFor) return;
 
     try {
-      const res = await fetch('/api/offramp/schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/offramp/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId,
           amount: parseFloat(amount),
           currency,
           scheduledFor,
-          action: 'schedule',
+          action: "schedule",
         }),
       });
       const data = await res.json();
       setScheduled([...scheduled, data.scheduled]);
-      setAmount('');
-      setScheduledFor('');
+      setAmount("");
+      setScheduledFor("");
     } catch (error) {
-      console.error('Failed to schedule transaction', error);
+      console.error("Failed to schedule transaction", error);
     }
   };
 
   const handleCancel = async (id: string) => {
     try {
-      await fetch('/api/offramp/schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scheduledId: id, action: 'cancel' }),
+      await fetch("/api/offramp/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ scheduledId: id, action: "cancel" }),
       });
       setScheduled(scheduled.filter((s) => s.id !== id));
     } catch (error) {
-      console.error('Failed to cancel scheduled transaction', error);
+      console.error("Failed to cancel scheduled transaction", error);
     }
   };
 
@@ -122,7 +122,7 @@ export function SchedulingUI({ userId }: SchedulingUIProps) {
                   {new Date(tx.scheduledFor).toLocaleString()}
                 </p>
               </div>
-              {tx.status === 'scheduled' && (
+              {tx.status === "scheduled" && (
                 <button
                   onClick={() => handleCancel(tx.id)}
                   className="text-red-500 hover:text-red-700 text-sm"

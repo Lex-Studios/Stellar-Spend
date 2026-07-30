@@ -1,9 +1,13 @@
-import { NextResponse } from 'next/server';
-import { ErrorHandler } from '@/lib/error-handler';
-import { processRefund, processEligibleRefunds, isRefundEligible } from '@/lib/refund/refund-service';
-import { dal } from '@/lib/db/dal';
-import { withIdempotency } from '@/lib/idempotency';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import { ErrorHandler } from "@/lib/error-handler";
+import {
+  processRefund,
+  processEligibleRefunds,
+  isRefundEligible,
+} from "@/lib/refund/refund-service";
+import { dal } from "@/lib/db/dal";
+import { withIdempotency } from "@/lib/idempotency";
+import type { NextRequest } from "next/server";
 
 export const maxDuration = 30;
 
@@ -17,9 +21,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ data: results });
       }
 
-      const { transactionId, reason = 'manual', partial = false } = body;
-      if (!transactionId || typeof transactionId !== 'string') {
-        return ErrorHandler.validation('transactionId is required');
+      const { transactionId, reason = "manual", partial = false } = body;
+      if (!transactionId || typeof transactionId !== "string") {
+        return ErrorHandler.validation("transactionId is required");
       }
 
       const result = await processRefund(transactionId, reason, partial);
@@ -36,15 +40,25 @@ export async function POST(request: NextRequest) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const transactionId = searchParams.get('transactionId');
+    const transactionId = searchParams.get("transactionId");
     if (!transactionId) {
-      return ErrorHandler.validation('transactionId query param is required');
+      return ErrorHandler.validation("transactionId query param is required");
     }
     const tx = await dal.getById(transactionId);
     if (!tx) {
-      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Transaction not found" },
+        { status: 404 },
+      );
     }
-    return NextResponse.json({ data: { transactionId, eligible: isRefundEligible(tx), status: tx.status, payoutStatus: tx.payoutStatus } });
+    return NextResponse.json({
+      data: {
+        transactionId,
+        eligible: isRefundEligible(tx),
+        status: tx.status,
+        payoutStatus: tx.payoutStatus,
+      },
+    });
   } catch (err) {
     return ErrorHandler.handle(err);
   }

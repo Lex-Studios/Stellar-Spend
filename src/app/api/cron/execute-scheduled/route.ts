@@ -1,13 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getPendingScheduledTransactions, executeScheduledTransaction } from '@/lib/services/scheduling.service';
-import { logger } from '@/lib/logger';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getPendingScheduledTransactions,
+  executeScheduledTransaction,
+} from "@/lib/services/scheduling.service";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
     // Verify cron secret
-    const secret = req.headers.get('x-cron-secret');
+    const secret = req.headers.get("x-cron-secret");
     if (secret !== process.env.CRON_SECRET) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const pending = await getPendingScheduledTransactions();
@@ -17,10 +20,13 @@ export async function POST(req: NextRequest) {
       try {
         // Execute transaction logic here
         // For now, just mark as executed
-        await executeScheduledTransaction(scheduled.id, '');
+        await executeScheduledTransaction(scheduled.id, "");
         logger.info(`Executed scheduled transaction ${scheduled.id}`);
       } catch (error) {
-        logger.error(`Failed to execute scheduled transaction ${scheduled.id}`, { error: String(error) });
+        logger.error(
+          `Failed to execute scheduled transaction ${scheduled.id}`,
+          { error: String(error) },
+        );
       }
     }
 
@@ -29,10 +35,7 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    logger.error('Cron job failed', { error: String(error) });
-    return NextResponse.json(
-      { error: 'Cron job failed' },
-      { status: 500 }
-    );
+    logger.error("Cron job failed", { error: String(error) });
+    return NextResponse.json({ error: "Cron job failed" }, { status: 500 });
   }
 }

@@ -10,8 +10,12 @@ vi.mock("@stellar/freighter-api", () => ({
   isConnected: vi.fn().mockResolvedValue({ isConnected: false }),
   getAddress: vi.fn().mockResolvedValue({ address: "" }),
   requestAccess: vi.fn().mockResolvedValue({ address: "" }),
-  signTransaction: vi.fn().mockResolvedValue({ signedTxXdr: "", signerAddress: "" }),
-  getNetworkDetails: vi.fn().mockResolvedValue({ networkPassphrase: "Public Global Stellar Network ; September 2015" }),
+  signTransaction: vi
+    .fn()
+    .mockResolvedValue({ signedTxXdr: "", signerAddress: "" }),
+  getNetworkDetails: vi.fn().mockResolvedValue({
+    networkPassphrase: "Public Global Stellar Network ; September 2015",
+  }),
 }));
 
 const VALID_KEY = "GBLOBSTR1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD";
@@ -20,7 +24,7 @@ const SIGNED_XDR = "lobstr-signed-xdr";
 // ── Window helpers ─────────────────────────────────────────────────────────────
 
 function setLobstrWindow(variant: "lobstr" | "stellar" | "both" | "none") {
-  const w = global.window as any ?? {};
+  const w = (global.window as any) ?? {};
 
   // Clear previous state
   delete w.lobstr;
@@ -35,7 +39,11 @@ function setLobstrWindow(variant: "lobstr" | "stellar" | "both" | "none") {
     w.lobstr = provider;
   }
   if (variant === "stellar" || variant === "both") {
-    w.stellar = { isLobstr: true, connect: provider.connect, signTransaction: provider.signTransaction };
+    w.stellar = {
+      isLobstr: true,
+      connect: provider.connect,
+      signTransaction: provider.signTransaction,
+    };
   }
 
   global.window = w;
@@ -43,7 +51,7 @@ function setLobstrWindow(variant: "lobstr" | "stellar" | "both" | "none") {
 }
 
 function clearLobstrWindow() {
-  const w = global.window as any ?? {};
+  const w = (global.window as any) ?? {};
   delete w.lobstr;
   if (w.stellar) delete w.stellar;
   global.window = w;
@@ -171,14 +179,14 @@ describe("connectLobstr — error paths", () => {
   it("throws user-friendly error when no provider is present", async () => {
     clearLobstrWindow();
     await expect(new StellarWalletAdapter().connectLobstr()).rejects.toThrow(
-      /Lobstr wallet is not installed or unavailable/
+      /Lobstr wallet is not installed or unavailable/,
     );
   });
 
   it("throws user-friendly error when provider interface is invalid", async () => {
     (global.window as any).lobstr = { connect: vi.fn() }; // missing signTransaction
     await expect(new StellarWalletAdapter().connectLobstr()).rejects.toThrow(
-      /Lobstr wallet is not installed or unavailable/
+      /Lobstr wallet is not installed or unavailable/,
     );
   });
 
@@ -189,7 +197,7 @@ describe("connectLobstr — error paths", () => {
       signTransaction: vi.fn(),
     };
     await expect(new StellarWalletAdapter().connectLobstr()).rejects.toThrow(
-      /declined/i
+      /declined/i,
     );
   });
 
@@ -200,7 +208,7 @@ describe("connectLobstr — error paths", () => {
       signTransaction: vi.fn(),
     };
     await expect(new StellarWalletAdapter().connectLobstr()).rejects.toThrow(
-      /declined/i
+      /declined/i,
     );
   });
 
@@ -211,7 +219,7 @@ describe("connectLobstr — error paths", () => {
       signTransaction: vi.fn(),
     };
     await expect(new StellarWalletAdapter().connectLobstr()).rejects.toThrow(
-      /unexpected response/i
+      /unexpected response/i,
     );
   });
 
@@ -222,7 +230,7 @@ describe("connectLobstr — error paths", () => {
       signTransaction: vi.fn(),
     };
     await expect(new StellarWalletAdapter().connectLobstr()).rejects.toThrow(
-      /valid public key/i
+      /valid public key/i,
     );
   });
 
@@ -233,7 +241,7 @@ describe("connectLobstr — error paths", () => {
       signTransaction: vi.fn(),
     };
     await expect(new StellarWalletAdapter().connectLobstr()).rejects.toThrow(
-      /valid public key/i
+      /valid public key/i,
     );
   });
 
@@ -244,7 +252,7 @@ describe("connectLobstr — error paths", () => {
       signTransaction: vi.fn(),
     };
     await expect(new StellarWalletAdapter().connectLobstr()).rejects.toThrow(
-      /valid public key/i
+      /valid public key/i,
     );
   });
 
@@ -255,7 +263,7 @@ describe("connectLobstr — error paths", () => {
       signTransaction: vi.fn(),
     };
     await expect(new StellarWalletAdapter().connectLobstr()).rejects.toThrow(
-      /valid public key/i
+      /valid public key/i,
     );
   });
 
@@ -266,7 +274,9 @@ describe("connectLobstr — error paths", () => {
       signTransaction: vi.fn(),
     };
     // Should throw an Error (not crash), message may pass through for unknown errors
-    await expect(new StellarWalletAdapter().connectLobstr()).rejects.toBeInstanceOf(Error);
+    await expect(
+      new StellarWalletAdapter().connectLobstr(),
+    ).rejects.toBeInstanceOf(Error);
   });
 });
 
@@ -353,7 +363,7 @@ describe("signTransaction — Lobstr", () => {
       expect.any(String),
       expect.objectContaining({
         networkPassphrase: "Public Global Stellar Network ; September 2015",
-      })
+      }),
     );
   });
 
@@ -365,7 +375,7 @@ describe("signTransaction — Lobstr", () => {
     clearLobstrWindow(); // simulate extension being uninstalled mid-session
 
     await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
-      /Lobstr is no longer available/
+      /Lobstr is no longer available/,
     );
   });
 
@@ -380,7 +390,9 @@ describe("signTransaction — Lobstr", () => {
     const adapter = new StellarWalletAdapter();
     await adapter.connectLobstr();
 
-    await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(/declined/i);
+    await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
+      /declined/i,
+    );
   });
 
   it("throws when signedXdr is empty", async () => {
@@ -394,7 +406,7 @@ describe("signTransaction — Lobstr", () => {
     await adapter.connectLobstr();
 
     await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
-      /empty signed transaction/i
+      /empty signed transaction/i,
     );
   });
 });
@@ -414,7 +426,7 @@ describe("connectAuto — Lobstr fallback", () => {
   it("throws when neither wallet is available", async () => {
     clearLobstrWindow();
     await expect(new StellarWalletAdapter().connectAuto()).rejects.toThrow(
-      /No Stellar wallet found/
+      /No Stellar wallet found/,
     );
   });
 });

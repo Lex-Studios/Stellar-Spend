@@ -3,24 +3,24 @@
  * Tiers are determined by cumulative USDC volume transacted.
  */
 
-export type LoyaltyTier = 'bronze' | 'silver' | 'gold' | 'platinum';
+export type LoyaltyTier = "bronze" | "silver" | "gold" | "platinum";
 
 export interface TierConfig {
   tier: LoyaltyTier;
   label: string;
-  minVolume: number;   // USDC
+  minVolume: number; // USDC
   color: string;
   benefits: string[];
   pointsMultiplier: number;
-  feeDiscount: number;        // percentage (0–1)
+  feeDiscount: number; // percentage (0–1)
   maxConcurrentSessions: number;
-  withdrawalLimit: number;    // daily USDC
+  withdrawalLimit: number; // daily USDC
 }
 
 export interface LoyaltyProgramConfig {
   pointsPerUSDC: number;
   minRedemptionPoints: number;
-  redemptionRate: number;     // points per $1 redemption value
+  redemptionRate: number; // points per $1 redemption value
   tierReviewPeriodDays: number;
   enabled: boolean;
 }
@@ -28,51 +28,60 @@ export interface LoyaltyProgramConfig {
 export const DEFAULT_PROGRAM_CONFIG: LoyaltyProgramConfig = {
   pointsPerUSDC: 10,
   minRedemptionPoints: 500,
-  redemptionRate: 100,        // 100 points = $1
+  redemptionRate: 100, // 100 points = $1
   tierReviewPeriodDays: 30,
   enabled: true,
 };
 
 export const TIERS: TierConfig[] = [
   {
-    tier: 'bronze',
-    label: 'Bronze',
+    tier: "bronze",
+    label: "Bronze",
     minVolume: 0,
-    color: '#cd7f32',
-    benefits: ['Transaction history', 'Basic support'],
+    color: "#cd7f32",
+    benefits: ["Transaction history", "Basic support"],
     pointsMultiplier: 1,
     feeDiscount: 0,
     maxConcurrentSessions: 2,
     withdrawalLimit: 1000,
   },
   {
-    tier: 'silver',
-    label: 'Silver',
+    tier: "silver",
+    label: "Silver",
     minVolume: 500,
-    color: '#c0c0c0',
-    benefits: ['Priority support', '0.1% fee discount'],
+    color: "#c0c0c0",
+    benefits: ["Priority support", "0.1% fee discount"],
     pointsMultiplier: 1.5,
     feeDiscount: 0.001,
     maxConcurrentSessions: 3,
     withdrawalLimit: 5000,
   },
   {
-    tier: 'gold',
-    label: 'Gold',
+    tier: "gold",
+    label: "Gold",
     minVolume: 2000,
-    color: '#c9a962',
-    benefits: ['Dedicated support', '0.25% fee discount', 'Early access to features'],
+    color: "#c9a962",
+    benefits: [
+      "Dedicated support",
+      "0.25% fee discount",
+      "Early access to features",
+    ],
     pointsMultiplier: 2,
     feeDiscount: 0.0025,
     maxConcurrentSessions: 5,
     withdrawalLimit: 20000,
   },
   {
-    tier: 'platinum',
-    label: 'Platinum',
+    tier: "platinum",
+    label: "Platinum",
     minVolume: 10000,
-    color: '#e5e4e2',
-    benefits: ['VIP support', '0.5% fee discount', 'Early access', 'Custom limits'],
+    color: "#e5e4e2",
+    benefits: [
+      "VIP support",
+      "0.5% fee discount",
+      "Early access",
+      "Custom limits",
+    ],
     pointsMultiplier: 3,
     feeDiscount: 0.005,
     maxConcurrentSessions: 10,
@@ -82,7 +91,7 @@ export const TIERS: TierConfig[] = [
 
 export interface LoyaltyProfile {
   userAddress: string;
-  totalVolume: number;   // cumulative USDC
+  totalVolume: number; // cumulative USDC
   transactionCount: number;
   tier: LoyaltyTier;
   points: number;
@@ -114,9 +123,9 @@ export interface LoyaltyAnalytics {
   estimatedMonthlyPoints: number;
 }
 
-const STORAGE_KEY = 'stellar_spend_loyalty';
-const REDEMPTION_KEY = 'stellar_spend_loyalty_redemptions';
-const CONFIG_KEY = 'stellar_spend_loyalty_config';
+const STORAGE_KEY = "stellar_spend_loyalty";
+const REDEMPTION_KEY = "stellar_spend_loyalty_redemptions";
+const CONFIG_KEY = "stellar_spend_loyalty_config";
 
 // ---------------------------------------------------------------------------
 // Pure helpers
@@ -142,12 +151,21 @@ export function volumeToNextTier(profile: LoyaltyProfile): number | null {
   return Math.max(0, next.minVolume - profile.totalVolume);
 }
 
-export function calculatePoints(usdcAmount: number, tier: LoyaltyTier, config: LoyaltyProgramConfig): number {
+export function calculatePoints(
+  usdcAmount: number,
+  tier: LoyaltyTier,
+  config: LoyaltyProgramConfig,
+): number {
   const tierConfig = getTierConfig(tier);
-  return Math.floor(usdcAmount * config.pointsPerUSDC * tierConfig.pointsMultiplier);
+  return Math.floor(
+    usdcAmount * config.pointsPerUSDC * tierConfig.pointsMultiplier,
+  );
 }
 
-export function pointsToUSDC(points: number, config: LoyaltyProgramConfig): number {
+export function pointsToUSDC(
+  points: number,
+  config: LoyaltyProgramConfig,
+): number {
   return points / config.redemptionRate;
 }
 
@@ -157,7 +175,7 @@ export function pointsToUSDC(points: number, config: LoyaltyProgramConfig): numb
 
 export class LoyaltyStorage {
   static getConfig(): LoyaltyProgramConfig {
-    if (typeof window === 'undefined') return DEFAULT_PROGRAM_CONFIG;
+    if (typeof window === "undefined") return DEFAULT_PROGRAM_CONFIG;
     try {
       const stored = localStorage.getItem(CONFIG_KEY);
       if (stored) return { ...DEFAULT_PROGRAM_CONFIG, ...JSON.parse(stored) };
@@ -167,10 +185,12 @@ export class LoyaltyStorage {
     return DEFAULT_PROGRAM_CONFIG;
   }
 
-  static updateConfig(updates: Partial<LoyaltyProgramConfig>): LoyaltyProgramConfig {
+  static updateConfig(
+    updates: Partial<LoyaltyProgramConfig>,
+  ): LoyaltyProgramConfig {
     const current = this.getConfig();
     const updated = { ...current, ...updates };
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       try {
         localStorage.setItem(CONFIG_KEY, JSON.stringify(updated));
       } catch {
@@ -181,10 +201,10 @@ export class LoyaltyStorage {
   }
 
   static get(userAddress: string): LoyaltyProfile {
-    if (typeof window === 'undefined') return this._default(userAddress);
+    if (typeof window === "undefined") return this._default(userAddress);
     try {
       const all: Record<string, LoyaltyProfile> = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) ?? '{}',
+        localStorage.getItem(STORAGE_KEY) ?? "{}",
       );
       return all[userAddress.toLowerCase()] ?? this._default(userAddress);
     } catch {
@@ -193,10 +213,10 @@ export class LoyaltyStorage {
   }
 
   static getAll(): LoyaltyProfile[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
     try {
       const all: Record<string, LoyaltyProfile> = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) ?? '{}',
+        localStorage.getItem(STORAGE_KEY) ?? "{}",
       );
       return Object.values(all);
     } catch {
@@ -242,7 +262,12 @@ export class LoyaltyStorage {
   static redeemPoints(
     userAddress: string,
     pointsToRedeem: number,
-  ): { success: boolean; usdcValue: number; profile: LoyaltyProfile; error?: string } {
+  ): {
+    success: boolean;
+    usdcValue: number;
+    profile: LoyaltyProfile;
+    error?: string;
+  } {
     const config = this.getConfig();
     const profile = this.get(userAddress);
 
@@ -260,7 +285,7 @@ export class LoyaltyStorage {
         success: false,
         usdcValue: 0,
         profile,
-        error: 'Insufficient points',
+        error: "Insufficient points",
       };
     }
 
@@ -285,10 +310,10 @@ export class LoyaltyStorage {
   }
 
   static getRedemptionHistory(userAddress: string): RedemptionRecord[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
     try {
       const all: RedemptionRecord[] = JSON.parse(
-        localStorage.getItem(REDEMPTION_KEY) ?? '[]',
+        localStorage.getItem(REDEMPTION_KEY) ?? "[]",
       );
       return all.filter((r) => r.userAddress === userAddress.toLowerCase());
     } catch {
@@ -316,7 +341,9 @@ export class LoyaltyStorage {
       points: profile.points,
       lifetimePoints: profile.lifetimePoints,
       pointsToNextTier: null,
-      volumeToNextTier: next ? Math.max(0, next.minVolume - profile.totalVolume) : null,
+      volumeToNextTier: next
+        ? Math.max(0, next.minVolume - profile.totalVolume)
+        : null,
       tierBenefits: tierCfg.benefits,
       feeDiscount: tierCfg.feeDiscount,
       pointsMultiplier: tierCfg.pointsMultiplier,
@@ -349,10 +376,10 @@ export class LoyaltyStorage {
     }
 
     let totalPointsRedeemed = 0;
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       try {
         const all: RedemptionRecord[] = JSON.parse(
-          localStorage.getItem(REDEMPTION_KEY) ?? '[]',
+          localStorage.getItem(REDEMPTION_KEY) ?? "[]",
         );
         totalPointsRedeemed = all.reduce((sum, r) => sum + r.pointsRedeemed, 0);
       } catch {
@@ -370,10 +397,10 @@ export class LoyaltyStorage {
   }
 
   private static _saveRedemption(record: RedemptionRecord): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     try {
       const all: RedemptionRecord[] = JSON.parse(
-        localStorage.getItem(REDEMPTION_KEY) ?? '[]',
+        localStorage.getItem(REDEMPTION_KEY) ?? "[]",
       );
       all.push(record);
       localStorage.setItem(REDEMPTION_KEY, JSON.stringify(all));
@@ -383,10 +410,10 @@ export class LoyaltyStorage {
   }
 
   private static _save(profile: LoyaltyProfile): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     try {
       const all: Record<string, LoyaltyProfile> = JSON.parse(
-        localStorage.getItem(STORAGE_KEY) ?? '{}',
+        localStorage.getItem(STORAGE_KEY) ?? "{}",
       );
       all[profile.userAddress.toLowerCase()] = profile;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
@@ -400,7 +427,7 @@ export class LoyaltyStorage {
       userAddress: userAddress.toLowerCase(),
       totalVolume: 0,
       transactionCount: 0,
-      tier: 'bronze',
+      tier: "bronze",
       points: 0,
       lifetimePoints: 0,
       updatedAt: Date.now(),

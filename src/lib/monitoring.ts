@@ -2,7 +2,7 @@
  * Production monitoring utilities.
  * Provides alert rules, uptime tracking, and dashboard metrics.
  */
-import * as Sentry from '@sentry/nextjs';
+import * as Sentry from "@sentry/nextjs";
 
 // ── Alert thresholds ──────────────────────────────────────────────────────
 
@@ -45,27 +45,32 @@ export function getUptimePercent(): number {
 
 export function getAvgLatencyMs(): number {
   if (uptimeHistory.length === 0) return 0;
-  return uptimeHistory.reduce((s, r) => s + r.latencyMs, 0) / uptimeHistory.length;
+  return (
+    uptimeHistory.reduce((s, r) => s + r.latencyMs, 0) / uptimeHistory.length
+  );
 }
 
 // ── Error tracking helpers ────────────────────────────────────────────────
 
 export function captureTransactionError(
   error: unknown,
-  context: Record<string, unknown>
+  context: Record<string, unknown>,
 ): void {
   Sentry.withScope((scope) => {
-    scope.setContext('transaction', context);
-    scope.setTag('component', 'offramp');
+    scope.setContext("transaction", context);
+    scope.setTag("component", "offramp");
     Sentry.captureException(error);
   });
 }
 
-export function captureQueueAlert(message: string, data: Record<string, unknown>): void {
+export function captureQueueAlert(
+  message: string,
+  data: Record<string, unknown>,
+): void {
   Sentry.withScope((scope) => {
-    scope.setContext('queue', data);
-    scope.setTag('component', 'priority-queue');
-    scope.setLevel('warning');
+    scope.setContext("queue", data);
+    scope.setTag("component", "priority-queue");
+    scope.setLevel("warning");
     Sentry.captureMessage(message);
   });
 }

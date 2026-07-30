@@ -1,4 +1,4 @@
-import { Database } from 'postgres';
+import { Database } from "postgres";
 
 export interface SorobanEvent {
   id: string;
@@ -74,14 +74,14 @@ export class SorobanEventIndexer {
     if (result.length === 0) {
       return {
         lastProcessedLedger: 0,
-        lastProcessedHash: '',
+        lastProcessedHash: "",
         lastProcessedAt: new Date(),
       };
     }
 
     return {
       lastProcessedLedger: result[0].last_processed_ledger || 0,
-      lastProcessedHash: result[0].last_processed_hash || '',
+      lastProcessedHash: result[0].last_processed_hash || "",
       lastProcessedAt: result[0].last_processed_at || new Date(),
     };
   }
@@ -92,10 +92,16 @@ export class SorobanEventIndexer {
 
     for (const contractId of this.contractIds) {
       try {
-        const events = await this.fetchContractEvents(contractId, state.lastProcessedLedger);
+        const events = await this.fetchContractEvents(
+          contractId,
+          state.lastProcessedLedger,
+        );
         eventCount += await this.persistEvents(events);
       } catch (error) {
-        console.error(`Failed to index events for contract ${contractId}:`, error);
+        console.error(
+          `Failed to index events for contract ${contractId}:`,
+          error,
+        );
       }
     }
 
@@ -106,30 +112,37 @@ export class SorobanEventIndexer {
     return eventCount;
   }
 
-  private async fetchContractEvents(contractId: string, fromLedger: number): Promise<SorobanEvent[]> {
+  private async fetchContractEvents(
+    contractId: string,
+    fromLedger: number,
+  ): Promise<SorobanEvent[]> {
     try {
       const response = await fetch(`${this.rpcUrl}/events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: '1',
-          method: 'getEvents',
-          params: [{
-            filters: [{
-              type: 'contract',
-              contractIds: [contractId],
-            }],
-            startLedger: fromLedger,
-            limit: 100,
-          }],
+          jsonrpc: "2.0",
+          id: "1",
+          method: "getEvents",
+          params: [
+            {
+              filters: [
+                {
+                  type: "contract",
+                  contractIds: [contractId],
+                },
+              ],
+              startLedger: fromLedger,
+              limit: 100,
+            },
+          ],
         }),
       });
 
       const result = await response.json();
 
       if (result.error) {
-        console.error('Event fetch error:', result.error);
+        console.error("Event fetch error:", result.error);
         return [];
       }
 
@@ -144,7 +157,7 @@ export class SorobanEventIndexer {
         indexed: false,
       }));
     } catch (error) {
-      console.error('Failed to fetch contract events:', error);
+      console.error("Failed to fetch contract events:", error);
       return [];
     }
   }
@@ -220,7 +233,7 @@ export class SorobanEventIndexer {
       SELECT * FROM soroban_events WHERE tx_hash = ${txHash}
     `;
 
-    return result.map(row => ({
+    return result.map((row) => ({
       id: row.id,
       contractId: row.contract_id,
       type: row.event_type,
@@ -232,14 +245,18 @@ export class SorobanEventIndexer {
     }));
   }
 
-  async reconcileStatus(txHash: string): Promise<{ onChain: boolean; status: string }> {
+  async reconcileStatus(
+    txHash: string,
+  ): Promise<{ onChain: boolean; status: string }> {
     const events = await this.getEventsByTransaction(txHash);
 
     if (events.length === 0) {
-      return { onChain: false, status: 'pending_indexing' };
+      return { onChain: false, status: "pending_indexing" };
     }
 
-    const status = events.some(e => e.type === 'success') ? 'success' : 'failed';
+    const status = events.some((e) => e.type === "success")
+      ? "success"
+      : "failed";
     return { onChain: true, status };
   }
 }

@@ -1,6 +1,6 @@
-import type { KYCData } from './kyc-limits';
+import type { KYCData } from "./kyc-limits";
 
-export type VerificationLevel = 'basic' | 'advanced' | 'enhanced';
+export type VerificationLevel = "basic" | "advanced" | "enhanced";
 
 export interface VerificationResponse {
   verified: boolean;
@@ -32,11 +32,14 @@ export interface KycProviderInterface {
   checkStatus(verificationId: string): Promise<VerificationResponse>;
 
   /** Initiate re-verification when limits change */
-  requestReverification(userId: string, reason: string): Promise<{ required: boolean; message: string }>;
+  requestReverification(
+    userId: string,
+    reason: string,
+  ): Promise<{ required: boolean; message: string }>;
 }
 
 export class SandboxKycProvider implements KycProviderInterface {
-  readonly name = 'sandbox';
+  readonly name = "sandbox";
 
   private results = new Map<string, VerificationResponse>();
 
@@ -58,7 +61,7 @@ export class SandboxKycProvider implements KycProviderInterface {
       verified: true,
       verificationId,
       level,
-      providerName: 'sandbox',
+      providerName: "sandbox",
       verifiedAt: now,
       expiryAt: expiryMs[level] ? now + expiryMs[level]! : null,
       metadata: { simulated: true },
@@ -76,10 +79,13 @@ export class SandboxKycProvider implements KycProviderInterface {
     return result;
   }
 
-  async requestReverification(_userId: string, _reason: string): Promise<{ required: boolean; message: string }> {
+  async requestReverification(
+    _userId: string,
+    _reason: string,
+  ): Promise<{ required: boolean; message: string }> {
     return {
       required: true,
-      message: 'Sandbox: re-verification would be required in production',
+      message: "Sandbox: re-verification would be required in production",
     };
   }
 }
@@ -87,18 +93,24 @@ export class SandboxKycProvider implements KycProviderInterface {
 const DEFAULT_PROVIDER: KycProviderInterface = new SandboxKycProvider();
 
 export function getKycProvider(name?: string): KycProviderInterface {
-  if (!name || name === 'sandbox') return DEFAULT_PROVIDER;
+  if (!name || name === "sandbox") return DEFAULT_PROVIDER;
   throw new Error(`Unknown KYC provider: ${name}`);
 }
 
-export const VERIFICATION_LEVEL_MAP: Record<VerificationLevel, { tier: import('./kyc-limits').LimitTier; label: string }> = {
-  basic: { tier: 'tier1', label: 'Basic - email & phone' },
-  advanced: { tier: 'tier2', label: 'Advanced - government ID' },
-  enhanced: { tier: 'tier3', label: 'Enhanced - in-person verification' },
+export const VERIFICATION_LEVEL_MAP: Record<
+  VerificationLevel,
+  { tier: import("./kyc-limits").LimitTier; label: string }
+> = {
+  basic: { tier: "tier1", label: "Basic - email & phone" },
+  advanced: { tier: "tier2", label: "Advanced - government ID" },
+  enhanced: { tier: "tier3", label: "Enhanced - in-person verification" },
 };
 
-export function getRequiredVerificationLevel(kyc: KYCData | null, requestedTier: import('./kyc-limits').LimitTier): VerificationLevel {
-  if (requestedTier === 'tier1') return 'basic';
-  if (requestedTier === 'tier2') return 'advanced';
-  return 'enhanced';
+export function getRequiredVerificationLevel(
+  kyc: KYCData | null,
+  requestedTier: import("./kyc-limits").LimitTier,
+): VerificationLevel {
+  if (requestedTier === "tier1") return "basic";
+  if (requestedTier === "tier2") return "advanced";
+  return "enhanced";
 }

@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { SyncStorage } from '../sync-storage';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { SyncStorage } from "../sync-storage";
 
-describe('SyncStorage', () => {
+describe("SyncStorage", () => {
   beforeEach(() => {
     // Clear localStorage before each test
     localStorage.clear();
@@ -11,14 +11,14 @@ describe('SyncStorage', () => {
     localStorage.clear();
   });
 
-  describe('Settings Management', () => {
-    it('should return default settings when none exist', () => {
+  describe("Settings Management", () => {
+    it("should return default settings when none exist", () => {
       const settings = SyncStorage.getSettings();
       expect(settings.syncEnabled).toBe(false);
-      expect(settings.conflictResolutionStrategy).toBe('last-write-wins');
+      expect(settings.conflictResolutionStrategy).toBe("last-write-wins");
     });
 
-    it('should update settings', () => {
+    it("should update settings", () => {
       const updated = SyncStorage.updateSettings({ syncEnabled: true });
       expect(updated.syncEnabled).toBe(true);
 
@@ -26,7 +26,7 @@ describe('SyncStorage', () => {
       expect(retrieved.syncEnabled).toBe(true);
     });
 
-    it('should toggle sync', () => {
+    it("should toggle sync", () => {
       let settings = SyncStorage.toggleSync(true);
       expect(settings.syncEnabled).toBe(true);
 
@@ -35,83 +35,83 @@ describe('SyncStorage', () => {
     });
   });
 
-  describe('Metadata Management', () => {
-    it('should store and retrieve transaction metadata', () => {
+  describe("Metadata Management", () => {
+    it("should store and retrieve transaction metadata", () => {
       const metadata = {
-        transactionId: 'tx1',
+        transactionId: "tx1",
         localVersion: 1,
         serverVersion: 1,
         lastModifiedAt: Date.now(),
       };
 
-      SyncStorage.setMetadata('tx1', metadata);
-      const retrieved = SyncStorage.getMetadata('tx1');
+      SyncStorage.setMetadata("tx1", metadata);
+      const retrieved = SyncStorage.getMetadata("tx1");
 
       expect(retrieved).toEqual(metadata);
     });
 
-    it('should return undefined for non-existent metadata', () => {
-      const retrieved = SyncStorage.getMetadata('non-existent');
+    it("should return undefined for non-existent metadata", () => {
+      const retrieved = SyncStorage.getMetadata("non-existent");
       expect(retrieved).toBeUndefined();
     });
 
-    it('should retrieve all metadata', () => {
+    it("should retrieve all metadata", () => {
       const metadata1 = {
-        transactionId: 'tx1',
+        transactionId: "tx1",
         localVersion: 1,
         serverVersion: 1,
         lastModifiedAt: Date.now(),
       };
 
       const metadata2 = {
-        transactionId: 'tx2',
+        transactionId: "tx2",
         localVersion: 2,
         serverVersion: 2,
         lastModifiedAt: Date.now(),
       };
 
-      SyncStorage.setMetadata('tx1', metadata1);
-      SyncStorage.setMetadata('tx2', metadata2);
+      SyncStorage.setMetadata("tx1", metadata1);
+      SyncStorage.setMetadata("tx2", metadata2);
 
       const all = SyncStorage.getAllMetadata();
       expect(Object.keys(all)).toHaveLength(2);
-      expect(all['tx1']).toEqual(metadata1);
-      expect(all['tx2']).toEqual(metadata2);
+      expect(all["tx1"]).toEqual(metadata1);
+      expect(all["tx2"]).toEqual(metadata2);
     });
   });
 
-  describe('Queue Management', () => {
-    it('should add transaction to queue', () => {
-      SyncStorage.addToQueue('tx1', 'create');
+  describe("Queue Management", () => {
+    it("should add transaction to queue", () => {
+      SyncStorage.addToQueue("tx1", "create");
       const queue = SyncStorage.getQueue();
 
       expect(queue).toHaveLength(1);
-      expect(queue[0].transactionId).toBe('tx1');
-      expect(queue[0].action).toBe('create');
+      expect(queue[0].transactionId).toBe("tx1");
+      expect(queue[0].action).toBe("create");
     });
 
-    it('should prevent duplicate entries in queue', () => {
-      SyncStorage.addToQueue('tx1', 'create');
-      SyncStorage.addToQueue('tx1', 'update');
+    it("should prevent duplicate entries in queue", () => {
+      SyncStorage.addToQueue("tx1", "create");
+      SyncStorage.addToQueue("tx1", "update");
       const queue = SyncStorage.getQueue();
 
       expect(queue).toHaveLength(1);
-      expect(queue[0].action).toBe('update');
+      expect(queue[0].action).toBe("update");
     });
 
-    it('should remove item from queue', () => {
-      SyncStorage.addToQueue('tx1', 'create');
-      SyncStorage.addToQueue('tx2', 'update');
-      SyncStorage.removeFromQueue('tx1');
+    it("should remove item from queue", () => {
+      SyncStorage.addToQueue("tx1", "create");
+      SyncStorage.addToQueue("tx2", "update");
+      SyncStorage.removeFromQueue("tx1");
 
       const queue = SyncStorage.getQueue();
       expect(queue).toHaveLength(1);
-      expect(queue[0].transactionId).toBe('tx2');
+      expect(queue[0].transactionId).toBe("tx2");
     });
 
-    it('should clear entire queue', () => {
-      SyncStorage.addToQueue('tx1', 'create');
-      SyncStorage.addToQueue('tx2', 'update');
+    it("should clear entire queue", () => {
+      SyncStorage.addToQueue("tx1", "create");
+      SyncStorage.addToQueue("tx2", "update");
       SyncStorage.clearQueue();
 
       const queue = SyncStorage.getQueue();
@@ -119,9 +119,9 @@ describe('SyncStorage', () => {
     });
   });
 
-  describe('Sync Completion', () => {
-    it('should update sync timestamps on completion', () => {
-      SyncStorage.markSyncComplete('0x123');
+  describe("Sync Completion", () => {
+    it("should update sync timestamps on completion", () => {
+      SyncStorage.markSyncComplete("0x123");
       const settings = SyncStorage.getSettings();
 
       expect(settings.lastSyncAt).toBeGreaterThan(0);
@@ -129,16 +129,16 @@ describe('SyncStorage', () => {
     });
   });
 
-  describe('Clear', () => {
-    it('should clear all sync data', () => {
+  describe("Clear", () => {
+    it("should clear all sync data", () => {
       SyncStorage.updateSettings({ syncEnabled: true });
-      SyncStorage.setMetadata('tx1', {
-        transactionId: 'tx1',
+      SyncStorage.setMetadata("tx1", {
+        transactionId: "tx1",
         localVersion: 1,
         serverVersion: 1,
         lastModifiedAt: Date.now(),
       });
-      SyncStorage.addToQueue('tx1', 'create');
+      SyncStorage.addToQueue("tx1", "create");
 
       SyncStorage.clear();
 

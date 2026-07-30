@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/cn';
-import type { NotificationCenterEvent } from '@/hooks/useNotificationCenter';
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/cn";
+import type { NotificationCenterEvent } from "@/hooks/useNotificationCenter";
 
 interface NotificationCenterProps {
   events: NotificationCenterEvent[];
@@ -18,7 +18,7 @@ interface NotificationCenterProps {
 
 /**
  * NotificationCenter
- * 
+ *
  * Bell icon button with dropdown panel showing aggregated notifications.
  * Features:
  * - Bell icon with unread badge
@@ -59,8 +59,8 @@ export function NotificationCenter({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
   // Handle keyboard navigation
@@ -68,14 +68,14 @@ export function NotificationCenter({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isOpen) return;
 
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setIsOpen(false);
         buttonRef.current?.focus();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
   const handleNotificationClick = (event: NotificationCenterEvent) => {
@@ -97,9 +97,15 @@ export function NotificationCenter({
 
   const getEventIcon = (type: string) => {
     switch (type) {
-      case 'price_alert':
+      case "price_alert":
         return (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
             <path
               d="M8 1.5L11.5 8H4.5M11.5 8H4.5M8 14.5V8"
               stroke="currentColor"
@@ -109,9 +115,15 @@ export function NotificationCenter({
             />
           </svg>
         );
-      case 'transaction_update':
+      case "transaction_update":
         return (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
             <path
               d="M8 1.5v13m0 0L4.5 11m3.5 3.5l3.5-3.5"
               stroke="currentColor"
@@ -121,16 +133,39 @@ export function NotificationCenter({
             />
           </svg>
         );
-      case 'payout_update':
+      case "payout_update":
         return (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1" />
-            <path d="M8 4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle
+              cx="8"
+              cy="8"
+              r="6.5"
+              stroke="currentColor"
+              strokeWidth="1"
+            />
+            <path
+              d="M8 4v4"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
           </svg>
         );
-      case 'tier_change':
+      case "tier_change":
         return (
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
             <path
               d="M8 2L3 5v4c0 4 5 5 5 5s5-1 5-5V5l-5-3z"
               stroke="currentColor"
@@ -147,16 +182,16 @@ export function NotificationCenter({
 
   const getEventTypeColor = (type: string) => {
     switch (type) {
-      case 'price_alert':
-        return 'text-amber-400';
-      case 'transaction_update':
-        return 'text-blue-400';
-      case 'payout_update':
-        return 'text-emerald-400';
-      case 'tier_change':
-        return 'text-purple-400';
+      case "price_alert":
+        return "text-amber-400";
+      case "transaction_update":
+        return "text-blue-400";
+      case "payout_update":
+        return "text-emerald-400";
+      case "tier_change":
+        return "text-purple-400";
       default:
-        return 'text-slate-400';
+        return "text-slate-400";
     }
   };
 
@@ -170,14 +205,21 @@ export function NotificationCenter({
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         className={cn(
-          'relative p-2 text-[#777777] hover:text-[#c9a962] transition-colors',
-          'focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]',
-          'rounded'
+          "relative p-2 text-[#777777] hover:text-[#c9a962] transition-colors",
+          "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
+          "rounded",
         )}
         title={`Notifications (${unreadCount} unread)`}
       >
         {/* Bell Icon */}
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           <path d="M13.73 21a2 2 0 0 1-3.46 0" />
         </svg>
@@ -186,9 +228,9 @@ export function NotificationCenter({
         {unreadCount > 0 && (
           <span
             className={cn(
-              'absolute top-1 right-1 min-w-[20px] h-5 px-1 rounded-full',
-              'bg-[#c9a962] text-[#0a0a0a] text-[10px] font-bold',
-              'flex items-center justify-center'
+              "absolute top-1 right-1 min-w-[20px] h-5 px-1 rounded-full",
+              "bg-[#c9a962] text-[#0a0a0a] text-[10px] font-bold",
+              "flex items-center justify-center",
             )}
             aria-label={`${unreadCount} unread notifications`}
           >
@@ -204,20 +246,22 @@ export function NotificationCenter({
           role="dialog"
           aria-label="Notifications"
           className={cn(
-            'absolute right-0 top-full mt-2 w-80 max-h-96',
-            'bg-[#111111] border border-[#333333] rounded shadow-xl',
-            'z-50 flex flex-col overflow-hidden'
+            "absolute right-0 top-full mt-2 w-80 max-h-96",
+            "bg-[#111111] border border-[#333333] rounded shadow-xl",
+            "z-50 flex flex-col overflow-hidden",
           )}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[#333333]">
-            <h3 className="text-sm font-semibold text-white tracking-wide">NOTIFICATIONS</h3>
+            <h3 className="text-sm font-semibold text-white tracking-wide">
+              NOTIFICATIONS
+            </h3>
             {events.length > 0 && (
               <button
                 onClick={onMarkAllAsRead}
                 className={cn(
-                  'text-[10px] text-[#c9a962] hover:text-[#dbb76d]',
-                  'transition-colors focus:outline-none focus-visible:underline'
+                  "text-[10px] text-[#c9a962] hover:text-[#dbb76d]",
+                  "transition-colors focus:outline-none focus-visible:underline",
                 )}
                 title="Mark all as read"
               >
@@ -250,30 +294,39 @@ export function NotificationCenter({
                   <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
                 <p className="text-[#777777] text-sm">No notifications yet</p>
-                <p className="text-[#555555] text-xs mt-1">Stay tuned for updates on your transactions</p>
+                <p className="text-[#555555] text-xs mt-1">
+                  Stay tuned for updates on your transactions
+                </p>
               </div>
             ) : (
               // Notification list
               <ul className="divide-y divide-[#222222]">
-                {events.map(event => (
+                {events.map((event) => (
                   <li
                     key={event.id}
                     className={cn(
-                      'px-4 py-3 border-l-4 transition-colors hover:bg-[#1a1a1a]',
-                      event.read ? 'border-[#222222] bg-[#0a0a0a]' : 'border-[#c9a962] bg-[#1a1a1a]'
+                      "px-4 py-3 border-l-4 transition-colors hover:bg-[#1a1a1a]",
+                      event.read
+                        ? "border-[#222222] bg-[#0a0a0a]"
+                        : "border-[#c9a962] bg-[#1a1a1a]",
                     )}
                   >
                     <button
                       onClick={() => handleNotificationClick(event)}
                       className={cn(
-                        'w-full text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962] rounded px-1',
-                        'transition-all'
+                        "w-full text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962] rounded px-1",
+                        "transition-all",
                       )}
                       aria-label={`${event.title}: ${event.description}`}
                     >
                       {/* Event header */}
                       <div className="flex items-start gap-2 mb-1">
-                        <span className={cn('shrink-0 mt-0.5', getEventTypeColor(event.type))}>
+                        <span
+                          className={cn(
+                            "shrink-0 mt-0.5",
+                            getEventTypeColor(event.type),
+                          )}
+                        >
                           {getEventIcon(event.type)}
                         </span>
                         <div className="flex-1 min-w-0">
@@ -309,7 +362,7 @@ export function NotificationCenter({
 
                     {/* Remove button */}
                     <button
-                      onClick={e => {
+                      onClick={(e) => {
                         e.stopPropagation();
                         onRemoveEvent(event.id);
                       }}
@@ -317,7 +370,13 @@ export function NotificationCenter({
                       aria-label="Remove notification"
                       title="Remove"
                     >
-                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        aria-hidden="true"
+                      >
                         <path
                           d="M12 4L4 12M4 4L12 12"
                           stroke="currentColor"
@@ -338,9 +397,9 @@ export function NotificationCenter({
               <button
                 onClick={onClearAll}
                 className={cn(
-                  'w-full text-[10px] text-[#777777] hover:text-red-400',
-                  'transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]',
-                  'py-1 rounded tracking-widest uppercase'
+                  "w-full text-[10px] text-[#777777] hover:text-red-400",
+                  "transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
+                  "py-1 rounded tracking-widest uppercase",
                 )}
                 title="Clear all notifications"
               >
@@ -365,15 +424,15 @@ function formatTime(timestamp: number): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (minutes < 1) return 'just now';
+  if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   if (days < 7) return `${days}d ago`;
 
   // Format as date
   const date = new Date(timestamp);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
   });
 }

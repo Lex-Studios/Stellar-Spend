@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from "next/server";
 import {
   CloudWatchLogsClient,
   StartQueryCommand,
   GetQueryResultsCommand,
   type ResultField,
-} from '@aws-sdk/client-cloudwatch-logs';
+} from "@aws-sdk/client-cloudwatch-logs";
 
 /**
  * POST /api/logs/search
@@ -25,13 +25,15 @@ import {
 
 export const maxDuration = 30;
 
-const LOG_GROUP = process.env.CW_LOG_GROUP ?? `/ecs/stellar-spend-${process.env.ENVIRONMENT ?? 'production'}`;
-const REGION    = process.env.AWS_REGION ?? 'us-east-1';
+const LOG_GROUP =
+  process.env.CW_LOG_GROUP ??
+  `/ecs/stellar-spend-${process.env.ENVIRONMENT ?? "production"}`;
+const REGION = process.env.AWS_REGION ?? "us-east-1";
 
 const client = new CloudWatchLogsClient({ region: REGION });
 
 function rowToObject(fields: ResultField[]): Record<string, string> {
-  return Object.fromEntries(fields.map((f) => [f.field ?? '', f.value ?? '']));
+  return Object.fromEntries(fields.map((f) => [f.field ?? "", f.value ?? ""]));
 }
 
 async function runQuery(
@@ -40,15 +42,17 @@ async function runQuery(
   endTime: number,
   limit: number,
 ): Promise<Record<string, string>[]> {
-  const { queryId } = await client.send(new StartQueryCommand({
-    logGroupName: LOG_GROUP,
-    queryString,
-    startTime,
-    endTime,
-    limit,
-  }));
+  const { queryId } = await client.send(
+    new StartQueryCommand({
+      logGroupName: LOG_GROUP,
+      queryString,
+      startTime,
+      endTime,
+      limit,
+    }),
+  );
 
-  if (!queryId) throw new Error('Failed to start query');
+  if (!queryId) throw new Error("Failed to start query");
 
   // Poll up to 25s (Insights queries typically complete in 1–5s)
   const deadline = Date.now() + 25_000;
@@ -56,24 +60,24 @@ async function runQuery(
     await new Promise((r) => setTimeout(r, 1000));
     const result = await client.send(new GetQueryResultsCommand({ queryId }));
     const status = result.status;
-    if (status === 'Complete') {
+    if (status === "Complete") {
       return (result.results ?? []).map(rowToObject);
     }
-    if (status === 'Failed' || status === 'Cancelled') {
+    if (status === "Failed" || status === "Cancelled") {
       throw new Error(`Query ${status.toLowerCase()}`);
     }
     // status === 'Running' | 'Scheduled' — keep polling
   }
-  throw new Error('Query timed out');
+  throw new Error("Query timed out");
 }
 
 export async function POST(request: NextRequest) {
   // Require internal auth — same admin token used for api-keys management
   const adminToken = process.env.API_KEY_ADMIN_TOKEN;
   if (adminToken) {
-    const auth = request.headers.get('authorization');
+    const auth = request.headers.get("authorization");
     if (auth !== `Bearer ${adminToken}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }
 
@@ -81,25 +85,30 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   const { query, startTime, endTime, limit } = body;
 
-  if (typeof query !== 'string' || !query.trim()) {
-    return NextResponse.json({ error: 'query is required' }, { status: 400 });
+  if (typeof query !== "string" || !query.trim()) {
+    return NextResponse.json({ error: "query is required" }, { status: 400 });
   }
 
   const now = Math.floor(Date.now() / 1000);
-  const start = typeof startTime === 'number' ? startTime : now - 3600;
-  const end   = typeof endTime   === 'number' ? endTime   : now;
-  const lim   = typeof limit     === 'number' ? Math.min(Math.max(limit, 1), 1000) : 100;
+  const start = typeof startTime === "number" ? startTime : now - 3600;
+  const end = typeof endTime === "number" ? endTime : now;
+  const lim =
+    typeof limit === "number" ? Math.min(Math.max(limit, 1), 1000) : 100;
 
   try {
     const results = await runQuery(query, start, end, lim);
-    return NextResponse.json({ results, count: results.length, logGroup: LOG_GROUP });
+    return NextResponse.json({
+      results,
+      count: results.length,
+      logGroup: LOG_GROUP,
+    });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Search failed';
+    const message = err instanceof Error ? err.message : "Search failed";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { StellarWalletAdapter, _resetAdapterSingleton } from "@/lib/stellar/wallet-adapter";
+import {
+  StellarWalletAdapter,
+  _resetAdapterSingleton,
+} from "@/lib/stellar/wallet-adapter";
 
 // ── Mock @stellar/freighter-api ────────────────────────────────────────────────
 vi.mock("@stellar/freighter-api", () => ({
@@ -7,7 +10,9 @@ vi.mock("@stellar/freighter-api", () => ({
   getAddress: vi.fn(),
   requestAccess: vi.fn(),
   signTransaction: vi.fn(),
-  getNetworkDetails: vi.fn().mockResolvedValue({ networkPassphrase: "Public Global Stellar Network ; September 2015" }),
+  getNetworkDetails: vi.fn().mockResolvedValue({
+    networkPassphrase: "Public Global Stellar Network ; September 2015",
+  }),
 }));
 
 import * as freighterApi from "@stellar/freighter-api";
@@ -17,11 +22,12 @@ const mockGetAddress = vi.mocked(freighterApi.getAddress);
 const mockRequestAccess = vi.mocked(freighterApi.requestAccess);
 const mockSignTransaction = vi.mocked(freighterApi.signTransaction);
 
-const FREIGHTER_KEY = "GCFREIGHTER1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890AB";
-const LOBSTR_KEY    = "GBLOBSTR1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD";
-const SIGNED_XDR_F  = "freighter-signed-xdr";
-const SIGNED_XDR_L  = "lobstr-signed-xdr";
-const MAINNET       = "Public Global Stellar Network ; September 2015";
+const FREIGHTER_KEY =
+  "GCFREIGHTER1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890AB";
+const LOBSTR_KEY = "GBLOBSTR1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCD";
+const SIGNED_XDR_F = "freighter-signed-xdr";
+const SIGNED_XDR_L = "lobstr-signed-xdr";
+const MAINNET = "Public Global Stellar Network ; September 2015";
 
 // ── Window helpers ─────────────────────────────────────────────────────────────
 
@@ -32,10 +38,12 @@ function setFreighterWindow(present: boolean) {
   global.window = w;
 }
 
-function makeLobstrProvider(overrides: Partial<{
-  connect: () => Promise<unknown>;
-  signTransaction: () => Promise<unknown>;
-}> = {}) {
+function makeLobstrProvider(
+  overrides: Partial<{
+    connect: () => Promise<unknown>;
+    signTransaction: () => Promise<unknown>;
+  }> = {},
+) {
   return {
     connect: vi.fn().mockResolvedValue({ publicKey: LOBSTR_KEY }),
     signTransaction: vi.fn().mockResolvedValue({ signedXdr: SIGNED_XDR_L }),
@@ -43,7 +51,9 @@ function makeLobstrProvider(overrides: Partial<{
   };
 }
 
-function setLobstrWindow(provider: ReturnType<typeof makeLobstrProvider> | null) {
+function setLobstrWindow(
+  provider: ReturnType<typeof makeLobstrProvider> | null,
+) {
   const w = (global.window as any) ?? {};
   if (provider) w.lobstr = provider;
   else delete w.lobstr;
@@ -123,17 +133,17 @@ describe("connectAuto — detection order", () => {
   it("throws when neither Freighter nor Lobstr is available", async () => {
     clearAllWallets();
     await expect(new StellarWalletAdapter().connectAuto()).rejects.toThrow(
-      /No Stellar wallet found/
+      /No Stellar wallet found/,
     );
   });
 
   it("error message includes install links for both wallets", async () => {
     clearAllWallets();
     await expect(new StellarWalletAdapter().connectAuto()).rejects.toThrow(
-      /freighter\.app/i
+      /freighter\.app/i,
     );
     await expect(new StellarWalletAdapter().connectAuto()).rejects.toThrow(
-      /lobstr\.co/i
+      /lobstr\.co/i,
     );
   });
 });
@@ -311,7 +321,7 @@ describe("signTransaction — Freighter", () => {
 
     expect(mockSignTransaction).toHaveBeenCalledWith(
       "raw-xdr",
-      expect.objectContaining({ networkPassphrase: MAINNET })
+      expect.objectContaining({ networkPassphrase: MAINNET }),
     );
   });
 
@@ -325,17 +335,22 @@ describe("signTransaction — Freighter", () => {
 
     const adapter = new StellarWalletAdapter();
     await adapter.connectAuto();
-    await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(/declined/i);
+    await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
+      /declined/i,
+    );
   });
 
   it("throws when signedTxXdr is empty with no error", async () => {
     mockFreighterReady();
-    mockSignTransaction.mockResolvedValue({ signedTxXdr: "", signerAddress: "" });
+    mockSignTransaction.mockResolvedValue({
+      signedTxXdr: "",
+      signerAddress: "",
+    });
 
     const adapter = new StellarWalletAdapter();
     await adapter.connectAuto();
     await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
-      /empty signed transaction/i
+      /empty signed transaction/i,
     );
   });
 });
@@ -360,7 +375,7 @@ describe("signTransaction — Lobstr", () => {
 
     expect(lobstr.signTransaction).toHaveBeenCalledWith(
       "raw-xdr",
-      expect.objectContaining({ networkPassphrase: MAINNET })
+      expect.objectContaining({ networkPassphrase: MAINNET }),
     );
   });
 
@@ -372,7 +387,7 @@ describe("signTransaction — Lobstr", () => {
     clearAllWallets(); // simulate extension removed mid-session
 
     await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
-      /Lobstr is no longer available/
+      /Lobstr is no longer available/,
     );
   });
 
@@ -384,7 +399,9 @@ describe("signTransaction — Lobstr", () => {
 
     const adapter = new StellarWalletAdapter();
     await adapter.connectAuto();
-    await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(/declined/i);
+    await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
+      /declined/i,
+    );
   });
 
   it("throws when signedXdr is empty", async () => {
@@ -396,7 +413,7 @@ describe("signTransaction — Lobstr", () => {
     const adapter = new StellarWalletAdapter();
     await adapter.connectAuto();
     await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
-      /empty signed transaction/i
+      /empty signed transaction/i,
     );
   });
 });
@@ -407,7 +424,7 @@ describe("signTransaction — no wallet connected", () => {
   it("throws before any provider call when no wallet is connected", async () => {
     const adapter = new StellarWalletAdapter();
     await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
-      /No wallet connected/
+      /No wallet connected/,
     );
     expect(mockSignTransaction).not.toHaveBeenCalled();
   });
@@ -419,7 +436,7 @@ describe("signTransaction — no wallet connected", () => {
     adapter.disconnect();
 
     await expect(adapter.signTransaction("raw-xdr")).rejects.toThrow(
-      /No wallet connected/
+      /No wallet connected/,
     );
   });
 });

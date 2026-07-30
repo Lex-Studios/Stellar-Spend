@@ -9,7 +9,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "100", 10);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
-    const actions = await auditLoggingService.getAdminActions(adminAddress, limit, offset);
+    const actions = await auditLoggingService.getAdminActions(
+      adminAddress,
+      limit,
+      offset,
+    );
     return NextResponse.json({ actions });
   } catch (error) {
     logger.error("Failed to fetch admin actions", { error });
@@ -40,11 +44,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const action = await auditLoggingService.logAdminAction(adminAddress, actionType, {
-      targetUser,
-      actionDetails,
-      reason,
-    });
+    const action = await auditLoggingService.logAdminAction(
+      adminAddress,
+      actionType,
+      {
+        targetUser,
+        actionDetails,
+        reason,
+      },
+    );
 
     return NextResponse.json(action, { status: 201 });
   } catch (error) {

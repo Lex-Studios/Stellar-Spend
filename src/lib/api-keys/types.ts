@@ -1,24 +1,24 @@
-export type ApiKeyStatus = 'active' | 'rotated' | 'revoked';
+export type ApiKeyStatus = "active" | "rotated" | "revoked";
 
 export type ApiKeyScope =
-  | 'transactions:read'
-  | 'transactions:write'
-  | 'analytics:read'
-  | 'wallets:read'
-  | 'webhooks:read'
-  | 'webhooks:write'
-  | 'admin'
-  | 'admin:*'
-  | 'read:quotes'
-  | 'read:transactions'
-  | 'write:transactions'
-  | 'write:payouts'
-  | 'read:analytics'
-  | 'read:wallets'
-  | 'read:webhooks'
-  | 'write:webhooks'
-  | 'read:api-keys'
-  | 'write:api-keys';
+  | "transactions:read"
+  | "transactions:write"
+  | "analytics:read"
+  | "wallets:read"
+  | "webhooks:read"
+  | "webhooks:write"
+  | "admin"
+  | "admin:*"
+  | "read:quotes"
+  | "read:transactions"
+  | "write:transactions"
+  | "write:payouts"
+  | "read:analytics"
+  | "read:wallets"
+  | "read:webhooks"
+  | "write:webhooks"
+  | "read:api-keys"
+  | "write:api-keys";
 
 export interface ApiKeyRecord {
   id: string;

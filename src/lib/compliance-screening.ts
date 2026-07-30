@@ -1,4 +1,4 @@
-export type ScreeningVerdict = 'allow' | 'deny' | 'review';
+export type ScreeningVerdict = "allow" | "deny" | "review";
 
 export interface ScreeningResult {
   verdict: ScreeningVerdict;
@@ -11,7 +11,7 @@ export interface ScreeningResult {
 
 export interface ScreeningRequest {
   address: string;
-  addressType: 'stellar' | 'evm' | 'bank';
+  addressType: "stellar" | "evm" | "bank";
   amount?: number;
   currency?: string;
 }
@@ -22,7 +22,7 @@ export interface ScreeningProvider {
 }
 
 export class SandboxScreeningProvider implements ScreeningProvider {
-  readonly name = 'sandbox';
+  readonly name = "sandbox";
 
   async screen(request: ScreeningRequest): Promise<ScreeningResult> {
     const now = Date.now();
@@ -30,24 +30,30 @@ export class SandboxScreeningProvider implements ScreeningProvider {
     let score = 0;
 
     // Sandbox rules: flag known test addresses
-    if (request.address.startsWith('G') && request.address.includes('SANDBOX_BLOCKED')) {
+    if (
+      request.address.startsWith("G") &&
+      request.address.includes("SANDBOX_BLOCKED")
+    ) {
       score = 100;
-      flags.push('sandbox_blocked_address');
-    } else if (request.address.startsWith('G') && request.address.includes('SANDBOX_REVIEW')) {
+      flags.push("sandbox_blocked_address");
+    } else if (
+      request.address.startsWith("G") &&
+      request.address.includes("SANDBOX_REVIEW")
+    ) {
       score = 60;
-      flags.push('sandbox_review_address');
+      flags.push("sandbox_review_address");
     } else {
       score = 0;
     }
 
     if (request.amount && request.amount >= 10000) {
       score = Math.min(score + 20, 100);
-      flags.push('high_value');
+      flags.push("high_value");
     }
 
-    let verdict: ScreeningVerdict = 'allow';
-    if (score >= 80) verdict = 'deny';
-    else if (score >= 40) verdict = 'review';
+    let verdict: ScreeningVerdict = "allow";
+    if (score >= 80) verdict = "deny";
+    else if (score >= 40) verdict = "review";
 
     return {
       verdict,
@@ -71,19 +77,19 @@ export interface ScreeningOverride {
   expiresAt: number | null;
 }
 
-const OVERRIDE_STORAGE_KEY = 'stellar_spend_screening_overrides';
+const OVERRIDE_STORAGE_KEY = "stellar_spend_screening_overrides";
 
 function getOverrides(): ScreeningOverride[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem(OVERRIDE_STORAGE_KEY) || '[]');
+    return JSON.parse(localStorage.getItem(OVERRIDE_STORAGE_KEY) || "[]");
   } catch {
     return [];
   }
 }
 
 function saveOverrides(overrides: ScreeningOverride[]): void {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     localStorage.setItem(OVERRIDE_STORAGE_KEY, JSON.stringify(overrides));
   }
 }
@@ -103,14 +109,18 @@ export function addScreeningOverride(
     createdAt: Date.now(),
     expiresAt: expiresAt ?? null,
   };
-  const overrides = getOverrides().filter((o) => o.address !== address.toLowerCase());
+  const overrides = getOverrides().filter(
+    (o) => o.address !== address.toLowerCase(),
+  );
   overrides.push(override);
   saveOverrides(overrides);
   return override;
 }
 
 export function removeScreeningOverride(address: string): void {
-  const overrides = getOverrides().filter((o) => o.address !== address.toLowerCase());
+  const overrides = getOverrides().filter(
+    (o) => o.address !== address.toLowerCase(),
+  );
   saveOverrides(overrides);
 }
 
@@ -122,17 +132,19 @@ export function getScreeningOverrides(): ScreeningOverride[] {
 }
 
 function findOverride(address: string): ScreeningOverride | undefined {
-  return getScreeningOverrides().find((o) => o.address === address.toLowerCase());
+  return getScreeningOverrides().find(
+    (o) => o.address === address.toLowerCase(),
+  );
 }
 
 // ─── Cache ────────────────────────────────────────────────────────────────────
 
-const CACHE_KEY = 'stellar_spend_screening_cache';
+const CACHE_KEY = "stellar_spend_screening_cache";
 
 function getCachedResult(address: string): ScreeningResult | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   try {
-    const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+    const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
     const entry = cache[address.toLowerCase()];
     if (!entry) return null;
     if (entry.expiresAt < Date.now()) {
@@ -147,9 +159,9 @@ function getCachedResult(address: string): ScreeningResult | null {
 }
 
 function cacheResult(address: string, result: ScreeningResult): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
-    const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}');
+    const cache = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
     cache[address.toLowerCase()] = result;
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
   } catch {}
@@ -190,11 +202,11 @@ export async function screenAddress(
     const now = Date.now();
     return {
       verdict: override.verdict,
-      score: override.verdict === 'deny' ? 100 : 0,
+      score: override.verdict === "deny" ? 100 : 0,
       flags: [`override:${override.verdict}`],
       screenedAt: now,
       expiresAt: override.expiresAt ?? now + 24 * 60 * 60 * 1000,
-      provider: 'ops_override',
+      provider: "ops_override",
     };
   }
 
@@ -211,9 +223,9 @@ export async function screenAddress(
     if (failClosed) {
       const now = Date.now();
       return {
-        verdict: 'deny',
+        verdict: "deny",
         score: 100,
-        flags: ['screening_error_fail_closed'],
+        flags: ["screening_error_fail_closed"],
         screenedAt: now,
         expiresAt: now + 5 * 60 * 1000,
         provider: activeProvider.name,
@@ -221,9 +233,9 @@ export async function screenAddress(
     }
     const now = Date.now();
     return {
-      verdict: 'allow',
+      verdict: "allow",
       score: 0,
-      flags: ['screening_error_fail_open'],
+      flags: ["screening_error_fail_open"],
       screenedAt: now,
       expiresAt: now + 5 * 60 * 1000,
       provider: activeProvider.name,
@@ -232,7 +244,7 @@ export async function screenAddress(
 }
 
 export function clearScreeningCache(): void {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     localStorage.removeItem(CACHE_KEY);
   }
 }

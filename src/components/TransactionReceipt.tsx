@@ -38,13 +38,26 @@ function VerificationQR({ value, label }: { value: string; label: string }) {
     <div
       aria-label={label}
       role="img"
-      style={{ width: 72, height: 72, background: "#fff", border: "1px solid var(--line)" }}
+      style={{
+        width: 72,
+        height: 72,
+        background: "#fff",
+        border: "1px solid var(--line)",
+      }}
       dangerouslySetInnerHTML={{ __html: svgPattern }}
     />
   );
 }
 
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Row({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
   return (
     <div
       style={{
@@ -56,7 +69,9 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
         borderBottom: "1px solid var(--line)",
       }}
     >
-      <span style={{ fontSize: 11, color: "var(--muted)", flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 11, color: "var(--muted)", flexShrink: 0 }}>
+        {label}
+      </span>
       <span
         style={{
           fontSize: 12,
@@ -129,7 +144,10 @@ export function TransactionReceipt({ data, onClose }: TransactionReceiptProps) {
   async function handleShare() {
     if (navigator.share) {
       try {
-        await navigator.share({ title: "Transaction Receipt", text: shareText });
+        await navigator.share({
+          title: "Transaction Receipt",
+          text: shareText,
+        });
       } catch {
         // user cancelled
       }
@@ -151,19 +169,43 @@ export function TransactionReceipt({ data, onClose }: TransactionReceiptProps) {
     >
       <div ref={printableRef}>
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: 20,
+          }}
+        >
           <div>
-            <div style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em", marginBottom: 4 }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: "var(--muted)",
+                letterSpacing: "0.08em",
+                marginBottom: 4,
+              }}
+            >
               {t("receipt.title").toUpperCase()}
             </div>
-            <div style={{ fontSize: 20, color: "var(--text)", fontWeight: 600 }}>
+            <div
+              style={{ fontSize: 20, color: "var(--text)", fontWeight: 600 }}
+            >
               {data.amount} USDC
             </div>
             <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 2 }}>
-              → {formatNumber(parseFloat(data.destinationAmount), language)} {data.currency}
+              → {formatNumber(parseFloat(data.destinationAmount), language)}{" "}
+              {data.currency}
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: 8,
+            }}
+          >
             <span
               style={{
                 fontSize: 11,
@@ -193,16 +235,28 @@ export function TransactionReceipt({ data, onClose }: TransactionReceiptProps) {
         <div ref={receiptRef}>
           <Row label={t("receipt.date")} value={date} />
           <Row label={t("receipt.txHash")} value={shortHash} mono />
-          {data.orderId && <Row label={t("receipt.orderId")} value={data.orderId} mono />}
+          {data.orderId && (
+            <Row label={t("receipt.orderId")} value={data.orderId} mono />
+          )}
           <Row label={t("receipt.provider")} value={data.provider} />
           <Row
             label={t("receipt.exchangeRate")}
             value={`1 USDC = ${formatNumber(data.rate, language)} ${data.currency}`}
           />
-          <Row label={t("receipt.bridgeFee")} value={`${data.bridgeFee} USDC`} />
-          <Row label={t("receipt.payoutFee")} value={`${data.payoutFee} USDC`} />
+          <Row
+            label={t("receipt.bridgeFee")}
+            value={`${data.bridgeFee} USDC`}
+          />
+          <Row
+            label={t("receipt.payoutFee")}
+            value={`${data.payoutFee} USDC`}
+          />
           <Row label={t("receipt.bank")} value={data.bankName} />
-          <Row label={t("receipt.account")} value={`****${data.accountNumber.slice(-4)}`} mono />
+          <Row
+            label={t("receipt.account")}
+            value={`****${data.accountNumber.slice(-4)}`}
+            mono
+          />
         </div>
 
         <a
@@ -210,7 +264,12 @@ export function TransactionReceipt({ data, onClose }: TransactionReceiptProps) {
           target="_blank"
           rel="noopener noreferrer"
           className="explorer-link"
-          style={{ display: "block", fontSize: 11, color: "var(--accent)", marginTop: 12 }}
+          style={{
+            display: "block",
+            fontSize: 11,
+            color: "var(--accent)",
+            marginTop: 12,
+          }}
         >
           {t("receipt.viewExplorer")} ↗
         </a>
@@ -233,8 +292,18 @@ export function TransactionReceipt({ data, onClose }: TransactionReceiptProps) {
       </div>
 
       {/* QR + Actions */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: 20 }}>
-        <VerificationQR value={qrPayload} label={`QR code for transaction ${data.txHash.slice(0, 8)}…`} />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          marginTop: 20,
+        }}
+      >
+        <VerificationQR
+          value={qrPayload}
+          label={`QR code for transaction ${data.txHash.slice(0, 8)}…`}
+        />
 
         <div style={{ display: "flex", gap: 8 }}>
           <button

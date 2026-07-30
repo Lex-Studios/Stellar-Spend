@@ -217,7 +217,10 @@ export class MultisigSettlementService {
   }
 
   requiredThreshold(value: bigint): number {
-    if (this.config.highValueLimit > BigInt(0) && value <= this.config.highValueLimit) {
+    if (
+      this.config.highValueLimit > BigInt(0) &&
+      value <= this.config.highValueLimit
+    ) {
       return 1;
     }
     return this.config.threshold;

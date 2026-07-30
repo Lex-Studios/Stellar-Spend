@@ -5,11 +5,15 @@ import { logger } from "@/lib/logger";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { transactionId, userAddress, signature, publicKey, algorithm } = body;
+    const { transactionId, userAddress, signature, publicKey, algorithm } =
+      body;
 
     if (!transactionId || !userAddress || !signature || !publicKey) {
       return NextResponse.json(
-        { error: "transactionId, userAddress, signature, and publicKey are required" },
+        {
+          error:
+            "transactionId, userAddress, signature, and publicKey are required",
+        },
         { status: 400 },
       );
     }
@@ -44,9 +48,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const signatures = await transactionSigningService.getTransactionSignatures(
-      transactionId,
-    );
+    const signatures =
+      await transactionSigningService.getTransactionSignatures(transactionId);
 
     return NextResponse.json({ signatures });
   } catch (error) {

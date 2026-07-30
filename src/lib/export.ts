@@ -6,8 +6,11 @@ import type { Transaction } from "./transaction-storage";
 
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleString("en-US", {
-    month: "short", day: "numeric", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -27,7 +30,7 @@ function triggerDownload(blob: Blob, filename: string): void {
 
 function getTimestampedFilename(basename: string, ext: string): string {
   const now = new Date();
-  const timestamp = now.toISOString().split('T')[0];
+  const timestamp = now.toISOString().split("T")[0];
   return `${basename}_${timestamp}.${ext}`;
 }
 
@@ -38,7 +41,7 @@ function getTimestampedFilename(basename: string, ext: string): string {
 export function filterByDateRange(
   txs: Transaction[],
   dateFrom: string,
-  dateTo: string
+  dateTo: string,
 ): Transaction[] {
   let result = txs;
   if (dateFrom) {
@@ -57,13 +60,25 @@ export function filterByDateRange(
 // ---------------------------------------------------------------------------
 
 const CSV_HEADERS = [
-  "ID", "Date", "Amount (USDC)", "Currency",
-  "Stellar Tx Hash", "Bridge Status", "Payout Order ID", "Payout Status",
-  "Bank / Institution", "Account Name", "Account Identifier",
-  "Status", "Error",
+  "ID",
+  "Date",
+  "Amount (USDC)",
+  "Currency",
+  "Stellar Tx Hash",
+  "Bridge Status",
+  "Payout Order ID",
+  "Payout Status",
+  "Bank / Institution",
+  "Account Name",
+  "Account Identifier",
+  "Status",
+  "Error",
 ];
 
-export function exportCSV(txs: Transaction[], filename = "transactions.csv"): void {
+export function exportCSV(
+  txs: Transaction[],
+  filename = "transactions.csv",
+): void {
   const rows = [
     CSV_HEADERS.map(escapeCell).join(","),
     ...txs.map((tx) =>
@@ -83,13 +98,13 @@ export function exportCSV(txs: Transaction[], filename = "transactions.csv"): vo
         tx.error ?? "",
       ]
         .map(escapeCell)
-        .join(",")
+        .join(","),
     ),
   ];
 
   triggerDownload(
     new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" }),
-    filename
+    filename,
   );
 }
 
@@ -109,7 +124,7 @@ export function exportPDF(txs: Transaction[], filename = "transactions"): void {
         <td>${tx.beneficiary.institution}</td>
         <td>${tx.beneficiary.accountName}</td>
         <td class="status ${tx.status}">${tx.status.toUpperCase()}</td>
-      </tr>`
+      </tr>`,
     )
     .join("");
 
@@ -153,14 +168,19 @@ export function exportPDF(txs: Transaction[], filename = "transactions"): void {
   win.document.close();
   win.focus();
   // Small delay so the browser renders before print dialog
-  setTimeout(() => { win.print(); }, 400);
+  setTimeout(() => {
+    win.print();
+  }, 400);
 }
 
 // ---------------------------------------------------------------------------
 // JSON export
 // ---------------------------------------------------------------------------
 
-export function exportJSON(txs: Transaction[], filename = "transactions.json"): void {
+export function exportJSON(
+  txs: Transaction[],
+  filename = "transactions.json",
+): void {
   const data = {
     exportedAt: new Date().toISOString(),
     transactionCount: txs.length,
@@ -180,22 +200,30 @@ export function exportJSON(txs: Transaction[], filename = "transactions.json"): 
     })),
   };
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-  triggerDownload(blob, getTimestampedFilename(filename.replace(".json", ""), "json"));
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+  triggerDownload(
+    blob,
+    getTimestampedFilename(filename.replace(".json", ""), "json"),
+  );
 }
 
 // ---------------------------------------------------------------------------
 // Excel export (XLSX)
 // ---------------------------------------------------------------------------
 
-export async function exportXLSX(txs: Transaction[], filename = "transactions.xlsx"): Promise<void> {
+export async function exportXLSX(
+  txs: Transaction[],
+  filename = "transactions.xlsx",
+): Promise<void> {
   try {
     const { utils, writeFile } = await import("xlsx");
 
     const data = txs.map((tx) => ({
-      "Date": formatDate(tx.timestamp),
+      Date: formatDate(tx.timestamp),
       "Amount (USDC)": tx.amount,
-      "Currency": tx.currency,
+      Currency: tx.currency,
       "Stellar Tx Hash": tx.stellarTxHash ?? "",
       "Bridge Status": tx.bridgeStatus ?? "",
       "Payout Order ID": tx.payoutOrderId ?? "",
@@ -203,15 +231,18 @@ export async function exportXLSX(txs: Transaction[], filename = "transactions.xl
       "Bank / Institution": tx.beneficiary.institution,
       "Account Name": tx.beneficiary.accountName,
       "Account Identifier": tx.beneficiary.accountIdentifier,
-      "Status": tx.status,
-      "Error": tx.error ?? "",
+      Status: tx.status,
+      Error: tx.error ?? "",
     }));
 
     const ws = utils.json_to_sheet(data);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Transactions");
 
-    writeFile(wb, getTimestampedFilename(filename.replace(".xlsx", ""), "xlsx"));
+    writeFile(
+      wb,
+      getTimestampedFilename(filename.replace(".xlsx", ""), "xlsx"),
+    );
   } catch (error) {
     console.error("Excel export failed:", error);
     throw new Error("Failed to export to Excel");

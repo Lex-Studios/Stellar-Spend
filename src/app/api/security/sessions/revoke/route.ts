@@ -17,7 +17,10 @@ export async function POST(request: NextRequest) {
 
     if (revokeAll) {
       await sessionManagementService.revokeAllUserSessions(userAddress, reason);
-      return NextResponse.json({ success: true, message: "All sessions revoked" });
+      return NextResponse.json({
+        success: true,
+        message: "All sessions revoked",
+      });
     }
 
     if (!sessionId) {

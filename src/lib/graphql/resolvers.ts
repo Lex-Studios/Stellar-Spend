@@ -9,7 +9,7 @@ export interface GraphQLContext {
   userId?: string;
   isPremium?: boolean;
   isAuthenticated: boolean;
-  role?: 'user' | 'admin' | 'ops';
+  role?: "user" | "admin" | "ops";
 }
 
 // ─── Query Resolvers ─────────────────────────────────────────────────────────
@@ -23,7 +23,12 @@ const Query = {
 
   async transactions(
     _: unknown,
-    { limit = 20, offset = 0, status, currency }: { limit?: number; offset?: number; status?: string; currency?: string },
+    {
+      limit = 20,
+      offset = 0,
+      status,
+      currency,
+    }: { limit?: number; offset?: number; status?: string; currency?: string },
     ctx: GraphQLContext,
   ) {
     requireAuth(ctx);
@@ -33,7 +38,11 @@ const Query = {
 
   async quote(
     _: unknown,
-    { amount, currency, feeMethod = "USDC" }: { amount: string; currency: string; feeMethod?: string },
+    {
+      amount,
+      currency,
+      feeMethod = "USDC",
+    }: { amount: string; currency: string; feeMethod?: string },
     ctx: GraphQLContext,
   ) {
     requireAuth(ctx);
@@ -47,13 +56,21 @@ const Query = {
     return getCurrencies();
   },
 
-  async institutions(_: unknown, { currency }: { currency: string }, ctx: GraphQLContext) {
+  async institutions(
+    _: unknown,
+    { currency }: { currency: string },
+    ctx: GraphQLContext,
+  ) {
     requireAuth(ctx);
     const { getInstitutions } = await import("../currencies");
     return getInstitutions(currency);
   },
 
-  async rate(_: unknown, { currency = "NGN" }: { currency?: string }, ctx: GraphQLContext) {
+  async rate(
+    _: unknown,
+    { currency = "NGN" }: { currency?: string },
+    ctx: GraphQLContext,
+  ) {
     requireAuth(ctx);
     const { getRate } = await import("../services/quote.service");
     const rate = await getRate(currency);
@@ -63,7 +80,7 @@ const Query = {
   // ─── Dispute queries ────────────────────────────────────────────────────────
 
   async dispute(_: unknown, { id }: { id: string }, ctx: GraphQLContext) {
-    requireRole(ctx, 'admin');
+    requireRole(ctx, "admin");
     const { getDisputeById } = await import("../repositories/dispute");
     return getDisputeById(id);
   },
@@ -73,7 +90,7 @@ const Query = {
     { status, limit = 20 }: { status?: string; limit?: number },
     ctx: GraphQLContext,
   ) {
-    requireRole(ctx, 'admin');
+    requireRole(ctx, "admin");
     const { getDisputes } = await import("../repositories/dispute");
     return getDisputes({ status, limit });
   },
@@ -85,14 +102,21 @@ const Query = {
     { from, to }: { from?: string; to?: string },
     ctx: GraphQLContext,
   ) {
-    requireRole(ctx, 'admin');
+    requireRole(ctx, "admin");
     const { generateAnalyticsSummary } = await import("./analytics");
-    return generateAnalyticsSummary(from ? parseInt(from) : undefined, to ? parseInt(to) : undefined);
+    return generateAnalyticsSummary(
+      from ? parseInt(from) : undefined,
+      to ? parseInt(to) : undefined,
+    );
   },
 
   // ─── KYC queries ────────────────────────────────────────────────────────────
 
-  async kycInfo(_: unknown, { userId }: { userId: string }, ctx: GraphQLContext) {
+  async kycInfo(
+    _: unknown,
+    { userId }: { userId: string },
+    ctx: GraphQLContext,
+  ) {
     requireAuth(ctx);
     const { KYCLimitService } = await import("../kyc-limits");
     const kyc = KYCLimitService.getKYC(userId);
@@ -102,12 +126,18 @@ const Query = {
       status: kyc.status,
       documentType: kyc.documentType,
       submittedAt: new Date(kyc.submittedAt).toISOString(),
-      verifiedAt: kyc.verifiedAt ? new Date(kyc.verifiedAt).toISOString() : null,
+      verifiedAt: kyc.verifiedAt
+        ? new Date(kyc.verifiedAt).toISOString()
+        : null,
       rejectionReason: kyc.rejectionReason,
     };
   },
 
-  async userLimits(_: unknown, { userId }: { userId: string }, ctx: GraphQLContext) {
+  async userLimits(
+    _: unknown,
+    { userId }: { userId: string },
+    ctx: GraphQLContext,
+  ) {
     requireAuth(ctx);
     const { KYCLimitService } = await import("../kyc-limits");
     const limits = KYCLimitService.getUserLimits(userId);
@@ -127,10 +157,14 @@ const Query = {
 
   // ─── Compliance queries ─────────────────────────────────────────────────────
 
-  async screeningResult(_: unknown, { address }: { address: string }, ctx: GraphQLContext) {
+  async screeningResult(
+    _: unknown,
+    { address }: { address: string },
+    ctx: GraphQLContext,
+  ) {
     requireAuth(ctx);
     const { screenAddress } = await import("../compliance-screening");
-    const result = await screenAddress({ address, addressType: 'stellar' });
+    const result = await screenAddress({ address, addressType: "stellar" });
     return {
       verdict: result.verdict,
       score: result.score,
@@ -141,14 +175,18 @@ const Query = {
   },
 
   async screeningOverrides(_: unknown, __: unknown, ctx: GraphQLContext) {
-    requireRole(ctx, 'ops');
+    requireRole(ctx, "ops");
     const { getScreeningOverrides } = await import("../compliance-screening");
     return getScreeningOverrides();
   },
 
   // ─── Webhook queries ────────────────────────────────────────────────────────
 
-  async webhookDelivery(_: unknown, { id }: { id: string }, ctx: GraphQLContext) {
+  async webhookDelivery(
+    _: unknown,
+    { id }: { id: string },
+    ctx: GraphQLContext,
+  ) {
     requireAuth(ctx);
     return getRecord(id);
   },
@@ -159,7 +197,9 @@ const Query = {
     ctx: GraphQLContext,
   ) {
     requireAuth(ctx);
-    const records = await getRecordsByStatus(status as "pending" | "delivered" | "failed");
+    const records = await getRecordsByStatus(
+      status as "pending" | "delivered" | "failed",
+    );
     return records.slice(0, limit);
   },
 
@@ -179,7 +219,11 @@ const Query = {
     };
   },
 
-  async dlqEntries(_: unknown, { limit = 50 }: { limit?: number }, ctx: GraphQLContext) {
+  async dlqEntries(
+    _: unknown,
+    { limit = 50 }: { limit?: number },
+    ctx: GraphQLContext,
+  ) {
     requireAuth(ctx);
     const entries = await listDLQ();
     return entries.slice(0, limit);
@@ -189,13 +233,21 @@ const Query = {
 // ─── Mutation Resolvers ───────────────────────────────────────────────────────
 
 const Mutation = {
-  async replayWebhook(_: unknown, { dlqEntryId }: { dlqEntryId: string }, ctx: GraphQLContext) {
-    requireRole(ctx, 'admin');
+  async replayWebhook(
+    _: unknown,
+    { dlqEntryId }: { dlqEntryId: string },
+    ctx: GraphQLContext,
+  ) {
+    requireRole(ctx, "admin");
     return replayDLQ(dlqEntryId);
   },
 
-  async retryWebhookDelivery(_: unknown, { deliveryId }: { deliveryId: string }, ctx: GraphQLContext) {
-    requireRole(ctx, 'admin');
+  async retryWebhookDelivery(
+    _: unknown,
+    { deliveryId }: { deliveryId: string },
+    ctx: GraphQLContext,
+  ) {
+    requireRole(ctx, "admin");
     const record = await getRecord(deliveryId);
     if (!record) throw new Error(`Delivery ${deliveryId} not found`);
     return updateRecord(deliveryId, {
@@ -208,12 +260,21 @@ const Mutation = {
 
   async createDispute(
     _: unknown,
-    { transactionId, reason, evidence }: { transactionId: string; reason: string; evidence?: string[] },
+    {
+      transactionId,
+      reason,
+      evidence,
+    }: { transactionId: string; reason: string; evidence?: string[] },
     ctx: GraphQLContext,
   ) {
     requireAuth(ctx);
     const { createDispute } = await import("../repositories/dispute");
-    return createDispute({ transactionId, userId: ctx.userId!, reason, evidence });
+    return createDispute({
+      transactionId,
+      userId: ctx.userId!,
+      reason,
+      evidence,
+    });
   },
 
   async resolveDispute(
@@ -221,7 +282,7 @@ const Mutation = {
     { id, resolution }: { id: string; resolution: string },
     ctx: GraphQLContext,
   ) {
-    requireRole(ctx, 'admin');
+    requireRole(ctx, "admin");
     const { resolveDispute } = await import("../repositories/dispute");
     return resolveDispute(id, resolution, ctx.userId!);
   },
@@ -230,17 +291,25 @@ const Mutation = {
 
   async addScreeningOverride(
     _: unknown,
-    { address, verdict, reason }: { address: string; verdict: string; reason: string },
+    {
+      address,
+      verdict,
+      reason,
+    }: { address: string; verdict: string; reason: string },
     ctx: GraphQLContext,
   ) {
-    requireRole(ctx, 'ops');
+    requireRole(ctx, "ops");
     const { addScreeningOverride } = await import("../compliance-screening");
     addScreeningOverride(address, verdict as any, reason, ctx.userId!);
     return true;
   },
 
-  async removeScreeningOverride(_: unknown, { address }: { address: string }, ctx: GraphQLContext) {
-    requireRole(ctx, 'ops');
+  async removeScreeningOverride(
+    _: unknown,
+    { address }: { address: string },
+    ctx: GraphQLContext,
+  ) {
+    requireRole(ctx, "ops");
     const { removeScreeningOverride } = await import("../compliance-screening");
     removeScreeningOverride(address);
     return true;
@@ -250,7 +319,11 @@ const Mutation = {
 
   async submitKYC(
     _: unknown,
-    { userId, documentType, documentId }: { userId: string; documentType: string; documentId: string },
+    {
+      userId,
+      documentType,
+      documentId,
+    }: { userId: string; documentType: string; documentId: string },
     ctx: GraphQLContext,
   ) {
     requireAuth(ctx);
@@ -264,8 +337,12 @@ const Mutation = {
     };
   },
 
-  async approveKYC(_: unknown, { userId }: { userId: string }, ctx: GraphQLContext) {
-    requireRole(ctx, 'admin');
+  async approveKYC(
+    _: unknown,
+    { userId }: { userId: string },
+    ctx: GraphQLContext,
+  ) {
+    requireRole(ctx, "admin");
     const { KYCLimitService } = await import("../kyc-limits");
     const kyc = KYCLimitService.verifyKYC(userId);
     if (!kyc) throw new Error(`No KYC found for user ${userId}`);
@@ -274,7 +351,9 @@ const Mutation = {
       status: kyc.status,
       documentType: kyc.documentType,
       submittedAt: new Date(kyc.submittedAt).toISOString(),
-      verifiedAt: kyc.verifiedAt ? new Date(kyc.verifiedAt).toISOString() : null,
+      verifiedAt: kyc.verifiedAt
+        ? new Date(kyc.verifiedAt).toISOString()
+        : null,
     };
   },
 
@@ -283,7 +362,7 @@ const Mutation = {
     { userId, reason }: { userId: string; reason: string },
     ctx: GraphQLContext,
   ) {
-    requireRole(ctx, 'admin');
+    requireRole(ctx, "admin");
     const { KYCLimitService } = await import("../kyc-limits");
     const kyc = KYCLimitService.rejectKYC(userId, reason);
     if (!kyc) throw new Error(`No KYC found for user ${userId}`);
@@ -312,12 +391,17 @@ export const subscriptions = {
   },
 
   rateUpdated: {
-    subscribe: async function* (_: unknown, { currency = "NGN" }: { currency?: string }) {
+    subscribe: async function* (
+      _: unknown,
+      { currency = "NGN" }: { currency?: string },
+    ) {
       while (true) {
         await new Promise((r) => setTimeout(r, 30000));
         const { getRate } = await import("../services/quote.service");
         const rate = await getRate(currency);
-        yield { rateUpdated: { rate, currency, updatedAt: new Date().toISOString() } };
+        yield {
+          rateUpdated: { rate, currency, updatedAt: new Date().toISOString() },
+        };
       }
     },
   },
@@ -361,7 +445,7 @@ export const subscriptions = {
       const { screenAddress } = await import("../compliance-screening");
       while (true) {
         await new Promise((r) => setTimeout(r, 60000));
-        const result = await screenAddress({ address, addressType: 'stellar' });
+        const result = await screenAddress({ address, addressType: "stellar" });
         yield {
           screeningAlert: {
             verdict: result.verdict,

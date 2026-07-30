@@ -16,7 +16,8 @@ export interface AnalyticsConfig {
 }
 
 const DEFAULT_CONFIG: AnalyticsConfig = {
-  enabled: typeof window !== "undefined" && process.env.NODE_ENV === "production",
+  enabled:
+    typeof window !== "undefined" && process.env.NODE_ENV === "production",
   debug: process.env.NODE_ENV === "development",
 };
 
@@ -46,7 +47,9 @@ export function useAnalytics(config: Partial<AnalyticsConfig> = {}) {
 
       // Use sendBeacon for reliability (doesn't block page unload)
       if (navigator.sendBeacon) {
-        const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+        const blob = new Blob([JSON.stringify(payload)], {
+          type: "application/json",
+        });
         navigator.sendBeacon("/api/monitoring/vitals", blob);
       } else {
         // Fallback to fetch
@@ -62,7 +65,7 @@ export function useAnalytics(config: Partial<AnalyticsConfig> = {}) {
         });
       }
     },
-    [finalConfig]
+    [finalConfig],
   );
 
   // Track page views
@@ -83,19 +86,22 @@ export function useAnalytics(config: Partial<AnalyticsConfig> = {}) {
         label: walletType,
       });
     },
-    [track]
+    [track],
   );
 
   // Track transaction events
   const trackTransaction = useCallback(
-    (action: "initiated" | "completed" | "failed", metadata?: Record<string, unknown>) => {
+    (
+      action: "initiated" | "completed" | "failed",
+      metadata?: Record<string, unknown>,
+    ) => {
       track({
         category: "Transaction",
         action,
         metadata,
       });
     },
-    [track]
+    [track],
   );
 
   // Track theme changes
@@ -107,7 +113,7 @@ export function useAnalytics(config: Partial<AnalyticsConfig> = {}) {
         label: theme,
       });
     },
-    [track]
+    [track],
   );
 
   // Track errors
@@ -123,7 +129,7 @@ export function useAnalytics(config: Partial<AnalyticsConfig> = {}) {
         },
       });
     },
-    [track]
+    [track],
   );
 
   return {

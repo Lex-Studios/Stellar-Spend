@@ -17,7 +17,7 @@ export interface ApiRequestOptions extends RequestInit {
  */
 export async function apiRequest<T>(
   endpoint: string,
-  options: ApiRequestOptions = {}
+  options: ApiRequestOptions = {},
 ): Promise<T> {
   const { timeout = 30000, ...fetchOptions } = options;
 
@@ -44,8 +44,11 @@ export async function apiRequest<T>(
 /**
  * Make a GET request
  */
-export async function apiGet<T>(endpoint: string, options?: ApiRequestOptions): Promise<T> {
-  return apiRequest<T>(endpoint, { ...options, method: 'GET' });
+export async function apiGet<T>(
+  endpoint: string,
+  options?: ApiRequestOptions,
+): Promise<T> {
+  return apiRequest<T>(endpoint, { ...options, method: "GET" });
 }
 
 /**
@@ -54,13 +57,13 @@ export async function apiGet<T>(endpoint: string, options?: ApiRequestOptions): 
 export async function apiPost<T>(
   endpoint: string,
   body?: any,
-  options?: ApiRequestOptions
+  options?: ApiRequestOptions,
 ): Promise<T> {
   return apiRequest<T>(endpoint, {
     ...options,
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options?.headers,
     },
     body: body ? JSON.stringify(body) : undefined,
@@ -73,13 +76,13 @@ export async function apiPost<T>(
 export async function apiPut<T>(
   endpoint: string,
   body?: any,
-  options?: ApiRequestOptions
+  options?: ApiRequestOptions,
 ): Promise<T> {
   return apiRequest<T>(endpoint, {
     ...options,
-    method: 'PUT',
+    method: "PUT",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...options?.headers,
     },
     body: body ? JSON.stringify(body) : undefined,
@@ -89,8 +92,11 @@ export async function apiPut<T>(
 /**
  * Make a DELETE request
  */
-export async function apiDelete<T>(endpoint: string, options?: ApiRequestOptions): Promise<T> {
-  return apiRequest<T>(endpoint, { ...options, method: 'DELETE' });
+export async function apiDelete<T>(
+  endpoint: string,
+  options?: ApiRequestOptions,
+): Promise<T> {
+  return apiRequest<T>(endpoint, { ...options, method: "DELETE" });
 }
 
 /**
@@ -100,8 +106,8 @@ export function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error;
   }
-  return 'An unknown error occurred';
+  return "An unknown error occurred";
 }

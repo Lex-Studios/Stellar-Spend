@@ -20,7 +20,9 @@ export interface UseSyncSettingsReturn {
  * Hook for managing transaction sync settings
  */
 export function useSyncSettings(userAddress?: string): UseSyncSettingsReturn {
-  const [settings, setSettings] = useState<SyncSettings>(SyncStorage.getDefaultSettings());
+  const [settings, setSettings] = useState<SyncSettings>(
+    SyncStorage.getDefaultSettings(),
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,7 +71,7 @@ export function useSyncSettings(userAddress?: string): UseSyncSettingsReturn {
         setLoading(false);
       }
     },
-    [userAddress]
+    [userAddress],
   );
 
   const queue = SyncStorage.getQueue();

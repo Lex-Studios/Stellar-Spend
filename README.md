@@ -45,7 +45,6 @@ The diagram shows the complete data flow:
 5. **Paycrest** converts USDC → fiat and initiates the bank transfer
 6. **Beneficiary** receives local currency (NGN, KES, GHS, …)
 
-
 ## Key Features
 
 - Connect Freighter or Lobstr wallet (auto-detect)
@@ -80,14 +79,14 @@ graph LR
 
 **Data flow summary:**
 
-| Step | Actor | Action |
-|------|-------|--------|
-| 1 | Browser | Fetches quote, builds Soroban XDR, user signs in wallet |
-| 2 | Stellar | Signed transaction submitted; Allbridge bridge contract invoked |
-| 3 | Allbridge | Detects Stellar deposit, releases USDC on Base |
-| 4 | Server | Polls bridge status; sends Base USDC to Paycrest settlement address |
-| 5 | Paycrest | Converts USDC → fiat, initiates bank transfer |
-| 6 | Bank | Beneficiary receives local currency |
+| Step | Actor     | Action                                                              |
+| ---- | --------- | ------------------------------------------------------------------- |
+| 1    | Browser   | Fetches quote, builds Soroban XDR, user signs in wallet             |
+| 2    | Stellar   | Signed transaction submitted; Allbridge bridge contract invoked     |
+| 3    | Allbridge | Detects Stellar deposit, releases USDC on Base                      |
+| 4    | Server    | Polls bridge status; sends Base USDC to Paycrest settlement address |
+| 5    | Paycrest  | Converts USDC → fiat, initiates bank transfer                       |
+| 6    | Bank      | Beneficiary receives local currency                                 |
 
 ---
 
@@ -125,20 +124,20 @@ sequenceDiagram
 
 ## Tech Stack
 
-| Technology | Version | Purpose |
-|---|---|---|
-| [Next.js](https://nextjs.org) | 15.5 | App framework (App Router, API routes) |
-| [React](https://react.dev) | 19.0 | UI library |
-| [TypeScript](https://www.typescriptlang.org) | 5.7 | Type safety |
-| [Tailwind CSS](https://tailwindcss.com) | 4.2 | Styling |
-| [@stellar/stellar-sdk](https://github.com/stellar/js-stellar-sdk) | 14.6 | Stellar / Soroban transaction building |
-| [@stellar/freighter-api](https://github.com/stellar/freighter) | 6.0 | Freighter wallet integration |
-| [@allbridge/bridge-core-sdk](https://github.com/allbridge-io/allbridge-core-sdk) | 3.29 | Stellar → Base bridge |
-| [viem](https://viem.sh) | 2.47 | Base chain interaction |
-| [Paycrest API](https://paycrest.io) | v1 | Fiat payout / bank settlement |
-| [Sentry](https://sentry.io) | 10.46 | Error monitoring |
-| [Vitest](https://vitest.dev) | 4.1 | Unit testing |
-| [Playwright](https://playwright.dev) | 1.58 | E2E testing |
+| Technology                                                                       | Version | Purpose                                |
+| -------------------------------------------------------------------------------- | ------- | -------------------------------------- |
+| [Next.js](https://nextjs.org)                                                    | 15.5    | App framework (App Router, API routes) |
+| [React](https://react.dev)                                                       | 19.0    | UI library                             |
+| [TypeScript](https://www.typescriptlang.org)                                     | 5.7     | Type safety                            |
+| [Tailwind CSS](https://tailwindcss.com)                                          | 4.2     | Styling                                |
+| [@stellar/stellar-sdk](https://github.com/stellar/js-stellar-sdk)                | 14.6    | Stellar / Soroban transaction building |
+| [@stellar/freighter-api](https://github.com/stellar/freighter)                   | 6.0     | Freighter wallet integration           |
+| [@allbridge/bridge-core-sdk](https://github.com/allbridge-io/allbridge-core-sdk) | 3.29    | Stellar → Base bridge                  |
+| [viem](https://viem.sh)                                                          | 2.47    | Base chain interaction                 |
+| [Paycrest API](https://paycrest.io)                                              | v1      | Fiat payout / bank settlement          |
+| [Sentry](https://sentry.io)                                                      | 10.46   | Error monitoring                       |
+| [Vitest](https://vitest.dev)                                                     | 4.1     | Unit testing                           |
+| [Playwright](https://playwright.dev)                                             | 1.58    | E2E testing                            |
 
 ---
 
@@ -206,18 +205,18 @@ npm run build:analyze
 
 All variables are documented in [`.env.example`](./.env.example). The table below summarises each one.
 
-| Variable | Required | Exposed to browser | Description |
-|---|---|---|---|
-| `PAYCREST_API_KEY` | ✅ | ❌ | Paycrest dashboard API key |
-| `PAYCREST_WEBHOOK_SECRET` | ✅ | ❌ | Paycrest webhook HMAC signing secret |
-| `BASE_PRIVATE_KEY` | ✅ | ❌ | Private key of the Base payout wallet (hex, `0x…`) |
-| `BASE_RETURN_ADDRESS` | ✅ | ❌ | Base address for returns / treasury routing |
-| `BASE_RPC_URL` | ✅ | ❌ | Base chain RPC provider URL |
-| `STELLAR_SOROBAN_RPC_URL` | ✅ | ❌ | Soroban RPC endpoint (server-side) |
-| `STELLAR_HORIZON_URL` | ✅ | ❌ | Horizon endpoint (server-side) |
-| `NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL` | ✅ | ✅ | Soroban RPC endpoint (browser-safe) |
-| `NEXT_PUBLIC_BASE_RETURN_ADDRESS` | ✅ | ✅ | Base return address (browser-safe) |
-| `NEXT_PUBLIC_STELLAR_USDC_ISSUER` | ✅ | ✅ | Stellar USDC issuer account (for trustline filtering) |
+| Variable                              | Required | Exposed to browser | Description                                           |
+| ------------------------------------- | -------- | ------------------ | ----------------------------------------------------- |
+| `PAYCREST_API_KEY`                    | ✅       | ❌                 | Paycrest dashboard API key                            |
+| `PAYCREST_WEBHOOK_SECRET`             | ✅       | ❌                 | Paycrest webhook HMAC signing secret                  |
+| `BASE_PRIVATE_KEY`                    | ✅       | ❌                 | Private key of the Base payout wallet (hex, `0x…`)    |
+| `BASE_RETURN_ADDRESS`                 | ✅       | ❌                 | Base address for returns / treasury routing           |
+| `BASE_RPC_URL`                        | ✅       | ❌                 | Base chain RPC provider URL                           |
+| `STELLAR_SOROBAN_RPC_URL`             | ✅       | ❌                 | Soroban RPC endpoint (server-side)                    |
+| `STELLAR_HORIZON_URL`                 | ✅       | ❌                 | Horizon endpoint (server-side)                        |
+| `NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL` | ✅       | ✅                 | Soroban RPC endpoint (browser-safe)                   |
+| `NEXT_PUBLIC_BASE_RETURN_ADDRESS`     | ✅       | ✅                 | Base return address (browser-safe)                    |
+| `NEXT_PUBLIC_STELLAR_USDC_ISSUER`     | ✅       | ✅                 | Stellar USDC issuer account (for trustline filtering) |
 
 > ⚠️ **Never** prefix secrets with `NEXT_PUBLIC_`. The app validates this at startup and throws if a secret is accidentally exposed.
 
@@ -227,44 +226,45 @@ All variables are documented in [`.env.example`](./.env.example). The table belo
 
 ### Offramp
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/offramp/quote` | Get a conversion quote with FX rate and fees |
-| `GET` | `/api/offramp/currencies` | List supported fiat currencies |
-| `GET` | `/api/offramp/institutions/[currency]` | List banks / institutions for a currency |
-| `POST` | `/api/offramp/verify-account` | Verify a beneficiary account number |
-| `GET` | `/api/offramp/rate` | Get live USDC/NGN spot rate |
+| Method | Path                                   | Description                                  |
+| ------ | -------------------------------------- | -------------------------------------------- |
+| `POST` | `/api/offramp/quote`                   | Get a conversion quote with FX rate and fees |
+| `GET`  | `/api/offramp/currencies`              | List supported fiat currencies               |
+| `GET`  | `/api/offramp/institutions/[currency]` | List banks / institutions for a currency     |
+| `POST` | `/api/offramp/verify-account`          | Verify a beneficiary account number          |
+| `GET`  | `/api/offramp/rate`                    | Get live USDC/NGN spot rate                  |
 
 ### Bridge
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/offramp/bridge/build-tx` | Build Soroban XDR for the bridge transfer |
-| `POST` | `/api/offramp/bridge/submit-soroban` | Submit a signed Soroban XDR |
-| `GET` | `/api/offramp/bridge/status/[txHash]` | Poll Allbridge transfer status |
-| `GET` | `/api/offramp/bridge/tx-status/[hash]` | Poll Stellar on-chain transaction status |
-| `GET` | `/api/offramp/bridge/gas-fee-options` | Get available gas fee options (XLM / USDC) |
+| Method | Path                                   | Description                                |
+| ------ | -------------------------------------- | ------------------------------------------ |
+| `POST` | `/api/offramp/bridge/build-tx`         | Build Soroban XDR for the bridge transfer  |
+| `POST` | `/api/offramp/bridge/submit-soroban`   | Submit a signed Soroban XDR                |
+| `GET`  | `/api/offramp/bridge/status/[txHash]`  | Poll Allbridge transfer status             |
+| `GET`  | `/api/offramp/bridge/tx-status/[hash]` | Poll Stellar on-chain transaction status   |
+| `GET`  | `/api/offramp/bridge/gas-fee-options`  | Get available gas fee options (XLM / USDC) |
 
 ### Payout
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/offramp/paycrest/order` | Create a Paycrest payout order |
-| `GET` | `/api/offramp/status/[orderId]` | Poll payout order status |
-| `POST` | `/api/offramp/execute-payout` | Trigger Base USDC transfer to Paycrest |
+| Method | Path                            | Description                            |
+| ------ | ------------------------------- | -------------------------------------- |
+| `POST` | `/api/offramp/paycrest/order`   | Create a Paycrest payout order         |
+| `GET`  | `/api/offramp/status/[orderId]` | Poll payout order status               |
+| `POST` | `/api/offramp/execute-payout`   | Trigger Base USDC transfer to Paycrest |
 
 ### Webhooks & Health
 
-| Method | Path | Description |
-|--------|------|-------------|
+| Method | Path                     | Description                                     |
+| ------ | ------------------------ | ----------------------------------------------- |
 | `POST` | `/api/webhooks/paycrest` | Receive Paycrest webhook events (HMAC-verified) |
-| `GET` | `/api/health` | Health check endpoint |
+| `GET`  | `/api/health`            | Health check endpoint                           |
 
 ---
 
 ### Example: Get Quote
 
 **Request**
+
 ```http
 POST /api/offramp/quote
 Content-Type: application/json
@@ -277,6 +277,7 @@ Content-Type: application/json
 ```
 
 **Response**
+
 ```json
 {
   "destinationAmount": "158202.00",
@@ -293,6 +294,7 @@ Content-Type: application/json
 ### Example: Build Bridge Transaction
 
 **Request**
+
 ```http
 POST /api/offramp/bridge/build-tx
 Content-Type: application/json
@@ -306,6 +308,7 @@ Content-Type: application/json
 ```
 
 **Response**
+
 ```json
 {
   "xdr": "AAAAAgAAAAB...",
@@ -320,19 +323,19 @@ Content-Type: application/json
 
 Key architectural decisions are documented as ADRs in [`docs/adr/`](./docs/adr/).
 
-| ADR | Title | Date | Status |
-|-----|-------|------|--------|
-| [ADR-001](./docs/adr/ADR-001-localstorage-transaction-history.md) | localStorage for Transaction History | 2025-01-01 | Accepted |
-| [ADR-002](./docs/adr/ADR-002-allbridge-sdk-dynamic-import.md) | Allbridge SDK Dynamic Import | 2025-01-01 | Accepted |
-| [ADR-003](./docs/adr/ADR-003-adapter-pattern-external-services.md) | Adapter Pattern for External Services | 2025-01-01 | Accepted |
-| [ADR-004](./docs/adr/ADR-004-api-versioning-strategy.md) | API Versioning Strategy | 2025-01-01 | Accepted |
-| [ADR-005](./docs/adr/ADR-005-environment-variable-validation.md) | Environment Variable Validation | 2025-01-01 | Accepted |
-| [ADR-006](./docs/adr/ADR-006-idempotency-implementation.md) | Idempotency Implementation | 2025-01-01 | Accepted |
-| [ADR-007](./docs/adr/ADR-007-onramp-architecture.md) | On-Ramp Architecture — Provider Registry | 2026-06-27 | Accepted |
-| [ADR-008](./docs/adr/ADR-008-soroban-escrow-trust-model.md) | Soroban Escrow Trust Model | 2026-06-27 | Accepted |
-| [ADR-009](./docs/adr/ADR-009-provider-abstraction-routing.md) | Provider Abstraction and Routing | 2026-06-27 | Accepted |
-| [ADR-010](./docs/adr/ADR-010-realtime-transport-sse-vs-websocket.md) | Real-Time Transport — SSE vs WebSocket | 2026-06-27 | Accepted |
-| [ADR-011](./docs/adr/ADR-011-feature-flag-approach.md) | Feature Flag Approach | 2026-06-27 | Accepted |
+| ADR                                                                  | Title                                    | Date       | Status   |
+| -------------------------------------------------------------------- | ---------------------------------------- | ---------- | -------- |
+| [ADR-001](./docs/adr/ADR-001-localstorage-transaction-history.md)    | localStorage for Transaction History     | 2025-01-01 | Accepted |
+| [ADR-002](./docs/adr/ADR-002-allbridge-sdk-dynamic-import.md)        | Allbridge SDK Dynamic Import             | 2025-01-01 | Accepted |
+| [ADR-003](./docs/adr/ADR-003-adapter-pattern-external-services.md)   | Adapter Pattern for External Services    | 2025-01-01 | Accepted |
+| [ADR-004](./docs/adr/ADR-004-api-versioning-strategy.md)             | API Versioning Strategy                  | 2025-01-01 | Accepted |
+| [ADR-005](./docs/adr/ADR-005-environment-variable-validation.md)     | Environment Variable Validation          | 2025-01-01 | Accepted |
+| [ADR-006](./docs/adr/ADR-006-idempotency-implementation.md)          | Idempotency Implementation               | 2025-01-01 | Accepted |
+| [ADR-007](./docs/adr/ADR-007-onramp-architecture.md)                 | On-Ramp Architecture — Provider Registry | 2026-06-27 | Accepted |
+| [ADR-008](./docs/adr/ADR-008-soroban-escrow-trust-model.md)          | Soroban Escrow Trust Model               | 2026-06-27 | Accepted |
+| [ADR-009](./docs/adr/ADR-009-provider-abstraction-routing.md)        | Provider Abstraction and Routing         | 2026-06-27 | Accepted |
+| [ADR-010](./docs/adr/ADR-010-realtime-transport-sse-vs-websocket.md) | Real-Time Transport — SSE vs WebSocket   | 2026-06-27 | Accepted |
+| [ADR-011](./docs/adr/ADR-011-feature-flag-approach.md)               | Feature Flag Approach                    | 2026-06-27 | Accepted |
 
 ---
 

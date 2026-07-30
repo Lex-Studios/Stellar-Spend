@@ -6,7 +6,7 @@ export type {
   AccountType,
   EntryType,
   ReconciliationStatus,
-} from './types';
+} from "./types";
 
 export {
   recordEntry,
@@ -17,7 +17,7 @@ export {
   verifyBalances,
   verifyAllAccountsBalanced,
   seedStandardAccounts,
-} from './entries';
+} from "./entries";
 
-export { reconcileAccount, getReconciliationByReport } from './reconciliation';
-export { getRevenueSummary } from './revenue';
+export { reconcileAccount, getReconciliationByReport } from "./reconciliation";
+export { getRevenueSummary } from "./revenue";

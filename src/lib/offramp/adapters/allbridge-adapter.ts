@@ -1,4 +1,9 @@
-import { AllbridgeCoreSdk, nodeRpcUrlsDefault, ChainDetailsMap, TokenWithChainDetails } from '@allbridge/bridge-core-sdk';
+import {
+  AllbridgeCoreSdk,
+  nodeRpcUrlsDefault,
+  ChainDetailsMap,
+  TokenWithChainDetails,
+} from "@allbridge/bridge-core-sdk";
 
 // ─── Module-level SDK singleton ───────────────────────────────────────────────
 
@@ -15,7 +20,10 @@ interface CacheEntry<T> {
 }
 
 let _chainDetailsCache: CacheEntry<ChainDetailsMap> | null = null;
-let _tokenInfoCache: CacheEntry<{ stellar: AllbridgeTokenInfo; base: AllbridgeTokenInfo }> | null = null;
+let _tokenInfoCache: CacheEntry<{
+  stellar: AllbridgeTokenInfo;
+  base: AllbridgeTokenInfo;
+}> | null = null;
 
 function isFresh<T>(entry: CacheEntry<T> | null): entry is CacheEntry<T> {
   return entry !== null && Date.now() < entry.expiresAt;
@@ -62,17 +70,21 @@ export function initializeAllbridgeSdk(): AllbridgeCoreSdk {
   // Legacy fallback for STELLAR_RPC_URL
   const legacyRpcUrl = process.env.STELLAR_RPC_URL;
   if (legacyRpcUrl && !sorobanRpcUrl && !horizonUrl) {
-    if (legacyRpcUrl.includes('horizon')) {
+    if (legacyRpcUrl.includes("horizon")) {
       rpcUrls.STLR = legacyRpcUrl;
-      console.log(`[Allbridge SDK] Using legacy RPC as Horizon: ${legacyRpcUrl}`);
+      console.log(
+        `[Allbridge SDK] Using legacy RPC as Horizon: ${legacyRpcUrl}`,
+      );
     } else {
       rpcUrls.SRB = legacyRpcUrl;
-      console.log(`[Allbridge SDK] Using legacy RPC as Soroban: ${legacyRpcUrl}`);
+      console.log(
+        `[Allbridge SDK] Using legacy RPC as Soroban: ${legacyRpcUrl}`,
+      );
     }
   }
 
   _sdkInstance = new AllbridgeCoreSdk(rpcUrls);
-  console.log('[Allbridge SDK] Initialized new SDK instance');
+  console.log("[Allbridge SDK] Initialized new SDK instance");
   return _sdkInstance;
 }
 
@@ -82,7 +94,9 @@ export function initializeAllbridgeSdk(): AllbridgeCoreSdk {
  * Fetch chain details, caching the result for 5 minutes.
  * Invalidates cache and rethrows on error.
  */
-export async function getCachedChainDetailsMap(sdk: AllbridgeCoreSdk): Promise<ChainDetailsMap> {
+export async function getCachedChainDetailsMap(
+  sdk: AllbridgeCoreSdk,
+): Promise<ChainDetailsMap> {
   if (isFresh(_chainDetailsCache)) {
     return _chainDetailsCache.value;
   }
@@ -122,21 +136,27 @@ export async function getAllbridgeTokens(sdk: AllbridgeCoreSdk): Promise<{
     // Extract Stellar chain (SRB) and find USDC token
     const stellarChain = chainDetailsMap.SRB;
     if (!stellarChain) {
-      throw new Error('Stellar chain (SRB) not found in Allbridge chain details');
+      throw new Error(
+        "Stellar chain (SRB) not found in Allbridge chain details",
+      );
     }
-    const stellarUsdc = stellarChain.tokens.find((token: TokenWithChainDetails) => token.symbol === 'USDC');
+    const stellarUsdc = stellarChain.tokens.find(
+      (token: TokenWithChainDetails) => token.symbol === "USDC",
+    );
     if (!stellarUsdc) {
-      throw new Error('USDC token not found on Stellar chain');
+      throw new Error("USDC token not found on Stellar chain");
     }
 
     // Extract Base chain (BAS) and find USDC token
     const baseChain = chainDetailsMap.BAS;
     if (!baseChain) {
-      throw new Error('Base chain (BAS) not found in Allbridge chain details');
+      throw new Error("Base chain (BAS) not found in Allbridge chain details");
     }
-    const baseUsdc = baseChain.tokens.find((token: TokenWithChainDetails) => token.symbol === 'USDC');
+    const baseUsdc = baseChain.tokens.find(
+      (token: TokenWithChainDetails) => token.symbol === "USDC",
+    );
     if (!baseUsdc) {
-      throw new Error('USDC token not found on Base chain');
+      throw new Error("USDC token not found on Base chain");
     }
 
     const result = {
@@ -159,14 +179,18 @@ export async function getAllbridgeTokens(sdk: AllbridgeCoreSdk): Promise<{
 export async function getAllbridgeToken(
   sdk: AllbridgeCoreSdk,
   chainKey: string,
-  tokenSymbol: string
+  tokenSymbol: string,
 ): Promise<TokenWithChainDetails> {
   try {
     const chainDetailsMap = await getCachedChainDetailsMap(sdk);
     const chain = chainDetailsMap[chainKey];
-    if (!chain) throw new Error(`Chain ${chainKey} not found in Allbridge details`);
-    const token = chain.tokens.find((t: TokenWithChainDetails) => t.symbol === tokenSymbol.toUpperCase());
-    if (!token) throw new Error(`${tokenSymbol} not found on chain ${chainKey}`);
+    if (!chain)
+      throw new Error(`Chain ${chainKey} not found in Allbridge details`);
+    const token = chain.tokens.find(
+      (t: TokenWithChainDetails) => t.symbol === tokenSymbol.toUpperCase(),
+    );
+    if (!token)
+      throw new Error(`${tokenSymbol} not found on chain ${chainKey}`);
     return token;
   } catch (error) {
     invalidateSdkCache();
@@ -179,7 +203,7 @@ export async function getAllbridgeToken(
  */
 export async function getAllbridgeChainTokens(
   sdk: AllbridgeCoreSdk,
-  chainKey: string
+  chainKey: string,
 ): Promise<TokenWithChainDetails[]> {
   try {
     const chainDetailsMap = await getCachedChainDetailsMap(sdk);
@@ -201,30 +225,36 @@ export async function getAllbridgeQuote(
   sdk: AllbridgeCoreSdk,
   sourceToken: TokenWithChainDetails,
   destinationToken: TokenWithChainDetails,
-  amount: string
+  amount: string,
 ): Promise<{
   receiveAmount: string;
   fee: string;
   estimatedTime: number;
 }> {
   try {
-    const { Messenger } = await import('@allbridge/bridge-core-sdk');
+    const { Messenger } = await import("@allbridge/bridge-core-sdk");
 
     const amountToBeReceived = await sdk.getAmountToBeReceived(
       amount,
       sourceToken,
-      destinationToken
+      destinationToken,
     );
 
-    const fee = (parseFloat(amount) - parseFloat(amountToBeReceived)).toString();
+    const fee = (
+      parseFloat(amount) - parseFloat(amountToBeReceived)
+    ).toString();
 
     const estimatedTime = await sdk.getAverageTransferTime(
       sourceToken,
       destinationToken,
-      Messenger.ALLBRIDGE
+      Messenger.ALLBRIDGE,
     );
 
-    return { receiveAmount: amountToBeReceived, fee, estimatedTime: estimatedTime ?? 0 };
+    return {
+      receiveAmount: amountToBeReceived,
+      fee,
+      estimatedTime: estimatedTime ?? 0,
+    };
   } catch (error) {
     invalidateSdkCache();
     throw error;

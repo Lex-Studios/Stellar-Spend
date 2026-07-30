@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { CreateDisputeRequest } from '@/types/disputes';
-import { useI18n } from '@/lib/i18n';
-import { cn } from '@/lib/cn';
+import { useState, useRef } from "react";
+import { CreateDisputeRequest } from "@/types/disputes";
+import { useI18n } from "@/lib/i18n";
+import { cn } from "@/lib/cn";
 
 interface DisputeFormProps {
   transactionId: string;
@@ -11,11 +11,15 @@ interface DisputeFormProps {
   onCancel?: () => void;
 }
 
-export function DisputeForm({ transactionId, onSubmit, onCancel }: DisputeFormProps) {
-  const [reason, setReason] = useState('');
-  const [description, setDescription] = useState('');
+export function DisputeForm({
+  transactionId,
+  onSubmit,
+  onCancel,
+}: DisputeFormProps) {
+  const [reason, setReason] = useState("");
+  const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
 
@@ -23,18 +27,18 @@ export function DisputeForm({ transactionId, onSubmit, onCancel }: DisputeFormPr
   const { t } = useI18n();
 
   const reasons = [
-    'Funds not received',
-    'Incorrect amount',
-    'Wrong recipient',
-    'Duplicate transaction',
-    'Other',
+    "Funds not received",
+    "Incorrect amount",
+    "Wrong recipient",
+    "Duplicate transaction",
+    "Other",
   ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('File size must be less than 5MB');
+        setError("File size must be less than 5MB");
         return;
       }
       setSelectedFile(file);
@@ -48,7 +52,7 @@ export function DisputeForm({ transactionId, onSubmit, onCancel }: DisputeFormPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
@@ -58,17 +62,20 @@ export function DisputeForm({ transactionId, onSubmit, onCancel }: DisputeFormPr
         description: description || undefined,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit dispute');
+      setError(err instanceof Error ? err.message : "Failed to submit dispute");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in duration-300">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-5 animate-in fade-in duration-300"
+    >
       <div className="space-y-1.5">
         <label className="block text-[10px] tracking-widest uppercase text-[#777777] font-bold">
-          {t('dispute.reason')} *
+          {t("dispute.reason")} *
         </label>
         <select
           value={reason}
@@ -87,7 +94,7 @@ export function DisputeForm({ transactionId, onSubmit, onCancel }: DisputeFormPr
 
       <div className="space-y-1.5">
         <label className="block text-[10px] tracking-widest uppercase text-[#777777] font-bold">
-          {t('dispute.description')}
+          {t("dispute.description")}
         </label>
         <textarea
           value={description}
@@ -101,35 +108,45 @@ export function DisputeForm({ transactionId, onSubmit, onCancel }: DisputeFormPr
       {/* Document Upload */}
       <div className="space-y-1.5">
         <label className="block text-[10px] tracking-widest uppercase text-[#777777] font-bold">
-          {t('insurance.upload_document')}
+          {t("insurance.upload_document")}
         </label>
-        <div 
+        <div
           onClick={() => fileInputRef.current?.click()}
           className={cn(
             "border-2 border-dashed border-[#333333] p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-[#c9a962] transition-colors bg-[#0a0a0a]",
-            filePreview && "border-[#c9a962] bg-[#c9a962]/5"
+            filePreview && "border-[#c9a962] bg-[#c9a962]/5",
           )}
         >
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileChange} 
-            className="hidden" 
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
             accept="image/*,application/pdf"
           />
           {filePreview ? (
             <div className="flex flex-col items-center gap-2">
-              {selectedFile?.type.startsWith('image/') ? (
-                <img src={filePreview} alt="Preview" className="h-20 w-auto object-contain border border-[#333333]" />
+              {selectedFile?.type.startsWith("image/") ? (
+                <img
+                  src={filePreview}
+                  alt="Preview"
+                  className="h-20 w-auto object-contain border border-[#333333]"
+                />
               ) : (
-                <div className="w-12 h-12 bg-[#222222] flex items-center justify-center text-xs">PDF</div>
+                <div className="w-12 h-12 bg-[#222222] flex items-center justify-center text-xs">
+                  PDF
+                </div>
               )}
-              <span className="text-[10px] text-white truncate max-w-[200px] font-mono">{selectedFile?.name}</span>
+              <span className="text-[10px] text-white truncate max-w-[200px] font-mono">
+                {selectedFile?.name}
+              </span>
             </div>
           ) : (
             <>
               <span className="text-xl opacity-30">↑</span>
-              <span className="text-[10px] text-[#555555] uppercase tracking-widest">JPG, PNG or PDF (max 5MB)</span>
+              <span className="text-[10px] text-[#555555] uppercase tracking-widest">
+                JPG, PNG or PDF (max 5MB)
+              </span>
             </>
           )}
         </div>
@@ -137,11 +154,15 @@ export function DisputeForm({ transactionId, onSubmit, onCancel }: DisputeFormPr
 
       <div className="p-3 bg-blue-900/10 border border-blue-500/20 rounded">
         <p className="text-[10px] text-blue-400 italic">
-          {t('dispute.sla_notice')}
+          {t("dispute.sla_notice")}
         </p>
       </div>
 
-      {error && <div className="text-red-400 text-xs font-bold uppercase tracking-tight">{error}</div>}
+      {error && (
+        <div className="text-red-400 text-xs font-bold uppercase tracking-tight">
+          {error}
+        </div>
+      )}
 
       <div className="flex gap-3">
         <button
@@ -149,7 +170,9 @@ export function DisputeForm({ transactionId, onSubmit, onCancel }: DisputeFormPr
           disabled={!reason || loading}
           className="flex-1 py-3 bg-[#c9a962] text-[#0a0a0a] text-[10px] font-black uppercase tracking-widest hover:bg-[#d4b97a] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-[0_4px_10px_rgba(201,169,98,0.2)]"
         >
-          {loading ? t('common.loading').toUpperCase() : t('dispute.submit').toUpperCase()}
+          {loading
+            ? t("common.loading").toUpperCase()
+            : t("dispute.submit").toUpperCase()}
         </button>
         {onCancel && (
           <button
@@ -157,11 +180,10 @@ export function DisputeForm({ transactionId, onSubmit, onCancel }: DisputeFormPr
             onClick={onCancel}
             className="flex-1 py-3 border border-[#333333] text-[#777777] text-[10px] font-black uppercase tracking-widest hover:border-[#555555] hover:text-white transition-all"
           >
-            {t('common.cancel').toUpperCase()}
+            {t("common.cancel").toUpperCase()}
           </button>
         )}
       </div>
     </form>
   );
 }
-

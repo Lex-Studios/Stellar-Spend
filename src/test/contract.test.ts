@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from "vitest";
 
 interface Contract {
   version: string;
@@ -8,380 +8,382 @@ interface Contract {
 
 const contracts: Map<string, Contract> = new Map();
 
-describe('Contract Testing - API Contracts', () => {
-  describe('Paycrest Integration Contract', () => {
-    it('should define quote request contract', () => {
+describe("Contract Testing - API Contracts", () => {
+  describe("Paycrest Integration Contract", () => {
+    it("should define quote request contract", () => {
       const quoteRequest = {
         amount: 100,
-        currency: 'NGN',
-        feeMethod: 'USDC',
+        currency: "NGN",
+        feeMethod: "USDC",
       };
 
-      expect(quoteRequest).toHaveProperty('amount');
-      expect(quoteRequest).toHaveProperty('currency');
-      expect(quoteRequest).toHaveProperty('feeMethod');
-      expect(typeof quoteRequest.amount).toBe('number');
-      expect(typeof quoteRequest.currency).toBe('string');
+      expect(quoteRequest).toHaveProperty("amount");
+      expect(quoteRequest).toHaveProperty("currency");
+      expect(quoteRequest).toHaveProperty("feeMethod");
+      expect(typeof quoteRequest.amount).toBe("number");
+      expect(typeof quoteRequest.currency).toBe("string");
     });
 
-    it('should define quote response contract', () => {
+    it("should define quote response contract", () => {
       const quoteResponse = {
-        destinationAmount: '158202.00',
+        destinationAmount: "158202.00",
         rate: 1598,
-        currency: 'NGN',
-        bridgeFee: '0.5',
-        payoutFee: '0',
+        currency: "NGN",
+        bridgeFee: "0.5",
+        payoutFee: "0",
         estimatedTime: 300,
       };
 
-      expect(quoteResponse).toHaveProperty('destinationAmount');
-      expect(quoteResponse).toHaveProperty('rate');
-      expect(quoteResponse).toHaveProperty('currency');
-      expect(typeof quoteResponse.rate).toBe('number');
+      expect(quoteResponse).toHaveProperty("destinationAmount");
+      expect(quoteResponse).toHaveProperty("rate");
+      expect(quoteResponse).toHaveProperty("currency");
+      expect(typeof quoteResponse.rate).toBe("number");
       expect(quoteResponse.rate).toBeGreaterThan(0);
     });
 
-    it('should define payout order request contract', () => {
+    it("should define payout order request contract", () => {
       const payoutRequest = {
-        amount: '100',
-        currency: 'NGN',
-        accountNumber: '1234567890',
-        bankCode: 'GTB',
-        accountName: 'John Doe',
-        narration: 'USDC Offramp',
+        amount: "100",
+        currency: "NGN",
+        accountNumber: "1234567890",
+        bankCode: "GTB",
+        accountName: "John Doe",
+        narration: "USDC Offramp",
       };
 
-      expect(payoutRequest).toHaveProperty('amount');
-      expect(payoutRequest).toHaveProperty('currency');
-      expect(payoutRequest).toHaveProperty('accountNumber');
-      expect(payoutRequest).toHaveProperty('bankCode');
-      expect(typeof payoutRequest.amount).toBe('string');
+      expect(payoutRequest).toHaveProperty("amount");
+      expect(payoutRequest).toHaveProperty("currency");
+      expect(payoutRequest).toHaveProperty("accountNumber");
+      expect(payoutRequest).toHaveProperty("bankCode");
+      expect(typeof payoutRequest.amount).toBe("string");
     });
 
-    it('should define payout order response contract', () => {
+    it("should define payout order response contract", () => {
       const payoutResponse = {
-        orderId: 'order_123456',
-        status: 'pending',
-        amount: '100',
-        currency: 'NGN',
-        createdAt: '2024-01-01T00:00:00Z',
-        reference: 'ref_123456',
+        orderId: "order_123456",
+        status: "pending",
+        amount: "100",
+        currency: "NGN",
+        createdAt: "2024-01-01T00:00:00Z",
+        reference: "ref_123456",
       };
 
-      expect(payoutResponse).toHaveProperty('orderId');
-      expect(payoutResponse).toHaveProperty('status');
-      expect(payoutResponse).toHaveProperty('amount');
-      expect(['pending', 'completed', 'failed']).toContain(payoutResponse.status);
+      expect(payoutResponse).toHaveProperty("orderId");
+      expect(payoutResponse).toHaveProperty("status");
+      expect(payoutResponse).toHaveProperty("amount");
+      expect(["pending", "completed", "failed"]).toContain(
+        payoutResponse.status,
+      );
     });
 
-    it('should validate payout status values', () => {
-      const validStatuses = ['pending', 'processing', 'completed', 'failed'];
-      const testStatus = 'completed';
+    it("should validate payout status values", () => {
+      const validStatuses = ["pending", "processing", "completed", "failed"];
+      const testStatus = "completed";
 
       expect(validStatuses).toContain(testStatus);
     });
   });
 
-  describe('Allbridge Integration Contract', () => {
-    it('should define bridge transaction request contract', () => {
+  describe("Allbridge Integration Contract", () => {
+    it("should define bridge transaction request contract", () => {
       const bridgeRequest = {
-        amount: '99.5',
-        fromAddress: 'GCFX...ABCD',
-        toAddress: '0xd8dA...6045',
-        feePaymentMethod: 'stablecoin',
+        amount: "99.5",
+        fromAddress: "GCFX...ABCD",
+        toAddress: "0xd8dA...6045",
+        feePaymentMethod: "stablecoin",
       };
 
-      expect(bridgeRequest).toHaveProperty('amount');
-      expect(bridgeRequest).toHaveProperty('fromAddress');
-      expect(bridgeRequest).toHaveProperty('toAddress');
-      expect(typeof bridgeRequest.amount).toBe('string');
+      expect(bridgeRequest).toHaveProperty("amount");
+      expect(bridgeRequest).toHaveProperty("fromAddress");
+      expect(bridgeRequest).toHaveProperty("toAddress");
+      expect(typeof bridgeRequest.amount).toBe("string");
     });
 
-    it('should define bridge transaction response contract', () => {
+    it("should define bridge transaction response contract", () => {
       const bridgeResponse = {
-        xdr: 'AAAAAgAAAAB...',
+        xdr: "AAAAAgAAAAB...",
         sourceToken: {
-          symbol: 'USDC',
+          symbol: "USDC",
           decimals: 7,
-          chain: 'STELLAR',
+          chain: "STELLAR",
         },
         destinationToken: {
-          symbol: 'USDC',
+          symbol: "USDC",
           decimals: 6,
-          chain: 'BASE',
+          chain: "BASE",
         },
       };
 
-      expect(bridgeResponse).toHaveProperty('xdr');
-      expect(bridgeResponse).toHaveProperty('sourceToken');
-      expect(bridgeResponse).toHaveProperty('destinationToken');
-      expect(bridgeResponse.sourceToken).toHaveProperty('symbol');
-      expect(bridgeResponse.sourceToken).toHaveProperty('decimals');
+      expect(bridgeResponse).toHaveProperty("xdr");
+      expect(bridgeResponse).toHaveProperty("sourceToken");
+      expect(bridgeResponse).toHaveProperty("destinationToken");
+      expect(bridgeResponse.sourceToken).toHaveProperty("symbol");
+      expect(bridgeResponse.sourceToken).toHaveProperty("decimals");
     });
 
-    it('should define bridge status response contract', () => {
+    it("should define bridge status response contract", () => {
       const statusResponse = {
-        txHash: 'tx_hash_123',
-        status: 'completed',
-        sourceAmount: '99.5',
-        destinationAmount: '99',
+        txHash: "tx_hash_123",
+        status: "completed",
+        sourceAmount: "99.5",
+        destinationAmount: "99",
         timestamp: 1704067200,
       };
 
-      expect(statusResponse).toHaveProperty('txHash');
-      expect(statusResponse).toHaveProperty('status');
-      expect(statusResponse).toHaveProperty('sourceAmount');
-      expect(statusResponse).toHaveProperty('destinationAmount');
+      expect(statusResponse).toHaveProperty("txHash");
+      expect(statusResponse).toHaveProperty("status");
+      expect(statusResponse).toHaveProperty("sourceAmount");
+      expect(statusResponse).toHaveProperty("destinationAmount");
     });
 
-    it('should validate bridge status values', () => {
-      const validStatuses = ['pending', 'completed', 'failed'];
-      const testStatus = 'pending';
+    it("should validate bridge status values", () => {
+      const validStatuses = ["pending", "completed", "failed"];
+      const testStatus = "pending";
 
       expect(validStatuses).toContain(testStatus);
     });
   });
 
-  describe('API Versioning Contract', () => {
-    it('should maintain backward compatibility for v1 endpoints', () => {
+  describe("API Versioning Contract", () => {
+    it("should maintain backward compatibility for v1 endpoints", () => {
       const v1Response = {
-        version: 'v1',
+        version: "v1",
         data: {
           amount: 100,
-          currency: 'NGN',
+          currency: "NGN",
         },
       };
 
-      expect(v1Response).toHaveProperty('version');
-      expect(v1Response.version).toBe('v1');
-      expect(v1Response).toHaveProperty('data');
+      expect(v1Response).toHaveProperty("version");
+      expect(v1Response.version).toBe("v1");
+      expect(v1Response).toHaveProperty("data");
     });
 
-    it('should support API versioning headers', () => {
+    it("should support API versioning headers", () => {
       const headers = {
-        'api-version': 'v1',
-        'content-type': 'application/json',
+        "api-version": "v1",
+        "content-type": "application/json",
       };
 
-      expect(headers).toHaveProperty('api-version');
-      expect(['v1', 'v2']).toContain(headers['api-version']);
+      expect(headers).toHaveProperty("api-version");
+      expect(["v1", "v2"]).toContain(headers["api-version"]);
     });
 
-    it('should handle version deprecation gracefully', () => {
+    it("should handle version deprecation gracefully", () => {
       const deprecationWarning = {
         status: 200,
-        warning: 'API v1 is deprecated. Please upgrade to v2.',
+        warning: "API v1 is deprecated. Please upgrade to v2.",
         data: {},
       };
 
-      expect(deprecationWarning).toHaveProperty('warning');
+      expect(deprecationWarning).toHaveProperty("warning");
       expect(deprecationWarning.status).toBe(200);
     });
   });
 
-  describe('Error Response Contract', () => {
-    it('should define error response contract', () => {
+  describe("Error Response Contract", () => {
+    it("should define error response contract", () => {
       const errorResponse = {
         error: {
-          code: 'INSUFFICIENT_BALANCE',
-          message: 'Insufficient USDC balance',
+          code: "INSUFFICIENT_BALANCE",
+          message: "Insufficient USDC balance",
           details: {
             required: 100,
             available: 50,
           },
         },
-        timestamp: '2024-01-01T00:00:00Z',
+        timestamp: "2024-01-01T00:00:00Z",
       };
 
-      expect(errorResponse).toHaveProperty('error');
-      expect(errorResponse.error).toHaveProperty('code');
-      expect(errorResponse.error).toHaveProperty('message');
-      expect(typeof errorResponse.error.code).toBe('string');
+      expect(errorResponse).toHaveProperty("error");
+      expect(errorResponse.error).toHaveProperty("code");
+      expect(errorResponse.error).toHaveProperty("message");
+      expect(typeof errorResponse.error.code).toBe("string");
     });
 
-    it('should define validation error contract', () => {
+    it("should define validation error contract", () => {
       const validationError = {
         error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Validation failed',
+          code: "VALIDATION_ERROR",
+          message: "Validation failed",
           fields: {
-            amount: 'Amount must be greater than 0',
-            currency: 'Invalid currency code',
+            amount: "Amount must be greater than 0",
+            currency: "Invalid currency code",
           },
         },
       };
 
-      expect(validationError.error).toHaveProperty('fields');
-      expect(validationError.error.fields).toHaveProperty('amount');
+      expect(validationError.error).toHaveProperty("fields");
+      expect(validationError.error.fields).toHaveProperty("amount");
     });
 
-    it('should define rate limit error contract', () => {
+    it("should define rate limit error contract", () => {
       const rateLimitError = {
         error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Too many requests',
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "Too many requests",
           retryAfter: 60,
         },
         status: 429,
       };
 
       expect(rateLimitError.status).toBe(429);
-      expect(rateLimitError.error).toHaveProperty('retryAfter');
+      expect(rateLimitError.error).toHaveProperty("retryAfter");
     });
   });
 
-  describe('Webhook Contract', () => {
-    it('should define webhook payload contract', () => {
+  describe("Webhook Contract", () => {
+    it("should define webhook payload contract", () => {
       const webhookPayload = {
-        event: 'payout.completed',
+        event: "payout.completed",
         data: {
-          orderId: 'order_123456',
-          status: 'completed',
-          amount: '100',
-          currency: 'NGN',
+          orderId: "order_123456",
+          status: "completed",
+          amount: "100",
+          currency: "NGN",
         },
-        timestamp: '2024-01-01T00:00:00Z',
-        signature: 'sig_123456',
+        timestamp: "2024-01-01T00:00:00Z",
+        signature: "sig_123456",
       };
 
-      expect(webhookPayload).toHaveProperty('event');
-      expect(webhookPayload).toHaveProperty('data');
-      expect(webhookPayload).toHaveProperty('signature');
-      expect(typeof webhookPayload.event).toBe('string');
+      expect(webhookPayload).toHaveProperty("event");
+      expect(webhookPayload).toHaveProperty("data");
+      expect(webhookPayload).toHaveProperty("signature");
+      expect(typeof webhookPayload.event).toBe("string");
     });
 
-    it('should validate webhook event types', () => {
+    it("should validate webhook event types", () => {
       const validEvents = [
-        'payout.pending',
-        'payout.processing',
-        'payout.completed',
-        'payout.failed',
+        "payout.pending",
+        "payout.processing",
+        "payout.completed",
+        "payout.failed",
       ];
-      const testEvent = 'payout.completed';
+      const testEvent = "payout.completed";
 
       expect(validEvents).toContain(testEvent);
     });
 
-    it('should verify webhook signature format', () => {
-      const signature = 'sig_abc123def456';
+    it("should verify webhook signature format", () => {
+      const signature = "sig_abc123def456";
       const isValidFormat = /^sig_[a-z0-9]+$/.test(signature);
 
       expect(isValidFormat).toBe(true);
     });
   });
 
-  describe('Contract Versioning', () => {
-    it('should track contract version changes', () => {
+  describe("Contract Versioning", () => {
+    it("should track contract version changes", () => {
       const contractVersion = {
-        version: '1.0.0',
+        version: "1.0.0",
         changes: [
-          'Added orderId field to payout response',
-          'Deprecated reference field',
+          "Added orderId field to payout response",
+          "Deprecated reference field",
         ],
-        releaseDate: '2024-01-01',
+        releaseDate: "2024-01-01",
       };
 
-      expect(contractVersion).toHaveProperty('version');
-      expect(contractVersion).toHaveProperty('changes');
+      expect(contractVersion).toHaveProperty("version");
+      expect(contractVersion).toHaveProperty("changes");
       expect(Array.isArray(contractVersion.changes)).toBe(true);
     });
 
-    it('should support contract migration', () => {
+    it("should support contract migration", () => {
       const migrationPath = {
-        from: '1.0.0',
-        to: '1.1.0',
+        from: "1.0.0",
+        to: "1.1.0",
         breaking: false,
-        deprecations: ['reference'],
-        additions: ['orderId'],
+        deprecations: ["reference"],
+        additions: ["orderId"],
       };
 
-      expect(migrationPath).toHaveProperty('from');
-      expect(migrationPath).toHaveProperty('to');
+      expect(migrationPath).toHaveProperty("from");
+      expect(migrationPath).toHaveProperty("to");
       expect(migrationPath.breaking).toBe(false);
     });
 
-    it('should detect breaking changes', () => {
-      const v1 = { fields: { orderId: 'string', reference: 'string' } };
-      const v2 = { fields: { orderId: 'string' } };
+    it("should detect breaking changes", () => {
+      const v1 = { fields: { orderId: "string", reference: "string" } };
+      const v2 = { fields: { orderId: "string" } };
 
       const removedFields = Object.keys(v1.fields).filter(
-        (f) => !v2.fields.hasOwnProperty(f)
+        (f) => !v2.fields.hasOwnProperty(f),
       );
 
       expect(removedFields.length).toBeGreaterThan(0);
-      expect(removedFields).toContain('reference');
+      expect(removedFields).toContain("reference");
     });
 
-    it('should track deprecation timeline', () => {
+    it("should track deprecation timeline", () => {
       const deprecation = {
-        field: 'reference',
-        deprecatedIn: '1.1.0',
-        removedIn: '2.0.0',
-        replacement: 'orderId',
+        field: "reference",
+        deprecatedIn: "1.1.0",
+        removedIn: "2.0.0",
+        replacement: "orderId",
       };
 
-      expect(deprecation).toHaveProperty('deprecatedIn');
-      expect(deprecation).toHaveProperty('removedIn');
-      expect(deprecation).toHaveProperty('replacement');
+      expect(deprecation).toHaveProperty("deprecatedIn");
+      expect(deprecation).toHaveProperty("removedIn");
+      expect(deprecation).toHaveProperty("replacement");
     });
   });
 
-  describe('Integration Test Scenarios', () => {
-    it('should handle complete offramp flow contract', () => {
+  describe("Integration Test Scenarios", () => {
+    it("should handle complete offramp flow contract", () => {
       const flow = {
-        step1: { type: 'quote', status: 'success' },
-        step2: { type: 'bridge_build', status: 'success' },
-        step3: { type: 'bridge_submit', status: 'success' },
-        step4: { type: 'payout_order', status: 'success' },
-        step5: { type: 'payout_execute', status: 'success' },
+        step1: { type: "quote", status: "success" },
+        step2: { type: "bridge_build", status: "success" },
+        step3: { type: "bridge_submit", status: "success" },
+        step4: { type: "payout_order", status: "success" },
+        step5: { type: "payout_execute", status: "success" },
       };
 
       Object.values(flow).forEach((step: any) => {
-        expect(step).toHaveProperty('type');
-        expect(step).toHaveProperty('status');
-        expect(['success', 'failed']).toContain(step.status);
+        expect(step).toHaveProperty("type");
+        expect(step).toHaveProperty("status");
+        expect(["success", "failed"]).toContain(step.status);
       });
     });
 
-    it('should handle error recovery contract', () => {
+    it("should handle error recovery contract", () => {
       const errorRecovery = {
-        originalError: 'BRIDGE_TIMEOUT',
+        originalError: "BRIDGE_TIMEOUT",
         retryCount: 3,
-        retryStrategy: 'exponential_backoff',
-        finalStatus: 'recovered',
+        retryStrategy: "exponential_backoff",
+        finalStatus: "recovered",
       };
 
-      expect(errorRecovery).toHaveProperty('originalError');
-      expect(errorRecovery).toHaveProperty('retryStrategy');
+      expect(errorRecovery).toHaveProperty("originalError");
+      expect(errorRecovery).toHaveProperty("retryStrategy");
       expect(errorRecovery.retryCount).toBeGreaterThan(0);
     });
 
-    it('should validate contract consistency across endpoints', () => {
+    it("should validate contract consistency across endpoints", () => {
       const endpoints = {
-        quote: { version: '1.0.0', breaking: false },
-        bridge: { version: '1.0.0', breaking: false },
-        payout: { version: '1.0.0', breaking: false },
+        quote: { version: "1.0.0", breaking: false },
+        bridge: { version: "1.0.0", breaking: false },
+        payout: { version: "1.0.0", breaking: false },
       };
 
       Object.values(endpoints).forEach((endpoint) => {
-        expect(endpoint.version).toBe('1.0.0');
+        expect(endpoint.version).toBe("1.0.0");
         expect(endpoint.breaking).toBe(false);
       });
     });
   });
 
-  describe('Contract Verification', () => {
-    it('should verify request matches contract', () => {
+  describe("Contract Verification", () => {
+    it("should verify request matches contract", () => {
       const contract = {
-        amount: 'number',
-        currency: 'string',
-        feeMethod: 'string',
+        amount: "number",
+        currency: "string",
+        feeMethod: "string",
       };
 
       const request = {
         amount: 100,
-        currency: 'NGN',
-        feeMethod: 'USDC',
+        currency: "NGN",
+        feeMethod: "USDC",
       };
 
       Object.entries(contract).forEach(([key, type]) => {
@@ -389,17 +391,17 @@ describe('Contract Testing - API Contracts', () => {
       });
     });
 
-    it('should verify response matches contract', () => {
+    it("should verify response matches contract", () => {
       const contract = {
-        destinationAmount: 'string',
-        rate: 'number',
-        currency: 'string',
+        destinationAmount: "string",
+        rate: "number",
+        currency: "string",
       };
 
       const response = {
-        destinationAmount: '158202.00',
+        destinationAmount: "158202.00",
         rate: 1598,
-        currency: 'NGN',
+        currency: "NGN",
       };
 
       Object.entries(contract).forEach(([key, type]) => {
@@ -407,57 +409,59 @@ describe('Contract Testing - API Contracts', () => {
       });
     });
 
-    it('should detect contract violations', () => {
+    it("should detect contract violations", () => {
       const contract = {
-        amount: 'number',
-        currency: 'string',
+        amount: "number",
+        currency: "string",
       };
 
       const invalidRequest = {
-        amount: '100', // Should be number
-        currency: 'NGN',
+        amount: "100", // Should be number
+        currency: "NGN",
       };
 
       const violations = Object.entries(contract).filter(([key, type]) => {
-        return typeof invalidRequest[key as keyof typeof invalidRequest] !== type;
+        return (
+          typeof invalidRequest[key as keyof typeof invalidRequest] !== type
+        );
       });
 
       expect(violations.length).toBeGreaterThan(0);
     });
   });
 
-  describe('Contract Breaking Changes', () => {
-    it('should detect removed fields', () => {
-      const oldContract = { orderId: 'string', reference: 'string' };
-      const newContract = { orderId: 'string' };
+  describe("Contract Breaking Changes", () => {
+    it("should detect removed fields", () => {
+      const oldContract = { orderId: "string", reference: "string" };
+      const newContract = { orderId: "string" };
 
       const removed = Object.keys(oldContract).filter(
-        (k) => !newContract.hasOwnProperty(k)
+        (k) => !newContract.hasOwnProperty(k),
       );
 
-      expect(removed).toContain('reference');
+      expect(removed).toContain("reference");
     });
 
-    it('should detect type changes', () => {
-      const oldContract = { amount: 'string' };
-      const newContract = { amount: 'number' };
+    it("should detect type changes", () => {
+      const oldContract = { amount: "string" };
+      const newContract = { amount: "number" };
 
       const typeChanges = Object.entries(oldContract).filter(
-        ([key, type]) => newContract[key as keyof typeof newContract] !== type
+        ([key, type]) => newContract[key as keyof typeof newContract] !== type,
       );
 
       expect(typeChanges.length).toBeGreaterThan(0);
     });
 
-    it('should detect required field additions', () => {
-      const oldContract = { amount: 'number' };
-      const newContract = { amount: 'number', orderId: 'string' };
+    it("should detect required field additions", () => {
+      const oldContract = { amount: "number" };
+      const newContract = { amount: "number", orderId: "string" };
 
       const added = Object.keys(newContract).filter(
-        (k) => !oldContract.hasOwnProperty(k)
+        (k) => !oldContract.hasOwnProperty(k),
       );
 
-      expect(added).toContain('orderId');
+      expect(added).toContain("orderId");
     });
   });
 });

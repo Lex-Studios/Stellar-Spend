@@ -1,4 +1,4 @@
-import type { UserRepository, User } from '../user';
+import type { UserRepository, User } from "../user";
 
 export class InMemoryUserRepository implements UserRepository {
   private users: Map<string, User> = new Map();

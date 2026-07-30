@@ -1,14 +1,50 @@
-import type { CurrencyRepository, Currency } from '../currency';
+import type { CurrencyRepository, Currency } from "../currency";
 
 const DEFAULT_CURRENCIES: Currency[] = [
-  { code: 'NGN', name: 'Nigerian Naira', symbol: '₦', decimals: 2, supported: true },
-  { code: 'KES', name: 'Kenyan Shilling', symbol: 'KSh', decimals: 2, supported: true },
-  { code: 'GHS', name: 'Ghanaian Cedi', symbol: '₵', decimals: 2, supported: true },
-  { code: 'UGX', name: 'Ugandan Shilling', symbol: 'USh', decimals: 0, supported: true },
-  { code: 'ZAR', name: 'South African Rand', symbol: 'R', decimals: 2, supported: true },
-  { code: 'GBP', name: 'British Pound', symbol: '£', decimals: 2, supported: true },
-  { code: 'USD', name: 'US Dollar', symbol: '$', decimals: 2, supported: true },
-  { code: 'EUR', name: 'Euro', symbol: '€', decimals: 2, supported: true },
+  {
+    code: "NGN",
+    name: "Nigerian Naira",
+    symbol: "₦",
+    decimals: 2,
+    supported: true,
+  },
+  {
+    code: "KES",
+    name: "Kenyan Shilling",
+    symbol: "KSh",
+    decimals: 2,
+    supported: true,
+  },
+  {
+    code: "GHS",
+    name: "Ghanaian Cedi",
+    symbol: "₵",
+    decimals: 2,
+    supported: true,
+  },
+  {
+    code: "UGX",
+    name: "Ugandan Shilling",
+    symbol: "USh",
+    decimals: 0,
+    supported: true,
+  },
+  {
+    code: "ZAR",
+    name: "South African Rand",
+    symbol: "R",
+    decimals: 2,
+    supported: true,
+  },
+  {
+    code: "GBP",
+    name: "British Pound",
+    symbol: "£",
+    decimals: 2,
+    supported: true,
+  },
+  { code: "USD", name: "US Dollar", symbol: "$", decimals: 2, supported: true },
+  { code: "EUR", name: "Euro", symbol: "€", decimals: 2, supported: true },
 ];
 
 export class InMemoryCurrencyRepository implements CurrencyRepository {

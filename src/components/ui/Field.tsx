@@ -9,11 +9,19 @@ interface FieldProps {
 }
 
 /** Read-only display field. Shows a skeleton while loading. */
-export function Field({ label, value, tone = "muted", isLoading = false, loadingLabel }: FieldProps) {
+export function Field({
+  label,
+  value,
+  tone = "muted",
+  isLoading = false,
+  loadingLabel,
+}: FieldProps) {
   const color = tone === "accent" ? "var(--accent)" : "var(--muted)";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em" }}>
+      <label
+        style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em" }}
+      >
         {label}
       </label>
       <div
@@ -26,9 +34,15 @@ export function Field({ label, value, tone = "muted", isLoading = false, loading
         }}
       >
         {isLoading ? (
-          <Skeleton width={140} height={14} aria-label={loadingLabel ?? `Loading ${label.toLowerCase()}…`} />
+          <Skeleton
+            width={140}
+            height={14}
+            aria-label={loadingLabel ?? `Loading ${label.toLowerCase()}…`}
+          />
         ) : (
-          <span style={{ fontSize: 14, color, font: "inherit" }}>{value ?? "—"}</span>
+          <span style={{ fontSize: 14, color, font: "inherit" }}>
+            {value ?? "—"}
+          </span>
         )}
       </div>
     </div>

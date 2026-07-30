@@ -1,11 +1,15 @@
-import { validateAmount } from '@/lib/offramp/utils/validation';
-import { fetchPaycrestQuote, buildQuote, calculateBridgeAmount } from '@/lib/offramp/utils/quote-fetcher';
-import { isSupportedCurrency } from '@/lib/currencies';
+import { validateAmount } from "@/lib/offramp/utils/validation";
+import {
+  fetchPaycrestQuote,
+  buildQuote,
+  calculateBridgeAmount,
+} from "@/lib/offramp/utils/quote-fetcher";
+import { isSupportedCurrency } from "@/lib/currencies";
 
 export interface QuoteRequest {
   amount: string;
   currency: string;
-  feeMethod: 'USDC' | 'XLM' | 'stablecoin' | 'native';
+  feeMethod: "USDC" | "XLM" | "stablecoin" | "native";
 }
 
 export interface QuoteResponse {
@@ -17,13 +21,13 @@ export interface QuoteResponse {
   estimatedTime: number;
 }
 
-const STABLECOIN_FEE = '0.5';
+const STABLECOIN_FEE = "0.5";
 
-const FEE_METHOD_MAP: Record<string, 'stablecoin' | 'native'> = {
-  USDC: 'stablecoin',
-  stablecoin: 'stablecoin',
-  XLM: 'native',
-  native: 'native',
+const FEE_METHOD_MAP: Record<string, "stablecoin" | "native"> = {
+  USDC: "stablecoin",
+  stablecoin: "stablecoin",
+  XLM: "native",
+  native: "native",
 };
 
 export class QuoteService {
@@ -32,24 +36,34 @@ export class QuoteService {
 
     const normalizedFee = FEE_METHOD_MAP[request.feeMethod];
     if (!normalizedFee) {
-      throw new Error('feeMethod must be "USDC", "XLM", "stablecoin", or "native"');
+      throw new Error(
+        'feeMethod must be "USDC", "XLM", "stablecoin", or "native"',
+      );
     }
 
-    const bridgeAmount = normalizedFee === 'stablecoin'
-      ? calculateBridgeAmount(String(request.amount), 'stablecoin', STABLECOIN_FEE)
-      : String(request.amount);
+    const bridgeAmount =
+      normalizedFee === "stablecoin"
+        ? calculateBridgeAmount(
+            String(request.amount),
+            "stablecoin",
+            STABLECOIN_FEE,
+          )
+        : String(request.amount);
 
-    const paycrestQuote = await fetchPaycrestQuote(bridgeAmount, request.currency);
+    const paycrestQuote = await fetchPaycrestQuote(
+      bridgeAmount,
+      request.currency,
+    );
     return buildQuote(paycrestQuote, request.currency, normalizedFee);
   }
 
   private validateRequest(request: QuoteRequest): void {
-    if (!validateAmount(String(request.amount ?? ''))) {
-      throw new Error('Invalid amount: must be a positive number');
+    if (!validateAmount(String(request.amount ?? ""))) {
+      throw new Error("Invalid amount: must be a positive number");
     }
 
-    if (!request.currency || typeof request.currency !== 'string') {
-      throw new Error('currency is required');
+    if (!request.currency || typeof request.currency !== "string") {
+      throw new Error("currency is required");
     }
 
     if (!isSupportedCurrency(request.currency)) {

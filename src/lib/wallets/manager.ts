@@ -2,11 +2,16 @@
  * Wallet Manager - Handles wallet switching and auto-detection
  */
 
-import { WalletAdapter, WalletType, WalletConnection, SignOptions } from './adapter';
-import { FreighterAdapter } from './freighter.adapter';
-import { LobstrAdapter } from './lobstr.adapter';
+import {
+  WalletAdapter,
+  WalletType,
+  WalletConnection,
+  SignOptions,
+} from "./adapter";
+import { FreighterAdapter } from "./freighter.adapter";
+import { LobstrAdapter } from "./lobstr.adapter";
 
-export type WalletEventType = 'accountChange' | 'disconnect' | 'networkChange';
+export type WalletEventType = "accountChange" | "disconnect" | "networkChange";
 export type WalletEventListener = (event: WalletEvent) => void;
 
 export interface WalletEvent {
@@ -18,7 +23,8 @@ export interface WalletEvent {
 export class WalletManager {
   private adapters: Map<WalletType, WalletAdapter> = new Map();
   private currentAdapter: WalletAdapter | null = null;
-  private eventListeners: Map<WalletEventType, Set<WalletEventListener>> = new Map();
+  private eventListeners: Map<WalletEventType, Set<WalletEventListener>> =
+    new Map();
 
   constructor() {
     this.registerAdapter(new FreighterAdapter());
@@ -31,9 +37,9 @@ export class WalletManager {
   }
 
   private initializeEventListeners(): void {
-    this.eventListeners.set('accountChange', new Set());
-    this.eventListeners.set('disconnect', new Set());
-    this.eventListeners.set('networkChange', new Set());
+    this.eventListeners.set("accountChange", new Set());
+    this.eventListeners.set("disconnect", new Set());
+    this.eventListeners.set("networkChange", new Set());
   }
 
   /**
@@ -55,11 +61,14 @@ export class WalletManager {
   private emit(event: WalletEvent): void {
     const listeners = this.eventListeners.get(event.type);
     if (listeners) {
-      listeners.forEach(listener => {
+      listeners.forEach((listener) => {
         try {
           listener(event);
         } catch (err) {
-          console.error(`Error in wallet event listener for ${event.type}:`, err);
+          console.error(
+            `Error in wallet event listener for ${event.type}:`,
+            err,
+          );
         }
       });
     }
@@ -74,7 +83,9 @@ export class WalletManager {
         return this.connect(adapter.type);
       }
     }
-    throw new Error('No wallet extension detected. Please install Freighter or Lobstr.');
+    throw new Error(
+      "No wallet extension detected. Please install Freighter or Lobstr.",
+    );
   }
 
   /**
@@ -96,35 +107,35 @@ export class WalletManager {
    * Setup event listeners for wallet changes
    */
   private setupWalletListeners(walletType: WalletType): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
-    if (walletType === 'freighter') {
+    if (walletType === "freighter") {
       const w = window as any;
       if (w.freighter) {
         try {
-          w.freighter.addEventListener('publicKeyChange', () => {
+          w.freighter.addEventListener("publicKeyChange", () => {
             this.emit({
-              type: 'accountChange',
-              walletType: 'freighter',
+              type: "accountChange",
+              walletType: "freighter",
             });
           });
         } catch (err) {
-          console.error('Failed to setup Freighter listener:', err);
+          console.error("Failed to setup Freighter listener:", err);
         }
       }
-    } else if (walletType === 'lobstr') {
+    } else if (walletType === "lobstr") {
       const w = window as any;
       const provider = w.lobstr ?? w.stellar;
       if (provider) {
         try {
-          provider.addEventListener('accountChange', () => {
+          provider.addEventListener("accountChange", () => {
             this.emit({
-              type: 'accountChange',
-              walletType: 'lobstr',
+              type: "accountChange",
+              walletType: "lobstr",
             });
           });
         } catch (err) {
-          console.error('Failed to setup Lobstr listener:', err);
+          console.error("Failed to setup Lobstr listener:", err);
         }
       }
     }
@@ -145,7 +156,7 @@ export class WalletManager {
    */
   async signTransaction(xdr: string, opts: SignOptions): Promise<string> {
     if (!this.currentAdapter) {
-      throw new Error('No wallet connected. Please connect first.');
+      throw new Error("No wallet connected. Please connect first.");
     }
     return this.currentAdapter.signTransaction(xdr, opts);
   }
@@ -155,7 +166,7 @@ export class WalletManager {
    */
   async getPublicKey(): Promise<string> {
     if (!this.currentAdapter) {
-      throw new Error('No wallet connected. Please connect first.');
+      throw new Error("No wallet connected. Please connect first.");
     }
     return this.currentAdapter.getPublicKey();
   }
@@ -179,7 +190,9 @@ export class WalletManager {
    * Get all available wallets
    */
   getAvailableWallets(): WalletAdapter[] {
-    return Array.from(this.adapters.values()).filter(adapter => adapter.isAvailable);
+    return Array.from(this.adapters.values()).filter(
+      (adapter) => adapter.isAvailable,
+    );
   }
 }
 

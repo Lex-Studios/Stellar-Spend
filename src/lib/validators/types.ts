@@ -8,10 +8,16 @@ export interface ValidationResult {
   errors: ValidationError[];
 }
 
-export function createValidationError(field: string, message: string): ValidationError {
+export function createValidationError(
+  field: string,
+  message: string,
+): ValidationError {
   return { field, message };
 }
 
-export function createValidationResult(valid: boolean, errors: ValidationError[] = []): ValidationResult {
+export function createValidationResult(
+  valid: boolean,
+  errors: ValidationError[] = [],
+): ValidationResult {
   return { valid, errors };
 }

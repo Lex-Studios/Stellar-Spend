@@ -69,7 +69,7 @@ export function Tutorial({ forceOpen = false, onClose }: TutorialProps) {
       setVisible(false);
       onClose?.();
     },
-    [onClose]
+    [onClose],
   );
 
   const handleNext = () => {
@@ -115,7 +115,9 @@ export function Tutorial({ forceOpen = false, onClose }: TutorialProps) {
             Step {step + 1} of {STEPS.length}
           </p>
           <h2 className="text-white font-medium">{current.title}</h2>
-          <p className="text-[#aaa] text-sm leading-relaxed">{current.description}</p>
+          <p className="text-[#aaa] text-sm leading-relaxed">
+            {current.description}
+          </p>
         </div>
 
         {/* Progress dots */}

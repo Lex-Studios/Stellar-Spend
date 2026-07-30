@@ -9,6 +9,7 @@ This feature adds **authenticated server-side synchronization** of transaction h
 ### Components
 
 #### 1. **Client-Side Sync Management**
+
 - **`src/lib/sync-storage.ts`** - LocalStorage-based sync state management
   - Settings: Sync toggle, strategy, last sync timestamp
   - Metadata: Per-transaction versioning and sync status
@@ -26,6 +27,7 @@ This feature adds **authenticated server-side synchronization** of transaction h
   - Audit trail for conflicts
 
 #### 2. **Server-Side Sync Endpoints**
+
 - **`src/app/api/v1/sync/history/route.ts`**
   - `GET /api/v1/sync/history?wallet={address}` - Fetch user's synced history
   - `POST /api/v1/sync/history` - Upload/merge transactions
@@ -35,6 +37,7 @@ This feature adds **authenticated server-side synchronization** of transaction h
   - `POST /api/v1/sync/settings` - Update sync preferences
 
 #### 3. **UI Components**
+
 - **`src/app/settings/page.tsx`** - Settings page with new "Privacy & Sync" section
   - Sync toggle (opt-in)
   - Last sync timestamp
@@ -44,6 +47,7 @@ This feature adds **authenticated server-side synchronization** of transaction h
 - **`src/hooks/useSyncSettings.ts`** - React hook for sync settings management
 
 #### 4. **Background Sync**
+
 - **`src/lib/background-sync.ts`** - Extended with history sync
   - `triggerHistorySync()` - Manual/periodic sync trigger
   - Status tracking
@@ -76,12 +80,14 @@ Update sync metadata and clear queue
 ## Key Features
 
 ### 1. **Opt-In Privacy-Respecting Design**
+
 - Sync disabled by default
 - Users explicitly enable for each wallet
 - Settings persisted server-side per wallet
 - Users can disable at any time
 
 ### 2. **Last-Write-Wins Conflict Resolution**
+
 ```typescript
 // Timestamps compared:
 // 1. finalizedAt (if present)
@@ -92,6 +98,7 @@ Update sync metadata and clear queue
 ```
 
 ### 3. **Metadata-Only Sync**
+
 - Does NOT sync operational transaction data (amounts, addresses, hashes)
 - Syncs only user-controlled metadata:
   - Notes (user annotations)
@@ -100,18 +107,20 @@ Update sync metadata and clear queue
 - Operational data sourced from backend APIs (Stellar, Paycrest, Base)
 
 ### 4. **Offline-First with Graceful Degradation**
+
 - Local storage continues to work without sync
 - Sync failures don't prevent local operations
 - Queue-based retry mechanism
 - Background sync registers with Service Worker
 
 ### 5. **Audit Trail for Conflicts**
+
 ```typescript
 interface ConflictRecord {
   transactionId: string;
   localVersion: Transaction;
   serverVersion: Transaction;
-  winner: 'local' | 'server';
+  winner: "local" | "server";
   resolvedAt: number;
   reason: string; // e.g., "Server version newer (server: 2000, local: 1000)"
 }
@@ -122,12 +131,14 @@ interface ConflictRecord {
 ### Sync History
 
 **GET /api/v1/sync/history**
+
 ```
 Query: wallet={address}
 Returns: { success, transactions[], timestamp }
 ```
 
 **POST /api/v1/sync/history**
+
 ```
 Body: {
   wallet: string,
@@ -140,6 +151,7 @@ Returns: { success, synced, conflicts, conflictDetails }
 ### Sync Settings
 
 **GET /api/v1/sync/settings**
+
 ```
 Query: wallet={address}
 Returns: {
@@ -153,6 +165,7 @@ Returns: {
 ```
 
 **POST /api/v1/sync/settings**
+
 ```
 Body: {
   wallet: string,
@@ -166,6 +179,7 @@ Returns: { settings, timestamp }
 ### Unit Tests
 
 **`src/lib/__tests__/transaction-merge.test.ts`**
+
 - Merge with no conflicts
 - Server newer (last-write-wins)
 - Local newer (last-write-wins)
@@ -174,6 +188,7 @@ Returns: { settings, timestamp }
 - Finding differences
 
 **`src/lib/__tests__/sync-storage.test.ts`**
+
 - Settings CRUD
 - Metadata management
 - Queue management
@@ -213,6 +228,7 @@ Returns: { settings, timestamp }
 ### Database Setup (Production)
 
 Create table for sync settings:
+
 ```sql
 CREATE TABLE sync_settings (
   id SERIAL PRIMARY KEY,
@@ -230,23 +246,27 @@ CREATE INDEX idx_sync_settings_wallet ON sync_settings(wallet);
 ### Environment Variables
 
 No new environment variables required. Uses existing:
+
 - `DATABASE_URL` - PostgreSQL connection
 - Auth middleware for wallet verification
 
 ## Security Considerations
 
 ### Authentication
+
 - All endpoints require wallet ownership verification
 - Middleware should validate request origin matches wallet
 - TODO: Implement proper auth checks in endpoints
 
 ### Data Privacy
+
 - Sync settings stored server-side (encrypted at rest)
 - Transaction metadata synced only between user devices
 - No third-party access
 - User can clear sync data anytime
 
 ### Conflict Handling
+
 - No user data lost in conflicts
 - Both versions retained for audit
 - Last-write-wins is deterministic and predictable
@@ -282,18 +302,21 @@ No new environment variables required. Uses existing:
 ## Troubleshooting
 
 ### Sync Not Working
+
 1. Check sync is enabled: `SyncStorage.getSettings().syncEnabled`
 2. Verify queue has items: `SyncStorage.getQueue()`
 3. Check browser network tab for API failures
 4. Verify wallet address is correct
 
 ### Data Not Appearing on Second Device
+
 1. Enable sync on both devices
 2. Verify same wallet address
 3. Wait for background sync (may take 5-10 seconds)
 4. Manually trigger: Call `triggerHistorySync()`
 
 ### Conflicts Detected
+
 1. This is expected when modifying same transaction on multiple devices
 2. Last-write-wins strategy automatically resolves
 3. No data is lost

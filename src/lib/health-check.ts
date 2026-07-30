@@ -1,8 +1,8 @@
-import { env } from './env';
-import packageJson from '../../package.json';
+import { env } from "./env";
+import packageJson from "../../package.json";
 
 export interface HealthCheckResult {
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   message?: string;
   responseTime?: number;
   version?: string;
@@ -16,7 +16,7 @@ export interface DependencyHealth {
 }
 
 export interface HealthCheckResponse {
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   timestamp: string;
   version: string;
   dependencies: DependencyHealth;
@@ -26,12 +26,12 @@ async function checkStellarRPC(): Promise<HealthCheckResult> {
   const start = Date.now();
   try {
     const response = await fetch(env.server.STELLAR_SOROBAN_RPC_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: 1,
-        method: 'getHealth',
+        method: "getHealth",
         params: {},
       }),
       signal: AbortSignal.timeout(5000),
@@ -40,20 +40,24 @@ async function checkStellarRPC(): Promise<HealthCheckResult> {
     const responseTime = Date.now() - start;
 
     if (!response.ok) {
-      return { status: 'unhealthy', message: `HTTP ${response.status}`, responseTime };
+      return {
+        status: "unhealthy",
+        message: `HTTP ${response.status}`,
+        responseTime,
+      };
     }
 
     const data = await response.json();
-    if (data.result?.status === 'healthy') {
-      return { status: 'healthy', responseTime };
+    if (data.result?.status === "healthy") {
+      return { status: "healthy", responseTime };
     }
 
-    return { status: 'degraded', message: 'Unexpected response', responseTime };
+    return { status: "degraded", message: "Unexpected response", responseTime };
   } catch (error) {
     const responseTime = Date.now() - start;
     return {
-      status: 'unhealthy',
-      message: error instanceof Error ? error.message : 'Connection failed',
+      status: "unhealthy",
+      message: error instanceof Error ? error.message : "Connection failed",
       responseTime,
     };
   }
@@ -63,12 +67,12 @@ async function checkBaseRPC(): Promise<HealthCheckResult> {
   const start = Date.now();
   try {
     const response = await fetch(env.server.BASE_RPC_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        jsonrpc: '2.0',
+        jsonrpc: "2.0",
         id: 1,
-        method: 'eth_blockNumber',
+        method: "eth_blockNumber",
         params: [],
       }),
       signal: AbortSignal.timeout(5000),
@@ -77,20 +81,24 @@ async function checkBaseRPC(): Promise<HealthCheckResult> {
     const responseTime = Date.now() - start;
 
     if (!response.ok) {
-      return { status: 'unhealthy', message: `HTTP ${response.status}`, responseTime };
+      return {
+        status: "unhealthy",
+        message: `HTTP ${response.status}`,
+        responseTime,
+      };
     }
 
     const data = await response.json();
     if (data.result) {
-      return { status: 'healthy', responseTime };
+      return { status: "healthy", responseTime };
     }
 
-    return { status: 'degraded', message: 'No block number', responseTime };
+    return { status: "degraded", message: "No block number", responseTime };
   } catch (error) {
     const responseTime = Date.now() - start;
     return {
-      status: 'unhealthy',
-      message: error instanceof Error ? error.message : 'Connection failed',
+      status: "unhealthy",
+      message: error instanceof Error ? error.message : "Connection failed",
       responseTime,
     };
   }
@@ -99,30 +107,41 @@ async function checkBaseRPC(): Promise<HealthCheckResult> {
 async function checkPaycrestAPI(): Promise<HealthCheckResult> {
   const start = Date.now();
   try {
-    const response = await fetch('https://api.paycrest.io/aggregator/supported-currencies', {
-      headers: {
-        'x-api-key': env.server.PAYCREST_API_KEY,
+    const response = await fetch(
+      "https://api.paycrest.io/aggregator/supported-currencies",
+      {
+        headers: {
+          "x-api-key": env.server.PAYCREST_API_KEY,
+        },
+        signal: AbortSignal.timeout(5000),
       },
-      signal: AbortSignal.timeout(5000),
-    });
+    );
 
     const responseTime = Date.now() - start;
 
     if (!response.ok) {
-      return { status: 'unhealthy', message: `HTTP ${response.status}`, responseTime };
+      return {
+        status: "unhealthy",
+        message: `HTTP ${response.status}`,
+        responseTime,
+      };
     }
 
     const data = await response.json();
     if (data.data && Array.isArray(data.data)) {
-      return { status: 'healthy', responseTime };
+      return { status: "healthy", responseTime };
     }
 
-    return { status: 'degraded', message: 'Unexpected response format', responseTime };
+    return {
+      status: "degraded",
+      message: "Unexpected response format",
+      responseTime,
+    };
   } catch (error) {
     const responseTime = Date.now() - start;
     return {
-      status: 'unhealthy',
-      message: error instanceof Error ? error.message : 'Connection failed',
+      status: "unhealthy",
+      message: error instanceof Error ? error.message : "Connection failed",
       responseTime,
     };
   }
@@ -131,11 +150,13 @@ async function checkPaycrestAPI(): Promise<HealthCheckResult> {
 async function checkAllbridgeSDK(): Promise<HealthCheckResult> {
   const start = Date.now();
   try {
-    const { AllbridgeCoreSdk, nodeRpcUrlsDefault } = await import('@allbridge/bridge-core-sdk');
+    const { AllbridgeCoreSdk, nodeRpcUrlsDefault } =
+      await import("@allbridge/bridge-core-sdk");
 
     const sdk = new AllbridgeCoreSdk({
       ...nodeRpcUrlsDefault,
-      sorobanNetworkPassphrase: 'Public Global Stellar Network ; September 2015',
+      sorobanNetworkPassphrase:
+        "Public Global Stellar Network ; September 2015",
       ...(env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL && {
         sorobanRpc: env.public.NEXT_PUBLIC_STELLAR_SOROBAN_RPC_URL,
       }),
@@ -144,21 +165,24 @@ async function checkAllbridgeSDK(): Promise<HealthCheckResult> {
 
     const chainDetails = await Promise.race([
       sdk.chainDetailsMap(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000)),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout")), 5000),
+      ),
     ]);
 
     const responseTime = Date.now() - start;
 
-    if (chainDetails && typeof chainDetails === 'object') {
-      return { status: 'healthy', responseTime };
+    if (chainDetails && typeof chainDetails === "object") {
+      return { status: "healthy", responseTime };
     }
 
-    return { status: 'degraded', message: 'No chain details', responseTime };
+    return { status: "degraded", message: "No chain details", responseTime };
   } catch (error) {
     const responseTime = Date.now() - start;
     return {
-      status: 'unhealthy',
-      message: error instanceof Error ? error.message : 'SDK initialization failed',
+      status: "unhealthy",
+      message:
+        error instanceof Error ? error.message : "SDK initialization failed",
       responseTime,
     };
   }
@@ -174,16 +198,20 @@ export async function performHealthCheck(): Promise<HealthCheckResponse> {
 
   const dependencies: DependencyHealth = { stellar, base, paycrest, allbridge };
 
-  const unhealthyCount = Object.values(dependencies).filter((d) => d.status === 'unhealthy').length;
-  const degradedCount = Object.values(dependencies).filter((d) => d.status === 'degraded').length;
+  const unhealthyCount = Object.values(dependencies).filter(
+    (d) => d.status === "unhealthy",
+  ).length;
+  const degradedCount = Object.values(dependencies).filter(
+    (d) => d.status === "degraded",
+  ).length;
 
-  let overallStatus: 'healthy' | 'degraded' | 'unhealthy';
+  let overallStatus: "healthy" | "degraded" | "unhealthy";
   if (unhealthyCount > 0) {
-    overallStatus = 'unhealthy';
+    overallStatus = "unhealthy";
   } else if (degradedCount > 0) {
-    overallStatus = 'degraded';
+    overallStatus = "degraded";
   } else {
-    overallStatus = 'healthy';
+    overallStatus = "healthy";
   }
 
   return {

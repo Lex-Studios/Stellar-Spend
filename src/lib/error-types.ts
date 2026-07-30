@@ -29,19 +29,19 @@ export interface EnvironmentConfig {
   isProduction: boolean;
   includeStackTrace: boolean;
   includeDetails: boolean;
-  logLevel: 'error' | 'warn' | 'info' | 'debug';
+  logLevel: "error" | "warn" | "info" | "debug";
 }
 
 /**
  * Error classification for consistent handling
  */
 export enum ErrorType {
-  VALIDATION = 'validation_error',
-  NOT_FOUND = 'not_found',
-  UNAUTHORIZED = 'unauthorized',
-  FORBIDDEN = 'forbidden',
-  SERVER_ERROR = 'server_error',
-  EXTERNAL_SERVICE = 'external_service_error'
+  VALIDATION = "validation_error",
+  NOT_FOUND = "not_found",
+  UNAUTHORIZED = "unauthorized",
+  FORBIDDEN = "forbidden",
+  SERVER_ERROR = "server_error",
+  EXTERNAL_SERVICE = "external_service_error",
 }
 
 /**
@@ -53,20 +53,20 @@ export const ERROR_STATUS_CODES: Record<ErrorType, number> = {
   [ErrorType.UNAUTHORIZED]: 401,
   [ErrorType.FORBIDDEN]: 403,
   [ErrorType.SERVER_ERROR]: 500,
-  [ErrorType.EXTERNAL_SERVICE]: 502
+  [ErrorType.EXTERNAL_SERVICE]: 502,
 };
 
 /**
  * Utility function to get environment configuration
  */
 export function getEnvironmentConfig(): EnvironmentConfig {
-  const isProduction = process.env.NODE_ENV === 'production';
-  
+  const isProduction = process.env.NODE_ENV === "production";
+
   return {
     isProduction,
     includeStackTrace: !isProduction,
     includeDetails: !isProduction,
-    logLevel: isProduction ? 'error' : 'debug'
+    logLevel: isProduction ? "error" : "debug",
   };
 }
 
@@ -81,5 +81,5 @@ export function isError(error: unknown): error is Error {
  * Type guard to check if an object has a message property
  */
 export function hasMessage(error: unknown): error is { message: string } {
-  return typeof error === 'object' && error !== null && 'message' in error;
+  return typeof error === "object" && error !== null && "message" in error;
 }

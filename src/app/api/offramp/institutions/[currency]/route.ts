@@ -1,6 +1,9 @@
-import { NextResponse } from 'next/server';
-import { env } from '@/lib/env';
-import { getCorridorInstitutions, getCorridorConfig } from '@/lib/corridor-config';
+import { NextResponse } from "next/server";
+import { env } from "@/lib/env";
+import {
+  getCorridorInstitutions,
+  getCorridorConfig,
+} from "@/lib/corridor-config";
 
 export const maxDuration = 10;
 
@@ -10,7 +13,7 @@ interface PaycrestHttpError extends Error {
 
 class PaycrestAdapter {
   private apiKey: string;
-  private apiUrl = 'https://api.paycrest.io/v1';
+  private apiUrl = "https://api.paycrest.io/v1";
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -21,17 +24,17 @@ class PaycrestAdapter {
       `${this.apiUrl}/institutions/${encodeURIComponent(currency)}`,
       {
         headers: {
-          'Content-Type': 'application/json',
-          'API-Key': this.apiKey,
+          "Content-Type": "application/json",
+          "API-Key": this.apiKey,
         },
-      }
+      },
     );
 
     const data = await response.json();
 
     if (!response.ok) {
       const error = new Error(
-        data?.message ?? `Failed to fetch institutions: ${response.status}`
+        data?.message ?? `Failed to fetch institutions: ${response.status}`,
       ) as PaycrestHttpError;
       error.status = response.status;
       throw error;
@@ -41,7 +44,10 @@ class PaycrestAdapter {
   }
 }
 
-export async function GET(_req: Request, { params }: { params: Promise<{ currency: string }> }) {
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ currency: string }> },
+) {
   const { currency } = await params;
 
   try {
@@ -50,7 +56,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ currenc
 
     return NextResponse.json(institutions);
   } catch (err: unknown) {
-    console.error('Error fetching institutions from Paycrest:', err);
+    console.error("Error fetching institutions from Paycrest:", err);
 
     // Fallback to corridor-config institutions when Paycrest is unreachable
     const corridorConfig = getCorridorConfig(currency);
@@ -64,17 +70,23 @@ export async function GET(_req: Request, { params }: { params: Promise<{ currenc
       return NextResponse.json(fallback);
     }
 
-    if (err instanceof Error && 'status' in err) {
+    if (err instanceof Error && "status" in err) {
       const httpError = err as PaycrestHttpError;
       if (httpError.status === 400 || httpError.status === 404) {
         return NextResponse.json(
           { error: `Unsupported currency: ${currency}` },
-          { status: 400 }
+          { status: 400 },
         );
       }
-      return NextResponse.json({ error: err.message }, { status: httpError.status });
+      return NextResponse.json(
+        { error: err.message },
+        { status: httpError.status },
+      );
     }
 
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

@@ -1,5 +1,5 @@
-import type { BridgeProviderAdapter } from './bridge-provider';
-import type { PayoutProviderAdapter } from './payout-provider';
+import type { BridgeProviderAdapter } from "./bridge-provider";
+import type { PayoutProviderAdapter } from "./payout-provider";
 
 export interface ProviderHealth {
   ok: boolean;
@@ -53,11 +53,11 @@ export class BridgeProviderRegistry {
 
   getEligibleBridges(corridor: string): string[] {
     const routeProviders = this.routes
-      .filter(r => r.corridor === corridor)
+      .filter((r) => r.corridor === corridor)
       .sort((a, b) => a.priority - b.priority)
-      .map(r => r.bridgeProvider);
+      .map((r) => r.bridgeProvider);
 
-    const healthy = routeProviders.filter(p => {
+    const healthy = routeProviders.filter((p) => {
       const health = this.healthCache.get(p);
       return !health || health.ok;
     });
@@ -67,12 +67,12 @@ export class BridgeProviderRegistry {
 
   getEligiblePayouts(currency: string): string[] {
     const routeProviders = this.routes
-      .filter(r => r.fiatCurrency === currency)
+      .filter((r) => r.fiatCurrency === currency)
       .sort((a, b) => a.priority - b.priority)
-      .map(r => r.payoutProvider)
+      .map((r) => r.payoutProvider)
       .filter(Boolean) as string[];
 
-    const healthy = routeProviders.filter(p => {
+    const healthy = routeProviders.filter((p) => {
       const health = this.healthCache.get(p);
       return !health || health.ok;
     });
@@ -91,14 +91,23 @@ export class BridgeProviderRegistry {
   async checkBridgeHealth(name: string): Promise<ProviderHealth> {
     const adapter = this.bridges.get(name);
     if (!adapter) {
-      return { ok: false, latencyMs: 0, lastChecked: Date.now(), error: 'Unknown provider' };
+      return {
+        ok: false,
+        latencyMs: 0,
+        lastChecked: Date.now(),
+        error: "Unknown provider",
+      };
     }
 
     const start = Date.now();
     try {
-      const status = await adapter.getTransferStatus('test-id');
+      const status = await adapter.getTransferStatus("test-id");
       const latency = Date.now() - start;
-      const health: ProviderHealth = { ok: true, latencyMs: latency, lastChecked: Date.now() };
+      const health: ProviderHealth = {
+        ok: true,
+        latencyMs: latency,
+        lastChecked: Date.now(),
+      };
       this.healthCache.set(name, health);
       return health;
     } catch (err) {
@@ -107,7 +116,7 @@ export class BridgeProviderRegistry {
         ok: false,
         latencyMs: latency,
         lastChecked: Date.now(),
-        error: err instanceof Error ? err.message : 'Health check failed',
+        error: err instanceof Error ? err.message : "Health check failed",
       };
       this.healthCache.set(name, health);
       return health;
@@ -117,14 +126,23 @@ export class BridgeProviderRegistry {
   async checkPayoutHealth(name: string): Promise<ProviderHealth> {
     const adapter = this.payouts.get(name);
     if (!adapter) {
-      return { ok: false, latencyMs: 0, lastChecked: Date.now(), error: 'Unknown provider' };
+      return {
+        ok: false,
+        latencyMs: 0,
+        lastChecked: Date.now(),
+        error: "Unknown provider",
+      };
     }
 
     const start = Date.now();
     try {
       await adapter.getCurrencies();
       const latency = Date.now() - start;
-      const health: ProviderHealth = { ok: true, latencyMs: latency, lastChecked: Date.now() };
+      const health: ProviderHealth = {
+        ok: true,
+        latencyMs: latency,
+        lastChecked: Date.now(),
+      };
       this.healthCache.set(name, health);
       return health;
     } catch (err) {
@@ -133,7 +151,7 @@ export class BridgeProviderRegistry {
         ok: false,
         latencyMs: latency,
         lastChecked: Date.now(),
-        error: err instanceof Error ? err.message : 'Health check failed',
+        error: err instanceof Error ? err.message : "Health check failed",
       };
       this.healthCache.set(name, health);
       return health;
@@ -167,7 +185,7 @@ export class BridgeProviderRegistry {
   }
 
   getRoutesForCorridor(corridor: string): PerCorridorRoute[] {
-    return this.routes.filter(r => r.corridor === corridor);
+    return this.routes.filter((r) => r.corridor === corridor);
   }
 }
 

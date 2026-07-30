@@ -45,7 +45,12 @@ async function getOrSet<T>(
             const newEntry: CacheEntry<T> = { value, timestamp: Date.now() };
             return client.set(key, JSON.stringify(newEntry), ttl);
           })
-          .catch((err) => console.error(`[cache] Background revalidation failed for ${key}:`, err));
+          .catch((err) =>
+            console.error(
+              `[cache] Background revalidation failed for ${key}:`,
+              err,
+            ),
+          );
         return entry.value;
       }
     } catch {
@@ -56,7 +61,11 @@ async function getOrSet<T>(
   metrics.misses++;
   const value = await fetcher();
   const entry: CacheEntry<T> = { value, timestamp: Date.now() };
-  await client.set(key, JSON.stringify(entry), ttl + (staleWhileRevalidate || 0));
+  await client.set(
+    key,
+    JSON.stringify(entry),
+    ttl + (staleWhileRevalidate || 0),
+  );
   return value;
 }
 
@@ -81,7 +90,12 @@ export async function getCachedQuote<T>(
   feeMethod: string,
   fetcher: () => Promise<T>,
 ): Promise<T> {
-  return getOrSet(CacheKey.quote(amount, currency, feeMethod), TTL.QUOTE, fetcher, TTL.QUOTE);
+  return getOrSet(
+    CacheKey.quote(amount, currency, feeMethod),
+    TTL.QUOTE,
+    fetcher,
+    TTL.QUOTE,
+  );
 }
 
 export async function invalidateQuotes(): Promise<void> {
@@ -90,7 +104,9 @@ export async function invalidateQuotes(): Promise<void> {
 
 // ─── Currencies cache ─────────────────────────────────────────────────────────
 
-export async function getCachedCurrencies<T>(fetcher: () => Promise<T>): Promise<T> {
+export async function getCachedCurrencies<T>(
+  fetcher: () => Promise<T>,
+): Promise<T> {
   return getOrSet(CacheKey.currencies(), TTL.CURRENCIES, fetcher, 3600);
 }
 
@@ -104,7 +120,12 @@ export async function getCachedInstitutions<T>(
   currency: string,
   fetcher: () => Promise<T>,
 ): Promise<T> {
-  return getOrSet(CacheKey.institutions(currency), TTL.INSTITUTIONS, fetcher, 3600);
+  return getOrSet(
+    CacheKey.institutions(currency),
+    TTL.INSTITUTIONS,
+    fetcher,
+    3600,
+  );
 }
 
 export async function invalidateInstitutions(currency?: string): Promise<void> {

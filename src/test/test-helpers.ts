@@ -1,22 +1,24 @@
-import type { Transaction } from '@/lib/transaction-storage';
+import type { Transaction } from "@/lib/transaction-storage";
 
 /**
  * Factory for creating test transactions with sensible defaults
  */
-export function createTestTransaction(overrides?: Partial<Transaction>): Transaction {
+export function createTestTransaction(
+  overrides?: Partial<Transaction>,
+): Transaction {
   return {
     id: `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     timestamp: Date.now(),
-    userAddress: 'GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDE',
-    amount: '100.00',
-    currency: 'USDC',
+    userAddress: "GABC1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDE",
+    amount: "100.00",
+    currency: "USDC",
     beneficiary: {
-      institution: 'Test Bank',
-      accountIdentifier: '1234567890',
-      accountName: 'Test User',
-      currency: 'USD',
+      institution: "Test Bank",
+      accountIdentifier: "1234567890",
+      accountName: "Test User",
+      currency: "USD",
     },
-    status: 'pending',
+    status: "pending",
     ...overrides,
   };
 }
@@ -25,8 +27,8 @@ export function createTestTransaction(overrides?: Partial<Transaction>): Transac
  * Factory for creating valid Stellar addresses (G-key format)
  */
 export function createValidStellarAddress(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-  let address = 'G';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let address = "G";
   for (let i = 0; i < 55; i++) {
     address += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -37,8 +39,8 @@ export function createValidStellarAddress(): string {
  * Factory for creating valid Base addresses (0x format)
  */
 export function createValidBaseAddress(): string {
-  const chars = '0123456789abcdef';
-  let address = '0x';
+  const chars = "0123456789abcdef";
+  let address = "0x";
   for (let i = 0; i < 40; i++) {
     address += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -89,11 +91,11 @@ export function createQuoteFactory() {
   return {
     create(overrides?: Partial<QuoteResponse>): QuoteResponse {
       return {
-        destinationAmount: '158202.00',
+        destinationAmount: "158202.00",
         rate: 1598,
-        currency: 'NGN',
-        bridgeFee: '0.5',
-        payoutFee: '0',
+        currency: "NGN",
+        bridgeFee: "0.5",
+        payoutFee: "0",
         estimatedTime: 300,
         ...overrides,
       };
@@ -122,10 +124,10 @@ export function createBeneficiaryFactory() {
   return {
     create(overrides?: Partial<Beneficiary>): Beneficiary {
       return {
-        institution: 'Test Bank',
-        accountIdentifier: '1234567890',
-        accountName: 'Test User',
-        currency: 'NGN',
+        institution: "Test Bank",
+        accountIdentifier: "1234567890",
+        accountName: "Test User",
+        currency: "NGN",
         ...overrides,
       };
     },
@@ -158,17 +160,24 @@ export function createApiResponseFactory() {
     success<T>(data: T, meta?: Record<string, unknown>): ApiSuccessResponse<T> {
       return { data, meta };
     },
-    error(message: string, code?: string, details?: Record<string, unknown>): ApiErrorResponse {
+    error(
+      message: string,
+      code?: string,
+      details?: Record<string, unknown>,
+    ): ApiErrorResponse {
       return { error: message, code, details };
     },
     validationError(field: string, message: string): ApiErrorResponse {
-      return this.error(`Validation failed: ${field}`, 'VALIDATION_ERROR', { field, message });
+      return this.error(`Validation failed: ${field}`, "VALIDATION_ERROR", {
+        field,
+        message,
+      });
     },
     notFound(resource: string): ApiErrorResponse {
-      return this.error(`${resource} not found`, 'NOT_FOUND');
+      return this.error(`${resource} not found`, "NOT_FOUND");
     },
     unauthorized(): ApiErrorResponse {
-      return this.error('Unauthorized', 'UNAUTHORIZED');
+      return this.error("Unauthorized", "UNAUTHORIZED");
     },
   };
 }
@@ -191,21 +200,25 @@ export function createTransactionFactory() {
       return createTestTransaction(overrides);
     },
     withTraits(traits: TransactionFactoryTraits): Transaction {
-      let status: Transaction['status'] = 'pending';
-      if (traits.completed) status = 'completed';
-      if (traits.failed) status = 'failed';
+      let status: Transaction["status"] = "pending";
+      if (traits.completed) status = "completed";
+      if (traits.failed) status = "failed";
 
       return this.create({
         status,
-        bridgeStatus: traits.withBridge ? 'completed' : undefined,
-        payoutStatus: traits.withPayout ? 'settled' : undefined,
+        bridgeStatus: traits.withBridge ? "completed" : undefined,
+        payoutStatus: traits.withPayout ? "settled" : undefined,
       });
     },
     pending(): Transaction {
       return this.withTraits({ pending: true });
     },
     completed(): Transaction {
-      return this.withTraits({ completed: true, withBridge: true, withPayout: true });
+      return this.withTraits({
+        completed: true,
+        withBridge: true,
+        withPayout: true,
+      });
     },
     failed(): Transaction {
       return this.withTraits({ failed: true });

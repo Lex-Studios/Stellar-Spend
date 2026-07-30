@@ -1,5 +1,5 @@
-import { pool } from '@/lib/db/client';
-import crypto from 'crypto';
+import { pool } from "@/lib/db/client";
+import crypto from "crypto";
 
 export interface ReferralCode {
   id: string;
@@ -30,7 +30,7 @@ export interface FraudCheckResult {
 }
 
 function generateReferralCode(): string {
-  return crypto.randomBytes(6).toString('hex').toUpperCase().slice(0, 10);
+  return crypto.randomBytes(6).toString("hex").toUpperCase().slice(0, 10);
 }
 
 export async function createReferralCode(
@@ -55,14 +55,17 @@ export async function getReferralCode(userId: string) {
   return result.rows[0];
 }
 
-export async function trackReferral(referralCode: string, referredUserId: string) {
+export async function trackReferral(
+  referralCode: string,
+  referredUserId: string,
+) {
   const codeRecord = await pool.query(
     `SELECT * FROM referral_codes WHERE code = $1`,
     [referralCode],
   );
 
   if (!codeRecord.rows[0]) {
-    throw new Error('Invalid referral code');
+    throw new Error("Invalid referral code");
   }
 
   const referrerId = codeRecord.rows[0].user_id;
@@ -111,11 +114,11 @@ export async function distributeReward(referralId: string) {
   );
 
   if (!existing.rows[0]) {
-    throw new Error('Referral reward not found');
+    throw new Error("Referral reward not found");
   }
 
-  if (existing.rows[0].status !== 'pending') {
-    throw new Error('Reward already processed');
+  if (existing.rows[0].status !== "pending") {
+    throw new Error("Reward already processed");
   }
 
   const result = await pool.query(
@@ -129,7 +132,9 @@ export async function distributeReward(referralId: string) {
   return result.rows[0];
 }
 
-export async function getReferralAnalytics(userId: string): Promise<ReferralAnalytics> {
+export async function getReferralAnalytics(
+  userId: string,
+): Promise<ReferralAnalytics> {
   const result = await pool.query(
     `SELECT
        COUNT(*) as total_referrals,
@@ -154,7 +159,9 @@ export async function getReferralAnalytics(userId: string): Promise<ReferralAnal
   };
 }
 
-export async function getReferralLeaderboard(limit: number = 10): Promise<LeaderboardEntry[]> {
+export async function getReferralLeaderboard(
+  limit: number = 10,
+): Promise<LeaderboardEntry[]> {
   const result = await pool.query(
     `SELECT
        referrer_id as user_id,
@@ -188,7 +195,7 @@ export async function detectReferralFraud(
     [referralCode],
   );
   if (codeOwner.rows[0]?.user_id === userId) {
-    reasons.push('Self-referral detected');
+    reasons.push("Self-referral detected");
   }
 
   // Check for multiple referral attempts by the same user
@@ -199,7 +206,7 @@ export async function detectReferralFraud(
     [userId],
   );
   if (Number(previousAttempts.rows[0]?.attempt_count) > 0) {
-    reasons.push('User already used a referral code');
+    reasons.push("User already used a referral code");
   }
 
   // Check for rapid referral creation (more than 5 in the last hour from referrer)
@@ -212,7 +219,9 @@ export async function detectReferralFraud(
       [codeOwner.rows[0].user_id],
     );
     if (Number(recentReferrals.rows[0]?.recent_count) >= 5) {
-      reasons.push('Referrer has unusually high referral rate in the last hour');
+      reasons.push(
+        "Referrer has unusually high referral rate in the last hour",
+      );
     }
   }
 

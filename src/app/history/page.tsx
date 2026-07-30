@@ -53,8 +53,13 @@ function formatUsdc(amount: number): string {
   });
 }
 
-function getInsuranceStatusLabel(status: NonNullable<Transaction["insurance"]>["status"]): string {
-  const labels: Record<NonNullable<Transaction["insurance"]>["status"], string> = {
+function getInsuranceStatusLabel(
+  status: NonNullable<Transaction["insurance"]>["status"],
+): string {
+  const labels: Record<
+    NonNullable<Transaction["insurance"]>["status"],
+    string
+  > = {
     pending: "Pending",
     active: "Active",
     claimed: "Claim filed",
@@ -142,7 +147,8 @@ export default function HistoryPage() {
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState("");
   const [noteError, setNoteError] = useState<string | null>(null);
-  const [claimingTransaction, setClaimingTransaction] = useState<Transaction | null>(null);
+  const [claimingTransaction, setClaimingTransaction] =
+    useState<Transaction | null>(null);
 
   // Hydrate filters from localStorage on mount (client-only).
   useEffect(() => {
@@ -223,7 +229,9 @@ export default function HistoryPage() {
     setTransactions((prev) =>
       prev.map((tx) => (tx.id === id ? { ...tx, note: trimmed } : tx)),
     );
-    const rollbackLocal = TransactionStorage.applyOptimistic(id, { note: trimmed });
+    const rollbackLocal = TransactionStorage.applyOptimistic(id, {
+      note: trimmed,
+    });
 
     try {
       const res = await fetch(`/api/transactions/${encodeURIComponent(id)}`, {
@@ -327,7 +335,10 @@ export default function HistoryPage() {
 
   const activeCoverage = insuredTransactions.reduce(
     (sum, tx) =>
-      tx.insurance && ["pending", "active", "claimed", "claim_approved"].includes(tx.insurance.status)
+      tx.insurance &&
+      ["pending", "active", "claimed", "claim_approved"].includes(
+        tx.insurance.status,
+      )
         ? sum + tx.insurance.coverage
         : sum,
     0,
@@ -342,10 +353,14 @@ export default function HistoryPage() {
     };
     setTransactions((prev) =>
       prev.map((tx) =>
-        tx.id === claimingTransaction.id ? { ...tx, insurance: updatedInsurance } : tx,
+        tx.id === claimingTransaction.id
+          ? { ...tx, insurance: updatedInsurance }
+          : tx,
       ),
     );
-    TransactionStorage.update(claimingTransaction.id, { insurance: updatedInsurance });
+    TransactionStorage.update(claimingTransaction.id, {
+      insurance: updatedInsurance,
+    });
     setClaimingTransaction(null);
   };
 
@@ -431,21 +446,30 @@ export default function HistoryPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
               <div className="border border-[#333333] bg-[#111111] p-4">
-                <p className="text-[10px] tracking-widest uppercase text-[#777777]">Insured Transactions</p>
+                <p className="text-[10px] tracking-widest uppercase text-[#777777]">
+                  Insured Transactions
+                </p>
                 <p className="mt-2 text-2xl font-semibold text-white tabular-nums">
                   {insuredTransactions.length}
                 </p>
               </div>
               <div className="border border-[#333333] bg-[#111111] p-4">
-                <p className="text-[10px] tracking-widest uppercase text-[#777777]">Active Coverage</p>
+                <p className="text-[10px] tracking-widest uppercase text-[#777777]">
+                  Active Coverage
+                </p>
                 <p className="mt-2 text-2xl font-semibold text-[#4ade80] tabular-nums">
                   {formatUsdc(activeCoverage)} USDC
                 </p>
               </div>
               <div className="border border-[#333333] bg-[#111111] p-4">
-                <p className="text-[10px] tracking-widest uppercase text-[#777777]">Claims Filed</p>
+                <p className="text-[10px] tracking-widest uppercase text-[#777777]">
+                  Claims Filed
+                </p>
                 <p className="mt-2 text-2xl font-semibold text-[#c9a962] tabular-nums">
-                  {insuredTransactions.filter((tx) => tx.insurance?.claimId).length}
+                  {
+                    insuredTransactions.filter((tx) => tx.insurance?.claimId)
+                      .length
+                  }
                 </p>
               </div>
             </div>
@@ -507,7 +531,9 @@ export default function HistoryPage() {
                     <option value="completed">Completed</option>
                     <option value="failed">Failed</option>
                     <option value="reversed">Reversed</option>
-                    <option value="partially_reversed">Partially reversed</option>
+                    <option value="partially_reversed">
+                      Partially reversed
+                    </option>
                   </select>
                 </div>
 
@@ -627,7 +653,10 @@ export default function HistoryPage() {
             </div>
 
             {noteError && (
-              <div role="alert" className="mt-3 border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs text-red-400">
+              <div
+                role="alert"
+                className="mt-3 border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs text-red-400"
+              >
                 {noteError}
               </div>
             )}
@@ -771,7 +800,8 @@ export default function HistoryPage() {
                                 onChange={(e) => setNoteInput(e.target.value)}
                                 onKeyDown={(e) => {
                                   if (e.key === "Enter") saveNote(tx.id);
-                                  if (e.key === "Escape") setEditingNoteId(null);
+                                  if (e.key === "Escape")
+                                    setEditingNoteId(null);
                                 }}
                                 className="flex-1 bg-[#0a0a0a] border border-[#c9a962] px-2 py-1 text-xs text-white focus:outline-none"
                                 aria-label="Edit note"
@@ -780,12 +810,16 @@ export default function HistoryPage() {
                                 onClick={() => saveNote(tx.id)}
                                 className="text-[#c9a962] hover:text-white text-[10px] px-1"
                                 aria-label="Save note"
-                              >✓</button>
+                              >
+                                ✓
+                              </button>
                               <button
                                 onClick={() => setEditingNoteId(null)}
                                 className="text-[#777777] hover:text-white text-[10px] px-1"
                                 aria-label="Cancel"
-                              >✕</button>
+                              >
+                                ✕
+                              </button>
                             </div>
                           ) : (
                             <button
@@ -795,9 +829,15 @@ export default function HistoryPage() {
                               }}
                               className="text-left text-[#777777] hover:text-[#c9a962] transition-colors duration-150 truncate max-w-[180px] block"
                               title={tx.note || "Add note"}
-                              aria-label={tx.note ? `Edit note: ${tx.note}` : "Add note"}
+                              aria-label={
+                                tx.note ? `Edit note: ${tx.note}` : "Add note"
+                              }
                             >
-                              {tx.note || <span className="text-[#444444] italic">+ add note</span>}
+                              {tx.note || (
+                                <span className="text-[#444444] italic">
+                                  + add note
+                                </span>
+                              )}
                             </button>
                           )}
                         </td>
@@ -809,11 +849,13 @@ export default function HistoryPage() {
                                   {getInsuranceStatusLabel(tx.insurance.status)}
                                 </span>
                                 <span className="text-[#777777]">
-                                  {formatUsdc(tx.insurance.premium)} USDC premium
+                                  {formatUsdc(tx.insurance.premium)} USDC
+                                  premium
                                 </span>
                               </div>
                               <span className="text-[#4ade80]">
-                                {formatUsdc(tx.insurance.coverage)} USDC coverage
+                                {formatUsdc(tx.insurance.coverage)} USDC
+                                coverage
                               </span>
                               {tx.insurance.claimId && (
                                 <span className="font-mono text-[10px] text-[#777777]">

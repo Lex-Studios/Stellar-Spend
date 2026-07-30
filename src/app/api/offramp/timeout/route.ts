@@ -1,7 +1,12 @@
-import { NextResponse } from 'next/server';
-import { ErrorHandler } from '@/lib/error-handler';
-import { cancelTimedOutTransaction, checkAndCancelTimedOutTransactions, isTransactionTimedOut, TRANSACTION_TIMEOUT_MS } from '@/lib/transaction-timeout';
-import { dal } from '@/lib/db/dal';
+import { NextResponse } from "next/server";
+import { ErrorHandler } from "@/lib/error-handler";
+import {
+  cancelTimedOutTransaction,
+  checkAndCancelTimedOutTransactions,
+  isTransactionTimedOut,
+  TRANSACTION_TIMEOUT_MS,
+} from "@/lib/transaction-timeout";
+import { dal } from "@/lib/db/dal";
 
 export const maxDuration = 30;
 
@@ -15,13 +20,15 @@ export async function POST(request: Request) {
     const body = await request.json();
 
     if (body.userAddress && !body.transactionId) {
-      const results = await checkAndCancelTimedOutTransactions(body.userAddress);
+      const results = await checkAndCancelTimedOutTransactions(
+        body.userAddress,
+      );
       return NextResponse.json({ data: results });
     }
 
     const { transactionId } = body;
-    if (!transactionId || typeof transactionId !== 'string') {
-      return ErrorHandler.validation('transactionId is required');
+    if (!transactionId || typeof transactionId !== "string") {
+      return ErrorHandler.validation("transactionId is required");
     }
 
     const result = await cancelTimedOutTransaction(transactionId);
@@ -38,13 +45,16 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const transactionId = searchParams.get('transactionId');
+    const transactionId = searchParams.get("transactionId");
     if (!transactionId) {
-      return ErrorHandler.validation('transactionId query param is required');
+      return ErrorHandler.validation("transactionId query param is required");
     }
     const tx = await dal.getById(transactionId);
     if (!tx) {
-      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Transaction not found" },
+        { status: 404 },
+      );
     }
     const ageMs = Date.now() - tx.timestamp;
     return NextResponse.json({

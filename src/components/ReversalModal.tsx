@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
-import type { Transaction } from '@/lib/transaction-storage';
-import { TransactionStorage } from '@/lib/transaction-storage';
-import { cn } from '@/lib/cn';
-import { useFocusTrap, useFocusRestore } from '@/hooks/useFocusTrap';
+import { useEffect, useRef, useState } from "react";
+import type { Transaction } from "@/lib/transaction-storage";
+import { TransactionStorage } from "@/lib/transaction-storage";
+import { cn } from "@/lib/cn";
+import { useFocusTrap, useFocusRestore } from "@/hooks/useFocusTrap";
 
 interface ReversalModalProps {
   transaction: Transaction;
@@ -20,7 +20,7 @@ export function ReversalModal({
   onSuccess,
 }: ReversalModalProps) {
   const [amount, setAmount] = useState(transaction.amount);
-  const [reason, setReason] = useState('');
+  const [reason, setReason] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,17 +32,17 @@ export function ReversalModal({
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isLoading) onClose();
+      if (e.key === "Escape" && !isLoading) onClose();
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [isOpen, isLoading, onClose]);
 
   // Focus the first interactive element when the modal opens
   useEffect(() => {
     if (!isOpen) return;
     const el = dialogRef.current?.querySelector<HTMLElement>(
-      'button:not([disabled]), input:not([disabled]), textarea:not([disabled])',
+      "button:not([disabled]), input:not([disabled]), textarea:not([disabled])",
     );
     el?.focus();
   }, [isOpen]);
@@ -56,9 +56,9 @@ export function ReversalModal({
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/offramp/reverse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/offramp/reverse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           transactionId: transaction.id,
           amount,
@@ -68,13 +68,13 @@ export function ReversalModal({
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Failed to initiate reversal');
+        throw new Error(data.error || "Failed to initiate reversal");
       }
 
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -106,9 +106,9 @@ export function ReversalModal({
           disabled={isLoading}
           aria-label="Close reversal dialog"
           className={cn(
-            'absolute top-4 right-4 text-[#999999] hover:text-white transition-colors',
-            'focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]',
-            isLoading && 'cursor-not-allowed opacity-40',
+            "absolute top-4 right-4 text-[#999999] hover:text-white transition-colors",
+            "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
+            isLoading && "cursor-not-allowed opacity-40",
           )}
         >
           ✕
@@ -116,12 +116,16 @@ export function ReversalModal({
 
         {!isEligible ? (
           <div className="bg-red-500/10 border border-red-500/30 p-4 text-red-400 text-sm">
-            This transaction is not eligible for reversal. Only completed transactions without existing reversals can be reversed.
+            This transaction is not eligible for reversal. Only completed
+            transactions without existing reversals can be reversed.
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="reversal-amount" className="block text-xs text-[#999999] mb-2">
+              <label
+                htmlFor="reversal-amount"
+                className="block text-xs text-[#999999] mb-2"
+              >
                 Reversal Amount (max: {maxAmount})
               </label>
               <input
@@ -138,7 +142,10 @@ export function ReversalModal({
             </div>
 
             <div>
-              <label htmlFor="reversal-reason" className="block text-xs text-[#999999] mb-2">
+              <label
+                htmlFor="reversal-reason"
+                className="block text-xs text-[#999999] mb-2"
+              >
                 Reason for Reversal
               </label>
               <textarea
@@ -152,7 +159,10 @@ export function ReversalModal({
             </div>
 
             {error && (
-              <div role="alert" className="bg-red-500/10 border border-red-500/30 p-3 text-red-400 text-xs">
+              <div
+                role="alert"
+                className="bg-red-500/10 border border-red-500/30 p-3 text-red-400 text-xs"
+              >
                 {error}
               </div>
             )}
@@ -170,13 +180,13 @@ export function ReversalModal({
                 type="submit"
                 disabled={isLoading}
                 className={cn(
-                  'flex-1 px-4 py-2 text-xs font-semibold transition-colors',
+                  "flex-1 px-4 py-2 text-xs font-semibold transition-colors",
                   isLoading
-                    ? 'bg-[#666666] text-[#999999] cursor-not-allowed'
-                    : 'bg-red-600 text-white hover:bg-red-700',
+                    ? "bg-[#666666] text-[#999999] cursor-not-allowed"
+                    : "bg-red-600 text-white hover:bg-red-700",
                 )}
               >
-                {isLoading ? 'Processing...' : 'Reverse Transaction'}
+                {isLoading ? "Processing..." : "Reverse Transaction"}
               </button>
             </div>
           </form>

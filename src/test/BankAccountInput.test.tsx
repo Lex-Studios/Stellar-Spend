@@ -21,7 +21,9 @@ describe("BankField", () => {
   });
 
   it("shows success checkmark for valid account number after blur", async () => {
-    const { rerender } = render(<BankField type="account" value="" onChange={noop} />);
+    const { rerender } = render(
+      <BankField type="account" value="" onChange={noop} />,
+    );
     const input = screen.getByRole("textbox");
     await userEvent.click(input);
     rerender(<BankField type="account" value="0123456789" onChange={noop} />);
@@ -73,13 +75,27 @@ describe("BankAccountInput", () => {
   });
 
   it("shows routing + account fields in US mode", () => {
-    render(<BankAccountInput {...baseProps} mode="us" routingNumber="" onRoutingNumberChange={noop} />);
+    render(
+      <BankAccountInput
+        {...baseProps}
+        mode="us"
+        routingNumber=""
+        onRoutingNumberChange={noop}
+      />,
+    );
     expect(screen.getByLabelText(/routing number/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/account number/i)).toBeInTheDocument();
   });
 
   it("shows IBAN field in iban mode", () => {
-    render(<BankAccountInput {...baseProps} mode="iban" iban="" onIbanChange={noop} />);
+    render(
+      <BankAccountInput
+        {...baseProps}
+        mode="iban"
+        iban=""
+        onIbanChange={noop}
+      />,
+    );
     expect(screen.getByLabelText(/iban/i)).toBeInTheDocument();
   });
 });

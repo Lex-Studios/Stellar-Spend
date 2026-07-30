@@ -34,9 +34,7 @@ export async function lazyLoadModule<T>(
 /**
  * Preload a module in the background.
  */
-export function preloadModule<T>(
-  importFn: () => Promise<T>,
-): void {
+export function preloadModule<T>(importFn: () => Promise<T>): void {
   if (typeof window !== "undefined") {
     // Use requestIdleCallback if available, otherwise use setTimeout
     if ("requestIdleCallback" in window) {
@@ -67,7 +65,8 @@ export const featureChunks = {
   qrScanner: () => import("@/components/QRScanner").then((m) => m.default),
   walletModal: () => import("@/components/WalletModal").then((m) => m.default),
   twoFA: () => import("@/components/TwoFASetup").then((m) => m.default),
-  insurance: () => import("@/components/InsuranceOption").then((m) => m.default),
+  insurance: () =>
+    import("@/components/InsuranceOption").then((m) => m.default),
   referral: () =>
     import("@/components/ReferralDashboard").then((m) => m.default),
   loyalty: () => import("@/components/LoyaltyDashboard").then((m) => m.default),

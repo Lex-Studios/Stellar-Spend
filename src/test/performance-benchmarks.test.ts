@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from "vitest";
 
 interface BenchmarkResult {
   name: string;
@@ -9,9 +9,9 @@ interface BenchmarkResult {
 
 const benchmarks: BenchmarkResult[] = [];
 
-describe('Performance Benchmarks', () => {
-  describe('Quote Fetching Performance', () => {
-    it('should fetch quote within 500ms', async () => {
+describe("Performance Benchmarks", () => {
+  describe("Quote Fetching Performance", () => {
+    it("should fetch quote within 500ms", async () => {
       const start = performance.now();
 
       // Simulate quote fetch
@@ -21,7 +21,7 @@ describe('Performance Benchmarks', () => {
       const threshold = 500;
 
       benchmarks.push({
-        name: 'quote_fetch',
+        name: "quote_fetch",
         duration,
         threshold,
         passed: duration < threshold,
@@ -30,7 +30,7 @@ describe('Performance Benchmarks', () => {
       expect(duration).toBeLessThan(threshold);
     });
 
-    it('should handle concurrent quote requests', async () => {
+    it("should handle concurrent quote requests", async () => {
       const start = performance.now();
       const requests = Array(5)
         .fill(null)
@@ -42,7 +42,7 @@ describe('Performance Benchmarks', () => {
       const threshold = 300;
 
       benchmarks.push({
-        name: 'concurrent_quotes',
+        name: "concurrent_quotes",
         duration,
         threshold,
         passed: duration < threshold,
@@ -51,9 +51,9 @@ describe('Performance Benchmarks', () => {
       expect(duration).toBeLessThan(threshold);
     });
 
-    it('should cache quote results', async () => {
+    it("should cache quote results", async () => {
       const cache = new Map();
-      const key = 'quote_100_NGN';
+      const key = "quote_100_NGN";
 
       const start = performance.now();
       if (!cache.has(key)) {
@@ -71,19 +71,19 @@ describe('Performance Benchmarks', () => {
     });
   });
 
-  describe('Transaction Building Performance', () => {
-    it('should build Soroban XDR within 200ms', async () => {
+  describe("Transaction Building Performance", () => {
+    it("should build Soroban XDR within 200ms", async () => {
       const start = performance.now();
 
       // Simulate XDR building
-      const xdr = 'AAAAAgAAAAB...';
+      const xdr = "AAAAAgAAAAB...";
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       const duration = performance.now() - start;
       const threshold = 200;
 
       benchmarks.push({
-        name: 'xdr_build',
+        name: "xdr_build",
         duration,
         threshold,
         passed: duration < threshold,
@@ -93,13 +93,13 @@ describe('Performance Benchmarks', () => {
       expect(xdr).toBeDefined();
     });
 
-    it('should validate transaction within 100ms', async () => {
+    it("should validate transaction within 100ms", async () => {
       const start = performance.now();
 
       const transaction = {
-        amount: '100',
-        fromAddress: 'GCFX...ABCD',
-        toAddress: '0xd8dA...6045',
+        amount: "100",
+        fromAddress: "GCFX...ABCD",
+        toAddress: "0xd8dA...6045",
       };
 
       // Simulate validation
@@ -109,7 +109,7 @@ describe('Performance Benchmarks', () => {
       const threshold = 100;
 
       benchmarks.push({
-        name: 'tx_validation',
+        name: "tx_validation",
         duration,
         threshold,
         passed: duration < threshold,
@@ -119,15 +119,15 @@ describe('Performance Benchmarks', () => {
       expect(transaction).toBeDefined();
     });
 
-    it('should handle large transaction batches', async () => {
+    it("should handle large transaction batches", async () => {
       const start = performance.now();
 
       const transactions = Array(100)
         .fill(null)
         .map((_, i) => ({
           id: i,
-          amount: '100',
-          status: 'pending',
+          amount: "100",
+          status: "pending",
         }));
 
       // Simulate batch processing
@@ -137,7 +137,7 @@ describe('Performance Benchmarks', () => {
       const threshold = 500;
 
       benchmarks.push({
-        name: 'batch_processing',
+        name: "batch_processing",
         duration,
         threshold,
         passed: duration < threshold,
@@ -148,21 +148,21 @@ describe('Performance Benchmarks', () => {
     });
   });
 
-  describe('Database Query Performance', () => {
-    it('should query transactions within 100ms', async () => {
+  describe("Database Query Performance", () => {
+    it("should query transactions within 100ms", async () => {
       const start = performance.now();
 
       // Simulate DB query
       const results = Array(50)
         .fill(null)
-        .map((_, i) => ({ id: i, amount: '100' }));
+        .map((_, i) => ({ id: i, amount: "100" }));
       await new Promise((resolve) => setTimeout(resolve, 50));
 
       const duration = performance.now() - start;
       const threshold = 100;
 
       benchmarks.push({
-        name: 'db_query_transactions',
+        name: "db_query_transactions",
         duration,
         threshold,
         passed: duration < threshold,
@@ -172,21 +172,21 @@ describe('Performance Benchmarks', () => {
       expect(results.length).toBe(50);
     });
 
-    it('should index queries efficiently', async () => {
+    it("should index queries efficiently", async () => {
       const start = performance.now();
 
       // Simulate indexed query
       const index = new Map();
       for (let i = 0; i < 1000; i++) {
-        index.set(`tx_${i}`, { id: i, amount: '100' });
+        index.set(`tx_${i}`, { id: i, amount: "100" });
       }
 
-      const result = index.get('tx_500');
+      const result = index.get("tx_500");
       const duration = performance.now() - start;
       const threshold = 50;
 
       benchmarks.push({
-        name: 'indexed_query',
+        name: "indexed_query",
         duration,
         threshold,
         passed: duration < threshold,
@@ -196,7 +196,7 @@ describe('Performance Benchmarks', () => {
       expect(result).toBeDefined();
     });
 
-    it('should handle connection pooling', async () => {
+    it("should handle connection pooling", async () => {
       const start = performance.now();
 
       const pool = {
@@ -211,7 +211,7 @@ describe('Performance Benchmarks', () => {
       const threshold = 10;
 
       benchmarks.push({
-        name: 'connection_pool',
+        name: "connection_pool",
         duration,
         threshold,
         passed: duration < threshold,
@@ -222,14 +222,14 @@ describe('Performance Benchmarks', () => {
     });
   });
 
-  describe('API Endpoint Performance', () => {
-    it('should respond to /api/offramp/quote within 600ms', async () => {
+  describe("API Endpoint Performance", () => {
+    it("should respond to /api/offramp/quote within 600ms", async () => {
       const start = performance.now();
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 150));
       const response = {
-        destinationAmount: '158202.00',
+        destinationAmount: "158202.00",
         rate: 1598,
       };
 
@@ -237,7 +237,7 @@ describe('Performance Benchmarks', () => {
       const threshold = 600;
 
       benchmarks.push({
-        name: 'api_quote_endpoint',
+        name: "api_quote_endpoint",
         duration,
         threshold,
         passed: duration < threshold,
@@ -247,7 +247,7 @@ describe('Performance Benchmarks', () => {
       expect(response.rate).toBeGreaterThan(0);
     });
 
-    it('should handle concurrent API requests', async () => {
+    it("should handle concurrent API requests", async () => {
       const start = performance.now();
 
       const requests = Array(10)
@@ -260,7 +260,7 @@ describe('Performance Benchmarks', () => {
       const threshold = 500;
 
       benchmarks.push({
-        name: 'concurrent_api_requests',
+        name: "concurrent_api_requests",
         duration,
         threshold,
         passed: duration < threshold,
@@ -269,34 +269,34 @@ describe('Performance Benchmarks', () => {
       expect(duration).toBeLessThan(threshold);
     });
 
-    it('should cache API responses', async () => {
+    it("should cache API responses", async () => {
       const cache = new Map();
 
       const start = performance.now();
-      const key = 'currencies_list';
+      const key = "currencies_list";
 
       if (!cache.has(key)) {
         await new Promise((resolve) => setTimeout(resolve, 100));
-        cache.set(key, ['NGN', 'KES', 'GHS']);
+        cache.set(key, ["NGN", "KES", "GHS"]);
       }
 
       const duration = performance.now() - start;
       const threshold = 100;
 
       benchmarks.push({
-        name: 'api_response_cache',
+        name: "api_response_cache",
         duration,
         threshold,
         passed: duration < threshold,
       });
 
       expect(duration).toBeLessThan(threshold);
-      expect(cache.get(key)).toContain('NGN');
+      expect(cache.get(key)).toContain("NGN");
     });
   });
 
-  describe('Benchmark Regression Detection', () => {
-    it('should detect performance regressions', () => {
+  describe("Benchmark Regression Detection", () => {
+    it("should detect performance regressions", () => {
       const baseline = {
         quote_fetch: 100,
         xdr_build: 50,
@@ -315,10 +315,10 @@ describe('Performance Benchmarks', () => {
       });
 
       expect(regressions.length).toBeGreaterThan(0);
-      expect(regressions[0][0]).toBe('quote_fetch');
+      expect(regressions[0][0]).toBe("quote_fetch");
     });
 
-    it('should track performance trends', () => {
+    it("should track performance trends", () => {
       const history = [
         { timestamp: 1, duration: 100 },
         { timestamp: 2, duration: 105 },
@@ -333,21 +333,21 @@ describe('Performance Benchmarks', () => {
       expect(trend).toBe(15);
     });
 
-    it('should alert on threshold breach', () => {
+    it("should alert on threshold breach", () => {
       const metrics = [
-        { name: 'quote_fetch', duration: 600, threshold: 500 },
-        { name: 'xdr_build', duration: 150, threshold: 200 },
+        { name: "quote_fetch", duration: 600, threshold: 500 },
+        { name: "xdr_build", duration: 150, threshold: 200 },
       ];
 
       const breaches = metrics.filter((m) => m.duration > m.threshold);
 
       expect(breaches.length).toBe(1);
-      expect(breaches[0].name).toBe('quote_fetch');
+      expect(breaches[0].name).toBe("quote_fetch");
     });
   });
 
-  describe('Benchmark Reports', () => {
-    it('should generate performance report', () => {
+  describe("Benchmark Reports", () => {
+    it("should generate performance report", () => {
       const report = {
         timestamp: new Date().toISOString(),
         benchmarks: benchmarks.slice(0, 5),
@@ -358,33 +358,33 @@ describe('Performance Benchmarks', () => {
         },
       };
 
-      expect(report).toHaveProperty('timestamp');
-      expect(report).toHaveProperty('benchmarks');
-      expect(report).toHaveProperty('summary');
+      expect(report).toHaveProperty("timestamp");
+      expect(report).toHaveProperty("benchmarks");
+      expect(report).toHaveProperty("summary");
       expect(report.summary.total).toBeGreaterThan(0);
     });
 
-    it('should export benchmark results', () => {
+    it("should export benchmark results", () => {
       const exportData = {
-        format: 'json',
+        format: "json",
         data: benchmarks.slice(0, 3),
         exportedAt: new Date().toISOString(),
       };
 
-      expect(exportData.format).toBe('json');
+      expect(exportData.format).toBe("json");
       expect(Array.isArray(exportData.data)).toBe(true);
-      expect(exportData).toHaveProperty('exportedAt');
+      expect(exportData).toHaveProperty("exportedAt");
     });
 
-    it('should compare benchmark runs', () => {
+    it("should compare benchmark runs", () => {
       const run1 = [
-        { name: 'quote_fetch', duration: 100 },
-        { name: 'xdr_build', duration: 50 },
+        { name: "quote_fetch", duration: 100 },
+        { name: "xdr_build", duration: 50 },
       ];
 
       const run2 = [
-        { name: 'quote_fetch', duration: 110 },
-        { name: 'xdr_build', duration: 48 },
+        { name: "quote_fetch", duration: 110 },
+        { name: "xdr_build", duration: 48 },
       ];
 
       const comparison = run1.map((b, i) => ({
@@ -399,8 +399,8 @@ describe('Performance Benchmarks', () => {
     });
   });
 
-  describe('Performance Targets', () => {
-    it('should define performance SLAs', () => {
+  describe("Performance Targets", () => {
+    it("should define performance SLAs", () => {
       const slas = {
         quote_fetch: { target: 500, critical: 1000 },
         xdr_build: { target: 200, critical: 500 },
@@ -412,7 +412,7 @@ describe('Performance Benchmarks', () => {
       expect(slas.xdr_build.target).toBeLessThan(slas.xdr_build.critical);
     });
 
-    it('should validate against performance targets', () => {
+    it("should validate against performance targets", () => {
       const targets = {
         p50: 100,
         p95: 200,

@@ -1,16 +1,16 @@
 export type OnrampState =
-  | 'draft'
-  | 'quoted'
-  | 'order_created'
-  | 'deposit_pending'
-  | 'deposit_confirmed'
-  | 'bridge_pending'
-  | 'bridge_completed'
-  | 'completed'
-  | 'failed'
-  | 'expired';
+  | "draft"
+  | "quoted"
+  | "order_created"
+  | "deposit_pending"
+  | "deposit_confirmed"
+  | "bridge_pending"
+  | "bridge_completed"
+  | "completed"
+  | "failed"
+  | "expired";
 
-export type DepositStatus = 'pending' | 'confirmed' | 'failed' | 'expired';
+export type DepositStatus = "pending" | "confirmed" | "failed" | "expired";
 
 export interface OnrampQuoteRequest {
   fiatAmount: string;

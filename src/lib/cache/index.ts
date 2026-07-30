@@ -14,4 +14,8 @@ export {
   warmCache,
   getCacheMetrics,
 } from "./service";
-export { withCaching, setCacheHeaders, invalidateCachePattern } from "./middleware";
+export {
+  withCaching,
+  setCacheHeaders,
+  invalidateCachePattern,
+} from "./middleware";

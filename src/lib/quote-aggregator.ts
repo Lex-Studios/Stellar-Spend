@@ -1,6 +1,10 @@
-import { fetchPaycrestQuote, buildQuote, type QuoteResult } from './offramp/utils/quote-fetcher';
-import { providerRegistry } from './offramp/adapters/provider-registry';
-import { getCacheClient } from './cache';
+import {
+  fetchPaycrestQuote,
+  buildQuote,
+  type QuoteResult,
+} from "./offramp/utils/quote-fetcher";
+import { providerRegistry } from "./offramp/adapters/provider-registry";
+import { getCacheClient } from "./cache";
 
 export interface ProviderQuote extends QuoteResult {
   provider: string;
@@ -21,7 +25,7 @@ export interface AggregatedQuoteResponse {
   degradedProviders: string[];
 }
 
-export type QuoteProvider = 'paycrest' | 'allbridge';
+export type QuoteProvider = "paycrest" | "allbridge";
 
 interface ProviderConfig {
   name: string;
@@ -35,7 +39,7 @@ interface ProviderConfig {
 
 const PROVIDER_CONFIGS: Record<QuoteProvider, ProviderConfig> = {
   paycrest: {
-    name: 'Paycrest',
+    name: "Paycrest",
     enabled: true,
     priority: 1,
     timeout: 5000,
@@ -44,7 +48,7 @@ const PROVIDER_CONFIGS: Record<QuoteProvider, ProviderConfig> = {
     maxRetries: 1,
   },
   allbridge: {
-    name: 'Allbridge',
+    name: "Allbridge",
     enabled: false,
     priority: 2,
     timeout: 5000,
@@ -60,7 +64,7 @@ const CACHE_TTL_SECONDS = 30;
 
 function calculateReliability(history: number[]): number {
   if (history.length === 0) return 1.0;
-  const successes = history.filter(r => r === 1).length;
+  const successes = history.filter((r) => r === 1).length;
   return successes / history.length;
 }
 
@@ -79,38 +83,45 @@ function isProviderDegraded(provider: QuoteProvider): boolean {
 
 async function fetchQuoteFromPaycrest(
   receiveAmount: string,
-  currency: string
+  currency: string,
 ): Promise<ProviderQuote> {
   const start = Date.now();
   try {
-    const { rate, destinationAmount } = await fetchPaycrestQuote(receiveAmount, currency);
-    const quote = buildQuote(destinationAmount, rate, currency, '0', '0', 300);
+    const { rate, destinationAmount } = await fetchPaycrestQuote(
+      receiveAmount,
+      currency,
+    );
+    const quote = buildQuote(destinationAmount, rate, currency, "0", "0", 300);
 
     const result: ProviderQuote = {
       ...quote,
-      provider: 'paycrest',
+      provider: "paycrest",
       success: true,
       responseTime: Date.now() - start,
-      reliability: calculateReliability(PROVIDER_CONFIGS.paycrest.reliabilityHistory),
+      reliability: calculateReliability(
+        PROVIDER_CONFIGS.paycrest.reliabilityHistory,
+      ),
       netPayout: parseFloat(destinationAmount),
     };
 
-    recordReliability('paycrest', true);
+    recordReliability("paycrest", true);
     return result;
   } catch (error) {
-    recordReliability('paycrest', false);
+    recordReliability("paycrest", false);
     return {
-      destinationAmount: '0',
+      destinationAmount: "0",
       rate: 0,
       currency,
-      bridgeFee: '0',
-      payoutFee: '0',
+      bridgeFee: "0",
+      payoutFee: "0",
       estimatedTime: 0,
-      provider: 'paycrest',
+      provider: "paycrest",
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
       responseTime: Date.now() - start,
-      reliability: calculateReliability(PROVIDER_CONFIGS.paycrest.reliabilityHistory),
+      reliability: calculateReliability(
+        PROVIDER_CONFIGS.paycrest.reliabilityHistory,
+      ),
       netPayout: 0,
     };
   }
@@ -118,17 +129,21 @@ async function fetchQuoteFromPaycrest(
 
 async function fetchQuoteFromAllbridge(
   receiveAmount: string,
-  currency: string
+  currency: string,
 ): Promise<ProviderQuote> {
   const start = Date.now();
   try {
-    const { initializeAllbridgeSdk, getAllbridgeTokens, getAllbridgeQuote } = await import(
-      './offramp/adapters/allbridge-adapter'
-    );
+    const { initializeAllbridgeSdk, getAllbridgeTokens, getAllbridgeQuote } =
+      await import("./offramp/adapters/allbridge-adapter");
 
     const sdk = initializeAllbridgeSdk();
     const tokens = await getAllbridgeTokens(sdk);
-    const quote = await getAllbridgeQuote(sdk, tokens.stellar.usdc, tokens.base.usdc, receiveAmount);
+    const quote = await getAllbridgeQuote(
+      sdk,
+      tokens.stellar.usdc,
+      tokens.base.usdc,
+      receiveAmount,
+    );
 
     const bridgeFee = parseFloat(quote.receiveAmount) * 0.005;
     const payoutFee = 0;
@@ -142,29 +157,33 @@ async function fetchQuoteFromAllbridge(
       bridgeFee: bridgeFee.toFixed(6),
       payoutFee: payoutFee.toFixed(6),
       estimatedTime: quote.estimatedTime,
-      provider: 'allbridge',
+      provider: "allbridge",
       success: true,
       responseTime: Date.now() - start,
-      reliability: calculateReliability(PROVIDER_CONFIGS.allbridge.reliabilityHistory),
+      reliability: calculateReliability(
+        PROVIDER_CONFIGS.allbridge.reliabilityHistory,
+      ),
       netPayout,
     };
 
-    recordReliability('allbridge', true);
+    recordReliability("allbridge", true);
     return result;
   } catch (error) {
-    recordReliability('allbridge', false);
+    recordReliability("allbridge", false);
     return {
-      destinationAmount: '0',
+      destinationAmount: "0",
       rate: 0,
       currency,
-      bridgeFee: '0',
-      payoutFee: '0',
+      bridgeFee: "0",
+      payoutFee: "0",
       estimatedTime: 0,
-      provider: 'allbridge',
+      provider: "allbridge",
       success: false,
-      error: error instanceof Error ? error.message : 'Provider not available',
+      error: error instanceof Error ? error.message : "Provider not available",
       responseTime: Date.now() - start,
-      reliability: calculateReliability(PROVIDER_CONFIGS.allbridge.reliabilityHistory),
+      reliability: calculateReliability(
+        PROVIDER_CONFIGS.allbridge.reliabilityHistory,
+      ),
       netPayout: 0,
     };
   }
@@ -196,7 +215,7 @@ function rankQuotes(quotes: ProviderQuote[]): ProviderQuote[] {
 }
 
 function selectBestQuote(quotes: ProviderQuote[]): ProviderQuote | null {
-  const successful = quotes.filter(q => q.success);
+  const successful = quotes.filter((q) => q.success);
   if (successful.length === 0) return null;
   const ranked = rankQuotes(quotes);
   return ranked.length > 0 ? ranked[0] : null;
@@ -204,19 +223,19 @@ function selectBestQuote(quotes: ProviderQuote[]): ProviderQuote | null {
 
 function getDegradedProviders(): string[] {
   return (Object.keys(PROVIDER_CONFIGS) as QuoteProvider[]).filter(
-    p => PROVIDER_CONFIGS[p].enabled && isProviderDegraded(p)
+    (p) => PROVIDER_CONFIGS[p].enabled && isProviderDegraded(p),
   );
 }
 
 export async function aggregateQuotes(
   receiveAmount: string,
   currency: string,
-  providers: QuoteProvider[] = ['paycrest']
+  providers: QuoteProvider[] = ["paycrest"],
 ): Promise<AggregatedQuoteResponse> {
   const enabledProviders = providers.filter((p) => PROVIDER_CONFIGS[p].enabled);
 
   if (enabledProviders.length === 0) {
-    throw new Error('No enabled providers available');
+    throw new Error("No enabled providers available");
   }
 
   const cacheKey = `quote:aggregate:${currency}:${receiveAmount}`;
@@ -233,16 +252,21 @@ export async function aggregateQuotes(
   const quotePromises = enabledProviders.map(async (provider) => {
     const config = PROVIDER_CONFIGS[provider];
 
-    const fetchWithRetry = async (retriesLeft: number): Promise<ProviderQuote> => {
+    const fetchWithRetry = async (
+      retriesLeft: number,
+    ): Promise<ProviderQuote> => {
       try {
         const timeoutPromise = new Promise<ProviderQuote>((_, reject) =>
-          setTimeout(() => reject(new Error('Provider timeout')), config.timeout)
+          setTimeout(
+            () => reject(new Error("Provider timeout")),
+            config.timeout,
+          ),
         );
 
         let fetchPromise: Promise<ProviderQuote>;
-        if (provider === 'paycrest') {
+        if (provider === "paycrest") {
           fetchPromise = fetchQuoteFromPaycrest(receiveAmount, currency);
-        } else if (provider === 'allbridge') {
+        } else if (provider === "allbridge") {
           fetchPromise = fetchQuoteFromAllbridge(receiveAmount, currency);
         } else {
           throw new Error(`Unknown provider: ${provider}`);
@@ -254,15 +278,15 @@ export async function aggregateQuotes(
           return fetchWithRetry(retriesLeft - 1);
         }
         return {
-          destinationAmount: '0',
+          destinationAmount: "0",
           rate: 0,
           currency,
-          bridgeFee: '0',
-          payoutFee: '0',
+          bridgeFee: "0",
+          payoutFee: "0",
           estimatedTime: 0,
           provider,
           success: false,
-          error: error instanceof Error ? error.message : 'Provider failed',
+          error: error instanceof Error ? error.message : "Provider failed",
           responseTime: config.timeout,
           reliability: calculateReliability(config.reliabilityHistory),
           netPayout: 0,
@@ -276,9 +300,9 @@ export async function aggregateQuotes(
   const allQuotes = await Promise.all(quotePromises);
   const bestQuote = selectBestQuote(allQuotes);
 
-  const successful = allQuotes.filter(q => q.success);
+  const successful = allQuotes.filter((q) => q.success);
   const alternatives = allQuotes
-    .filter(q => q.success && q.provider !== bestQuote?.provider)
+    .filter((q) => q.success && q.provider !== bestQuote?.provider)
     .sort((a, b) => (b.netPayout ?? 0) - (a.netPayout ?? 0));
 
   const result: AggregatedQuoteResponse = {

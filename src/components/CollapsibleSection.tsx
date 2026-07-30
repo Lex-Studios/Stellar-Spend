@@ -20,7 +20,10 @@ export function CollapsibleSection({
   children,
   className,
 }: CollapsibleSectionProps) {
-  const { isOpen, toggle, isMounted } = useProgressiveDisclosure(id, defaultOpen);
+  const { isOpen, toggle, isMounted } = useProgressiveDisclosure(
+    id,
+    defaultOpen,
+  );
 
   if (!isMounted) {
     return null;
@@ -33,7 +36,7 @@ export function CollapsibleSection({
         className={cn(
           "w-full px-4 py-3 flex items-center justify-between",
           "hover:bg-[#1a1a1a] transition-colors duration-150",
-          "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]"
+          "focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]",
         )}
         aria-expanded={isOpen}
         aria-controls={`${id}-content`}
@@ -53,7 +56,7 @@ export function CollapsibleSection({
           strokeWidth="2"
           className={cn(
             "text-[#c9a962] transition-transform duration-200 flex-shrink-0 ml-2",
-            isOpen && "rotate-180"
+            isOpen && "rotate-180",
           )}
           aria-hidden="true"
         >
@@ -66,7 +69,7 @@ export function CollapsibleSection({
           id={`${id}-content`}
           className={cn(
             "border-t border-[#333333] px-4 py-3",
-            "animate-in fade-in slide-in-from-top-2 duration-200"
+            "animate-in fade-in slide-in-from-top-2 duration-200",
           )}
         >
           {children}

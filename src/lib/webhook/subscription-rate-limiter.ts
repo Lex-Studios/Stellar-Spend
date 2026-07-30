@@ -1,9 +1,12 @@
-import { getCacheClient } from '../cache/client';
+import { getCacheClient } from "../cache/client";
 
 export class SubscriptionRateLimiter {
   private readonly cache = getCacheClient();
 
-  async check(subscriptionId: string, maxPerMinute: number): Promise<{ allowed: boolean; remaining: number }> {
+  async check(
+    subscriptionId: string,
+    maxPerMinute: number,
+  ): Promise<{ allowed: boolean; remaining: number }> {
     const key = `webhook:ratelimit:${subscriptionId}`;
     const windowMs = 60_000;
 

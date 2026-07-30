@@ -108,15 +108,15 @@ interface TranslationKeys {
 
 ### Supported languages
 
-| Code | Language  | RTL |
-|------|-----------|-----|
-| `en` | English   | No  |
-| `es` | Spanish   | No  |
-| `fr` | French    | No  |
-| `zh` | Chinese   | No  |
-| `pt` | Portuguese| No  |
-| `ar` | Arabic    | Yes |
-| `sw` | Swahili   | No  |
+| Code | Language   | RTL |
+| ---- | ---------- | --- |
+| `en` | English    | No  |
+| `es` | Spanish    | No  |
+| `fr` | French     | No  |
+| `zh` | Chinese    | No  |
+| `pt` | Portuguese | No  |
+| `ar` | Arabic     | Yes |
+| `sw` | Swahili    | No  |
 
 ### Adding a key to an existing language
 
@@ -133,15 +133,17 @@ TypeScript will report a compile error for any language that is missing the new 
 
 ```tsx
 // src/app/layout.tsx (or equivalent root layout)
-import { I18nProvider } from '@/lib/i18n';
+import { I18nProvider } from "@/lib/i18n";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html>
       <body>
-        <I18nProvider defaultLanguage="en">
-          {children}
-        </I18nProvider>
+        <I18nProvider defaultLanguage="en">{children}</I18nProvider>
       </body>
     </html>
   );
@@ -151,29 +153,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ### Consume translations with `useI18n`
 
 ```tsx
-'use client';
+"use client";
 
-import { useI18n } from '@/lib/i18n';
+import { useI18n } from "@/lib/i18n";
 
 export function SubmitButton() {
   const { t } = useI18n();
 
-  return <button type="submit">{t('common.submit')}</button>;
+  return <button type="submit">{t("common.submit")}</button>;
 }
 ```
 
 ### Apply RTL layout direction
 
 ```tsx
-'use client';
+"use client";
 
-import { useI18n } from '@/lib/i18n';
+import { useI18n } from "@/lib/i18n";
 
 export function PageWrapper({ children }: { children: React.ReactNode }) {
   const { isRTL } = useI18n();
 
   return (
-    <div dir={isRTL ? 'rtl' : 'ltr'} className={isRTL ? 'font-arabic' : ''}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={isRTL ? "font-arabic" : ""}>
       {children}
     </div>
   );
@@ -183,10 +185,10 @@ export function PageWrapper({ children }: { children: React.ReactNode }) {
 ### Drop-in language switcher
 
 ```tsx
-import { LanguageSelector } from '@/lib/i18n';
+import { LanguageSelector } from "@/lib/i18n";
 
 // Place anywhere inside I18nProvider
-<LanguageSelector />
+<LanguageSelector />;
 ```
 
 The `LanguageSelector` component automatically reverses its own flex direction when `isRTL` is `true`.
@@ -196,10 +198,10 @@ The `LanguageSelector` component automatically reverses its own flex direction w
 For non-component code (e.g., utility functions, server-side logic) that needs a translated string, use the singleton directly:
 
 ```ts
-import { i18n } from '@/lib/i18n';
+import { i18n } from "@/lib/i18n";
 
-i18n.setLanguage('fr');
-const msg = i18n.t('errors.networkError'); // 'Erreur réseau'
+i18n.setLanguage("fr");
+const msg = i18n.t("errors.networkError"); // 'Erreur réseau'
 ```
 
 ---
@@ -210,44 +212,44 @@ const msg = i18n.t('errors.networkError'); // 'Erreur réseau'
 
 ```ts
 // src/lib/i18n/types.ts
-export type Language = 'en' | 'es' | 'fr' | 'zh' | 'ar' | 'pt'; // added 'pt'
+export type Language = "en" | "es" | "fr" | "zh" | "ar" | "pt"; // added 'pt'
 ```
 
 ### Step 2 — Add a translation object in `translations.ts`
 
 ```ts
 // src/lib/i18n/translations.ts
-import { TranslationKeys } from './types';
+import { TranslationKeys } from "./types";
 
 export const pt: TranslationKeys = {
   common: {
-    loading: 'A carregar...',
-    error: 'Erro',
-    success: 'Sucesso',
-    cancel: 'Cancelar',
-    submit: 'Enviar',
-    close: 'Fechar',
+    loading: "A carregar...",
+    error: "Erro",
+    success: "Sucesso",
+    cancel: "Cancelar",
+    submit: "Enviar",
+    close: "Fechar",
   },
   navigation: {
-    home: 'Início',
-    history: 'Histórico',
-    settings: 'Definições',
+    home: "Início",
+    history: "Histórico",
+    settings: "Definições",
   },
   offramp: {
-    title: 'Converter para Moeda Fiduciária',
-    enterAmount: 'Introduzir Valor',
-    selectCurrency: 'Selecionar Moeda',
-    selectBank: 'Selecionar Banco',
-    accountNumber: 'Número de Conta',
-    estimatedTime: 'Tempo Estimado',
-    fees: 'Taxas',
-    total: 'Total',
+    title: "Converter para Moeda Fiduciária",
+    enterAmount: "Introduzir Valor",
+    selectCurrency: "Selecionar Moeda",
+    selectBank: "Selecionar Banco",
+    accountNumber: "Número de Conta",
+    estimatedTime: "Tempo Estimado",
+    fees: "Taxas",
+    total: "Total",
   },
   errors: {
-    invalidAmount: 'Valor inválido',
-    insufficientBalance: 'Saldo insuficiente',
-    networkError: 'Erro de rede',
-    transactionFailed: 'Transação falhou',
+    invalidAmount: "Valor inválido",
+    insufficientBalance: "Saldo insuficiente",
+    networkError: "Erro de rede",
+    transactionFailed: "Transação falhou",
   },
 };
 ```
@@ -256,10 +258,15 @@ export const pt: TranslationKeys = {
 
 ```ts
 // src/lib/i18n/i18n.ts
-import { en, es, fr, zh, ar, pt } from './translations'; // add pt
+import { en, es, fr, zh, ar, pt } from "./translations"; // add pt
 
 const translations: Record<Language, TranslationKeys> = {
-  en, es, fr, zh, ar, pt, // add pt
+  en,
+  es,
+  fr,
+  zh,
+  ar,
+  pt, // add pt
 };
 ```
 
@@ -267,7 +274,7 @@ const translations: Record<Language, TranslationKeys> = {
 
 ```tsx
 // src/lib/i18n/LanguageSelector.tsx
-const languages: Language[] = ['en', 'es', 'fr', 'zh', 'ar', 'pt']; // add 'pt'
+const languages: Language[] = ["en", "es", "fr", "zh", "ar", "pt"]; // add 'pt'
 ```
 
 ### Step 5 — Mark RTL if needed
@@ -332,7 +339,7 @@ The `LanguageSelector` component shows how to handle row layouts:
 ### Text alignment
 
 ```tsx
-<p className={isRTL ? 'text-right' : 'text-left'}>…</p>
+<p className={isRTL ? "text-right" : "text-left"}>…</p>
 ```
 
 ### Icons and arrows
@@ -340,7 +347,7 @@ The `LanguageSelector` component shows how to handle row layouts:
 Directional icons (chevrons, arrows) should mirror in RTL. Apply `scale-x-[-1]` with Tailwind:
 
 ```tsx
-<ChevronRightIcon className={isRTL ? 'scale-x-[-1]' : ''} />
+<ChevronRightIcon className={isRTL ? "scale-x-[-1]" : ""} />
 ```
 
 ---
@@ -380,7 +387,10 @@ transactions: {
 Then interpolate the count in the component:
 
 ```tsx
-const label = tp(t, 'transactions.item', count).replace('{{count}}', String(count));
+const label = tp(t, "transactions.item", count).replace(
+  "{{count}}",
+  String(count),
+);
 ```
 
 ### Language-specific plural rules
@@ -388,10 +398,10 @@ const label = tp(t, 'transactions.item', count).replace('{{count}}', String(coun
 Arabic has six grammatical number forms (zero, one, two, few, many, other). When adding proper Arabic plural support, extend the keys or adopt a library such as `Intl.PluralRules`:
 
 ```ts
-const rules = new Intl.PluralRules('ar');
+const rules = new Intl.PluralRules("ar");
 const form = rules.select(count); // 'zero' | 'one' | 'two' | 'few' | 'many' | 'other'
 const key = `transactions.item_${form}`;
-return t(key).replace('{{count}}', String(count));
+return t(key).replace("{{count}}", String(count));
 ```
 
 ---
@@ -404,26 +414,26 @@ Use the browser-native `Intl` API for locale-aware formatting. Derive the locale
 
 ```ts
 const LOCALE_MAP: Record<Language, string> = {
-  en: 'en-US',
-  es: 'es-ES',
-  fr: 'fr-FR',
-  zh: 'zh-CN',
-  ar: 'ar-SA',
+  en: "en-US",
+  es: "es-ES",
+  fr: "fr-FR",
+  zh: "zh-CN",
+  ar: "ar-SA",
 };
 ```
 
 ### Date formatting
 
 ```ts
-import { useI18n } from '@/lib/i18n';
+import { useI18n } from "@/lib/i18n";
 
 function useFormattedDate(date: Date): string {
   const { language } = useI18n();
   const locale = LOCALE_MAP[language];
   return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   }).format(date);
 }
 ```
@@ -433,10 +443,14 @@ function useFormattedDate(date: Date): string {
 Always include `currency` and `minimumFractionDigits` for financial values:
 
 ```ts
-function formatAmount(amount: number, currency: string, language: Language): string {
+function formatAmount(
+  amount: number,
+  currency: string,
+  language: Language,
+): string {
   const locale = LOCALE_MAP[language];
   return new Intl.NumberFormat(locale, {
-    style: 'currency',
+    style: "currency",
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -449,13 +463,13 @@ function formatAmount(amount: number, currency: string, language: Language): str
 ```ts
 function formatRelativeTime(ms: number, language: Language): string {
   const locale = LOCALE_MAP[language];
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
   const seconds = Math.round(ms / 1000);
-  if (Math.abs(seconds) < 60) return rtf.format(seconds, 'second');
+  if (Math.abs(seconds) < 60) return rtf.format(seconds, "second");
   const minutes = Math.round(seconds / 60);
-  if (Math.abs(minutes) < 60) return rtf.format(minutes, 'minute');
+  if (Math.abs(minutes) < 60) return rtf.format(minutes, "minute");
   const hours = Math.round(minutes / 60);
-  return rtf.format(hours, 'hour');
+  return rtf.format(hours, "hour");
 }
 ```
 
@@ -473,23 +487,25 @@ The current implementation requires the caller to pass `defaultLanguage` to `I18
 
 ```ts
 // src/lib/i18n/detect-language.ts
-import type { Language } from './types';
+import type { Language } from "./types";
 
-const SUPPORTED: Language[] = ['en', 'es', 'fr', 'zh', 'ar'];
+const SUPPORTED: Language[] = ["en", "es", "fr", "zh", "ar"];
 
 export function detectLanguage(): Language {
   // 1. Persisted preference
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem('stellar-spend:language') as Language | null;
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem(
+      "stellar-spend:language",
+    ) as Language | null;
     if (stored && SUPPORTED.includes(stored)) return stored;
   }
 
   // 2. Browser language
-  const browserLang = navigator.language.split('-')[0] as Language;
+  const browserLang = navigator.language.split("-")[0] as Language;
   if (SUPPORTED.includes(browserLang)) return browserLang;
 
   // 3. Fallback
-  return 'en';
+  return "en";
 }
 ```
 
@@ -506,11 +522,14 @@ import { detectLanguage } from '@/lib/i18n/detect-language';
 Call `localStorage.setItem` whenever `setLanguage` is invoked, or extend `I18nProvider` to do it automatically:
 
 ```tsx
-const setLanguage = useCallback((lang: Language) => {
-  i18nInstance.setLanguage(lang);
-  setLanguageState(lang);
-  localStorage.setItem('stellar-spend:language', lang);
-}, [i18nInstance]);
+const setLanguage = useCallback(
+  (lang: Language) => {
+    i18nInstance.setLanguage(lang);
+    setLanguageState(lang);
+    localStorage.setItem("stellar-spend:language", lang);
+  },
+  [i18nInstance],
+);
 ```
 
 ---
@@ -520,43 +539,49 @@ const setLanguage = useCallback((lang: Language) => {
 ### Unit testing the I18n class
 
 ```ts
-import { describe, it, expect, beforeEach } from 'vitest';
-import { I18n } from '@/lib/i18n/i18n';
+import { describe, it, expect, beforeEach } from "vitest";
+import { I18n } from "@/lib/i18n/i18n";
 
-describe('I18n', () => {
+describe("I18n", () => {
   let i18n: I18n;
 
   beforeEach(() => {
-    i18n = new I18n('en');
+    i18n = new I18n("en");
   });
 
-  it('returns the correct translation for a known key', () => {
-    expect(i18n.t('common.submit')).toBe('Submit');
+  it("returns the correct translation for a known key", () => {
+    expect(i18n.t("common.submit")).toBe("Submit");
   });
 
-  it('returns the raw key for an unknown key', () => {
-    expect(i18n.t('does.not.exist')).toBe('does.not.exist');
+  it("returns the raw key for an unknown key", () => {
+    expect(i18n.t("does.not.exist")).toBe("does.not.exist");
   });
 
-  it('switches language correctly', () => {
-    i18n.setLanguage('es');
-    expect(i18n.t('common.submit')).toBe('Enviar');
+  it("switches language correctly", () => {
+    i18n.setLanguage("es");
+    expect(i18n.t("common.submit")).toBe("Enviar");
   });
 
-  it('reports RTL correctly for Arabic', () => {
-    i18n.setLanguage('ar');
+  it("reports RTL correctly for Arabic", () => {
+    i18n.setLanguage("ar");
     expect(i18n.isRTL()).toBe(true);
   });
 
-  it('reports LTR correctly for non-RTL languages', () => {
-    (['en', 'es', 'fr', 'zh'] as const).forEach((lang) => {
+  it("reports LTR correctly for non-RTL languages", () => {
+    (["en", "es", "fr", "zh"] as const).forEach((lang) => {
       i18n.setLanguage(lang);
       expect(i18n.isRTL()).toBe(false);
     });
   });
 
-  it('lists all supported languages', () => {
-    expect(i18n.getSupportedLanguages()).toEqual(['en', 'es', 'fr', 'zh', 'ar']);
+  it("lists all supported languages", () => {
+    expect(i18n.getSupportedLanguages()).toEqual([
+      "en",
+      "es",
+      "fr",
+      "zh",
+      "ar",
+    ]);
   });
 });
 ```
@@ -564,14 +589,14 @@ describe('I18n', () => {
 ### Testing that all translation keys are present
 
 ```ts
-import { describe, it, expect } from 'vitest';
-import { en, es, fr, zh, ar } from '@/lib/i18n/translations';
-import type { TranslationKeys } from '@/lib/i18n/types';
+import { describe, it, expect } from "vitest";
+import { en, es, fr, zh, ar } from "@/lib/i18n/translations";
+import type { TranslationKeys } from "@/lib/i18n/types";
 
-function collectKeys(obj: Record<string, unknown>, prefix = ''): string[] {
+function collectKeys(obj: Record<string, unknown>, prefix = ""): string[] {
   return Object.entries(obj).flatMap(([k, v]) => {
     const full = prefix ? `${prefix}.${k}` : k;
-    return typeof v === 'object' && v !== null
+    return typeof v === "object" && v !== null
       ? collectKeys(v as Record<string, unknown>, full)
       : [full];
   });
@@ -579,13 +604,18 @@ function collectKeys(obj: Record<string, unknown>, prefix = ''): string[] {
 
 const BASE_KEYS = collectKeys(en as unknown as Record<string, unknown>);
 
-describe('translation completeness', () => {
+describe("translation completeness", () => {
   const languages: [string, TranslationKeys][] = [
-    ['es', es], ['fr', fr], ['zh', zh], ['ar', ar],
+    ["es", es],
+    ["fr", fr],
+    ["zh", zh],
+    ["ar", ar],
   ];
 
-  it.each(languages)('%s has all keys present in en', (_name, translations) => {
-    const keys = collectKeys(translations as unknown as Record<string, unknown>);
+  it.each(languages)("%s has all keys present in en", (_name, translations) => {
+    const keys = collectKeys(
+      translations as unknown as Record<string, unknown>,
+    );
     expect(keys).toEqual(expect.arrayContaining(BASE_KEYS));
   });
 });
@@ -594,38 +624,42 @@ describe('translation completeness', () => {
 ### Testing the LanguageSelector component
 
 ```tsx
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
-import { I18nProvider } from '@/lib/i18n/provider';
-import { LanguageSelector } from '@/lib/i18n/LanguageSelector';
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, it, expect, vi } from "vitest";
+import { I18nProvider } from "@/lib/i18n/provider";
+import { LanguageSelector } from "@/lib/i18n/LanguageSelector";
 
-function renderWithProvider(defaultLanguage = 'en' as const) {
+function renderWithProvider(defaultLanguage = "en" as const) {
   return render(
     <I18nProvider defaultLanguage={defaultLanguage}>
       <LanguageSelector />
-    </I18nProvider>
+    </I18nProvider>,
   );
 }
 
-describe('LanguageSelector', () => {
-  it('renders buttons for all supported languages', () => {
+describe("LanguageSelector", () => {
+  it("renders buttons for all supported languages", () => {
     renderWithProvider();
-    ['EN', 'ES', 'FR', 'ZH', 'AR'].forEach((lang) => {
-      expect(screen.getByRole('button', { name: new RegExp(lang, 'i') })).toBeInTheDocument();
+    ["EN", "ES", "FR", "ZH", "AR"].forEach((lang) => {
+      expect(
+        screen.getByRole("button", { name: new RegExp(lang, "i") }),
+      ).toBeInTheDocument();
     });
   });
 
-  it('highlights the active language', () => {
-    renderWithProvider('es');
-    const esButton = screen.getByRole('button', { name: /es/i });
-    expect(esButton).toHaveClass('bg-blue-600');
+  it("highlights the active language", () => {
+    renderWithProvider("es");
+    const esButton = screen.getByRole("button", { name: /es/i });
+    expect(esButton).toHaveClass("bg-blue-600");
   });
 
-  it('changes language on click', async () => {
-    renderWithProvider('en');
-    await userEvent.click(screen.getByRole('button', { name: /fr/i }));
-    expect(screen.getByRole('button', { name: /fr/i })).toHaveClass('bg-blue-600');
+  it("changes language on click", async () => {
+    renderWithProvider("en");
+    await userEvent.click(screen.getByRole("button", { name: /fr/i }));
+    expect(screen.getByRole("button", { name: /fr/i })).toHaveClass(
+      "bg-blue-600",
+    );
   });
 });
 ```
