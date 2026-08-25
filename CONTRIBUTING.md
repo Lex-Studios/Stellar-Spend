@@ -324,7 +324,7 @@ A contribution is **done** when **all** of the following are true:
 - [ ] `docs/` updated if architecture, API behavior, or configuration changed
 - [ ] If the architecture changed (new service, new external dependency, data-flow change): update `docs/diagrams/` source files and run the diagram check (`bash scripts/check-diagrams.sh`)
 - [ ] New environment variables are added to `.env.example` with descriptions
-- [ ] New ADRs created for significant architectural decisions (see `docs/adr/`)
+- [ ] New ADRs created for significant architectural decisions (see `docs/adr/`, e.g. [ADR-013](./docs/adr/ADR-013-state-management-architecture.md))
 - [ ] In-code comments are accurate and not stale
 
 ### Security
@@ -389,6 +389,7 @@ SLAs are for the first substantive review. Trivial approvals (docs typo) may be 
 ### React / Next.js
 
 - Functional components with hooks only
+- Follow the state management architecture defined in [ADR-013 (State Management Architecture)](./docs/adr/ADR-013-state-management-architecture.md): use React Context strictly for low-frequency global UI state (`src/contexts/`), custom hooks for domain workflows (`src/hooks/`), and local state for component-level UI interactions
 - Use `'use client'` directive only where client-side state/effects are needed
 - Implement error boundaries around complex component trees
 - Always provide loading and error states for async operations
