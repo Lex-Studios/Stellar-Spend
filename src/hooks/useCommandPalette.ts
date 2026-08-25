@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { CommandAction } from '@/components/CommandPalette';
+import type { CommandAction } from '@/lib/command-registry';
 
 const RECENT_COMMANDS_KEY = 'stellar_spend_recent_commands';
 const MAX_RECENT = 5;

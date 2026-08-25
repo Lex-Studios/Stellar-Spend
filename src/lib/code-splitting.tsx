@@ -46,21 +46,12 @@ export function preloadModule<T>(importFn: () => Promise<T>): void {
 /**
  * Split code by route for better code splitting.
  */
-export const routeChunks = {
-  dashboard: () => import('@/components/StellarSpendDashboard').then((m) => m.default),
-  history: () => import('@/components/RecentOfframpsTable').then((m) => m.default),
-  analytics: () => import('@/components/AnalyticsDashboard').then((m) => m.default),
-  settings: () => import('@/components/ShareSettings').then((m) => m.default),
-} as const;
+export const routeChunks = {} as const;
 
 /**
  * Split code by feature for better code splitting.
  */
 export const featureChunks = {
-  qrScanner: () => import('@/components/QRScanner').then((m) => m.default),
-  walletModal: () => import('@/components/WalletModal').then((m) => m.default),
-  twoFA: () => import('@/components/TwoFASetup').then((m) => m.default),
-  insurance: () => import('@/components/InsuranceOption').then((m) => m.default),
-  referral: () => import('@/components/ReferralDashboard').then((m) => m.default),
-  loyalty: () => import('@/components/LoyaltyDashboard').then((m) => m.default),
+  walletModal: () => import('@/components/WalletModal').then((m) => m.WalletModal),
+  insurance: () => import('@/components/InsuranceOption').then((m) => m.InsuranceOption),
 } as const;

@@ -6,12 +6,6 @@ vi.mock('@/components/FormCard', () => ({ default: () => <div data-testid="FormC
 vi.mock('@/components/RightPanel', () => ({
   default: () => <div data-testid="RightPanel-mock" />,
 }));
-vi.mock('@/components/RecentOfframpsTable', () => ({
-  default: () => <div data-testid="RecentOfframpsTable-mock" />,
-}));
-vi.mock('@/components/ProgressSteps', () => ({
-  default: () => <div data-testid="ProgressSteps-mock" />,
-}));
 vi.mock('@/components/Header', () => ({ Header: () => <div data-testid="Header-mock" /> }));
 
 import Home from '../page';

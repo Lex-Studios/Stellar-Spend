@@ -1,4 +1,13 @@
-import type { CommandAction } from '@/components/CommandPalette';
+export interface CommandAction {
+  id: string;
+  label: string;
+  description?: string;
+  keywords?: string[];
+  icon?: string;
+  section?: string;
+  action: () => void;
+  shortcut?: string;
+}
 
 export function buildAppCommands({
   router,
