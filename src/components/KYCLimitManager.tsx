@@ -1,23 +1,45 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { KYCLimitService, KYCStatus, LimitTier } from '@/lib/kyc-limits';
 import { Button, Card } from '@/components/design-system';
+import { useForm } from '@/hooks/useForm';
 
 interface KYCLimitManagerProps {
   userId: string;
 }
+
+const kycFormSchema = z.object({
+  documentType: z.string().min(1),
+  documentId: z.string().min(1, 'Document ID is required'),
+});
 
 export function KYCLimitManager({ userId }: KYCLimitManagerProps) {
   const [kycStatus, setKycStatus] = useState<KYCStatus>('unverified');
   const [limits, setLimits] = useState<any>(null);
   const [showKYCForm, setShowKYCForm] = useState(false);
   const [showLimitRequest, setShowLimitRequest] = useState(false);
-  const [formData, setFormData] = useState({
-    documentType: 'passport',
-    documentId: '',
-  });
   const [requestedTier, setRequestedTier] = useState<LimitTier>('tier2');
+
+  const {
+    values: formData,
+    setFieldValue,
+    handleSubmit: submitKYCForm,
+    resetForm,
+  } = useForm({
+    initialValues: {
+      documentType: 'passport',
+      documentId: '',
+    },
+    schema: kycFormSchema,
+    onSubmit: (data) => {
+      KYCLimitService.submitKYC(userId, data.documentType, data.documentId);
+      setKycStatus('pending');
+      setShowKYCForm(false);
+      resetForm();
+    },
+  });
 
   useEffect(() => {
     const kyc = KYCLimitService.getKYC(userId);
@@ -32,10 +54,7 @@ export function KYCLimitManager({ userId }: KYCLimitManagerProps) {
 
   const handleSubmitKYC = () => {
     if (!formData.documentId) return;
-    KYCLimitService.submitKYC(userId, formData.documentType, formData.documentId);
-    setKycStatus('pending');
-    setShowKYCForm(false);
-    setFormData({ documentType: 'passport', documentId: '' });
+    submitKYCForm();
   };
 
   const handleRequestLimitIncrease = () => {
@@ -68,7 +87,7 @@ export function KYCLimitManager({ userId }: KYCLimitManagerProps) {
           <div className="space-y-2">
             <select
               value={formData.documentType}
-              onChange={(e) => setFormData({ ...formData, documentType: e.target.value })}
+              onChange={(e) => setFieldValue('documentType', e.target.value)}
               className="w-full p-2 border rounded"
             >
               <option value="passport">Passport</option>
@@ -79,7 +98,7 @@ export function KYCLimitManager({ userId }: KYCLimitManagerProps) {
               type="text"
               placeholder="Document ID"
               value={formData.documentId}
-              onChange={(e) => setFormData({ ...formData, documentId: e.target.value })}
+              onChange={(e) => setFieldValue('documentId', e.target.value)}
               className="w-full p-2 border rounded"
             />
             <div className="flex gap-2">

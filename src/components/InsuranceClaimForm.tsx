@@ -1,11 +1,13 @@
 'use client';
 
 import { FormEvent, useEffect, useState, useRef } from 'react';
+import { z } from 'zod';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
+import { useForm } from '@/hooks/useForm';
 
 // ---------------------------------------------------------------------------
-// Types
+// Types & Schema
 // ---------------------------------------------------------------------------
 
 export interface InsuranceClaimFormProps {
@@ -26,6 +28,11 @@ const CLAIM_REASONS = [
   'Other',
 ];
 
+const insuranceClaimSchema = z.object({
+  reason: z.string().min(1, 'Please select a reason'),
+  evidence: z.string().max(2000, 'Evidence must be 2000 characters or less').optional(),
+});
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -37,10 +44,7 @@ export function InsuranceClaimForm({
   onSuccess,
   onCancel,
 }: InsuranceClaimFormProps) {
-  const [reason, setReason] = useState('');
-  const [evidence, setEvidence] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [isCheckingEligibility, setIsCheckingEligibility] = useState(true);
   const [isEligible, setIsEligible] = useState<boolean | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -48,6 +52,54 @@ export function InsuranceClaimForm({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useI18n();
+
+  const {
+    values,
+    isSubmitting: loading,
+    submitError,
+    errors,
+    setFieldValue,
+    setSubmitError,
+    handleSubmit: submitForm,
+  } = useForm({
+    initialValues: {
+      reason: '',
+      evidence: '',
+    },
+    schema: insuranceClaimSchema,
+    onSubmit: async (formValues) => {
+      if (!isEligible) return;
+
+      if (insuranceId.startsWith('ins_')) {
+        await new Promise((r) => setTimeout(r, 1000));
+        onSuccess(`CLAIM-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`);
+        return;
+      }
+
+      const res = await fetch(`/api/transactions/${encodeURIComponent(transactionId)}/insurance`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          insuranceId,
+          reason: formValues.reason,
+          evidence: formValues.evidence || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body?.error ?? `Request failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      const claimId = data?.claim?.claim_id ?? data?.claim?.id ?? 'CLAIM-FILED';
+      onSuccess(claimId);
+    },
+  });
+
+  const error = fileError || submitError || errors.reason;
+  const reason = values.reason;
+  const evidence = values.evidence;
 
   // Simulate eligibility check on mount
   useEffect(() => {
@@ -75,9 +127,10 @@ export function InsuranceClaimForm({
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('File size must be less than 5MB');
+        setFileError('File size must be less than 5MB');
         return;
       }
+      setFileError(null);
       setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -90,36 +143,9 @@ export function InsuranceClaimForm({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!reason || !isEligible) return;
-
-    setError(null);
-    setLoading(true);
-
-    try {
-      if (insuranceId.startsWith('ins_')) {
-        await new Promise((r) => setTimeout(r, 1000));
-        onSuccess(`CLAIM-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`);
-        return;
-      }
-
-      const res = await fetch(`/api/transactions/${encodeURIComponent(transactionId)}/insurance`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ insuranceId, reason, evidence: evidence || undefined }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error ?? `Request failed (${res.status})`);
-      }
-
-      const data = await res.json();
-      const claimId = data?.claim?.claim_id ?? data?.claim?.id ?? 'CLAIM-FILED';
-      onSuccess(claimId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to file claim');
-    } finally {
-      setLoading(false);
-    }
+    setFileError(null);
+    setSubmitError(null);
+    await submitForm(e);
   };
 
   return (
@@ -205,7 +231,7 @@ export function InsuranceClaimForm({
               <select
                 id="claim-reason"
                 value={reason}
-                onChange={(e) => setReason(e.target.value)}
+                onChange={(e) => setFieldValue('reason', e.target.value)}
                 required
                 className={cn(
                   'w-full bg-[#111111] border border-[#333333] px-3 py-2.5',
@@ -235,7 +261,7 @@ export function InsuranceClaimForm({
               <textarea
                 id="claim-evidence"
                 value={evidence}
-                onChange={(e) => setEvidence(e.target.value)}
+                onChange={(e) => setFieldValue('evidence', e.target.value)}
                 placeholder={t('insurance.evidence_placeholder')}
                 rows={3}
                 maxLength={2000}
