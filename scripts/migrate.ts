@@ -305,6 +305,32 @@ class MigrationRunner {
     }
   }
 
+  async lintAllMigrations(): Promise<boolean> {
+    console.log('🔍 Linting migration files against safety rules...');
+    const files = fs
+      .readdirSync('./migrations')
+      .filter((f) => f.endsWith('.sql'))
+      .sort();
+
+    let allPassed = true;
+    for (const file of files) {
+      const content = fs.readFileSync(`./migrations/${file}`, 'utf-8');
+      const [up] = this.extractUpDown(content);
+      const isSafe = this.lintMigration(up || content);
+      if (!isSafe) {
+        console.error(`❌ Migration ${file} failed linting!`);
+        allPassed = false;
+      }
+    }
+
+    if (allPassed) {
+      console.log('✅ Linting passed for all migrations');
+      return true;
+    } else {
+      throw new Error('Migration linting failed');
+    }
+  }
+
   async close(): Promise<void> {
     await this.pool.end();
   }
@@ -320,7 +346,9 @@ async function main() {
   const runner = new MigrationRunner(dryRun, verbose);
 
   try {
-    await runner.initialize();
+    if (command !== 'lint') {
+      await runner.initialize();
+    }
 
     switch (command) {
       case 'up':
@@ -334,6 +362,10 @@ async function main() {
 
       case 'dry-run':
         await runner.dryRunMigrations();
+        break;
+
+      case 'lint':
+        await runner.lintAllMigrations();
         break;
 
       case 'verify':
@@ -354,6 +386,7 @@ Commands:
   down [steps]          Rollback migrations (default: 1)
   dry-run               Show pending migrations without applying
   verify <id>           Verify rollback for a specific migration
+  lint                  Check migration files against safety rules
 
 Options:
   --dry-run             Simulate migration without applying
@@ -364,7 +397,9 @@ Options:
     console.error('❌ Migration failed:', error);
     process.exit(1);
   } finally {
-    await runner.close();
+    if (command !== 'lint') {
+      await runner.close();
+    }
   }
 }
 

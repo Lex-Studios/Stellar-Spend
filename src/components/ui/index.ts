@@ -13,8 +13,6 @@ export type { ButtonProps } from './Button';
 export { Input, inputVariants } from './Input';
 export type { InputProps } from './Input';
 
-export { InputField } from './InputField';
-export { SelectField } from './SelectField';
-export { Field } from './Field';
 export { Label } from './Label';
 export { Skeleton } from './Skeleton';
+

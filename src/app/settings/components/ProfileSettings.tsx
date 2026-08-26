@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { validateDisplayName, DISPLAY_NAME_MAX } from '@/lib/validation';
+import { useForm } from '@/hooks/useForm';
 import { SectionHeader } from './SectionHeader';
 
 interface ProfileSettingsProps {
@@ -13,12 +13,19 @@ interface ProfileSettingsProps {
 /** Profile section — public presence and account details. */
 export function ProfileSettings({ address = 'GDUY...7J2L' }: ProfileSettingsProps) {
   const { t } = useI18n();
-  const [displayName, setDisplayName] = useState('');
-  const [error, setError] = useState<string | undefined>(undefined);
+  const { values, errors, setFieldValue } = useForm({
+    initialValues: { displayName: '' },
+    validate: (vals) => {
+      const res = validateDisplayName(vals.displayName);
+      return res.error ? { displayName: res.error } : {};
+    },
+  });
+
+  const displayName = values.displayName;
+  const error = errors.displayName;
 
   const handleNameChange = (value: string) => {
-    setDisplayName(value);
-    setError(validateDisplayName(value).error);
+    setFieldValue('displayName', value);
   };
 
   return (

@@ -1,4 +1,10 @@
-import type { HelpTopic } from '@/components/HelpModal';
+export interface HelpTopic {
+  id: string;
+  category?: string;
+  title: string;
+  content: string;
+  keywords?: string[];
+}
 
 // Topics are organized by user journey:
 // 1. Getting Started  2. Wallet  3. Sending Money  4. Fees  5. Currencies & Banks
