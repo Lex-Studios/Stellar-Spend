@@ -3,6 +3,7 @@
 import type { Transaction } from "@/lib/transaction-storage";
 import type { UseHistoryFiltersResult } from "@/hooks/useHistoryFilters";
 import ExportControls from "@/components/ExportControls";
+import { EmptyState } from "@/components/EmptyState";
 import { HistoryStats } from "./HistoryStats";
 import { HistoryFilters } from "./HistoryFilters";
 import { HistoryTable } from "./HistoryTable";
@@ -66,13 +67,14 @@ export function HistoryResults({
       )}
 
       {filtered.length === 0 ? (
-        <div className="border border-[#333333] bg-[#111111] p-12 text-center mt-4">
-          <p className="text-sm text-[#777777]">
-            {transactions.length === 0
+        <EmptyState
+          className="border border-[#333333] bg-[#111111] mt-4"
+          title={
+            transactions.length === 0
               ? "No transactions found"
-              : "No transactions match the current filters"}
-          </p>
-        </div>
+              : "No transactions match the current filters"
+          }
+        />
       ) : (
         <>
           <HistoryTable

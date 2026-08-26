@@ -59,6 +59,8 @@ export function QRCodeDisplay({ data, size = 200, showDownload = true }: QRCodeD
       <div className="flex justify-center p-4 bg-white border rounded-lg">
         <div
           ref={svgRef}
+          role="img"
+          aria-label={`QR code encoding transaction ${data.transactionId}: ${data.amount} ${data.currency}, status ${data.status}. Scan with a compatible wallet or scanner to view the transaction details.`}
           dangerouslySetInnerHTML={{ __html: svgPattern }}
           style={{ width: size, height: size }}
         />

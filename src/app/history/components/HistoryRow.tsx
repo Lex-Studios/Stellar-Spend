@@ -12,18 +12,37 @@ import { InsuranceCell } from "./InsuranceCell";
 interface HistoryRowProps {
   tx: Transaction;
   index: number;
+  isFocused: boolean;
+  rowRef: (el: HTMLTableRowElement | null) => void;
+  onRowFocus: () => void;
+  onRowKeyDown: (e: React.KeyboardEvent<HTMLTableRowElement>) => void;
   onSaveNote: (id: string, note: string) => void;
   onFileClaim: (tx: Transaction) => void;
 }
 
 /** A single transaction row in the history table. */
-export function HistoryRow({ tx, index, onSaveNote, onFileClaim }: HistoryRowProps) {
+export function HistoryRow({
+  tx,
+  index,
+  isFocused,
+  rowRef,
+  onRowFocus,
+  onRowKeyDown,
+  onSaveNote,
+  onFileClaim,
+}: HistoryRowProps) {
   return (
     <tr
+      ref={rowRef}
+      tabIndex={isFocused ? 0 : -1}
+      onFocus={onRowFocus}
+      onKeyDown={onRowKeyDown}
+      aria-label={`Transaction on ${formatDate(tx.timestamp)}, ${tx.amount} USDC, ${getCurrencySymbol(tx.currency)} ${tx.currency}, status ${tx.status}`}
       className={cn(
-        "border-b border-[#222222] transition-colors duration-100",
+        "border-b border-[#222222] transition-colors duration-100 focus:outline-none",
         index % 2 === 0 ? "bg-[#111111]" : "bg-[#0f0f0f]",
         "hover:bg-[#1a1a1a]",
+        isFocused && "ring-1 ring-inset ring-[#c9a962]",
       )}
     >
       <td className="px-5 py-3 text-xs text-[#aaaaaa] whitespace-nowrap">

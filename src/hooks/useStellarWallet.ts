@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { WalletManager } from '@/lib/wallets/manager';
 import { WalletType, WalletConnection, WalletError } from '@/lib/wallets/adapter';
 
@@ -389,6 +389,27 @@ export function useStellarWallet(
     }));
   }, []);
 
+  // Sign a transaction with the currently connected wallet's adapter.
+  const signTransaction = useCallback(
+    async (xdr: string): Promise<string> => {
+      if (!managerRef.current) {
+        throw new Error('Wallet manager is not ready. Please try again.');
+      }
+      return managerRef.current.signTransaction(xdr, { networkPassphrase });
+    },
+    [networkPassphrase]
+  );
+
+  // Convenience object mirroring the shape consumers expect: a single
+  // `wallet` value that is non-null exactly when a wallet is connected.
+  const wallet = useMemo(
+    () =>
+      state.isConnected && state.publicKey && state.walletType
+        ? { publicKey: state.publicKey, type: state.walletType }
+        : null,
+    [state.isConnected, state.publicKey, state.walletType]
+  );
+
   // Initialize on mount
   useEffect(() => {
     loadSettings();
@@ -448,6 +469,7 @@ export function useStellarWallet(
   return {
     // State
     ...state,
+    wallet,
     error: state.error,
     errorMessage: getErrorMessage(state.error),
 
@@ -459,6 +481,7 @@ export function useStellarWallet(
     connect,
     disconnect,
     switchWallet,
+    signTransaction,
     autoReconnect,
     clearError,
     clearAccountChanged,

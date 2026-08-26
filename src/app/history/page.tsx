@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import type { Transaction } from "@/lib/transaction-storage";
 import { useStellarWallet } from "@/hooks/useStellarWallet";
 import { useTransactionHistory } from "@/hooks/useTransactionHistory";
 import { useHistoryFilters } from "@/hooks/useHistoryFilters";
 import { Header } from "@/components/Header";
 import { TransactionTableSkeleton } from "@/components/skeletons";
+import { AsyncBoundary, ListErrorState } from "@/components/AsyncBoundary";
 import { InsuranceClaimForm } from "@/components/InsuranceClaimForm";
 import { TransactionSearchService } from "@/lib/transaction-search";
 import { applyFilters } from "./filters";
@@ -95,7 +96,7 @@ function HistoryPageContent() {
         onDisconnect={disconnect}
       />
 
-      <section className="border border-[#333333] px-[2.6rem] py-8 max-[1100px]:p-4 mt-6">
+      <section id="main-content" className="border border-[#333333] px-[2.6rem] py-8 max-[1100px]:p-4 mt-6">
         <HistoryPageHeader
           isConnected={isConnected}
           shownCount={filtered.length}
@@ -104,29 +105,31 @@ function HistoryPageContent() {
 
         {!isConnected ? (
           <ConnectWalletPrompt onConnect={() => connect()} />
-        ) : isLoading ? (
-          <TransactionTableSkeleton rows={5} />
-        ) : error ? (
-          <div role="alert" className="border border-red-500/30 bg-red-500/10 p-6 text-center">
-            <p className="text-sm text-red-400">{error}</p>
-          </div>
         ) : (
-          <HistoryResults
-            walletAddress={wallet?.publicKey}
-            transactions={transactions}
-            filtered={filtered}
-            pageRows={pageRows}
-            availableCurrencies={availableCurrencies}
-            filterState={filterState}
-            onSaveCurrentView={handleSaveCurrentView}
-            noteError={noteError}
-            page={page}
-            pageSize={pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            onSaveNote={handleSaveNote}
-            onFileClaim={setClaimingTransaction}
-          />
+          <AsyncBoundary
+            isLoading={isLoading}
+            isEmpty={false}
+            error={error}
+            loadingContent={<TransactionTableSkeleton rows={5} />}
+            errorContent={(err) => <ListErrorState error={err} />}
+          >
+            <HistoryResults
+              walletAddress={wallet?.publicKey}
+              transactions={transactions}
+              filtered={filtered}
+              pageRows={pageRows}
+              availableCurrencies={availableCurrencies}
+              filterState={filterState}
+              onSaveCurrentView={handleSaveCurrentView}
+              noteError={noteError}
+              page={page}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              onSaveNote={handleSaveNote}
+              onFileClaim={setClaimingTransaction}
+            />
+          </AsyncBoundary>
         )}
       </section>
 

@@ -128,8 +128,13 @@ fields are reachable and announced as a modal.
 
 ## Data Table Keyboard Navigation — Roving Tabindex Pattern
 
-The `DataTable` component (and its derivatives `RecentOfframpsTable`, `VirtualizedTransactionTable`)
-implement the [roving tabindex](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) pattern.
+The `DataTable` component (and its derivative `RecentOfframpsTable`, used on the
+dashboard) and the presentational `HistoryTable`/`HistoryRow` pair (used on
+`/history` — the actual "core transaction list") implement the
+[roving tabindex](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) pattern.
+
+*(`VirtualizedTransactionTable` also renders row `tabIndex`, but it is currently
+unused/dead code — nothing in the app imports it — so it's not covered here.)*
 
 ### How it works
 
@@ -137,8 +142,9 @@ implement the [roving tabindex](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) 
 2. **Arrow keys** move the "roving" focus between rows within the table without leaving the table's tab stop.
    - `ArrowDown` moves to the next row.
    - `ArrowUp` moves to the previous row.
-3. When the caller provides an `onRowActivate` callback, pressing **Enter** or **Space** on the focused row calls that handler — equivalent to a mouse click.
-4. When the user tabs *into* the table for the first time, focus lands on the first row (index 0).  Subsequent tabs resume from whichever row was last active (standard roving tabindex behaviour).
+3. When the caller provides an `onRowActivate` callback (as `DataTable` does), pressing **Enter** or **Space** on the focused row calls that handler — equivalent to a mouse click. `HistoryTable` rows don't have a single primary action, so they skip this step — Tab still reaches each row's own controls (tx-hash link, copy button, note editor, claim button) once that row has roving focus.
+4. When the user tabs *into* the table for the first time, focus lands on the first row (index 0). Subsequent tabs resume from whichever row was last active (standard roving tabindex behaviour).
+5. Each row also gets a descriptive `aria-label` (date, amount, currency, status) so a screen reader announces the row's content as a whole when it receives focus, not just "row" — see `HistoryRow.tsx`.
 
 ### Usage example
 
@@ -156,7 +162,7 @@ implement the [roving tabindex](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) 
 
 - Keyboard user can navigate all rows without a mouse.
 - Enter / Space activates a row when `onRowActivate` is provided.
-- Screen-reader announces the correct row via the `<table>` / `role="table"` semantics.
+- Screen-reader announces the row's content via `aria-label` plus native `<table>` semantics (`scope="col"` headers).
 - The component passes the existing `axe-core` zero-serious-violations gate.
 
 ## Color Contrast Ratios
@@ -227,12 +233,23 @@ These items are known issues that do not currently trigger the zero-serious-viol
 
 | ID | Violation | Severity | Location | Owner | Target |
 |----|-----------|----------|----------|-------|--------|
-| A11Y-001 | Skip-to-main-content link not yet implemented | Moderate | Layout | — | Q3 2026 |
-| A11Y-002 | `prefers-reduced-motion` not respected on transaction progress animation | Moderate | `TransactionProgressModal` | — | Q3 2026 |
-| A11Y-003 | Focus not trapped inside wallet connect modal (third-party component) | Moderate | Wallet connect dialog | — | Q3 2026 |
-| A11Y-004 | QR code image lacks contextual description beyond generic alt text | Minor | `SharePreview` | — | Q4 2026 |
-| A11Y-005 | Exchange rate chart canvas element lacks a text-equivalent data table | Minor | Dashboard chart | — | Q4 2026 |
-| A11Y-006 | Font scaling above 200% breaks the offramp form layout | Minor | Offramp form | — | Q4 2026 |
+| A11Y-006 | Font scaling above 200% has not been visually verified against the offramp form layout | Minor | `FormCard` | — | Q4 2026 |
+
+### Resolved (Issue #935)
+
+Re-audited against current code; several debt items had already been superseded by
+unrelated work and are removed above. What actually changed in this pass:
+
+| ID | Was | Resolution |
+|----|-----|------------|
+| A11Y-001 | Skip-to-main-content link not yet implemented (Layout) | Added a site-wide skip link in `src/app/layout.tsx` (first focusable element in `<body>`), and gave every top-level page a `#main-content` landmark: `page.tsx` (already had one — the ad-hoc per-page link was removed in favor of the layout-level one), `history/page.tsx`, `settings/page.tsx`, and `StatusPage.tsx` (promoted its root `<div>` to a `<main>` landmark). |
+| A11Y-002 | `prefers-reduced-motion` not respected on transaction progress animation | Already resolved outside this issue — `src/app/globals.css` has a blanket `@media (prefers-reduced-motion: reduce)` rule (`animation-duration`/`transition-duration` forced to `0.01ms`) that covers `TransactionProgressModal`'s spin/pulse/shake/racing-border animations along with everything else in the app. No code change needed; removed from the debt list. |
+| A11Y-003 | Focus not trapped inside wallet connect modal | Already resolved outside this issue — `WalletModal.tsx` already calls `useFocusTrap(overlayRef, isOpen)` / `useFocusRestore(isOpen)`. Removed from the debt list. |
+| A11Y-004 | QR code image lacks contextual description beyond generic alt text | The debt entry pointed at `SharePreview`, which renders no QR code. The actual QR renderer is `QRCodeDisplay.tsx`, which injects a raw `<svg>` via `dangerouslySetInnerHTML` with **no** accessible name at all (worse than "generic alt text"). Fixed by adding `role="img"` and a descriptive `aria-label` (amount, currency, status, transaction id) to the wrapping element. |
+| A11Y-005 | Exchange rate chart canvas element lacks a text-equivalent data table | No `<canvas>`-based chart exists anywhere in the codebase today (`FunnelChart` renders plain divs with text labels, which are already screen-reader accessible). Stale entry, removed. |
+| — | `viewport.maximumScale: 1` in `src/app/layout.tsx` | Not in the original debt list, but found during this audit: this setting blocks pinch-zoom/browser zoom entirely, which is a direct WCAG 1.4.4 (Resize Text) violation more severe than any single form's layout robustness at 200%. Removed. |
+
+A11Y-006 stays open: `FormCard`'s layout uses relative Tailwind units throughout (no obvious fixed-width traps found in a manual read), and removing the viewport zoom lock above is the main blocker to testing it at all, but an actual 200%-zoom visual pass hasn't been performed in this session.
 
 ### Adding to the Debt List
 When axe reports a violation that is intentionally deferred (non-blocking), add it here with:
