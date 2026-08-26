@@ -342,6 +342,8 @@ Key architectural decisions are documented as ADRs in [`docs/adr/`](./docs/adr/)
 | [ADR-010](./docs/adr/ADR-010-realtime-transport-sse-vs-websocket.md) | Real-Time Transport — SSE vs WebSocket                 | 2026-06-27 | Accepted |
 | [ADR-011](./docs/adr/ADR-011-feature-flag-approach.md)               | Feature Flag Approach                                  | 2026-06-27 | Accepted |
 | [ADR-012](./docs/adr/ADR-012-contract-architecture.md)               | Soroban Contract Architecture — Separation of Concerns | 2026-07-24 | Accepted |
+| [ADR-013](./docs/adr/ADR-013-state-management-architecture.md)       | State Management Architecture — React Context & Hooks  | 2026-08-25 | Accepted |
+| [Contract Integration](./docs/adr/contract-integration.md)            | Stellar Contract Integration Architecture              | 2026-08-25 | Accepted |
 
 ---
 
@@ -357,6 +359,7 @@ All architecture and flow diagrams are maintained as **Mermaid source** in [`doc
 | Paycrest order lifecycle                   | [`docs/diagrams/paycrest-order.md`](./docs/diagrams/paycrest-order.md)         |
 | Webhook event handling                     | [`docs/diagrams/webhook-handling.md`](./docs/diagrams/webhook-handling.md)     |
 | API key auth flow                          | [`docs/diagrams/api-key-auth.md`](./docs/diagrams/api-key-auth.md)             |
+| State management & data flow               | [`docs/diagrams/state-management.md`](./docs/diagrams/state-management.md)     |
 
 > **Keeping diagrams current:** If you change the architecture, update the relevant `.md` file and run `bash scripts/check-diagrams.sh` before opening a PR.
 
