@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 
@@ -11,6 +12,7 @@ interface ErrorProps {
 
 export default function HistoryError({ error, reset }: ErrorProps) {
   useEffect(() => {
+    Sentry.captureException(error);
     console.error('History error:', error);
   }, [error]);
 

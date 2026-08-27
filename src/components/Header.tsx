@@ -10,6 +10,7 @@ import { NotificationCenter } from './NotificationCenter';
 import { useFxRate } from '@/hooks/useFxRate';
 import { useNotificationCenter } from '@/hooks/useNotificationCenter';
 import type { WalletType } from '@/lib/stellar';
+import { formatNumber } from '@/lib/format';
 
 export interface HeaderProps {
   subtitle: string;
@@ -157,7 +158,7 @@ export function Header({
             )}
           >
             {rate != null
-              ? `LIVE RATE: ₦${Math.round(rate).toLocaleString()} / USDC`
+              ? `LIVE RATE: ₦${formatNumber(Math.round(rate))} / USDC`
               : 'LIVE RATE: —'}
           </span>
         </div>

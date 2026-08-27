@@ -1,4 +1,5 @@
 import { cn } from '@/lib/cn';
+import { formatNumber } from '@/lib/format';
 import { QuoteResult, getCurrencySymbol, formatPayout } from './types';
 
 export interface PayoutBoxProps {
@@ -30,7 +31,7 @@ export function PayoutBox({
         <span className="text-[10px] text-[#777777]">
           Rate:{' '}
           {currency.toUpperCase() === 'NGN'
-            ? `${getCurrencySymbol(currency)}${new Intl.NumberFormat('en-NG').format(effectiveRate)}`
+            ? `${getCurrencySymbol(currency)}${formatNumber(effectiveRate)}`
             : `${getCurrencySymbol(currency)} ${effectiveRate.toFixed(4)}`}{' '}
           / USDC
         </span>
