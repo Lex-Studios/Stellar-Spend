@@ -1,5 +1,6 @@
 import { env } from './env';
 import type { ResourceFeeEstimate } from './stellar/resource-fee-estimator';
+import { FEE_CONSTANTS } from '@stellar-spend/shared';
 
 export interface FeeBreakdown {
   bridgeFee: string;
@@ -21,9 +22,9 @@ export interface FeeCalculationParams {
   contractResourceEstimate?: ResourceFeeEstimate;
 }
 
-const STABLECOIN_FEE_PERCENTAGE = 0.5; // 0.5%
-const PAYCREST_FEE_PERCENTAGE = 1.0; // 1.0%
-const NETWORK_FEE_XLM = '0.00001'; // Base Stellar network fee
+const STABLECOIN_FEE_PERCENTAGE = FEE_CONSTANTS.STABLECOIN_FEE_PERCENTAGE;
+const PAYCREST_FEE_PERCENTAGE = FEE_CONSTANTS.PAYCREST_FEE_PERCENTAGE;
+const NETWORK_FEE_XLM = FEE_CONSTANTS.NETWORK_FEE_XLM;
 
 export function calculateBridgeFee(amount: string, feeMethod: 'stablecoin' | 'native'): string {
   if (feeMethod === 'native') {
