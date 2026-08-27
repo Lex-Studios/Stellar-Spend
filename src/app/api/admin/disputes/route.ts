@@ -4,21 +4,28 @@ import { disputeRepository } from '@/lib/repositories';
 import { DisputeStatus, DisputeUpdate } from '@shared/types/disputes';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
+import { decodeCursor, createPaginatedResponse } from '@/lib/pagination';
 
 export async function GET(req: NextRequest) {
   try {
     // TODO: Add admin authentication check
     const status = req.nextUrl.searchParams.get('status');
-    const limit = parseInt(req.nextUrl.searchParams.get('limit') || '50');
-    const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
+    const cursor = req.nextUrl.searchParams.get('cursor');
+    const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '50'), 1000);
 
+    const offset = decodeCursor(cursor);
     const disputes = await disputeRepository.listDisputes(
       (status || undefined) as DisputeStatus | undefined,
-      limit,
+      limit + 1,
       offset,
     );
 
-    return NextResponse.json(disputes);
+    const hasMore = disputes.length > limit;
+    const data = hasMore ? disputes.slice(0, limit) : disputes;
+
+    return NextResponse.json(
+      createPaginatedResponse(data, offset, limit, offset + disputes.length),
+    );
   } catch (error) {
     logger.error('Error fetching disputes', {}, error);
     return ErrorHandler.handle(new ApiError(ErrorType.SERVER_ERROR, 'Failed to fetch disputes'));
