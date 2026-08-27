@@ -88,7 +88,7 @@ export default function StatusPage() {
       : 'degraded';
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <main id="main-content" className="min-h-screen bg-[#0a0a0a] text-white">
       <div className="max-w-5xl mx-auto px-4 py-12 space-y-8">
         {/* Header */}
         <div className="space-y-2">
@@ -167,6 +167,6 @@ export default function StatusPage() {
           <p>Status powered by Stellar Spend Health Monitoring</p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

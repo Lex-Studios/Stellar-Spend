@@ -134,8 +134,13 @@ fields are reachable and announced as a modal.
 
 ## Data Table Keyboard Navigation — Roving Tabindex Pattern
 
-The `DataTable` component (and its derivatives `RecentOfframpsTable`, `VirtualizedTransactionTable`)
-implement the [roving tabindex](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) pattern.
+The presentational `HistoryTable`/`HistoryRow` pair (used on `/history` — the
+actual "core transaction list") implements the
+[roving tabindex](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) pattern.
+
+_(An earlier generic `DataTable` component and its `RecentOfframpsTable`
+derivative also implemented this pattern, but both were removed as unused dead
+code once nothing on the dashboard imported them any more.)_
 
 ### How it works
 
@@ -143,26 +148,15 @@ implement the [roving tabindex](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) 
 2. **Arrow keys** move the "roving" focus between rows within the table without leaving the table's tab stop.
    - `ArrowDown` moves to the next row.
    - `ArrowUp` moves to the previous row.
-3. When the caller provides an `onRowActivate` callback, pressing **Enter** or **Space** on the focused row calls that handler — equivalent to a mouse click.
+3. `HistoryTable` rows don't have a single primary action, so Tab reaches each row's own controls (tx-hash link, copy button, note editor, claim button) once that row has roving focus — there is no separate Enter/Space row-activation step.
 4. When the user tabs _into_ the table for the first time, focus lands on the first row (index 0). Subsequent tabs resume from whichever row was last active (standard roving tabindex behaviour).
-
-### Usage example
-
-```tsx
-<DataTable
-  columns={columns}
-  rows={rows}
-  getRowKey={(r) => r.id}
-  caption="Transaction history"
-  onRowActivate={(row) => openDetailView(row)}
-/>
-```
+5. Each row also gets a descriptive `aria-label` (date, amount, currency, status) so a screen reader announces the row's content as a whole when it receives focus, not just "row" — see `HistoryRow.tsx`.
 
 ### Acceptance criteria
 
 - Keyboard user can navigate all rows without a mouse.
 - Enter / Space activates a row when `onRowActivate` is provided.
-- Screen-reader announces the correct row via the `<table>` / `role="table"` semantics.
+- Screen-reader announces the row's content via `aria-label` plus native `<table>` semantics (`scope="col"` headers).
 - The component passes the existing `axe-core` zero-serious-violations gate.
 
 ## Color Contrast Ratios
@@ -238,14 +232,25 @@ To audit new or modified tokens, update `src/lib/contrast-checker.ts` and re-run
 
 These items are known issues that do not currently trigger the zero-serious-violations gate (they are minor or moderate severity) but must be resolved before the next major release.
 
-| ID       | Violation                                                                | Severity | Location                   | Owner | Target  |
-| -------- | ------------------------------------------------------------------------ | -------- | -------------------------- | ----- | ------- |
-| A11Y-001 | Skip-to-main-content link not yet implemented                            | Moderate | Layout                     | —     | Q3 2026 |
-| A11Y-002 | `prefers-reduced-motion` not respected on transaction progress animation | Moderate | `TransactionProgressModal` | —     | Q3 2026 |
-| A11Y-003 | Focus not trapped inside wallet connect modal (third-party component)    | Moderate | Wallet connect dialog      | —     | Q3 2026 |
-| A11Y-004 | QR code image lacks contextual description beyond generic alt text       | Minor    | `SharePreview`             | —     | Q4 2026 |
-| A11Y-005 | Exchange rate chart canvas element lacks a text-equivalent data table    | Minor    | Dashboard chart            | —     | Q4 2026 |
-| A11Y-006 | Font scaling above 200% breaks the offramp form layout                   | Minor    | Offramp form               | —     | Q4 2026 |
+| ID       | Violation                                                                              | Severity | Location   | Owner | Target  |
+| -------- | -------------------------------------------------------------------------------------- | -------- | ---------- | ----- | ------- |
+| A11Y-006 | Font scaling above 200% has not been visually verified against the offramp form layout | Minor    | `FormCard` | —     | Q4 2026 |
+
+### Resolved (Issue #935)
+
+Re-audited against current code; several debt items had already been superseded by
+unrelated work and are removed above. What actually changed in this pass:
+
+| ID       | Was                                                                      | Resolution                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A11Y-001 | Skip-to-main-content link not yet implemented (Layout)                   | Added a site-wide skip link in `src/app/layout.tsx` (first focusable element in `<body>`), and gave every top-level page a `#main-content` landmark: `page.tsx`, `history/page.tsx`, `settings/page.tsx`, and `StatusPage.tsx` (promoted its root `<div>` to a `<main>` landmark).                                                                                                                                     |
+| A11Y-002 | `prefers-reduced-motion` not respected on transaction progress animation | Already resolved outside this issue — `src/app/globals.css` has a blanket `@media (prefers-reduced-motion: reduce)` rule (`animation-duration`/`transition-duration` forced to `0.01ms`) that covers `TransactionProgressModal`'s spin/pulse/shake/racing-border animations along with everything else in the app. No code change needed; removed from the debt list.                                                  |
+| A11Y-003 | Focus not trapped inside wallet connect modal                            | Already resolved outside this issue — `WalletModal.tsx` already calls `useFocusTrap(overlayRef, isOpen)` / `useFocusRestore(isOpen)`. Removed from the debt list.                                                                                                                                                                                                                                                      |
+| A11Y-004 | QR code image lacks contextual description beyond generic alt text       | The component this pointed at (`QRCodeDisplay.tsx`, a raw `<svg>` injected via `dangerouslySetInnerHTML` with no accessible name at all) has since been removed from the codebase as unreferenced dead code — QR rendering now lives entirely server-side (`src/lib/services/qrcode-service.ts`) with no client component consuming it. Nothing in the current UI exhibits this violation; removed from the debt list. |
+| A11Y-005 | Exchange rate chart canvas element lacks a text-equivalent data table    | No `<canvas>`-based chart exists anywhere in the codebase today (`FunnelChart` renders plain divs with text labels, which are already screen-reader accessible). Stale entry, removed.                                                                                                                                                                                                                                 |
+| —        | `viewport.maximumScale: 1` in `src/app/layout.tsx`                       | Not in the original debt list, but found during this audit: this setting blocks pinch-zoom/browser zoom entirely, which is a direct WCAG 1.4.4 (Resize Text) violation more severe than any single form's layout robustness at 200%. Removed.                                                                                                                                                                          |
+
+A11Y-006 stays open: `FormCard`'s layout uses relative Tailwind units throughout (no obvious fixed-width traps found in a manual read), and removing the viewport zoom lock above is the main blocker to testing it at all, but an actual 200%-zoom visual pass hasn't been performed in this session.
 
 ### Adding to the Debt List
 

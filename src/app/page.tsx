@@ -5,12 +5,12 @@ import DashboardClient from '@/components/DashboardClient';
 
 /**
  * Main Page - Server Component with Suspense streaming
- * 
+ *
  * Architecture:
  * - Hero & Features: Server Components (static, no JS)
  * - DashboardClient: Client Component (interactive wallet/form logic)
  * - Suspense boundaries enable streaming for faster perceived performance
- * 
+ *
  * Performance impact:
  * - Reduced client JS bundle by ~40KB (Hero & Features no longer client-side)
  * - Above-the-fold content streamed immediately
@@ -28,7 +28,7 @@ function DashboardSkeleton() {
 
 export default function Page() {
   return (
-    <main className="min-h-screen bg-bg px-6 py-12 text-text sm:px-10">
+    <main id="main-content" className="min-h-screen bg-bg px-6 py-12 text-text sm:px-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
         {/* Hero: Server Component, streams immediately */}
         <Suspense fallback={<div className="h-48 animate-pulse rounded-2xl bg-panel/50" />}>

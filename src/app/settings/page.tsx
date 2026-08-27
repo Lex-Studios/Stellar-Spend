@@ -77,7 +77,7 @@ export default function SettingsPage() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 min-h-[600px] border border-[#222] bg-[#0a0a0a] p-8 shadow-2xl relative">
+        <main id="main-content" className="flex-1 min-h-[600px] border border-[#222] bg-[#0a0a0a] p-8 shadow-2xl relative">
           {isSaved && (
             <div className="absolute top-4 right-8 bg-green-500 text-[#0a0a0a] px-4 py-2 text-[10px] font-black uppercase tracking-widest animate-in slide-in-from-top-4 duration-300">
               {t('settings.saved')}
