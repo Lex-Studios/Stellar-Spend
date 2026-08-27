@@ -68,6 +68,7 @@ export function resolveTracesSampleRate(fallback = 0.1): number {
 const SENSITIVE_KEYS = ['privateKey', 'secret', 'password', 'token', 'mnemonic'] as const;
 
 type SentryEvent = Parameters<NonNullable<BrowserOptions['beforeSend']>>[0];
+type SentryBreadcrumb = Parameters<NonNullable<BrowserOptions['beforeBreadcrumb']>>[0];
 
 /**
  * Scrub known sensitive field names from the captured event's request body.
@@ -81,6 +82,28 @@ export function beforeSend(event: SentryEvent): SentryEvent | null {
     }
   }
   return event;
+}
+
+/**
+ * Filter and reduce noise from breadcrumbs.
+ * Removes low-value breadcrumbs that clutter error context.
+ */
+export function beforeBreadcrumb(breadcrumb: SentryBreadcrumb): SentryBreadcrumb | null {
+  // Ignore common low-value console breadcrumbs
+  if (breadcrumb.category === 'console' && breadcrumb.level === 'debug') {
+    return null;
+  }
+
+  // Ignore navigation breadcrumbs to self (no-op navigations)
+  if (breadcrumb.category === 'navigation') {
+    const current = typeof window !== 'undefined' ? window.location.href : undefined;
+    if (breadcrumb.data?.to === current) {
+      return null;
+    }
+  }
+
+  // Keep all other breadcrumbs
+  return breadcrumb;
 }
 
 // ---------------------------------------------------------------------------
@@ -131,5 +154,6 @@ export const sharedSentryOptions = {
   ),
   ignoreErrors: SHARED_IGNORE_ERRORS,
   beforeSend,
+  beforeBreadcrumb,
   debug: false,
 } as const satisfies BrowserOptions;

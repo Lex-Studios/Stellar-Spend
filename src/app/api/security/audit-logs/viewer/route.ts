@@ -3,6 +3,7 @@ import { auditLoggingService } from '@/lib/audit-logging';
 import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
+import { decodeCursor, createPaginatedResponse } from '@/lib/pagination';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,9 +17,10 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate')
       ? parseInt(searchParams.get('endDate')!, 10)
       : undefined;
-    const limit = parseInt(searchParams.get('limit') || '100', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const cursor = searchParams.get('cursor');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '100', 10), 1000);
 
+    const offset = decodeCursor(cursor);
     const logs = await auditLoggingService.getAuditLogs(
       {
         actionType,
@@ -27,11 +29,16 @@ export async function GET(request: NextRequest) {
         startDate,
         endDate,
       },
-      limit,
+      limit + 1,
       offset,
     );
 
-    return NextResponse.json({ logs });
+    const hasMore = logs.length > limit;
+    const data = hasMore ? logs.slice(0, limit) : logs;
+
+    return NextResponse.json(
+      createPaginatedResponse(data, offset, limit, offset + logs.length),
+    );
   } catch (error) {
     logger.error('Failed to fetch audit logs', { error });
     return ErrorHandler.handle(new ApiError(ErrorType.SERVER_ERROR, 'Failed to fetch audit logs'));
