@@ -1,4 +1,5 @@
 import { cn } from '@/lib/cn';
+import { Icon } from '@/components/Icon';
 
 export interface WalletModalHeaderProps {
   isConnecting: boolean;
@@ -29,14 +30,7 @@ export function WalletModalHeader({ isConnecting, onClose }: WalletModalHeaderPr
           isConnecting && 'opacity-40 cursor-not-allowed',
         )}
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path
-            d="M12 4L4 12M4 4L12 12"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </svg>
+        <Icon name="close" size={16} />
       </button>
     </div>
   );

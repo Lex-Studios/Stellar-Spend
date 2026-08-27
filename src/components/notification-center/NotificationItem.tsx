@@ -1,6 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/cn';
+import { Icon } from '@/components/Icon';
 import type { NotificationCenterEvent } from '@/hooks/useNotificationCenter';
 import { formatTime, getEventTypeColor } from './types';
 
@@ -110,14 +111,7 @@ export function NotificationItem({ event, onClick, onRemove }: NotificationItemP
         aria-label="Remove notification"
         title="Remove"
       >
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path
-            d="M12 4L4 12M4 4L12 12"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </svg>
+        <Icon name="close" size={12} />
       </button>
     </li>
   );

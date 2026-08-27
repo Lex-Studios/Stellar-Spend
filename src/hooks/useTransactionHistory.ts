@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Transaction } from '@/lib/transaction-storage';
 import { TransactionStorage } from '@/lib/transaction-storage';
+import { apiGet, apiPatch, apiPost, ApiErrorClass } from '@/lib/api/client';
+import { useToast } from '@/contexts/ToastContext';
 
 export interface UseTransactionHistoryResult {
   transactions: Transaction[];
@@ -16,6 +18,13 @@ export interface UseTransactionHistoryResult {
   saveNote: (id: string, note: string) => Promise<string | null>;
   /** Patch a transaction in local state + local storage (e.g. after a claim). */
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
+  /**
+   * Optimistically submit a new transaction: adds it to UI + local storage
+   * immediately, persists to the server, rolling both back (with a toast) on
+   * failure. Resolves to an error message when the submission fails, or
+   * `null` on success.
+   */
+  submitTransaction: (transaction: Transaction) => Promise<string | null>;
 }
 
 /**
@@ -28,6 +37,7 @@ export function useTransactionHistory(walletAddress?: string): UseTransactionHis
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!walletAddress) {
@@ -41,20 +51,7 @@ export function useTransactionHistory(walletAddress?: string): UseTransactionHis
     setIsLoading(true);
     setError(null);
 
-    fetch(`/api/transactions?wallet=${encodeURIComponent(address)}`)
-      .then((res) => {
-        if (!res.ok) {
-          return res.json().then(
-            (body) => {
-              throw new Error(body?.error ?? 'Failed to load transactions');
-            },
-            () => {
-              throw new Error('Failed to load transactions');
-            },
-          );
-        }
-        return res.json() as Promise<Transaction[]>;
-      })
+    apiGet<Transaction[]>(`/api/transactions?wallet=${encodeURIComponent(address)}`)
       .then((data) => {
         if (cancelled) return;
         const localTransactions = TransactionStorage.getByUser(address);
@@ -69,7 +66,7 @@ export function useTransactionHistory(walletAddress?: string): UseTransactionHis
         setError(
           localTransactions.length > 0
             ? null
-            : err instanceof Error
+            : err instanceof ApiErrorClass || err instanceof Error
               ? err.message
               : 'Failed to load transactions',
         );
@@ -93,20 +90,14 @@ export function useTransactionHistory(walletAddress?: string): UseTransactionHis
     const rollbackLocal = TransactionStorage.applyOptimistic(id, { note: trimmed });
 
     try {
-      const res = await fetch(`/api/transactions/${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ note: trimmed }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error ?? `Save failed (${res.status})`);
-      }
+      await apiPatch(`/api/transactions/${encodeURIComponent(id)}`, { note: trimmed });
       return null;
     } catch (err) {
       setTransactions((prev) => prev.map((tx) => (tx.id === id ? { ...tx, note: previous } : tx)));
       rollbackLocal();
-      return err instanceof Error ? err.message : 'Failed to save note';
+      return err instanceof ApiErrorClass || err instanceof Error
+        ? err.message
+        : 'Failed to save note';
     }
   }, []);
 
@@ -115,5 +106,33 @@ export function useTransactionHistory(walletAddress?: string): UseTransactionHis
     TransactionStorage.update(id, updates);
   }, []);
 
-  return { transactions, isLoading, error, saveNote, updateTransaction };
+  /**
+   * Optimistically submit a new transaction. The transaction is added to UI
+   * state and local storage immediately so the user sees it right away; if
+   * the server persist fails, both are rolled back and a toast surfaces the
+   * failure so the user knows the submission didn't go through.
+   */
+  const submitTransaction = useCallback(
+    async (transaction: Transaction): Promise<string | null> => {
+      setTransactions((prev) => [transaction, ...prev]);
+      TransactionStorage.save(transaction);
+
+      try {
+        await apiPost('/api/transactions', transaction);
+        return null;
+      } catch (err) {
+        setTransactions((prev) => prev.filter((tx) => tx.id !== transaction.id));
+        TransactionStorage.remove(transaction.id);
+        const message =
+          err instanceof ApiErrorClass || err instanceof Error
+            ? err.message
+            : 'Failed to submit transaction';
+        showToast(`Transaction failed to submit: ${message}`, 'error');
+        return message;
+      }
+    },
+    [showToast],
+  );
+
+  return { transactions, isLoading, error, saveNote, updateTransaction, submitTransaction };
 }

@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { useForm } from '@/hooks/useForm';
+import { apiPatch } from '@/lib/api/client';
 import {
   type InsuranceClaimFormProps,
   insuranceClaimSchema,
@@ -48,22 +49,15 @@ export function InsuranceClaimForm({
         return;
       }
 
-      const res = await fetch(`/api/transactions/${encodeURIComponent(transactionId)}/insurance`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const data = await apiPatch<{ claim?: { claim_id?: string; id?: string } }>(
+        `/api/transactions/${encodeURIComponent(transactionId)}/insurance`,
+        {
           insuranceId,
           reason: formValues.reason,
           evidence: formValues.evidence || undefined,
-        }),
-      });
+        },
+      );
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body?.error ?? `Request failed (${res.status})`);
-      }
-
-      const data = await res.json();
       const claimId = data?.claim?.claim_id ?? data?.claim?.id ?? 'CLAIM-FILED';
       onSuccess(claimId);
     },
