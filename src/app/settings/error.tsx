@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -11,7 +12,7 @@ interface ErrorProps {
 
 export default function SettingsError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error('Settings error:', error);
+    logger.error('settings.error', { digest: error.digest }, error);
   }, [error]);
 
   return (

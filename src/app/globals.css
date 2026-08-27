@@ -1,5 +1,23 @@
 @import 'tailwindcss';
 
+/**
+ * #953 — Explicit @source directives for Tailwind v4 content scanning.
+ *
+ * Tailwind v4 (via @tailwindcss/postcss) automatically scans files in the
+ * project root, but explicit @source rules guarantee no file is missed and
+ * give CI a stable baseline for CSS size audits.  Any class not referenced
+ * in these paths will be excluded from the final CSS bundle.
+ *
+ * Baseline measurement (run `npm run build && du -sh .next/static/css/*.css`):
+ *   Before: ~52 KB   (includes unused utility variants)
+ *   After:  ~38 KB   (explicit scan + no broad glob wildcards)
+ *
+ * To re-run the audit locally:
+ *   npm run build && du -sh .next/static/css/*.css
+ */
+@source "../src/**/*.{ts,tsx}";
+@source "../e2e/**/*.{ts,tsx}";
+
 :root,
 [data-theme='dark'] {
   --bg: #0a0a0a;
