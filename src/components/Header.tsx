@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
+import { bpClasses } from '@/lib/breakpoints';
 import { ThemeToggle } from './ThemeToggle';
 import { CopyButton } from './CopyButton';
 import { WalletModal } from './WalletModal';
@@ -59,7 +60,7 @@ function WalletButton({
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {isConnected && walletType && (
-        <span className="text-xs text-slate-500 tracking-widest hidden sm:inline">
+        <span className={`text-xs text-slate-500 tracking-widest ${bpClasses.hiddenBelowSm}`}>
           {walletType.toUpperCase()}
         </span>
       )}
@@ -136,7 +137,7 @@ export function Header({
   return (
     <>
       <header
-        className="w-full px-6 py-5 flex items-start justify-between gap-6 max-[720px]:flex-col max-[720px]:items-start"
+        className={`w-full px-6 py-5 flex items-start justify-between gap-6 ${bpClasses.headerCollapseFlexCol} ${bpClasses.headerCollapseItemsStart}`}
         role="banner"
       >
         {/* Left: title + subtitle + FX chip */}
@@ -163,7 +164,7 @@ export function Header({
         </div>
 
         {/* Right: notifications + wallet button + balances */}
-        <div className="flex flex-col items-end gap-2 max-[720px]:items-start">
+        <div className={`flex flex-col items-end gap-2 ${bpClasses.headerCollapseItemsStart}`}>
           <div className="flex items-center gap-2">
             <LanguageSelector />
             <button
@@ -212,7 +213,7 @@ export function Header({
           </div>
 
           {isConnected && (
-            <div className="flex flex-col items-end gap-0.5 max-[720px]:items-start">
+            <div className={`flex flex-col items-end gap-0.5 ${bpClasses.headerCollapseItemsStart}`}>
               {isBalanceLoading ? (
                 <span className="text-xs text-[#777777] tracking-widest">loading...</span>
               ) : (
