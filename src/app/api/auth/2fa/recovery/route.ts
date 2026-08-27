@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { TwoFAService } from '@/lib/two-fa';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
+import { validateBody } from '@/lib/validation/validate-request';
+
+const recoverySchema = z.object({
+  userId: z.string().min(1).optional(),
+  recoveryToken: z.string().min(1).optional(),
+  newMethod: z.string().min(1).optional(),
+});
 
 // Initiate recovery — issues a short-lived token
 export async function POST(req: NextRequest) {
   try {
-    const { userId, recoveryToken, newMethod } = await req.json();
+    const validation = await validateBody(req, recoverySchema);
+    if (!validation.success) return validation.response;
+    const { userId, recoveryToken, newMethod } = validation.data;
 
     // Start recovery: userId provided, no token yet
     if (userId && !recoveryToken) {
