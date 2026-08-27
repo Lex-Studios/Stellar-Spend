@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import { NextResponse, type NextRequest } from 'next/server';
-import { validateAmount } from '@/lib/offramp/utils/validation';
-import { calculateBridgeAmount } from '@/lib/offramp/utils/quote-fetcher';
+import { validateAmount } from '@/lib/offramp';
+import { calculateBridgeAmount } from '@/lib/offramp';
 import { aggregateQuotes, type QuoteProvider } from '@/lib/quote-aggregator';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
@@ -48,7 +48,9 @@ export async function POST(request: NextRequest) {
     const aggregatedQuotes = await aggregateQuotes(receiveAmount, currency, providerList);
 
     if (!aggregatedQuotes.bestQuote) {
-      return ErrorHandler.handle(new ApiError(ErrorType.EXTERNAL_SERVICE, 'No quotes available from any provider'));
+      return ErrorHandler.handle(
+        new ApiError(ErrorType.EXTERNAL_SERVICE, 'No quotes available from any provider'),
+      );
     }
 
     return NextResponse.json(aggregatedQuotes);

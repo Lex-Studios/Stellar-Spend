@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
-import { disputeRepository } from '@/lib/repositories/dispute-repository';
-import { DisputeStatus, DisputeUpdate } from '@/types/disputes';
+import { disputeRepository } from '@/lib/repositories';
+import { DisputeStatus, DisputeUpdate } from '@shared/types/disputes';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
 
@@ -12,7 +12,11 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(req.nextUrl.searchParams.get('limit') || '50');
     const offset = parseInt(req.nextUrl.searchParams.get('offset') || '0');
 
-    const disputes = await disputeRepository.listDisputes((status || undefined) as DisputeStatus | undefined, limit, offset);
+    const disputes = await disputeRepository.listDisputes(
+      (status || undefined) as DisputeStatus | undefined,
+      limit,
+      offset,
+    );
 
     return NextResponse.json(disputes);
   } catch (error) {
@@ -33,7 +37,7 @@ export async function PATCH(req: NextRequest) {
     const dispute = await disputeRepository.updateDispute(disputeId, update);
 
     if (!dispute) {
-      return ErrorHandler.notFound("Dispute");
+      return ErrorHandler.notFound('Dispute');
     }
 
     return NextResponse.json(dispute);

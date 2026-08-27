@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -22,21 +22,17 @@ export default function Error({ error, reset }: ErrorProps) {
             An unexpected error occurred. Our team has been notified.
           </p>
           {error.message && (
-            <p className="mt-2 text-xs text-muted-foreground break-words">
-              {error.message}
-            </p>
+            <p className="mt-2 text-xs text-muted-foreground break-words">{error.message}</p>
           )}
           {error.digest && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Error ID: {error.digest}
-            </p>
+            <p className="mt-2 text-xs text-muted-foreground">Error ID: {error.digest}</p>
           )}
         </div>
         <div className="flex gap-3 justify-center">
           <Button onClick={reset} variant="default">
             Try again
           </Button>
-          <Button onClick={() => window.location.href = '/'} variant="outline">
+          <Button onClick={() => (window.location.href = '/')} variant="outline">
             Go home
           </Button>
         </div>

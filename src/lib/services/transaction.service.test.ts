@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TransactionService } from './transaction.service';
-import * as dalModule from '@/lib/db/dal';
+import * as dalModule from '@/lib/db';
 import type { Transaction } from '@/lib/transaction-storage';
 
 vi.mock('@/lib/db/dal');
@@ -79,7 +79,9 @@ describe('TransactionService', () => {
     });
 
     it('should throw error when order ID is not provided', async () => {
-      await expect(service.getTransactionByPayoutOrderId('')).rejects.toThrow('Order ID is required');
+      await expect(service.getTransactionByPayoutOrderId('')).rejects.toThrow(
+        'Order ID is required',
+      );
     });
   });
 
@@ -148,7 +150,7 @@ describe('TransactionService', () => {
 
     it('should throw error when ID is not provided', async () => {
       await expect(service.updateTransaction('', { status: 'completed' })).rejects.toThrow(
-        'Transaction ID is required'
+        'Transaction ID is required',
       );
     });
 

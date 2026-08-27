@@ -1,21 +1,17 @@
-"use client";
+'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import type { Transaction } from "@/lib/transaction-storage";
-import { useStellarWallet } from "@/hooks/useStellarWallet";
-import { useTransactionHistory } from "@/hooks/useTransactionHistory";
-import { useHistoryFilters } from "@/hooks/useHistoryFilters";
-import { Header } from "@/components/Header";
-import { TransactionTableSkeleton } from "@/components/skeletons";
-import { AsyncBoundary, ListErrorState } from "@/components/AsyncBoundary";
-import { InsuranceClaimForm } from "@/components/InsuranceClaimForm";
-import { TransactionSearchService } from "@/lib/transaction-search";
-import { applyFilters } from "./filters";
-import {
-  HistoryPageHeader,
-  ConnectWalletPrompt,
-  HistoryResults,
-} from "./components";
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import type { Transaction } from '@/lib/transaction-storage';
+import { useStellarWallet } from '@/hooks/useStellarWallet';
+import { useTransactionHistory } from '@/hooks/useTransactionHistory';
+import { useHistoryFilters } from '@/hooks/useHistoryFilters';
+import { Header } from '@/components/Header';
+import { TransactionTableSkeleton } from '@/components/skeletons';
+import { AsyncBoundary, ListErrorState } from '@/components/AsyncBoundary';
+import { InsuranceClaimForm } from '@/components/InsuranceClaimForm';
+import { TransactionSearchService } from '@/lib/transaction-search';
+import { applyFilters } from './filters';
+import { HistoryPageHeader, ConnectWalletPrompt, HistoryResults } from './components';
 
 export default function HistoryPage() {
   return (
@@ -30,17 +26,25 @@ export default function HistoryPage() {
 // Defined here (not inside HistoryPageContent) to prevent React from
 // unmounting and remounting the element on every render.
 // ---------------------------------------------------------------------------
-function SortIndicator({ active, dir }: { active: boolean; dir: "asc" | "desc" }) {
-  if (!active) return <span className="ml-1 opacity-30" aria-hidden="true">↕</span>;
+function SortIndicator({ active, dir }: { active: boolean; dir: 'asc' | 'desc' }) {
+  if (!active)
+    return (
+      <span className="ml-1 opacity-30" aria-hidden="true">
+        ↕
+      </span>
+    );
   return (
-    <span className="ml-1" aria-hidden="true">{dir === "asc" ? "↑" : "↓"}</span>
+    <span className="ml-1" aria-hidden="true">
+      {dir === 'asc' ? '↑' : '↓'}
+    </span>
   );
 }
 
 function HistoryPageContent() {
   const { wallet, isConnected, isConnecting, connect, disconnect } = useStellarWallet();
-  const { transactions, isLoading, error, saveNote, updateTransaction } =
-    useTransactionHistory(wallet?.publicKey);
+  const { transactions, isLoading, error, saveNote, updateTransaction } = useTransactionHistory(
+    wallet?.publicKey,
+  );
   const filterState = useHistoryFilters();
   const { filters } = filterState;
 
@@ -72,16 +76,19 @@ function HistoryPageContent() {
     setNoteError(await saveNote(id, note));
   };
 
-  const handleClaimSuccess = useCallback((claimId: string) => {
-    if (!claimingTransaction?.insurance) return;
-    updateTransaction(claimingTransaction.id, {
-      insurance: { ...claimingTransaction.insurance, status: "claimed", claimId },
-    });
-    setClaimingTransaction(null);
-  }, [claimingTransaction]);
+  const handleClaimSuccess = useCallback(
+    (claimId: string) => {
+      if (!claimingTransaction?.insurance) return;
+      updateTransaction(claimingTransaction.id, {
+        insurance: { ...claimingTransaction.insurance, status: 'claimed', claimId },
+      });
+      setClaimingTransaction(null);
+    },
+    [claimingTransaction],
+  );
 
   const handleSaveCurrentView = () => {
-    const name = window.prompt("Name this view:");
+    const name = window.prompt('Name this view:');
     if (name) filterState.saveCurrentView(name);
   };
 
@@ -96,7 +103,10 @@ function HistoryPageContent() {
         onDisconnect={disconnect}
       />
 
-      <section id="main-content" className="border border-[#333333] px-[2.6rem] py-8 max-[1100px]:p-4 mt-6">
+      <section
+        id="main-content"
+        className="border border-[#333333] px-[2.6rem] py-8 max-[1100px]:p-4 mt-6"
+      >
         <HistoryPageHeader
           isConnected={isConnected}
           shownCount={filtered.length}

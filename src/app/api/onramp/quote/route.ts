@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import { NextResponse, type NextRequest } from 'next/server';
 import { globalContainer } from '@/lib/di';
-import { SERVICE_KEYS } from '@/lib/di/registry';
+import { SERVICE_KEYS } from '@/lib/di';
 import { isSupportedCurrency } from '@/lib/currencies';
 import { getCachedQuote } from '@/lib/cache';
 import { ErrorHandler } from '@/lib/error-handler';
@@ -29,15 +29,16 @@ export async function POST(request: NextRequest) {
       return ErrorHandler.validation('destinationAddress is required');
     }
 
-    const quote = await getCachedQuote(
-      fiatAmount,
-      fiatCurrency,
-      destinationToken,
-      async () => {
-        const svc = await globalContainer.resolve(SERVICE_KEYS.ONRAMP_SERVICE);
-        return svc.getQuote({ fiatAmount, fiatCurrency, destinationToken, destinationAddress, provider });
-      }
-    );
+    const quote = await getCachedQuote(fiatAmount, fiatCurrency, destinationToken, async () => {
+      const svc = await globalContainer.resolve(SERVICE_KEYS.ONRAMP_SERVICE);
+      return svc.getQuote({
+        fiatAmount,
+        fiatCurrency,
+        destinationToken,
+        destinationAddress,
+        provider,
+      });
+    });
 
     return NextResponse.json(quote);
   } catch (error) {

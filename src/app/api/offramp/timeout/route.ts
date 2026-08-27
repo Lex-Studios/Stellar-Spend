@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { ErrorHandler } from '@/lib/error-handler';
-import { cancelTimedOutTransaction, checkAndCancelTimedOutTransactions, isTransactionTimedOut, TRANSACTION_TIMEOUT_MS } from '@/lib/transaction-timeout';
-import { dal } from '@/lib/db/dal';
+import {
+  cancelTimedOutTransaction,
+  checkAndCancelTimedOutTransactions,
+  isTransactionTimedOut,
+  TRANSACTION_TIMEOUT_MS,
+} from '@/lib/transaction-timeout';
+import { dal } from '@/lib/db';
 
 export const maxDuration = 30;
 
