@@ -1,5 +1,6 @@
 import { pool } from './db/client';
 import { logger } from './logger';
+import { withTransaction, executeAtomic } from './db/transaction';
 import crypto from 'crypto';
 
 const LOG_INTEGRITY_KEY = process.env.AUDIT_LOG_INTEGRITY_KEY ?? 'default-dev-key-change-in-prod';
@@ -114,6 +115,76 @@ export class AuditLoggingService {
       sessionId: options?.sessionId,
       createdAt: now,
     };
+  }
+
+  async logActionWithIntegrityCheck(
+    actionType: string,
+    resourceType: string,
+    status: 'success' | 'failure',
+    options?: {
+      userAddress?: string;
+      resourceId?: string;
+      actionDetails?: string;
+      ipAddress?: string;
+      userAgent?: string;
+      sessionId?: string;
+    },
+  ): Promise<AuditLog> {
+    const id = `audit_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+    const now = Date.now();
+
+    const auditLog: AuditLog = {
+      id,
+      userAddress: options?.userAddress,
+      actionType,
+      resourceType,
+      resourceId: options?.resourceId,
+      actionDetails: options?.actionDetails,
+      status,
+      ipAddress: options?.ipAddress,
+      userAgent: options?.userAgent,
+      sessionId: options?.sessionId,
+      createdAt: now,
+    };
+
+    const integrityHash = this.computeLogIntegrityHash(auditLog);
+
+    // Multi-step write: insert log + compute hash atomically
+    await executeAtomic([
+      {
+        text: `INSERT INTO audit_logs (id, user_address, action_type, resource_type, resource_id, action_details, status, ip_address, user_agent, session_id, created_at)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+        values: [
+          id,
+          options?.userAddress || null,
+          actionType,
+          resourceType,
+          options?.resourceId || null,
+          options?.actionDetails || null,
+          status,
+          options?.ipAddress || null,
+          options?.userAgent || null,
+          options?.sessionId || null,
+          now,
+        ],
+      },
+      {
+        text: `INSERT INTO audit_log_integrity (audit_id, integrity_hash, verified_at)
+               VALUES ($1, $2, $3)
+               ON CONFLICT (audit_id) DO UPDATE SET integrity_hash = $2, verified_at = $3`,
+        values: [id, integrityHash, now],
+      },
+    ]);
+
+    logger.info(`Audit log created with integrity check`, {
+      auditId: id,
+      actionType,
+      resourceType,
+      status,
+      userId: options?.userAddress,
+    });
+
+    return auditLog;
   }
 
   async logAdminAction(
