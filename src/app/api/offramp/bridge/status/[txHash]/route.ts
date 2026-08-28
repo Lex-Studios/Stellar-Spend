@@ -1,9 +1,9 @@
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
-import { env } from '@/lib/env';
-import { extractErrorMessage } from '@/lib/offramp/utils/errors';
-import { get, set, isFresh } from '@/lib/polling/status-cache';
-import type { BridgeStatus } from '@/lib/offramp/types';
+import { extractErrorMessage } from '@/lib/offramp';
+import { get, set, isFresh } from '@/lib/polling';
+import type { BridgeStatus } from '@/lib/offramp';
+import { ErrorHandler } from '@/lib/error-handler';
 
 const BRIDGE_TERMINAL_STATES: BridgeStatus[] = ['completed', 'failed', 'expired'];
 
@@ -24,10 +24,7 @@ const BRIDGE_TERMINAL_STATES: BridgeStatus[] = ['completed', 'failed', 'expired'
  *   }
  * }
  */
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ txHash: string }> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ txHash: string }> }) {
   const { txHash } = await params;
 
   // Check cache first
@@ -139,9 +136,6 @@ export async function GET(
       });
     }
 
-    return NextResponse.json(
-      { error: message || 'Failed to fetch bridge status' },
-      { status: 500 }
-    );
+    return ErrorHandler.serverError(error);
   }
 }

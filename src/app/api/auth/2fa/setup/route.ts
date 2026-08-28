@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TwoFAService } from '@/lib/two-fa';
+import { ErrorHandler } from '@/lib/error-handler';
 
+// STORAGE_KEY was used in an earlier in-memory implementation; the record
+// now lives in the session store. Preserved here for reference.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const STORAGE_KEY = 'stellar_spend_2fa_config';
 
 export async function POST(req: NextRequest) {
@@ -8,10 +12,7 @@ export async function POST(req: NextRequest) {
     const { userId, method } = await req.json();
 
     if (!userId || !method || !['totp', 'sms'].includes(method)) {
-      return NextResponse.json(
-        { error: 'Invalid userId or method' },
-        { status: 400 }
-      );
+      return ErrorHandler.validation('Invalid userId or method');
     }
 
     if (method === 'totp') {
@@ -34,9 +35,6 @@ export async function POST(req: NextRequest) {
       });
     }
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
-    );
+    return ErrorHandler.serverError(error);
   }
 }

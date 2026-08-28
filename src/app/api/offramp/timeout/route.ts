@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { ErrorHandler } from '@/lib/error-handler';
-import { cancelTimedOutTransaction, checkAndCancelTimedOutTransactions, isTransactionTimedOut, TRANSACTION_TIMEOUT_MS } from '@/lib/transaction-timeout';
-import { dal } from '@/lib/db/dal';
+import {
+  cancelTimedOutTransaction,
+  checkAndCancelTimedOutTransactions,
+  isTransactionTimedOut,
+  TRANSACTION_TIMEOUT_MS,
+} from '@/lib/transaction-timeout';
+import { dal } from '@/lib/db';
 
 export const maxDuration = 30;
 
@@ -44,7 +49,7 @@ export async function GET(request: Request) {
     }
     const tx = await dal.getById(transactionId);
     if (!tx) {
-      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+      return ErrorHandler.notFound('Transaction');
     }
     const ageMs = Date.now() - tx.timestamp;
     return NextResponse.json({

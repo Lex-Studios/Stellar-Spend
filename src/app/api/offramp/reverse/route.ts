@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TransactionStorage } from '@/lib/transaction-storage';
 import { withIdempotency } from '@/lib/idempotency';
+import { ErrorHandler } from '@/lib/error-handler';
 
 const REVERSAL_FEE_RATE = 0.01;
 const REVERSAL_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -44,18 +45,18 @@ export async function GET(req: NextRequest) {
     if (requestId) {
       const request = reversalRequests.get(requestId);
       if (!request) {
-        return NextResponse.json({ error: 'Reversal request not found' }, { status: 404 });
+        return ErrorHandler.notFound('Reversal request');
       }
       return NextResponse.json({ request });
     }
 
     if (!transactionId) {
-      return NextResponse.json({ error: 'transactionId or requestId is required' }, { status: 400 });
+      return ErrorHandler.validation('transactionId or requestId is required');
     }
 
     const tx = TransactionStorage.getById(transactionId);
     if (!tx) {
-      return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
+      return ErrorHandler.notFound('Transaction');
     }
 
     const eligible = TransactionStorage.isReversalEligible(tx);
@@ -69,132 +70,128 @@ export async function GET(req: NextRequest) {
       reason: !eligible
         ? 'Transaction already reversed or not completed'
         : !withinWindow
-        ? 'Outside 24-hour reversal window'
-        : null,
+          ? 'Outside 24-hour reversal window'
+          : null,
       reversalFee: fee,
       maxReversalAmount: amount,
       netAmount: parseFloat((amount - fee).toFixed(6)),
       currentReversal: tx.reversal || null,
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
-    );
+    return ErrorHandler.serverError(error);
   }
 }
 
 export async function POST(req: NextRequest) {
-  return withIdempotency(req, async () => {
-    try {
-      const { transactionId, amount, reason } = await req.json();
+  return withIdempotency(
+    req,
+    async () => {
+      try {
+        const { transactionId, amount, reason } = await req.json();
 
-      if (!transactionId || !amount || !reason) {
-        return NextResponse.json(
-          { error: 'Missing required fields: transactionId, amount, reason' },
-          { status: 400 }
-        );
+        if (!transactionId || !amount || !reason) {
+          return ErrorHandler.validation('Missing required fields: transactionId, amount, reason');
+        }
+
+        const tx = TransactionStorage.getById(transactionId);
+        if (!tx) {
+          return ErrorHandler.notFound('Transaction');
+        }
+
+        if (!TransactionStorage.isReversalEligible(tx)) {
+          return ErrorHandler.validation('Transaction is not eligible for reversal');
+        }
+
+        if (!isWithinReversalWindow(tx)) {
+          return ErrorHandler.validation('Outside 24-hour reversal window');
+        }
+
+        const reversalAmount = parseFloat(amount);
+        const txAmount = parseFloat(tx.amount);
+        if (reversalAmount <= 0 || reversalAmount > txAmount) {
+          return ErrorHandler.validation('Invalid reversal amount');
+        }
+
+        const fee = calculateReversalFee(reversalAmount);
+        const requestId = `REV-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+        const request: ReversalRequest = {
+          transactionId,
+          requestId,
+          amount,
+          fee: fee.toFixed(6),
+          reason,
+          status: 'pending',
+          requestedAt: Date.now(),
+        };
+        reversalRequests.set(requestId, request);
+
+        TransactionStorage.reverse(transactionId, amount, reason);
+
+        return NextResponse.json({
+          success: true,
+          message: 'Reversal request submitted',
+          requestId,
+          reversalFee: fee,
+          netAmount: parseFloat((reversalAmount - fee).toFixed(6)),
+          transaction: TransactionStorage.getById(transactionId),
+        });
+      } catch (error) {
+        return ErrorHandler.serverError(error);
       }
-
-      const tx = TransactionStorage.getById(transactionId);
-      if (!tx) {
-        return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
-      }
-
-      if (!TransactionStorage.isReversalEligible(tx)) {
-        return NextResponse.json({ error: 'Transaction is not eligible for reversal' }, { status: 400 });
-      }
-
-      if (!isWithinReversalWindow(tx)) {
-        return NextResponse.json({ error: 'Outside 24-hour reversal window' }, { status: 400 });
-      }
-
-      const reversalAmount = parseFloat(amount);
-      const txAmount = parseFloat(tx.amount);
-      if (reversalAmount <= 0 || reversalAmount > txAmount) {
-        return NextResponse.json({ error: 'Invalid reversal amount' }, { status: 400 });
-      }
-
-      const fee = calculateReversalFee(reversalAmount);
-      const requestId = `REV-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-
-      const request: ReversalRequest = {
-        transactionId,
-        requestId,
-        amount,
-        fee: fee.toFixed(6),
-        reason,
-        status: 'pending',
-        requestedAt: Date.now(),
-      };
-      reversalRequests.set(requestId, request);
-
-      TransactionStorage.reverse(transactionId, amount, reason);
-
-      return NextResponse.json({
-        success: true,
-        message: 'Reversal request submitted',
-        requestId,
-        reversalFee: fee,
-        netAmount: parseFloat((reversalAmount - fee).toFixed(6)),
-        transaction: TransactionStorage.getById(transactionId),
-      });
-    } catch (error) {
-      return NextResponse.json(
-        { error: error instanceof Error ? error.message : 'Internal server error' },
-        { status: 500 }
-      );
-    }
-  });
+    },
+    { required: true },
+  );
 }
 
 export async function PATCH(req: NextRequest) {
-  return withIdempotency(req, async () => {
-    try {
-      const { requestId, action, notes } = await req.json();
+  return withIdempotency(
+    req,
+    async () => {
+      try {
+        const { requestId, action, notes } = await req.json();
 
-      if (!requestId || !action) {
-        return NextResponse.json({ error: 'Missing required fields: requestId, action' }, { status: 400 });
+        if (!requestId || !action) {
+          return ErrorHandler.validation('Missing required fields: requestId, action');
+        }
+
+        if (!['approve', 'reject'].includes(action)) {
+          return ErrorHandler.validation('action must be "approve" or "reject"');
+        }
+
+        const request = reversalRequests.get(requestId);
+        if (!request) {
+          return ErrorHandler.notFound('Reversal request');
+        }
+
+        if (request.status !== 'pending') {
+          return ErrorHandler.validation(`Reversal is already ${request.status}`);
+        }
+
+        if (action === 'approve') {
+          request.status = 'approved';
+          request.approvedAt = Date.now();
+          TransactionStorage.updateReversalStatus(request.transactionId, 'completed');
+          request.status = 'completed';
+          request.completedAt = Date.now();
+        } else {
+          request.status = 'rejected';
+          TransactionStorage.updateReversalStatus(request.transactionId, 'failed');
+        }
+
+        reversalRequests.set(requestId, request);
+
+        return NextResponse.json({
+          success: true,
+          request,
+          notes: notes || null,
+        });
+      } catch (error) {
+        return ErrorHandler.serverError(error);
       }
-
-      if (!['approve', 'reject'].includes(action)) {
-        return NextResponse.json({ error: 'action must be "approve" or "reject"' }, { status: 400 });
-      }
-
-      const request = reversalRequests.get(requestId);
-      if (!request) {
-        return NextResponse.json({ error: 'Reversal request not found' }, { status: 404 });
-      }
-
-      if (request.status !== 'pending') {
-        return NextResponse.json({ error: `Reversal is already ${request.status}` }, { status: 400 });
-      }
-
-      if (action === 'approve') {
-        request.status = 'approved';
-        request.approvedAt = Date.now();
-        TransactionStorage.updateReversalStatus(request.transactionId, 'completed');
-        request.status = 'completed';
-        request.completedAt = Date.now();
-      } else {
-        request.status = 'rejected';
-        TransactionStorage.updateReversalStatus(request.transactionId, 'failed');
-      }
-
-      reversalRequests.set(requestId, request);
-
-      return NextResponse.json({
-        success: true,
-        request,
-        notes: notes || null,
-      });
-    } catch (error) {
-      return NextResponse.json(
-        { error: error instanceof Error ? error.message : 'Internal server error' },
-        { status: 500 }
-      );
-    }
-  });
+    },
+    { required: true },
+  );
 }
 
 export async function PUT(req: NextRequest) {
@@ -211,10 +208,10 @@ export async function PUT(req: NextRequest) {
         totalReversalAmount: completed.reduce((s, r) => s + parseFloat(r.amount), 0),
         totalFeesCollected: completed.reduce((s, r) => s + parseFloat(r.fee), 0),
         approvalRate: requests.length ? approved.length / requests.length : 0,
-        averageProcessingTimeMs:
-          completed.length
-            ? completed.reduce((s, r) => s + ((r.completedAt ?? r.requestedAt) - r.requestedAt), 0) / completed.length
-            : 0,
+        averageProcessingTimeMs: completed.length
+          ? completed.reduce((s, r) => s + ((r.completedAt ?? r.requestedAt) - r.requestedAt), 0) /
+            completed.length
+          : 0,
         reversalsByReason: requests.reduce<Record<string, number>>((acc, r) => {
           acc[r.reason] = (acc[r.reason] || 0) + 1;
           return acc;
@@ -224,11 +221,8 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ analytics });
     }
 
-    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+    return ErrorHandler.validation('Unknown action');
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
-    );
+    return ErrorHandler.serverError(error);
   }
 }

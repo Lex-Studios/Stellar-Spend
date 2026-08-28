@@ -52,3 +52,5 @@ if (typeof globalThis.localStorage === "undefined" || globalThis.localStorage ==
     writable: true,
   });
 }
+import 'dotenv/config';
+import '@testing-library/jest-dom';

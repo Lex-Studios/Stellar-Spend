@@ -6,6 +6,7 @@ import {
   validateCurrencyAmount,
   SUPPORTED_CURRENCIES,
   getCurrencies,
+  getDefaultCurrencyForCountry,
 } from './currencies';
 
 describe('SUPPORTED_CURRENCIES', () => {
@@ -25,7 +26,7 @@ describe('SUPPORTED_CURRENCIES', () => {
   });
 
   it('has unique currency codes', () => {
-    const codes = SUPPORTED_CURRENCIES.map(c => c.code);
+    const codes = SUPPORTED_CURRENCIES.map((c) => c.code);
     expect(new Set(codes).size).toBe(codes.length);
   });
 
@@ -58,7 +59,7 @@ describe('getActiveCurrencies', () => {
 
   it('excludes inactive currencies', () => {
     const active = getActiveCurrencies();
-    const activeCodes = active.map(c => c.code);
+    const activeCodes = active.map((c) => c.code);
     expect(activeCodes).not.toContain('MWK');
     expect(activeCodes).not.toContain('ZMW');
   });
@@ -166,7 +167,7 @@ describe('validateCurrencyAmount', () => {
   });
 
   it('returns error for inactive currency', () => {
-    const inactive = SUPPORTED_CURRENCIES.find(c => !c.active);
+    const inactive = SUPPORTED_CURRENCIES.find((c) => !c.active);
     if (inactive) {
       const error = validateCurrencyAmount(inactive.code, inactive.minAmount);
       expect(error).toMatch(/not currently active/i);
@@ -206,7 +207,7 @@ describe('getCurrencies', () => {
 
   it('includes active currencies only', async () => {
     const currencies = await getCurrencies();
-    const codes = currencies.map(c => c.code);
+    const codes = currencies.map((c) => c.code);
     expect(codes).toContain('NGN');
     expect(codes).not.toContain('MWK');
   });
@@ -237,5 +238,21 @@ describe('precision and rounding edge cases', () => {
     for (const c of getActiveCurrencies()) {
       expect(validateCurrencyAmount(c.code, -1)).toMatch(/minimum/i);
     }
+  });
+});
+
+describe('getDefaultCurrencyForCountry', () => {
+  it('returns the active currency for a known country', () => {
+    expect(getDefaultCurrencyForCountry('NG')?.code).toBe('NGN');
+    expect(getDefaultCurrencyForCountry('ke')?.code).toBe('KES');
+  });
+
+  it('returns undefined for a country with no active currency mapping', () => {
+    expect(getDefaultCurrencyForCountry('ZZ')).toBeUndefined();
+  });
+
+  it("does not match an inactive currency's country", () => {
+    // MW (Malawi) maps to MWK, which is inactive.
+    expect(getDefaultCurrencyForCountry('MW')).toBeUndefined();
   });
 });
