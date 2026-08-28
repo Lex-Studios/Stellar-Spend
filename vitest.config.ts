@@ -48,6 +48,7 @@ export default defineConfig({
     },
     projects: [{
       extends: true,
+      name: 'unit',
       test: {
         environment: 'jsdom',
         globals: true,

@@ -9,6 +9,10 @@ soroban-sdk = "20"
 [lib]
 crate-type = ["cdylib"]
 
+[[test]]
+name = "integration"
+path = "tests/integration.rs"
+
 [profile.release]
 opt-level = "z"
 lto = true
