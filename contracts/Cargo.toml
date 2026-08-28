@@ -16,5 +16,6 @@ stellar-spend-shared = { path = "shared" }
 opt-level = "z"
 codegen-units = 1
 lto = true
+panic = "abort"
 strip = true
 overflow-checks = true
