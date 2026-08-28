@@ -124,10 +124,27 @@ E2E tests live in `./e2e/` and run against a real dev server on `http://localhos
 
 ### Configuration highlights (`playwright.config.ts`)
 
-- Browser: Chromium (Desktop Chrome)
+- Browsers: a cross-browser matrix of **Chromium (Desktop Chrome)**, **Firefox**, and **WebKit** (Issue #1016).
 - Base URL: `http://localhost:3001`
 - CI: 2 retries, 1 worker, `forbidOnly` enabled
 - Traces captured on first retry for debugging
+
+> **Runtime impact (Issue #1016):** each spec runs once per browser engine, so the
+> full E2E suite takes roughly **3×** the previous runtime. To run a single engine:
+>
+> ```bash
+> npx playwright test --project=chromium
+> npx playwright test --project=firefox
+> npx playwright test --project=webkit
+> ```
+
+### Writing cross-browser-safe E2E tests
+
+- Prefer auto-waiting assertions (`expect(...).toBeVisible()`) over
+  `page.waitForNavigation()`, which is unreliable for SPA route changes in
+  Firefox/WebKit. Wait for a concrete selector instead.
+- `toHaveScreenshot()` snapshots are stored per project
+  (`chromium/`, `firefox/`, `webkit/`), so visual regressions are tracked per engine.
 
 ### Running locally
 
@@ -137,6 +154,9 @@ npm run test:e2e
 
 # Run a specific spec file
 npx playwright test e2e/smoke.spec.ts
+
+# Run against a single browser engine
+npx playwright test --project=webkit e2e/smoke.spec.ts
 
 # Open the HTML report after a run
 npx playwright show-report

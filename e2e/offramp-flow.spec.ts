@@ -12,7 +12,9 @@ test.describe('Complete Offramp Flow', () => {
     
     // Select Freighter
     await page.click('button:has-text("Freighter")');
-    await page.waitForNavigation();
+    // Cross-browser note: prefer auto-waiting assertions over waitForNavigation,
+    // which is unreliable for SPA route changes in Firefox/WebKit.
+    await page.waitForSelector('input[placeholder="Enter amount"]');
 
     // Step 2: Enter amount
     await page.fill('input[placeholder="Enter amount"]', '100');
@@ -61,7 +63,7 @@ test.describe('Complete Offramp Flow', () => {
     await page.click('button:has-text("Connect Wallet")');
     await page.waitForSelector('[data-testid="wallet-modal"]');
     await page.click('button:has-text("Freighter")');
-    await page.waitForNavigation();
+    await page.waitForSelector('input[placeholder="Enter amount"]');
 
     // Step 2: Enter invalid amount first
     await page.fill('input[placeholder="Enter amount"]', '-100');
@@ -100,7 +102,7 @@ test.describe('Complete Offramp Flow', () => {
     await page.click('button:has-text("Connect Wallet")');
     await page.waitForSelector('[data-testid="wallet-modal"]');
     await page.click('button:has-text("Freighter")');
-    await page.waitForNavigation();
+    await page.waitForSelector('[data-testid="wallet-button"]');
 
     // Verify connected state
     const walletButton = await page.locator('[data-testid="wallet-button"]');
@@ -120,7 +122,7 @@ test.describe('Complete Offramp Flow', () => {
     await page.click('button:has-text("Connect Wallet")');
     await page.waitForSelector('[data-testid="wallet-modal"]');
     await page.click('button:has-text("Freighter")');
-    await page.waitForNavigation();
+    await page.waitForSelector('input[name="accountNumber"]');
 
     // Enter invalid account number
     await page.fill('input[name="accountNumber"]', 'invalid');

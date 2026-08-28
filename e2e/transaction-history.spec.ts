@@ -8,7 +8,6 @@ test.describe('Transaction History', () => {
     await page.click('button:has-text("Connect Wallet")');
     await page.waitForSelector('[data-testid="wallet-modal"]');
     await page.click('button:has-text("Freighter")');
-    await page.waitForNavigation();
   });
 
   test('should display transaction history', async ({ page }) => {
