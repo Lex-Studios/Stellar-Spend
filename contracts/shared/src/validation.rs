@@ -6,8 +6,10 @@
 
 use soroban_sdk::{Address, String, Vec};
 
-pub use crate::constants::{MAX_BASIS_POINTS, MAX_SIGNERS};
 use crate::errors::ContractError;
+
+/// Basis points denominator (100%).
+pub const MAX_BASIS_POINTS: u32 = 10_000;
 
 /// Rejects zero and negative amounts.
 pub fn require_positive_amount(amount: i128) -> Result<(), ContractError> {
@@ -96,6 +98,9 @@ pub fn check_schema_version(stored: Option<u32>, current: u32) -> Result<(), Con
     }
 }
 
+/// Upper bound on a multisig signer set, keeping [`require_unique_addresses`] and
+/// similar linear scans within a predictable instruction budget.
+pub const MAX_SIGNERS: u32 = 20;
 
 #[cfg(test)]
 mod tests {

@@ -71,8 +71,6 @@ use stellar_spend_shared::{
     },
 };
 
-pub use stellar_spend_shared::constants::{INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD};
-
 contractmeta!(key = "version", val = "1.0.0");
 contractmeta!(key = "contract", val = "stellar-spend-treasury");
 
@@ -88,6 +86,11 @@ pub const MAX_SINGLE_FEE_BP: u32 = 500;
 /// Upper bound on stored tiers, keeping [`TreasuryContract::fee_for_amount`]'s linear
 /// scan within a predictable instruction budget.
 pub const MAX_FEE_TIERS: u32 = 16;
+
+/// Instance TTL extension (~30 days) applied on state-changing calls.
+pub const INSTANCE_TTL_EXTEND_TO: u32 = 518_400;
+/// Only pay to extend when remaining TTL drops below ~6 days.
+pub const INSTANCE_TTL_THRESHOLD: u32 = 103_680;
 
 #[contracttype]
 #[derive(Clone)]

@@ -34,11 +34,9 @@ use stellar_spend_shared::{
     errors::ContractError,
     validation::{
         check_schema_version, require_non_negative_amount, require_string_len,
-        require_unique_addresses,
+        require_unique_addresses, MAX_SIGNERS,
     },
 };
-
-pub use stellar_spend_shared::constants::{INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD, MAX_SIGNERS};
 
 contractmeta!(key = "version", val = "1.0.0");
 contractmeta!(key = "contract", val = "stellar-spend-multisig-authority");
@@ -68,6 +66,11 @@ pub const DEFAULT_PROPOSAL_TTL_LEDGERS: u32 = 120_960;
 pub const MAX_PROPOSAL_ID_LEN: u32 = 64;
 /// Maximum length of a proposal description, in bytes.
 pub const MAX_DESCRIPTION_LEN: u32 = 256;
+
+/// Instance TTL extension (~30 days) applied on state-changing calls.
+pub const INSTANCE_TTL_EXTEND_TO: u32 = 518_400;
+/// Only pay to extend when remaining TTL drops below ~6 days.
+pub const INSTANCE_TTL_THRESHOLD: u32 = 103_680;
 
 /// Schema v1 proposal record.
 ///

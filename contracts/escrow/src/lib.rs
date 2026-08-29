@@ -48,10 +48,8 @@
 use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Map};
 use stellar_spend_shared::{
     errors::ContractError,
-    validation::{check_schema_version, require_basis_points, require_positive_amount},
+    validation::{check_schema_version, require_basis_points, require_positive_amount, MAX_BASIS_POINTS},
 };
-
-pub use stellar_spend_shared::constants::{INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD, MAX_BASIS_POINTS};
 
 // ── Sub-modules (issue #812) ──────────────────────────────────────────────────
 
@@ -74,6 +72,14 @@ pub const MIN_TIMEOUT_LEDGERS: u32 = 1;
 /// a timeout near this ceiling needs its instance TTL bumped by an outside caller
 /// before the deadline arrives; [`INSTANCE_TTL_EXTEND_TO`] only covers ~30 days.
 pub const MAX_TIMEOUT_LEDGERS: u32 = 10_000_000;
+
+/// Ledgers of instance TTL requested on every state-changing call (~30 days).
+///
+/// Without this the instance entry — which holds the deposit map — archives while
+/// deposits are still open, making them permanently unreleasable and unrefundable.
+pub const INSTANCE_TTL_EXTEND_TO: u32 = 518_400;
+/// Only pay to extend when the remaining TTL has fallen below this (~6 days).
+pub const INSTANCE_TTL_THRESHOLD: u32 = 103_680;
 
 #[contracttype]
 #[derive(Clone)]

@@ -30,11 +30,9 @@ use stellar_spend_shared::{
     errors::ContractError,
     validation::{
         basis_points_of, check_schema_version, require_basis_points, require_positive_amount,
-        require_string_len,
+        require_string_len, MAX_BASIS_POINTS,
     },
 };
-
-pub use stellar_spend_shared::constants::{INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD, MAX_BASIS_POINTS};
 
 contractmeta!(key = "version", val = "1.0.0");
 contractmeta!(key = "contract", val = "stellar-spend-fee-manager");
@@ -47,6 +45,11 @@ pub const MAX_DEFAULT_FEE_BP: u32 = 500;
 
 /// Rate applied when a contract initialised under schema v1 is migrated forward.
 pub const MIGRATED_DEFAULT_FEE_BP: u32 = 50;
+
+/// Instance TTL extension (~30 days) applied on state-changing calls.
+pub const INSTANCE_TTL_EXTEND_TO: u32 = 518_400;
+/// Only pay to extend when remaining TTL drops below ~6 days.
+pub const INSTANCE_TTL_THRESHOLD: u32 = 103_680;
 
 #[contracttype]
 #[derive(Clone)]

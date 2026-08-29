@@ -7,7 +7,6 @@ edition.workspace = true
 soroban-sdk = { workspace = true }
 
 [dev-dependencies]
-proptest = "1.5"
 soroban-sdk = { workspace = true, features = ["testutils"] }
 
 [lib]

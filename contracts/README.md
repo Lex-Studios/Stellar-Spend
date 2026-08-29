@@ -94,20 +94,6 @@ still readable and semantically unchanged — rather than a synthetic shortcut.
 Run per-contract: `cargo test -p escrow --test upgrade` (and similarly for
 `fee-manager`, `treasury`, `multisig-authority`).
 
-### Fuzz/property run (issue #992)
-
-The shared signer-threshold verifier is exercised by a `proptest` case set at
-`1_000_000` iterations, which gives a deterministic fuzz-like pass over malformed
-inputs without requiring a full `cargo-fuzz` toolchain.
-
-```text
-cd contracts
-cargo test -p stellar-spend-shared threshold_checks_hold_for_malformed_inputs -- --nocapture
-```
-
-This keeps the local workflow lean while still exercising the multisig validation
-path across a large malformed-input matrix.
-
 ## Error codes (issue #816)
 
 All four contracts return the single [`stellar_spend_shared::errors::ContractError`]

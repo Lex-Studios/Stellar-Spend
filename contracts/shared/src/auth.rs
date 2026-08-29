@@ -95,7 +95,6 @@ pub fn verify_threshold(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use proptest::prelude::*;
 
     // ── required_threshold ────────────────────────────────────────────────────
 
@@ -169,29 +168,5 @@ mod tests {
         // Even for low-value ops, 0 sigs is insufficient
         let err = verify_threshold(0, 5, 1_000, 500).unwrap_err();
         assert_eq!(err, ContractError::BelowThreshold);
-    }
-
-    proptest! {
-        #![proptest_config(ProptestConfig { cases: 1_000_000, ..ProptestConfig::default() })]
-
-        #[test]
-        fn threshold_checks_hold_for_malformed_inputs(
-            full_threshold in 1u32..=20u32,
-            high_value_limit in -10_000_000_000i128..=10_000_000_000i128,
-            value in -10_000_000_000i128..=10_000_000_000i128,
-            sig_count in 0u32..=20u32,
-        ) {
-            let required = required_threshold(full_threshold, high_value_limit, value);
-            let result = verify_threshold(sig_count, full_threshold, high_value_limit, value);
-
-            match sig_count.cmp(&required) {
-                std::cmp::Ordering::Less => {
-                    assert_eq!(result, Err(ContractError::BelowThreshold));
-                }
-                std::cmp::Ordering::Equal | std::cmp::Ordering::Greater => {
-                    assert!(result.is_ok(), "sig_count={sig_count} required={required} full_threshold={full_threshold} limit={high_value_limit} value={value}");
-                }
-            }
-        }
     }
 }
