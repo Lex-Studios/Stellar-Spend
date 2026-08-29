@@ -11,5 +11,6 @@
 
 pub mod auth;
 pub mod errors;
+pub mod policy;
 pub mod token;
 pub mod validation;

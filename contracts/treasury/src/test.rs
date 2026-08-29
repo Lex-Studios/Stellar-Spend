@@ -286,6 +286,24 @@ fn fee_schedule_keys_are_u64_in_schema_v3() {
 }
 
 #[test]
+fn treasury_fee_schedule_obeys_the_monotonic_invariant() {
+    use proptest::prelude::*;
+
+    let t = TreasuryTest::setup();
+    proptest!(|(amount in 0i128..=100_000_000_000i128)| {
+        let schedule = t.client().get_fee_schedule();
+        let expected = schedule
+            .iter()
+            .filter(|(threshold, _)| (*threshold as i128) <= amount)
+            .map(|(_, bps)| *bps)
+            .last()
+            .unwrap_or(0);
+
+        prop_assert_eq!(t.client().fee_for_amount(&amount), expected);
+    });
+}
+
+#[test]
 fn v2_to_v3_migration_converts_schedule_keys_from_i128_to_u64() {
     // Start with a genuine v2 layout (i128 keys).
     let t = TreasuryTest::with_legacy_v2_state();
