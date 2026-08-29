@@ -4,6 +4,7 @@ import { authMiddleware } from './src/lib/middleware/auth';
 import { geoMiddleware, attachGeoHeaders } from './src/lib/middleware/geo';
 import { createLoggingMiddleware } from './src/lib/middleware/logging';
 import { compressionMiddleware, addCompressionHeaders } from './src/lib/middleware/compression.middleware';
+import { publicApiRateLimitMiddleware, addRateLimitHeaders } from './src/lib/middleware/public-api-rate-limit.middleware';
 
 export function middleware(request: NextRequest): NextResponse {
   const start = Date.now();
@@ -26,32 +27,45 @@ export function middleware(request: NextRequest): NextResponse {
 
   let response: NextResponse;
 
-  // 1. Check geo restrictions first
-  const geoResponse = geoMiddleware(modifiedRequest);
-  if (geoResponse) {
-    response = geoResponse;
+  // 1. Check rate limiting first (issue #967)
+  const isAuthenticated = !!request.headers.get('x-account-id');
+  const rateLimitResponse = publicApiRateLimitMiddleware(modifiedRequest, isAuthenticated);
+  if (rateLimitResponse instanceof Promise) {
+    // Handle async rate limiting (shouldn't be needed for sync version)
+    response = NextResponse.next({ request: { headers: modifiedRequest.headers } });
+  } else if (rateLimitResponse) {
+    response = rateLimitResponse;
   } else {
-    // 2. Check auth/versioning
-    const authResponse = authMiddleware(modifiedRequest);
-    if (authResponse) {
-      response = authResponse;
+    // 2. Check geo restrictions
+    const geoResponse = geoMiddleware(modifiedRequest);
+    if (geoResponse) {
+      response = geoResponse;
     } else {
-      // 3. Pass through all other requests, forwarding the resolved
-      // request ID so the route handler can correlate its own logs.
-      response = NextResponse.next({ request: { headers: modifiedRequest.headers } });
+      // 3. Check auth/versioning
+      const authResponse = authMiddleware(modifiedRequest);
+      if (authResponse) {
+        response = authResponse;
+      } else {
+        // 4. Pass through all other requests, forwarding the resolved
+        // request ID so the route handler can correlate its own logs.
+        response = NextResponse.next({ request: { headers: modifiedRequest.headers } });
+      }
     }
   }
 
-  // 4. Attach geo headers
+  // 5. Attach geo headers
   response = attachGeoHeaders(response, request);
 
-  // 5. Add compression headers
+  // 6. Add compression headers
   response = addCompressionHeaders(response, pathname);
 
-  // 6. Add security headers
+  // 7. Add rate limit headers to response
+  response = addRateLimitHeaders(response, modifiedRequest);
+
+  // 8. Add security headers
   response = addSecurityHeaders(response);
 
-  // 7. Log and add request ID
+  // 9. Log and add request ID
   const durationMs = Date.now() - start;
   response = loggingMiddleware(request, response, durationMs, requestId);
 
