@@ -8,8 +8,8 @@
 use soroban_sdk::{symbol_short, Env};
 use stellar_spend_shared::errors::ContractError;
 
-use crate::{DataKey, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD};
 use crate::release::{acquire_lock, load_deposits, release_lock};
+use crate::{DataKey, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD};
 
 /// Refund a deposit to its depositor once the timeout ledger has passed.
 ///

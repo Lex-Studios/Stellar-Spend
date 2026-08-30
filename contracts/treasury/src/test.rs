@@ -1,14 +1,39 @@
 //! Treasury unit tests.
 //!
 //! All setup comes from [`crate::test_utils`] (issue #818).
-
 use stellar_spend_shared::errors::ContractError;
 
 use crate::test_utils::{assert_fresh_init_is_current, TreasuryTest};
 use crate::{MAX_FEE_TIERS, MAX_SINGLE_FEE_BP, SCHEMA_VERSION};
+use soroban_sdk::testutils::Events as _;
 
 // ── Initialisation ───────────────────────────────────────────────────────────
 
+fn assert_event<T>(
+    event: (
+        soroban_sdk::Address,
+        soroban_sdk::Vec<soroban_sdk::Val>,
+        soroban_sdk::Val,
+    ),
+    address: &soroban_sdk::Address,
+    env: &soroban_sdk::Env,
+    expected_topic: soroban_sdk::Symbol,
+    expected_data: T,
+) where
+    T: soroban_sdk::TryFromVal<soroban_sdk::Env, soroban_sdk::Val>
+        + core::cmp::PartialEq
+        + core::fmt::Debug,
+{
+    let (addr, topics, data) = event;
+    assert_eq!(addr, *address);
+    let topic_val = topics.get(0).unwrap();
+    let expected_topic_val: soroban_sdk::Val =
+        soroban_sdk::IntoVal::<soroban_sdk::Env, soroban_sdk::Val>::into_val(&expected_topic, env);
+    assert!(topic_val.shallow_eq(&expected_topic_val));
+    let decoded: T =
+        soroban_sdk::TryFromVal::try_from_val(env, &data).expect("failed to decode event data");
+    assert_eq!(decoded, expected_data);
+}
 #[test]
 fn init_persists_admin_treasury_and_schedule() {
     let t = TreasuryTest::setup();
@@ -274,7 +299,10 @@ fn fee_schedule_keys_are_u64_in_schema_v3() {
     let schedule = t.stored_schedule();
     assert_eq!(schedule.len(), 3, "init seeded 3 tiers");
     // Keys must round-trip as u64 through the stored map.
-    assert!(schedule.contains_key(0u64), "zero tier must be stored as u64");
+    assert!(
+        schedule.contains_key(0u64),
+        "zero tier must be stored as u64"
+    );
     assert!(
         schedule.contains_key(1_000_000u64),
         "1M tier must be stored as u64"
@@ -373,7 +401,7 @@ fn storage_footprint_schedule_key_is_8_bytes_not_16() {
     let t = TreasuryTest::setup();
     // Add tiers up to the max.
     for i in 3..16u64 {
-        t.client().set_fee_schedule(&(i as i128 * 100_000), &10);
+        t.client().set_fee_schedule(&(i as i128 * 100_000 + 1), &10);
     }
     let schedule = t.stored_schedule();
     assert_eq!(
@@ -421,146 +449,133 @@ fn migrate_rejects_state_from_a_future_build() {
 
 #[test]
 fn init_emits_event_with_admin_and_treasury() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = TreasuryTest::registered();
     t.client().init(&t.admin, &t.treasury);
 
-    assert_eq!(
-        t.env.events().all(),
-        soroban_sdk::vec![
-            &t.env,
-            (
-                t.contract_id.clone(),
-                (symbol_short!("init"),).into_val(&t.env),
-                (t.admin.clone(), t.treasury.clone()).into_val(&t.env),
-            ),
-        ]
+    let events = t.env.events().all();
+    assert_eq!(events.len(), 1);
+    let event = events.get(0).unwrap();
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("init"),
+        (t.admin.clone(), t.treasury.clone()),
     );
 }
 
 #[test]
 fn collect_fee_emits_event_with_amount_fee_recipient() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = TreasuryTest::setup();
-    let before = t.env.events().all().len();
 
     let fee = t.client().collect_fee(&1_000_000, &t.outsider);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("collect"),).into_val(&t.env),
-            (1_000_000i128, fee, t.outsider.clone()).into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("collect"),
+        (1_000_000i128, fee, t.outsider.clone()),
     );
 }
 
 #[test]
 fn set_fee_schedule_emits_event_with_tier_and_basis_points() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = TreasuryTest::setup();
-    let before = t.env.events().all().len();
 
     t.client().set_fee_schedule(&5_000_000, &30);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("schedule"),).into_val(&t.env),
-            (5_000_000i128, 30u32).into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("schedule"),
+        (5_000_000i128, 30u32),
     );
 }
 
 #[test]
 fn remove_fee_tier_emits_event_with_tier_threshold() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = TreasuryTest::setup();
-    let before = t.env.events().all().len();
 
     t.client().remove_fee_tier(&1_000_000);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("rmtier"),).into_val(&t.env),
-            1_000_000i128.into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("rmtier"),
+        1_000_000i128,
     );
 }
 
 #[test]
 fn update_treasury_emits_event_with_new_address() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = TreasuryTest::setup();
-    let before = t.env.events().all().len();
 
     t.client().update_treasury(&t.outsider);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("treasury"),).into_val(&t.env),
-            t.outsider.clone().into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("treasury"),
+        t.outsider.clone(),
     );
 }
 
 #[test]
 fn route_to_treasury_emits_event_with_amount_and_treasury_address() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = TreasuryTest::setup();
-    let before = t.env.events().all().len();
 
     t.client().route_to_treasury(&999);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("routed"),).into_val(&t.env),
-            (999i128, t.treasury.clone()).into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("routed"),
+        (999i128, t.treasury.clone()),
     );
 }
 
 #[test]
 fn migrate_emits_event_with_from_and_to_schema_versions() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = TreasuryTest::with_legacy_v1_state();
-    let before = t.env.events().all().len();
 
     t.client().migrate();
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("migrate"),).into_val(&t.env),
-            (1u32, SCHEMA_VERSION).into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("migrate"),
+        (1u32, SCHEMA_VERSION),
     );
 }

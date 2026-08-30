@@ -1,14 +1,39 @@
 //! Fee-manager unit tests.
 //!
 //! All setup comes from [`crate::test_utils`] (issue #818).
-
 use stellar_spend_shared::{errors::ContractError, validation::MAX_BASIS_POINTS};
 
 use crate::test_utils::{assert_fresh_init_is_current, FeeManagerTest, DEFAULT_TEST_FEE_BP};
 use crate::{MAX_DEFAULT_FEE_BP, SCHEMA_VERSION};
+use soroban_sdk::testutils::Events as _;
 
 // ── Initialisation ───────────────────────────────────────────────────────────
 
+fn assert_event<T>(
+    event: (
+        soroban_sdk::Address,
+        soroban_sdk::Vec<soroban_sdk::Val>,
+        soroban_sdk::Val,
+    ),
+    address: &soroban_sdk::Address,
+    env: &soroban_sdk::Env,
+    expected_topic: soroban_sdk::Symbol,
+    expected_data: T,
+) where
+    T: soroban_sdk::TryFromVal<soroban_sdk::Env, soroban_sdk::Val>
+        + core::cmp::PartialEq
+        + core::fmt::Debug,
+{
+    let (addr, topics, data) = event;
+    assert_eq!(addr, *address);
+    let topic_val = topics.get(0).unwrap();
+    let expected_topic_val: soroban_sdk::Val =
+        soroban_sdk::IntoVal::<soroban_sdk::Env, soroban_sdk::Val>::into_val(&expected_topic, env);
+    assert!(topic_val.shallow_eq(&expected_topic_val));
+    let decoded: T =
+        soroban_sdk::TryFromVal::try_from_val(env, &data).expect("failed to decode event data");
+    assert_eq!(decoded, expected_data);
+}
 #[test]
 fn init_persists_admin_rate_and_schema() {
     let t = FeeManagerTest::setup();
@@ -193,106 +218,85 @@ fn schema_version_matches_the_constant() {
 
 #[test]
 fn init_emits_event_with_admin_address() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = FeeManagerTest::registered();
     t.client().init(&t.admin, &DEFAULT_TEST_FEE_BP);
 
-    assert_eq!(
-        t.env.events().all(),
-        soroban_sdk::vec![
-            &t.env,
-            (
-                t.contract_id.clone(),
-                (symbol_short!("init"),).into_val(&t.env),
-                t.admin.clone().into_val(&t.env),
-            ),
-        ]
+    let events = t.env.events().all();
+    assert_eq!(events.len(), 1);
+    let event = events.get(0).unwrap();
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("init"),
+        t.admin.clone(),
     );
 }
 
 #[test]
 fn pause_emits_event_with_reason() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = FeeManagerTest::setup();
-    let before = t.env.events().all().len();
     let reason = t.reason("system maintenance");
 
     t.client().pause(&reason);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("pause"),).into_val(&t.env),
-            reason.into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("pause"),
+        reason,
     );
 }
 
 #[test]
 fn unpause_emits_event() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = FeeManagerTest::setup_paused();
-    let before = t.env.events().all().len();
 
     t.client().unpause();
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
-        event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("unpause"),).into_val(&t.env),
-            ().into_val(&t.env),
-        )
-    );
+    assert_event(event, &t.contract_id, &t.env, symbol_short!("unpause"), ());
 }
 
 #[test]
 fn set_default_rate_emits_event_with_new_rate() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = FeeManagerTest::setup();
-    let before = t.env.events().all().len();
 
     t.client().set_default_rate(&100);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
-        event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("rate"),).into_val(&t.env),
-            100u32.into_val(&t.env),
-        )
-    );
+    assert_event(event, &t.contract_id, &t.env, symbol_short!("rate"), 100u32);
 }
 
 #[test]
 fn migrate_emits_event_with_from_and_to_schema_versions() {
-    use soroban_sdk::{symbol_short, IntoVal};
     use crate::SCHEMA_VERSION;
+    use soroban_sdk::symbol_short;
 
     let t = FeeManagerTest::with_legacy_v1_state();
-    let before = t.env.events().all().len();
 
     t.client().migrate();
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("migrate"),).into_val(&t.env),
-            (1u32, SCHEMA_VERSION).into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("migrate"),
+        (1u32, SCHEMA_VERSION),
     );
 }

@@ -10,7 +10,9 @@ use stellar_spend_shared::{
     validation::{require_basis_points, require_positive_amount, MAX_BASIS_POINTS},
 };
 
-use crate::{DataKey, EscrowDeposit, DEFAULT_TIMEOUT_LEDGERS, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD};
+use crate::{
+    DataKey, EscrowDeposit, DEFAULT_TIMEOUT_LEDGERS, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD,
+};
 
 /// Record a deposit and return its id.
 ///
