@@ -12,6 +12,7 @@ import {
 import { ComponentList } from './status-page/ComponentList';
 import { CorridorList } from './status-page/CorridorList';
 import { UptimeSection } from './status-page/UptimeSection';
+import { formatDateTime } from '@/lib/format';
 
 export * from './status-page/types';
 
@@ -121,7 +122,7 @@ export default function StatusPage() {
                 <div className="flex items-center justify-between">
                   <div className="font-medium">{incident.title}</div>
                   <div className="text-xs text-[#777]">
-                    {new Date(incident.createdAt).toLocaleString()}
+                    {formatDateTime(incident.createdAt)}
                   </div>
                 </div>
                 {incident.updates.map((update, idx) => (

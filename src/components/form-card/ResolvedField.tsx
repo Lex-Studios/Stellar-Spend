@@ -21,6 +21,7 @@ export function ResolvedField({
           'bg-[#0a0a0a] border px-3 py-2.5 text-sm min-h-[42px] flex items-center justify-between',
           value && !loading ? 'border-green-500/40' : 'border-[#333333]',
         )}
+        data-testid={value && !loading ? 'resolved-account-name' : undefined}
       >
         <span>
           {loading ? (

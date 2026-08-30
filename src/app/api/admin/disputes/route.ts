@@ -1,10 +1,22 @@
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { disputeRepository } from '@/lib/repositories';
 import { DisputeStatus, DisputeUpdate } from '@shared/types/disputes';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
 import { decodeCursor, createPaginatedResponse } from '@/lib/pagination';
+import { validateBody } from '@/lib/validation/validate-request';
+
+const disputeUpdateSchema = z.object({
+  disputeId: z.string().min(1),
+  update: z.object({
+    status: z.enum(['open', 'in_review', 'resolved', 'rejected', 'escalated']).optional(),
+    resolutionNotes: z.string().optional(),
+    assignedTo: z.string().optional(),
+    priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+  }),
+});
 
 export async function GET(req: NextRequest) {
   try {
@@ -35,13 +47,11 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     // TODO: Add admin authentication check
-    const { disputeId, update }: { disputeId: string; update: DisputeUpdate } = await req.json();
+    const validation = await validateBody(req, disputeUpdateSchema);
+    if (!validation.success) return validation.response;
+    const { disputeId, update } = validation.data;
 
-    if (!disputeId) {
-      return ErrorHandler.validation('Dispute ID required');
-    }
-
-    const dispute = await disputeRepository.updateDispute(disputeId, update);
+    const dispute = await disputeRepository.updateDispute(disputeId, update as DisputeUpdate);
 
     if (!dispute) {
       return ErrorHandler.notFound('Dispute');

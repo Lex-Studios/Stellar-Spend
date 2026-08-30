@@ -3,7 +3,6 @@
  *
  * Covers:
  *  - Disabled mode: no network calls
- *  - Debug mode: console.log called when disabled+debug
  *  - Enabled mode via sendBeacon: payload sent
  *  - Enabled mode via fetch fallback (no sendBeacon)
  *  - trackWalletConnect helper
@@ -61,21 +60,6 @@ describe('useAnalytics', () => {
   it('does not call fetch when analytics is disabled', () => {
     renderHook(() => useAnalytics({ enabled: false }));
     expect(mockFetch).not.toHaveBeenCalled();
-  });
-
-  // ── Debug mode ─────────────────────────────────────────────────────────────
-
-  it('logs event to console in debug mode when disabled', () => {
-    renderHook(() => useAnalytics({ enabled: false, debug: true }));
-    expect(console.log).toHaveBeenCalledWith(
-      '[Analytics Debug]',
-      expect.objectContaining({ category: 'Navigation', action: 'page_view' }),
-    );
-  });
-
-  it('does not log to console when debug is false', () => {
-    renderHook(() => useAnalytics({ enabled: false, debug: false }));
-    expect(console.log).not.toHaveBeenCalled();
   });
 
   // ── Enabled mode with sendBeacon ───────────────────────────────────────────

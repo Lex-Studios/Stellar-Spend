@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
 import {
@@ -11,13 +12,34 @@ import {
   getBatchAnalytics,
 } from '@/lib/services';
 import { withIdempotency } from '@/lib/idempotency';
+import { validateBody } from '@/lib/validation/validate-request';
+
+const batchRequestSchema = z
+  .object({
+    action: z.enum(['cancel', 'execute']).optional(),
+    batchId: z.string().min(1).optional(),
+    userId: z.string().min(1).optional(),
+    transactions: z.array(z.object({ amount: z.number().optional() }).passthrough()).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.action === 'cancel' || data.action === 'execute') return Boolean(data.batchId);
+      if (!data.action) {
+        return Boolean(data.userId) && Array.isArray(data.transactions) && data.transactions.length > 0;
+      }
+      return true;
+    },
+    { message: 'Invalid batch request: check required fields for the given action' },
+  );
 
 export async function POST(req: NextRequest) {
   return withIdempotency(
     req,
     async () => {
       try {
-        const body = await req.json();
+        const validation = await validateBody(req, batchRequestSchema);
+        if (!validation.success) return validation.response;
+        const body = validation.data;
         const { action } = body;
 
         if (action === 'cancel') {
@@ -37,7 +59,10 @@ export async function POST(req: NextRequest) {
         }
 
         const { userId, transactions } = body;
-        const totalAmount = transactions.reduce((sum: number, t: any) => sum + (t.amount ?? 0), 0);
+        if (!userId || !transactions || transactions.length === 0) {
+          return ErrorHandler.validation('userId and transactions are required');
+        }
+        const totalAmount = transactions.reduce((sum, t) => sum + (t.amount ?? 0), 0);
         const batch = await createBatch(userId, totalAmount);
 
         for (const tx of transactions) {

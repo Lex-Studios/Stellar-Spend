@@ -44,6 +44,7 @@ export function FilterInputs({
           onChange={(e) => onChange('search', e.target.value)}
           placeholder="TX hash, ID, or note"
           aria-label="Search transactions"
+          data-testid="search-input"
           className={cn(inputClass, 'w-48')}
         />
       </Field>
@@ -52,6 +53,7 @@ export function FilterInputs({
           value={filters.status}
           onChange={(e) => onChange('status', e.target.value as Filters['status'])}
           aria-label="Filter by status"
+          data-testid="filter-status"
           className={inputClass}
         >
           <option value="all">All</option>

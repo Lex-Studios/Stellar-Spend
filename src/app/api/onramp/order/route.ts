@@ -1,18 +1,33 @@
 import { logger } from '@/lib/logger';
 import { NextResponse, type NextRequest } from 'next/server';
+import { z } from 'zod';
 import { globalContainer } from '@/lib/di';
 import { SERVICE_KEYS } from '@/lib/di';
 import { withIdempotency } from '@/lib/idempotency';
 import { ErrorHandler } from '@/lib/error-handler';
+import { validateBody } from '@/lib/validation/validate-request';
+import { amountSchema } from '@/lib/validators/schemas';
 
 export const maxDuration = 20;
+
+const createOrderSchema = z.object({
+  quoteId: z.string().min(1),
+  fiatAmount: amountSchema,
+  fiatCurrency: z.string().min(1),
+  destinationAmount: amountSchema,
+  destinationToken: z.string().min(1),
+  destinationAddress: z.string().min(1),
+  provider: z.string().min(1),
+  rate: z.number().positive(),
+});
 
 export async function POST(request: NextRequest) {
   return withIdempotency(
     request,
     async () => {
       try {
-        const body = await request.json();
+        const validation = await validateBody(request, createOrderSchema);
+        if (!validation.success) return validation.response;
         const {
           quoteId,
           fiatAmount,
@@ -22,39 +37,7 @@ export async function POST(request: NextRequest) {
           destinationAddress,
           provider,
           rate,
-        } = body;
-
-        if (!quoteId) {
-          return ErrorHandler.validation('quoteId is required');
-        }
-
-        if (!fiatAmount || parseFloat(fiatAmount) <= 0) {
-          return ErrorHandler.validation('Invalid fiatAmount');
-        }
-
-        if (!fiatCurrency) {
-          return ErrorHandler.validation('fiatCurrency is required');
-        }
-
-        if (!destinationAmount || parseFloat(destinationAmount) <= 0) {
-          return ErrorHandler.validation('Invalid destinationAmount');
-        }
-
-        if (!destinationToken) {
-          return ErrorHandler.validation('destinationToken is required');
-        }
-
-        if (!destinationAddress) {
-          return ErrorHandler.validation('destinationAddress is required');
-        }
-
-        if (!provider) {
-          return ErrorHandler.validation('provider is required');
-        }
-
-        if (!rate || rate <= 0) {
-          return ErrorHandler.validation('Invalid rate');
-        }
+        } = validation.data;
 
         const svc = await globalContainer.resolve(SERVICE_KEYS.ONRAMP_SERVICE);
         const order = await svc.createOrder({

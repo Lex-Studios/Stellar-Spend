@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { Button } from '@/components/ui/Button';
+import { logger } from '@/lib/logger';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -10,7 +12,8 @@ interface ErrorProps {
 
 export default function Error({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error('Root error:', error);
+    Sentry.captureException(error);
+    logger.error('root.error', { digest: error.digest }, error);
   }, [error]);
 
   return (

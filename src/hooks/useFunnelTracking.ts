@@ -57,10 +57,6 @@ export function useFunnelTracking() {
         timestamp: new Date(entry.ts).toISOString(),
       };
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Funnel]', payload);
-      }
-
       // Fire-and-forget to the analytics endpoint
       if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
         navigator.sendBeacon(

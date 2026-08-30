@@ -147,21 +147,31 @@ export class MerchantService {
     );
     const payout = rowToPayout(payoutResult.rows[0]);
 
-    for (const item of items) {
-      await db.query(
-        `INSERT INTO merchant_payout_items
-           (payout_id, beneficiary_institution, beneficiary_account, beneficiary_name, amount, currency)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          payout.id,
-          item.beneficiaryInstitution,
-          item.beneficiaryAccount,
-          item.beneficiaryName,
-          item.amount,
-          item.currency,
-        ],
+    // Single multi-row INSERT instead of one round trip per item — avoids
+    // N+1 query amplification for bulk payouts with many recipients.
+    const placeholders: string[] = [];
+    const values: unknown[] = [];
+    items.forEach((item, i) => {
+      const base = i * 6;
+      placeholders.push(
+        `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6})`,
       );
-    }
+      values.push(
+        payout.id,
+        item.beneficiaryInstitution,
+        item.beneficiaryAccount,
+        item.beneficiaryName,
+        item.amount,
+        item.currency,
+      );
+    });
+
+    await db.query(
+      `INSERT INTO merchant_payout_items
+         (payout_id, beneficiary_institution, beneficiary_account, beneficiary_name, amount, currency)
+       VALUES ${placeholders.join(', ')}`,
+      values,
+    );
 
     return payout;
   }
