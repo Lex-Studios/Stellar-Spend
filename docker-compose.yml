@@ -1,18 +1,25 @@
+# ── Shared anchors ────────────────────────────────────────────────────────────
+# Reused across multiple services to avoid repeating identical config blocks.
+x-app-build: &app-build
+  context: .
+  dockerfile: Dockerfile
+  cache_from:
+    - stellar-spend:latest
+
+x-db-env: &db-env
+  DATABASE_URL: postgresql://stellar:stellar@postgres:5432/stellar_spend
+
 services:
   # ── Application ─────────────────────────────────────────────────────────────
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      cache_from:
-        - stellar-spend:latest
+    build: *app-build
     image: stellar-spend:latest
     ports:
       - "3000:3000"
     env_file:
       - .env.local
     environment:
-      DATABASE_URL: postgresql://stellar:stellar@postgres:5432/stellar_spend
+      <<: *db-env
       REDIS_URL: redis://redis:6379
     depends_on:
       postgres:
@@ -89,12 +96,11 @@ services:
   # ── Database migrations ──────────────────────────────────────────────────────
   migrate:
     build:
-      context: .
-      dockerfile: Dockerfile
+      <<: *app-build
       target: builder
     command: npx ts-node scripts/migrate.ts
     environment:
-      DATABASE_URL: postgresql://stellar:stellar@postgres:5432/stellar_spend
+      <<: *db-env
     depends_on:
       postgres:
         condition: service_healthy
