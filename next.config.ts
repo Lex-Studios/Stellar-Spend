@@ -13,7 +13,12 @@ const bundleOptimization = {
   compress: true,
   productionBrowserSourceMaps: false,
   optimizeFonts: true,
-  optimizePackageImports: ['@stellar/stellar-sdk', '@allbridge/bridge-core-sdk', 'viem'],
+  optimizePackageImports: [
+    '@stellar/stellar-sdk',
+    '@allbridge/bridge-core-sdk',
+    'viem',
+    '@sentry/nextjs',
+  ],
 } as const;
 
 const securityHeaders = [
@@ -84,6 +89,7 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year
   },
   serverExternalPackages: [...externalServerPackages],
+  transpilePackages: ['@stellar-spend/shared'],
   assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || '',
   webpack: (config, { isServer }) => {
     // Tree shaking and code splitting optimization
@@ -119,6 +125,14 @@ const nextConfig: NextConfig = {
             },
           },
         },
+      };
+    }
+    // Bundle size performance hints (production only)
+    if (!isServer && process.env.NODE_ENV === 'production') {
+      config.performance = {
+        hints: 'warning',
+        maxEntrypointSize: 512 * 1024, // 512 KB
+        maxAssetSize: 512 * 1024,      // 512 KB
       };
     }
     return config;

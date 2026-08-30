@@ -30,9 +30,6 @@ export function useAnalytics(config: Partial<AnalyticsConfig> = {}) {
   const track = useCallback(
     (event: AnalyticsEvent) => {
       if (!finalConfig.enabled) {
-        if (finalConfig.debug) {
-          console.log('[Analytics Debug]', event);
-        }
         return;
       }
 

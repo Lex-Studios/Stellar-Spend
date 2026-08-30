@@ -1,6 +1,7 @@
 'use client';
 
 import { useI18n } from '@/lib/i18n';
+import { formatUsdcAmount } from '@/lib/format';
 
 export interface ClaimFormHeaderProps {
   coverage: number;
@@ -22,7 +23,7 @@ export function ClaimFormHeader({ coverage, onCancel }: ClaimFormHeaderProps) {
         <p className="text-xs text-[#777777] mt-1">
           {t('insurance.coverage')} up to{' '}
           <span className="text-[#4ade80] font-bold">
-            {coverage.toLocaleString('en-US', { minimumFractionDigits: 2 })} USDC
+            {formatUsdcAmount(coverage, { minimumFractionDigits: 2, maximumFractionDigits: 3 })} USDC
           </span>
         </p>
       </div>

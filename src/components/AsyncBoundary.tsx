@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
+import { Icon } from '@/components/Icon';
 
 export interface AsyncBoundaryProps {
   isLoading: boolean;
@@ -124,20 +125,7 @@ export interface ErrorStateProps {
 export function ListErrorState({ error, onRetry }: ErrorStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">
-      <svg
-        width="32"
-        height="32"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        className="mb-4 text-red-400"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
+      <Icon name="alert-circle" size={32} strokeWidth={1.5} className="mb-4 text-red-400" />
       <h3 className="text-sm font-semibold text-white mb-1">Failed to load</h3>
       <p className="text-xs text-[#777777] mb-4 text-center max-w-xs">{error}</p>
       {onRetry && (
