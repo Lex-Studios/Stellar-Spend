@@ -18,6 +18,10 @@ vi.mock('./src/lib/middleware/geo', () => ({
 vi.mock('./src/lib/middleware/auth', () => ({
   authMiddleware: vi.fn(() => null),
 }));
+vi.mock('./src/lib/middleware/public-api-rate-limit.middleware', () => ({
+  publicApiRateLimitMiddleware: vi.fn(() => Promise.resolve(null)),
+  addRateLimitHeaders: (res: any) => res,
+}));
 
 import { middleware } from './middleware';
 import { geoMiddleware } from './src/lib/middleware/geo';
@@ -28,35 +32,35 @@ function makeRequest(path: string, headers: Record<string, string> = {}) {
 }
 
 describe('middleware composition', () => {
-  it('chains middleware in correct order: geo → auth → security → logging', () => {
+  it('chains middleware in correct order: geo → auth → security → logging', async () => {
     const req = makeRequest('/api/v1/transactions');
-    const res = middleware(req);
+    const res = await middleware(req);
     expect(res.headers.get('X-Request-Id')).toBeTruthy();
   });
 
-  it('includes request ID in response headers', () => {
+  it('includes request ID in response headers', async () => {
     const req = makeRequest('/api/v1/test');
-    const res = middleware(req);
+    const res = await middleware(req);
     expect(res.headers.has('X-Request-Id')).toBe(true);
   });
 
-  it('short-circuits on a geo guard response without running auth', () => {
+  it('short-circuits on a geo guard response without running auth', async () => {
     const blocked = NextResponse.json({ error: 'geo blocked' }, { status: 451 });
     (geoMiddleware as any).mockReturnValueOnce(blocked);
 
     const req = makeRequest('/api/v1/transactions');
-    const res = middleware(req);
+    const res = await middleware(req);
 
     expect(res.status).toBe(451);
     expect(authMiddleware).not.toHaveBeenCalled();
   });
 
-  it('still applies security headers, request ID, and logging to a short-circuited response', () => {
+  it('still applies security headers, request ID, and logging to a short-circuited response', async () => {
     const blocked = NextResponse.json({ error: 'blocked' }, { status: 403 });
     (authMiddleware as any).mockReturnValueOnce(blocked);
 
     const req = makeRequest('/api/v1/transactions');
-    const res = middleware(req);
+    const res = await middleware(req);
 
     expect(res.status).toBe(403);
     expect(res.headers.get('x-security')).toBe('applied');

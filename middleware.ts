@@ -7,6 +7,10 @@ import {
   compressionMiddleware,
   addCompressionHeaders,
 } from './src/lib/middleware/compression.middleware';
+import {
+  publicApiRateLimitMiddleware,
+  addRateLimitHeaders,
+} from './src/lib/middleware/public-api-rate-limit.middleware';
 import { composeGuards, composeTransforms } from './src/lib/middleware/pipeline';
 
 // Guards run in order; the first one to return a response short-circuits
@@ -18,10 +22,11 @@ const runGuards = composeGuards(geoMiddleware, authMiddleware);
 const runTransforms = composeTransforms(
   (response, request) => attachGeoHeaders(response, request),
   (response, request) => addCompressionHeaders(response, new URL(request.url).pathname),
+  (response, request) => addRateLimitHeaders(response, request),
   (response) => addSecurityHeaders(response),
 );
 
-export function middleware(request: NextRequest): NextResponse {
+export async function middleware(request: NextRequest): Promise<NextResponse> {
   const start = Date.now();
 
   // Resolve the correlation ID once, up front, so the value logged here is
@@ -39,7 +44,11 @@ export function middleware(request: NextRequest): NextResponse {
     modifiedRequest.headers.set('x-request-id', requestId);
   }
 
-  const guardResponse = runGuards(modifiedRequest);
+  // Check rate limiting first (issue #967), ahead of the geo/auth guard chain.
+  const isAuthenticated = !!request.headers.get('x-account-id');
+  const rateLimitResponse = await publicApiRateLimitMiddleware(modifiedRequest, isAuthenticated);
+
+  const guardResponse = rateLimitResponse ?? runGuards(modifiedRequest);
   let response =
     guardResponse ?? NextResponse.next({ request: { headers: modifiedRequest.headers } });
 
