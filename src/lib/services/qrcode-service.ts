@@ -1,4 +1,4 @@
-import { QRCodeData, QRCodeOptions, GeneratedQRCode } from '@shared/types/qrcode';
+import { QRCodeData, QRCodeOptions, GeneratedQRCode } from '@stellar-spend/shared';
 
 export class QRCodeService {
   /**
