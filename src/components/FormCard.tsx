@@ -21,6 +21,7 @@ import { ResolvedField } from './form-card/ResolvedField';
 import { PayoutBox } from './form-card/PayoutBox';
 import { FeeMethodSelector } from './form-card/FeeMethodSelector';
 import { useFormCardState } from '@/hooks/useFormCardState';
+import { bpClasses } from '@/lib/breakpoints';
 
 export * from './form-card/types';
 
@@ -129,7 +130,7 @@ export function FormCard(props: FormCardProps) {
           onChange={handleFeeMethodChange}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 ${bpClasses.gridTwoCols} gap-4`}>
           <SelectField
             label="Currency"
             id="currency"
