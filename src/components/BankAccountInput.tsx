@@ -78,6 +78,7 @@ export function BankField({ type, value, onChange, label, placeholder, disabled 
           disabled={disabled}
           aria-invalid={showError}
           aria-describedby={showError ? `bank-field-${type}-error` : undefined}
+          data-testid={type === 'account' ? 'account-number-input' : `bank-field-${type}-input`}
           style={{
             flex: 1,
             background: 'none',

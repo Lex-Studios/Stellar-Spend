@@ -63,6 +63,7 @@ export function HistoryTable({
       scope="col"
       className={`${headerClass} cursor-pointer select-none`}
       onClick={() => onToggleSort(field)}
+      data-testid={`sort-${field}`}
       aria-sort={sortField === field ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
     >
       {label}

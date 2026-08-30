@@ -108,17 +108,17 @@ export function createTracingSDK(): NodeSDK {
 export function initializeTracing(): NodeSDK | undefined {
   // Skip tracing if disabled
   if (process.env.OTEL_DISABLED === 'true') {
-    console.log('OpenTelemetry tracing is disabled');
+    process.stdout.write(JSON.stringify({ level: 'info', event: 'otel.disabled', timestamp: new Date().toISOString(), service: 'stellar-spend' }) + '\n');
     return undefined;
   }
 
   try {
     const sdk = createTracingSDK();
     sdk.start();
-    console.log('OpenTelemetry tracing initialized');
+    process.stdout.write(JSON.stringify({ level: 'info', event: 'otel.initialized', timestamp: new Date().toISOString(), service: 'stellar-spend' }) + '\n');
     return sdk;
   } catch (error) {
-    console.error('Failed to initialize OpenTelemetry:', error);
+    process.stdout.write(JSON.stringify({ level: 'error', event: 'otel.init.failed', timestamp: new Date().toISOString(), service: 'stellar-spend', error: error instanceof Error ? { message: error.message, stack: error.stack } : String(error) }) + '\n');
     return undefined;
   }
 }
@@ -129,9 +129,9 @@ export function initializeTracing(): NodeSDK | undefined {
 export async function shutdownTracing(sdk: NodeSDK): Promise<void> {
   try {
     await sdk.shutdown();
-    console.log('OpenTelemetry tracing shut down successfully');
+    process.stdout.write(JSON.stringify({ level: 'info', event: 'otel.shutdown', timestamp: new Date().toISOString(), service: 'stellar-spend' }) + '\n');
   } catch (error) {
-    console.error('Error shutting down OpenTelemetry:', error);
+    process.stdout.write(JSON.stringify({ level: 'error', event: 'otel.shutdown.failed', timestamp: new Date().toISOString(), service: 'stellar-spend', error: error instanceof Error ? { message: error.message, stack: error.stack } : String(error) }) + '\n');
   }
 }
 

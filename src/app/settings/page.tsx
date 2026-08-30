@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import { Suspense, useState, useEffect } from 'react';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/hooks/useTheme';
 import { useSyncSettings } from '@/hooks/useSyncSettings';
@@ -17,7 +16,33 @@ import {
   type NotificationPrefs,
 } from './components';
 
-export default function SettingsPage() {
+// ---------------------------------------------------------------------------
+// Loading skeleton — shown while SettingsContent hydrates
+// ---------------------------------------------------------------------------
+function SettingsSkeleton() {
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-8 animate-pulse">
+      <div className="flex flex-col md:flex-row gap-8">
+        <div className="w-48 space-y-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-10 bg-[#1a1a1a] rounded border border-[#222]" />
+          ))}
+        </div>
+        <div className="flex-1 min-h-[600px] bg-[#0a0a0a] border border-[#222] rounded p-8 space-y-6">
+          <div className="h-6 w-40 bg-[#1a1a1a] rounded" />
+          <div className="h-4 w-full bg-[#1a1a1a] rounded" />
+          <div className="h-4 w-3/4 bg-[#1a1a1a] rounded" />
+          <div className="h-10 w-32 bg-[#1a1a1a] rounded" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Actual settings UI — separated so Suspense boundary wraps it cleanly
+// ---------------------------------------------------------------------------
+function SettingsContent() {
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
   const [isSaved, setIsSaved] = useState(false);
   const [notifications, setNotifications] = useState<NotificationPrefs>({
@@ -77,7 +102,10 @@ export default function SettingsPage() {
         />
 
         {/* Main Content Area */}
-        <main id="main-content" className="flex-1 min-h-[600px] border border-[#222] bg-[#0a0a0a] p-8 shadow-2xl relative">
+        <main
+          id="main-content"
+          className="flex-1 min-h-[600px] border border-[#222] bg-[#0a0a0a] p-8 shadow-2xl relative"
+        >
           {isSaved && (
             <div className="absolute top-4 right-8 bg-green-500 text-[#0a0a0a] px-4 py-2 text-[10px] font-black uppercase tracking-widest animate-in slide-in-from-top-4 duration-300">
               {t('settings.saved')}
@@ -112,5 +140,16 @@ export default function SettingsPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page — wraps SettingsContent in a Suspense boundary (#954)
+// ---------------------------------------------------------------------------
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={<SettingsSkeleton />}>
+      <SettingsContent />
+    </Suspense>
   );
 }
