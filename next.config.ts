@@ -13,7 +13,12 @@ const bundleOptimization = {
   compress: true,
   productionBrowserSourceMaps: false,
   optimizeFonts: true,
-  optimizePackageImports: ['@stellar/stellar-sdk', '@allbridge/bridge-core-sdk', 'viem'],
+  optimizePackageImports: [
+    '@stellar/stellar-sdk',
+    '@allbridge/bridge-core-sdk',
+    'viem',
+    '@sentry/nextjs',
+  ],
 } as const;
 
 const securityHeaders = [
@@ -120,6 +125,14 @@ const nextConfig: NextConfig = {
             },
           },
         },
+      };
+    }
+    // Bundle size performance hints (production only)
+    if (!isServer && process.env.NODE_ENV === 'production') {
+      config.performance = {
+        hints: 'warning',
+        maxEntrypointSize: 512 * 1024, // 512 KB
+        maxAssetSize: 512 * 1024,      // 512 KB
       };
     }
     return config;
