@@ -20,6 +20,11 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+interface PgError extends Error {
+  code?: string;
+  constraint?: string;
+}
+
 // ── Mock db/client before importing the module under test ─────────────────────
 
 const poolQueryMock = vi.fn();
@@ -132,9 +137,9 @@ describe('#852 — MerchantService unit tests', () => {
       await service.createMerchant('user-dup', 'First Biz', 'first@biz.com');
 
       // Second call simulates the DB unique-constraint violation
-      const pgError: any = new Error(
+      const pgError = new Error(
         'duplicate key value violates unique constraint "merchant_accounts_user_id_idx"',
-      );
+      ) as PgError;
       pgError.code = '23505';
       pgError.constraint = 'merchant_accounts_user_id_idx';
       poolQueryMock.mockRejectedValueOnce(pgError);
@@ -148,7 +153,7 @@ describe('#852 — MerchantService unit tests', () => {
       poolQueryMock.mockResolvedValueOnce({ rows: [makeMerchantRow()] });
       await service.createMerchant('user-email-1', 'Biz A', 'shared@email.com');
 
-      const pgError: any = new Error('duplicate key value violates unique constraint');
+      const pgError = new Error('duplicate key value violates unique constraint') as PgError;
       pgError.code = '23505';
       poolQueryMock.mockRejectedValueOnce(pgError);
 

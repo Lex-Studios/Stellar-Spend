@@ -15,14 +15,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useAnalytics } from '../useAnalytics';
-
-const ORIGINAL_ENV = process.env.NODE_ENV;
+import { logger } from '@/lib/logger';
 
 describe('useAnalytics', () => {
   const mockSendBeacon = vi.fn().mockReturnValue(true);
   const mockFetch = vi.fn().mockResolvedValue({ ok: true });
-  const mockConsoleLog = vi.fn();
-  const mockConsoleError = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -36,9 +33,9 @@ describe('useAnalytics', () => {
     // Mock fetch
     global.fetch = mockFetch as unknown as typeof fetch;
 
-    // Mock console
-    vi.spyOn(console, 'log').mockImplementation(mockConsoleLog);
-    vi.spyOn(console, 'error').mockImplementation(mockConsoleError);
+    // Mock logger
+    vi.spyOn(logger, 'debug').mockImplementation(() => {});
+    vi.spyOn(logger, 'error').mockImplementation(() => {});
 
     // Mock window.location
     Object.defineProperty(window, 'location', {
@@ -67,15 +64,15 @@ describe('useAnalytics', () => {
 
   it('logs event to console in debug mode when disabled', () => {
     renderHook(() => useAnalytics({ enabled: false, debug: true }));
-    expect(console.log).toHaveBeenCalledWith(
-      '[Analytics Debug]',
-      expect.objectContaining({ category: 'Navigation', action: 'page_view' }),
+    expect(logger.debug).toHaveBeenCalledWith(
+      'analytics.debug',
+      expect.objectContaining({ event: expect.objectContaining({ category: 'Navigation', action: 'page_view' }) }),
     );
   });
 
   it('does not log to console when debug is false', () => {
     renderHook(() => useAnalytics({ enabled: false, debug: false }));
-    expect(console.log).not.toHaveBeenCalled();
+    expect(logger.debug).not.toHaveBeenCalled();
   });
 
   // ── Enabled mode with sendBeacon ───────────────────────────────────────────

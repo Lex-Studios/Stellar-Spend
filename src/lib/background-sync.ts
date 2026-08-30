@@ -3,7 +3,6 @@ import { logger } from '@/lib/logger';
 
 import { useEffect, useState, useCallback } from 'react';
 import type { Transaction } from './transaction-storage';
-import { SyncStorage } from './sync-storage';
 import { syncTransactionHistory, getSyncStatus } from './transaction-sync-client';
 
 interface FailedTransaction extends Transaction {
@@ -13,7 +12,6 @@ interface FailedTransaction extends Transaction {
 
 const DB_NAME = 'stellar-spend';
 const STORE_NAME = 'failed-transactions';
-const SYNC_STORE_NAME = 'transaction-sync-queue';
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {

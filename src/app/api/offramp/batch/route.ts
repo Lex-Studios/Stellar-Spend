@@ -12,12 +12,24 @@ import {
 } from '@/lib/services';
 import { withIdempotency } from '@/lib/idempotency';
 
+interface BatchTransactionInput {
+  amount?: number | string;
+  [key: string]: unknown;
+}
+
+interface BatchRequestBody {
+  action?: string;
+  batchId?: string;
+  userId?: string;
+  transactions?: BatchTransactionInput[];
+}
+
 export async function POST(req: NextRequest) {
   return withIdempotency(
     req,
     async () => {
       try {
-        const body = await req.json();
+        const body = (await req.json()) as BatchRequestBody;
         const { action } = body;
 
         if (action === 'cancel') {
@@ -37,15 +49,18 @@ export async function POST(req: NextRequest) {
         }
 
         const { userId, transactions } = body;
-        const totalAmount = transactions.reduce((sum: number, t: any) => sum + (t.amount ?? 0), 0);
-        const batch = await createBatch(userId, totalAmount);
+        const totalAmount = (transactions ?? []).reduce(
+          (sum: number, t: BatchTransactionInput) => sum + (Number(t.amount) || 0),
+          0,
+        );
+        const batch = await createBatch(userId as string, totalAmount);
 
-        for (const tx of transactions) {
+        for (const tx of transactions ?? []) {
           await addTransactionToBatch(batch.id, tx);
         }
 
         return NextResponse.json({ batchId: batch.id, status: 'created' });
-      } catch (error) {
+      } catch (_error) {
         return ErrorHandler.handle(
           new ApiError(ErrorType.SERVER_ERROR, 'Failed to process batch request'),
         );

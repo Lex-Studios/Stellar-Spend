@@ -4,7 +4,6 @@ import {
   getNextTier,
   volumeToNextTier,
   calculatePoints,
-  TIERS,
   DEFAULT_PROGRAM_CONFIG,
   type LoyaltyProfile,
 } from '../loyalty';

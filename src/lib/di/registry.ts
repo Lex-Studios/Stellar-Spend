@@ -3,7 +3,7 @@
  * All services should be registered here for consistent DI wiring.
  */
 
-import { DIContainer, ServiceLifetime } from './container';
+import { DIContainer } from './container';
 import type {
   IQuoteService,
   IBridgeService,

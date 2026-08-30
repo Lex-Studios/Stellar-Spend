@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import type { NotificationCenterEvent } from '@/hooks/useNotificationCenter';
 
 export interface NotificationCenterProps {

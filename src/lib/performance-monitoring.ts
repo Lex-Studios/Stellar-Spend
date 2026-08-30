@@ -2,6 +2,7 @@
  * Performance Monitoring - SLO Tracking and Alerting
  */
 
+import { logger } from '@/lib/logger';
 import { sloConfig, SLO } from './slo-config';
 
 interface MetricPoint {
@@ -116,7 +117,16 @@ class PerformanceMonitor {
   Runbook: ${slo.alerting.runbook_url}
 `;
 
-    console.error(message);
+    logger.error('slo.alert', {
+      severity,
+      slo: slo.name,
+      description: slo.description,
+      objective: slo.objective,
+      currentValue: status.current_value,
+      errorBudgetRemaining: status.error_budget_remaining,
+      burnRate: status.burn_rate,
+      runbook: slo.alerting.runbook_url,
+    });
 
     // Send to alerting system
     if (typeof window !== 'undefined' && window.fetch) {
@@ -130,7 +140,7 @@ class PerformanceMonitor {
           message,
           timestamp: new Date().toISOString(),
         }),
-      }).catch(console.error);
+      }).catch((err) => logger.error('slo.alert.send_failed', {}, err));
     }
   }
 

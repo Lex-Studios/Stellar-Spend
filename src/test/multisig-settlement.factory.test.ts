@@ -17,7 +17,6 @@ import {
   makeMultisigProposals,
   makeMultisigSignatures,
   type MultisigProposal,
-  type MultisigSignature,
 } from '@/test/factories';
 
 describe('MultisigSettlement Factory — Proposals', () => {
@@ -195,7 +194,7 @@ describe('MultisigSettlement Factory — Composed Scenarios', () => {
   });
 
   it('creates a partially signed proposal with 5 signers', () => {
-    const { proposal, signatures } = partiallySignedMultisigProposal(5);
+    const { signatures } = partiallySignedMultisigProposal(5);
 
     expect(signatures.length).toBe(5);
     const uniqueSigners = new Set(signatures.map((s) => s.signer));
@@ -275,11 +274,11 @@ describe('MultisigSettlement Factory — Edge Cases', () => {
 
 describe('MultisigSettlement Factory — Seeding Consistency', () => {
   it('produces identical results with same seed', () => {
-    const seed1 = seedWith(42);
+    seedWith(42);
     const proposal1 = makeMultisigProposal();
     const signature1 = makeMultisigSignature(proposal1.id);
 
-    const seed2 = seedWith(42);
+    seedWith(42);
     const proposal2 = makeMultisigProposal();
     const signature2 = makeMultisigSignature(proposal2.id);
 
@@ -288,10 +287,10 @@ describe('MultisigSettlement Factory — Seeding Consistency', () => {
   });
 
   it('produces different results with different seeds', () => {
-    const proposal1 = seedWith(1) as unknown;
+    seedWith(1);
     const p1 = makeMultisigProposal();
 
-    const proposal2 = seedWith(2) as unknown;
+    seedWith(2);
     const p2 = makeMultisigProposal();
 
     // IDs should differ because they're based on counters

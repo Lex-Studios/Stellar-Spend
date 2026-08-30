@@ -5,6 +5,7 @@ import {
   updateSubscription,
   deleteSubscription,
 } from '@/lib/webhook';
+import type { WebhookSubscription } from '@/lib/webhook';
 import { requireApiKeyAdmin } from '@/app/api/api-keys/_utils';
 import { isSupportedSchemaVersion, SUPPORTED_SCHEMA_VERSIONS } from '@/lib/webhook';
 
@@ -61,7 +62,20 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       updates.schemaVersion = requested;
     }
 
-    const updated = await updateSubscription(id, updates as any);
+    const updated = await updateSubscription(
+      id,
+      updates as Partial<
+        Pick<
+          WebhookSubscription,
+          | 'endpointUrl'
+          | 'events'
+          | 'status'
+          | 'rateLimitMaxPerMinute'
+          | 'description'
+          | 'schemaVersion'
+        >
+      >,
+    );
     if (!updated) return ErrorHandler.notFound('Subscription');
 
     const { signingSecret, ...safe } = updated;

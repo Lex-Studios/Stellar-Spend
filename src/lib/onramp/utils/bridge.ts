@@ -16,7 +16,7 @@ export interface BridgeOnrampResponse {
 }
 
 export async function bridgeFromBaseToStellar(
-  request: BridgeOnrampRequest,
+  _request: BridgeOnrampRequest,
 ): Promise<BridgeOnrampResponse> {
   const sorobanRpc = env.server.STELLAR_SOROBAN_RPC_URL;
   if (!sorobanRpc) {

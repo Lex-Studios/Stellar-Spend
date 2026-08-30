@@ -14,7 +14,7 @@ const TEST_CONFIG: PollingConfig = {
 
 // The polling manager uses AbortSignal internally, so we need to mock fetch
 const mockFetch = vi.fn();
-global.fetch = mockFetch as any;
+global.fetch = mockFetch as unknown as typeof fetch;
 
 function createSuccessResponse(data: unknown) {
   return {

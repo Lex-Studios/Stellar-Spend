@@ -1,6 +1,6 @@
 import { pool } from './db/client';
 import { logger } from './logger';
-import { withTransaction, executeAtomic } from './db/transaction';
+import { executeAtomic } from './db/transaction';
 import crypto from 'crypto';
 
 const LOG_INTEGRITY_KEY = process.env.AUDIT_LOG_INTEGRITY_KEY ?? 'default-dev-key-change-in-prod';

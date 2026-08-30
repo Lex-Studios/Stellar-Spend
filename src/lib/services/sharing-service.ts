@@ -26,20 +26,20 @@ export class SharingService {
     return share;
   }
 
-  async getShareLink(shareToken: string): Promise<ShareableTransaction | null> {
+  async getShareLink(_shareToken: string): Promise<ShareableTransaction | null> {
     // TODO: Fetch from database
     return null;
   }
 
-  async incrementViewCount(shareToken: string): Promise<void> {
+  async incrementViewCount(_shareToken: string): Promise<void> {
     // TODO: Update view count in database
   }
 
-  async revokeShareLink(shareToken: string): Promise<void> {
+  async revokeShareLink(_shareToken: string): Promise<void> {
     // TODO: Delete from database
   }
 
-  async getUserShareLinks(userAddress: string): Promise<ShareableTransaction[]> {
+  async getUserShareLinks(_userAddress: string): Promise<ShareableTransaction[]> {
     // TODO: Fetch from database
     return [];
   }

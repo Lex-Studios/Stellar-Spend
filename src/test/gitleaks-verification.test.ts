@@ -42,8 +42,9 @@ function runGitleaks(sourcePath: string): number {
   try {
     execSync(cmd, { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'] });
     return 0;
-  } catch (error: any) {
-    return error.status ?? 1;
+  } catch (error: unknown) {
+    const err = error as { status?: number };
+    return err.status ?? 1;
   }
 }
 

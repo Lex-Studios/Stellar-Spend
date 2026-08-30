@@ -5,6 +5,7 @@ import {
   setFlagOverrides,
   clearFlagOverrides,
 } from '@/lib/feature-flags';
+import type { FeatureFlags } from '@/lib/feature-flags';
 import { requireApiKeyAdmin } from '@/app/api/api-keys/_utils';
 
 export async function GET(request: NextRequest) {
@@ -25,7 +26,7 @@ export async function PUT(request: NextRequest) {
   const unauthorized = requireApiKeyAdmin(request);
   if (unauthorized) return unauthorized;
 
-  let body: Record<string, unknown>;
+  let body: Partial<FeatureFlags>;
   try {
     body = await request.json();
   } catch {
@@ -33,7 +34,7 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    await setFlagOverrides(body as any);
+    await setFlagOverrides(body);
     return NextResponse.json({ data: { message: 'Feature flag overrides applied' } });
   } catch (error) {
     return ErrorHandler.serverError(error);

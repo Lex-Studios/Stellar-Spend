@@ -1,5 +1,5 @@
 import { disputeRepository } from './dispute-repository';
-import type { DisputeStatus } from '@shared/types/disputes';
+import type { Dispute, DisputeStatus } from '@shared/types/disputes';
 
 export interface DisputeRecord {
   id: string;
@@ -15,7 +15,7 @@ export interface DisputeRecord {
   evidence: string[];
 }
 
-function toRecord(dispute: any): DisputeRecord {
+function toRecord(dispute: Dispute): DisputeRecord {
   return {
     id: dispute.id,
     transactionId: dispute.transactionId,

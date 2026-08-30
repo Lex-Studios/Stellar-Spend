@@ -29,7 +29,6 @@ export interface InsuranceAnalytics {
   averagePremium: number;
 }
 
-const PROVIDERS = ['default', 'premium', 'enterprise'];
 const BASE_PREMIUM_RATE = 0.005; // 0.5%
 const HIGH_VALUE_THRESHOLD = 10000;
 const HIGH_VALUE_RATE = 0.003; // 0.3% for high-value (bulk discount)

@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger';
-import { Account, Keypair, Networks, Operation, TransactionBuilder } from 'stellar-sdk';
+import { Account, Networks, Operation, TransactionBuilder, xdr } from 'stellar-sdk';
 
 interface ResourceFeeEstimate {
   cpuInstructions: number;
@@ -51,7 +51,6 @@ export class ResourceFeeEstimator {
     args: unknown[],
     sourceAccount: Account,
   ): Promise<SimulationResult> {
-    const keypair = Keypair.random();
     const tx = new TransactionBuilder(sourceAccount, {
       fee: BASE_FEE_STROOPS,
       networkPassphrase: Networks.PUBLIC_NETWORK,
@@ -60,7 +59,7 @@ export class ResourceFeeEstimator {
         Operation.invokeContractFunction({
           contract: contractId,
           method: method,
-          parameters: args as any[],
+          parameters: args as xdr.ScVal[],
         }),
       )
       .setTimeout(30)

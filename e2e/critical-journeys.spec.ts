@@ -3,10 +3,16 @@ import AxeBuilder from '@axe-core/playwright';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 
+interface FreighterMock {
+  isConnected: () => Promise<boolean>;
+  getPublicKey: () => Promise<string>;
+  signTransaction: (xdr: string) => Promise<string>;
+}
+
 test.describe('Critical Journeys', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
-      (window as any).freighter = {
+      (window as unknown as { freighter: FreighterMock }).freighter = {
         isConnected: async () => true,
         getPublicKey: async () => 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
         signTransaction: async (xdr: string) => xdr,
@@ -64,7 +70,7 @@ test.describe('Critical Journeys', () => {
   test.describe('failure scenarios', () => {
     test('handles rejected wallet sign', async ({ page }) => {
       await page.addInitScript(() => {
-        (window as any).freighter = {
+        (window as unknown as { freighter: FreighterMock }).freighter = {
           isConnected: async () => true,
           getPublicKey: async () => 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
           signTransaction: async () => {

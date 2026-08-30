@@ -30,7 +30,7 @@ export class OnrampProviderRegistry {
 
     const byCapability = Array.from(this.capabilities.entries())
       .filter(
-        ([name, caps]) =>
+        ([, caps]) =>
           caps.supportedFiatCurrencies.includes(fiatCurrency) &&
           caps.supportedDestinationTokens.includes(destinationToken),
       )

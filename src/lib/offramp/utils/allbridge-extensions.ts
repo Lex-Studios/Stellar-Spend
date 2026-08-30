@@ -6,6 +6,7 @@
  */
 
 import type { BridgeStatus } from '../types';
+import type { AllbridgeCoreSdk, TokenWithChainDetails } from '@allbridge/bridge-core-sdk';
 
 /**
  * Get gas fee for bridge transaction, preferring stablecoin payment method
@@ -16,9 +17,9 @@ import type { BridgeStatus } from '../types';
  * @returns Object with gasAmount and feeTokenAmount (unused fee is "0")
  */
 export async function getAllbridgeGasFee(
-  sdk: any,
-  sourceToken: any,
-  destinationToken: any,
+  sdk: AllbridgeCoreSdk,
+  sourceToken: TokenWithChainDetails,
+  destinationToken: TokenWithChainDetails,
 ): Promise<{ gasAmount: string; feeTokenAmount: string }> {
   const { Messenger, FeePaymentMethod } = await import('@allbridge/bridge-core-sdk');
 
@@ -28,14 +29,14 @@ export async function getAllbridgeGasFee(
   if (feeOptions[FeePaymentMethod.WITH_STABLECOIN]) {
     return {
       gasAmount: '0',
-      feeTokenAmount: feeOptions[FeePaymentMethod.WITH_STABLECOIN],
+      feeTokenAmount: feeOptions[FeePaymentMethod.WITH_STABLECOIN] as unknown as string,
     };
   }
 
   // Fall back to native currency fee
   if (feeOptions[FeePaymentMethod.WITH_NATIVE_CURRENCY]) {
     return {
-      gasAmount: feeOptions[FeePaymentMethod.WITH_NATIVE_CURRENCY],
+      gasAmount: feeOptions[FeePaymentMethod.WITH_NATIVE_CURRENCY] as unknown as string,
       feeTokenAmount: '0',
     };
   }
@@ -56,9 +57,9 @@ export async function getAllbridgeGasFee(
  * @returns Object with both fee options in int and float formats
  */
 export async function getAllbridgeGasFeeOptions(
-  sdk: any,
-  sourceToken: any,
-  destinationToken: any,
+  sdk: AllbridgeCoreSdk,
+  sourceToken: TokenWithChainDetails,
+  destinationToken: TokenWithChainDetails,
 ): Promise<{
   native: { int: string; float: string };
   stablecoin: { int: string; float: string };
@@ -92,7 +93,7 @@ export async function getAllbridgeGasFeeOptions(
         float: stablecoinFloat,
       },
     };
-  } catch (error) {
+  } catch (_error) {
     // Return default values on error
     return {
       native: { int: '0', float: '0' },
@@ -138,12 +139,15 @@ export function getBridgeFeeForMethod(
  * @returns Object with status, txHash, and optional receiveAmount
  */
 export async function getAllbridgeTransferStatus(
-  sdk: any,
+  sdk: AllbridgeCoreSdk,
   chainSymbol: string,
   txHash: string,
 ): Promise<{ status: BridgeStatus; txHash: string; receiveAmount?: string }> {
   try {
-    const transferStatus = await sdk.getTransferStatus(chainSymbol, txHash);
+    const transferStatus = (await sdk.getTransferStatus(
+      chainSymbol,
+      txHash,
+    )) as { status?: string; receiveAmount?: string } | undefined;
 
     // Map Allbridge status strings to BridgeStatus type
     let status: BridgeStatus = 'pending';
@@ -168,7 +172,7 @@ export async function getAllbridgeTransferStatus(
       txHash,
       receiveAmount: transferStatus?.receiveAmount,
     };
-  } catch (error) {
+  } catch (_error) {
     // On error, return pending status (don't throw)
     return {
       status: 'pending',

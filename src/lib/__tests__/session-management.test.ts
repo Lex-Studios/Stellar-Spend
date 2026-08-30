@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 
 // Mock database pool & logger before importing service
 vi.mock('../db/client', () => ({
@@ -17,6 +17,8 @@ vi.mock('../logger', () => ({
 
 import { pool } from '../db/client';
 import { SessionManagementService } from '../session-management';
+
+const queryMock = pool.query as unknown as Mock;
 
 describe('Session Management Service - Expiry & Revocation Workflow', () => {
   let sessionService: SessionManagementService;
@@ -37,7 +39,7 @@ describe('Session Management Service - Expiry & Revocation Workflow', () => {
       const now = new Date('2026-07-28T12:00:00.000Z').getTime();
       vi.setSystemTime(now);
 
-      (pool.query as any)
+      queryMock
         .mockResolvedValueOnce({ rows: [] }) // _enforceConcurrentLimit getUserSessions
         .mockResolvedValueOnce({ rowCount: 1 }); // INSERT session
 
@@ -90,7 +92,7 @@ describe('Session Management Service - Expiry & Revocation Workflow', () => {
         activity_count: 2,
       };
 
-      (pool.query as any)
+      queryMock
         .mockResolvedValueOnce({ rows: [mockSessionRow] }) // SELECT session
         .mockResolvedValueOnce({ rowCount: 1 }); // UPDATE last_activity_at
 
@@ -119,7 +121,7 @@ describe('Session Management Service - Expiry & Revocation Workflow', () => {
         expires_at: expiresAt,
       };
 
-      (pool.query as any)
+      queryMock
         .mockResolvedValueOnce({ rows: [expiredSessionRow] }) // SELECT token
         .mockResolvedValueOnce({ rows: [{ user_address: mockUserAddress }] }) // revokeSession SELECT
         .mockResolvedValueOnce({ rowCount: 1 }) // UPDATE is_active = false
@@ -144,7 +146,7 @@ describe('Session Management Service - Expiry & Revocation Workflow', () => {
       const now = new Date('2026-07-28T13:00:00.000Z').getTime();
       vi.setSystemTime(now);
 
-      (pool.query as any).mockResolvedValueOnce({ rowCount: 4 });
+      queryMock.mockResolvedValueOnce({ rowCount: 4 });
 
       const cleanedCount = await sessionService.cleanupExpiredSessions();
 
@@ -161,7 +163,7 @@ describe('Session Management Service - Expiry & Revocation Workflow', () => {
       const now = new Date('2026-07-28T12:15:00.000Z').getTime();
       vi.setSystemTime(now);
 
-      (pool.query as any)
+      queryMock
         .mockResolvedValueOnce({ rows: [{ user_address: mockUserAddress }] }) // SELECT user_address
         .mockResolvedValueOnce({ rowCount: 1 }) // UPDATE is_active = false
         .mockResolvedValueOnce({ rowCount: 1 }); // INSERT session_revocations
@@ -194,7 +196,7 @@ describe('Session Management Service - Expiry & Revocation Workflow', () => {
         { id: 'sess-device-tablet' },
       ];
 
-      (pool.query as any)
+      queryMock
         .mockResolvedValueOnce({ rows: activeUserSessions }) // SELECT user sessions
         // Revoke 1
         .mockResolvedValueOnce({ rows: [{ user_address: mockUserAddress }] })
@@ -247,7 +249,7 @@ describe('Session Management Service - Expiry & Revocation Workflow', () => {
         is_active: true,
       };
 
-      (pool.query as any)
+      queryMock
         .mockResolvedValueOnce({ rows: [refreshRow] }) // SELECT refresh token
         .mockResolvedValueOnce({ rowCount: 1 }); // UPDATE expires_at, refreshed_at
 

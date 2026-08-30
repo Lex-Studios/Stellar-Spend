@@ -3,7 +3,6 @@ import {
   calculateBridgeFee,
   calculateNetworkFee,
   calculatePaycrestFee,
-  calculateTotalFees,
   calculateAllFees,
 } from '../fee-calculation';
 import {

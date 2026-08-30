@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { KYCLimitService, type LimitTier } from '@/lib/kyc-limits';
+import { KYCLimitService } from '@/lib/kyc-limits';
 import {
   SandboxKycProvider,
   VERIFICATION_LEVEL_MAP,
   getRequiredVerificationLevel,
-  type VerificationLevel,
 } from '@/lib/kyc-provider';
 
 function createLocalStorageMock() {
@@ -35,8 +34,12 @@ describe('KYC Tier Enforcement', () => {
 
   beforeEach(() => {
     if (typeof globalThis !== 'undefined') {
-      (globalThis as any).window = {};
-      (globalThis as any).localStorage = createLocalStorageMock();
+      const g = globalThis as unknown as {
+        window: Record<string, unknown>;
+        localStorage: ReturnType<typeof createLocalStorageMock>;
+      };
+      g.window = {};
+      g.localStorage = createLocalStorageMock();
     }
     // Start fresh
     KYCLimitService.initializeUserLimits(userId, 'tier1');

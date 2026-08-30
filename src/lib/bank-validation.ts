@@ -1,4 +1,4 @@
-import { getCorridorValidators, getCorridorConfig } from './corridor-config';
+import { getCorridorConfig } from './corridor-config';
 
 /**
  * Bank account validation utilities.

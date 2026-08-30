@@ -2,6 +2,7 @@
 
 import { useCallback, useRef } from 'react';
 import type { FunnelStep } from '@/lib/funnel';
+import { logger } from '@/lib/logger';
 
 const STORAGE_KEY = 'funnel_session';
 
@@ -58,7 +59,7 @@ export function useFunnelTracking() {
       };
 
       if (process.env.NODE_ENV === 'development') {
-        console.log('[Funnel]', payload);
+        logger.debug('funnel.step', { payload });
       }
 
       // Fire-and-forget to the analytics endpoint

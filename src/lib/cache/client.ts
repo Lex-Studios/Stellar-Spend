@@ -70,7 +70,6 @@ export function getCacheClient(): CacheClient {
 
   // Dynamically require ioredis to avoid bundling issues
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const Redis = require('ioredis');
     const redis = new Redis(redisUrl, {
       maxRetriesPerRequest: 3,

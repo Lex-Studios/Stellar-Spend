@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { apiGet, apiPost, apiPatch, apiDelete, ApiErrorClass } from '../apiClient';
 
 // Mock fetch
-global.fetch = vi.fn();
+const fetchMock = vi.fn();
+global.fetch = fetchMock as unknown as typeof fetch;
 
 interface TestData {
   id: number;
@@ -17,7 +18,7 @@ describe('apiClient', () => {
   describe('apiGet', () => {
     it('makes a GET request and returns typed data', async () => {
       const mockData: TestData = { id: 1, name: 'Test' };
-      (global.fetch as any).mockResolvedValueOnce(
+      fetchMock.mockResolvedValueOnce(
         new Response(JSON.stringify(mockData), { status: 200 }),
       );
 
@@ -35,7 +36,7 @@ describe('apiClient', () => {
     });
 
     it('throws ApiError on non-200 status', async () => {
-      (global.fetch as any).mockResolvedValueOnce(
+      fetchMock.mockResolvedValueOnce(
         new Response(JSON.stringify({ error: 'Not found' }), { status: 404 }),
       );
 
@@ -48,7 +49,7 @@ describe('apiClient', () => {
       const mockData: TestData = { id: 1, name: 'Created' };
       const payload = { name: 'Test' };
 
-      (global.fetch as any).mockResolvedValueOnce(
+      fetchMock.mockResolvedValueOnce(
         new Response(JSON.stringify(mockData), { status: 200 }),
       );
 
@@ -64,7 +65,7 @@ describe('apiClient', () => {
     });
 
     it('handles empty response body', async () => {
-      (global.fetch as any).mockResolvedValueOnce(new Response('', { status: 200 }));
+      fetchMock.mockResolvedValueOnce(new Response('', { status: 200 }));
 
       const result = await apiPost('/api/test');
       expect(result).toEqual({});
@@ -75,7 +76,7 @@ describe('apiClient', () => {
     it('makes a PATCH request with body', async () => {
       const mockData: TestData = { id: 1, name: 'Updated' };
 
-      (global.fetch as any).mockResolvedValueOnce(
+      fetchMock.mockResolvedValueOnce(
         new Response(JSON.stringify(mockData), { status: 200 }),
       );
 
@@ -92,7 +93,7 @@ describe('apiClient', () => {
 
   describe('apiDelete', () => {
     it('makes a DELETE request', async () => {
-      (global.fetch as any).mockResolvedValueOnce(new Response(null, { status: 200 }));
+      fetchMock.mockResolvedValueOnce(new Response(null, { status: 200 }));
 
       await apiDelete('/api/test/1');
       expect(global.fetch).toHaveBeenCalledWith(
@@ -106,13 +107,13 @@ describe('apiClient', () => {
 
   describe('error handling', () => {
     it('handles network errors', async () => {
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+      fetchMock.mockRejectedValueOnce(new Error('Network error'));
 
       await expect(apiGet('/api/test')).rejects.toThrow(ApiErrorClass);
     });
 
     it('parses error message from response body', async () => {
-      (global.fetch as any).mockResolvedValueOnce(
+      fetchMock.mockResolvedValueOnce(
         new Response(JSON.stringify({ error: 'Custom error message' }), { status: 400 }),
       );
 
@@ -127,14 +128,14 @@ describe('apiClient', () => {
     });
 
     it('handles malformed JSON in response', async () => {
-      (global.fetch as any).mockResolvedValueOnce(new Response('invalid json', { status: 200 }));
+      fetchMock.mockResolvedValueOnce(new Response('invalid json', { status: 200 }));
 
       const result = await apiGet('/api/test');
       expect(result).toEqual({});
     });
 
     it('respects custom headers', async () => {
-      (global.fetch as any).mockResolvedValueOnce(new Response('{}', { status: 200 }));
+      fetchMock.mockResolvedValueOnce(new Response('{}', { status: 200 }));
 
       await apiGet('/api/test', {
         headers: { 'X-Custom-Header': 'value' },

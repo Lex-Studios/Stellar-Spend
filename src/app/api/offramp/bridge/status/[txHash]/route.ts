@@ -48,9 +48,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ txH
     const sdk = new AllbridgeCoreSdk({ ...nodeRpcUrlsDefault });
 
     // Get transfer status from Allbridge
-    let transferStatus: any;
+    interface TransferStatusData {
+      status?: string;
+      receiveAmount?: string;
+      [key: string]: unknown;
+    }
+    let transferStatus: TransferStatusData;
     try {
-      transferStatus = await sdk.getTransferStatus('SRB', txHash);
+      transferStatus = (await sdk.getTransferStatus('SRB', txHash)) as TransferStatusData;
     } catch (error) {
       // Handle 404 gracefully - return pending status
       const message = extractErrorMessage(error);

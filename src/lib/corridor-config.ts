@@ -1,4 +1,3 @@
-import { getActiveCurrencies, getCurrencyConfig, CurrencyConfig } from './currencies';
 import type { LimitTier } from './kyc-limits';
 
 export type BankFieldType = 'account' | 'routing' | 'iban';

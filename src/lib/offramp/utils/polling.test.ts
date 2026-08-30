@@ -30,7 +30,6 @@ describe('Polling Utility', () => {
       const mockPollFn = vi.fn().mockResolvedValue({ ready: true });
       const checkCondition = (result: { ready: boolean }) => result.ready;
 
-      const startTime = Date.now();
       const promise = pollWithTimeout(mockPollFn, checkCondition, { interval: 5000 });
 
       await vi.runAllTimersAsync();

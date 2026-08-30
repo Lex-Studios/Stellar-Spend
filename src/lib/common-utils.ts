@@ -40,7 +40,7 @@ export async function retryWithBackoff<T>(
 /**
  * Debounce a function
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number,
 ): (...args: Parameters<T>) => void {
@@ -60,7 +60,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle a function
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number,
 ): (...args: Parameters<T>) => void {
@@ -93,7 +93,7 @@ export function throttle<T extends (...args: any[]) => any>(
 /**
  * Memoize a function
  */
-export function memoize<T extends (...args: any[]) => any>(fn: T): T {
+export function memoize<T extends (...args: unknown[]) => unknown>(fn: T): T {
   const cache = new Map();
 
   return ((...args: Parameters<T>) => {
@@ -112,7 +112,7 @@ export function memoize<T extends (...args: any[]) => any>(fn: T): T {
 /**
  * Deep merge objects
  */
-export function deepMerge<T extends Record<string, any>>(target: T, source: Partial<T>): T {
+export function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
   const result = { ...target };
 
   for (const key in source) {
@@ -130,7 +130,7 @@ export function deepMerge<T extends Record<string, any>>(target: T, source: Part
       ) {
         result[key] = deepMerge(targetValue, sourceValue);
       } else {
-        result[key] = sourceValue as any;
+        result[key] = sourceValue as T[string];
       }
     }
   }
@@ -176,7 +176,7 @@ export function delay(ms: number): Promise<void> {
 /**
  * Check if value is empty
  */
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: unknown): boolean {
   if (value === null || value === undefined) {
     return true;
   }

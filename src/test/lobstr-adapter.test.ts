@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   StellarWalletAdapter,
-  getStellarWalletAdapter,
   _resetAdapterSingleton,
 } from '@/lib/stellar';
 
@@ -22,7 +21,7 @@ const SIGNED_XDR = 'lobstr-signed-xdr';
 // ── Window helpers ─────────────────────────────────────────────────────────────
 
 function setLobstrWindow(variant: 'lobstr' | 'stellar' | 'both' | 'none') {
-  const w = (global.window as any) ?? {};
+  const w = (global.window as unknown as Record<string, unknown>) ?? {};
 
   // Clear previous state
   delete w.lobstr;
@@ -49,7 +48,7 @@ function setLobstrWindow(variant: 'lobstr' | 'stellar' | 'both' | 'none') {
 }
 
 function clearLobstrWindow() {
-  const w = (global.window as any) ?? {};
+  const w = (global.window as unknown as Record<string, unknown>) ?? {};
   delete w.lobstr;
   if (w.stellar) delete w.stellar;
   global.window = w;
@@ -84,17 +83,17 @@ describe('isLobstrAvailable', () => {
   });
 
   it('returns false when window.lobstr exists but lacks connect()', () => {
-    (global.window as any).lobstr = { signTransaction: vi.fn() }; // missing connect
+    (global.window as unknown as Record<string, unknown>).lobstr = { signTransaction: vi.fn() }; // missing connect
     expect(new StellarWalletAdapter().isLobstrAvailable()).toBe(false);
   });
 
   it('returns false when window.lobstr exists but lacks signTransaction()', () => {
-    (global.window as any).lobstr = { connect: vi.fn() }; // missing signTransaction
+    (global.window as unknown as Record<string, unknown>).lobstr = { connect: vi.fn() }; // missing signTransaction
     expect(new StellarWalletAdapter().isLobstrAvailable()).toBe(false);
   });
 
   it('returns false when window.lobstr is not an object', () => {
-    (global.window as any).lobstr = true;
+    (global.window as unknown as Record<string, unknown>).lobstr = true;
     expect(new StellarWalletAdapter().isLobstrAvailable()).toBe(false);
   });
 
@@ -149,7 +148,7 @@ describe('connectLobstr — happy paths', () => {
   });
 
   it('trims whitespace from the returned public key', async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     w.lobstr = {
       connect: vi.fn().mockResolvedValue({ publicKey: `  ${VALID_KEY}  ` }),
       signTransaction: vi.fn(),
@@ -182,14 +181,14 @@ describe('connectLobstr — error paths', () => {
   });
 
   it('throws user-friendly error when provider interface is invalid', async () => {
-    (global.window as any).lobstr = { connect: vi.fn() }; // missing signTransaction
+    (global.window as unknown as Record<string, unknown>).lobstr = { connect: vi.fn() }; // missing signTransaction
     await expect(new StellarWalletAdapter().connectLobstr()).rejects.toThrow(
       /Lobstr wallet is not installed or unavailable/,
     );
   });
 
   it('throws user-friendly error when user rejects the connection', async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     w.lobstr = {
       connect: vi.fn().mockRejectedValue(new Error('User declined')),
       signTransaction: vi.fn(),
@@ -198,7 +197,7 @@ describe('connectLobstr — error paths', () => {
   });
 
   it("throws user-friendly error when connect() rejects with 'rejected'", async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     w.lobstr = {
       connect: vi.fn().mockRejectedValue(new Error('rejected')),
       signTransaction: vi.fn(),
@@ -207,7 +206,7 @@ describe('connectLobstr — error paths', () => {
   });
 
   it('throws when connect() returns null', async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     w.lobstr = {
       connect: vi.fn().mockResolvedValue(null),
       signTransaction: vi.fn(),
@@ -218,7 +217,7 @@ describe('connectLobstr — error paths', () => {
   });
 
   it('throws when connect() returns an object without publicKey', async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     w.lobstr = {
       connect: vi.fn().mockResolvedValue({ address: VALID_KEY }), // wrong field name
       signTransaction: vi.fn(),
@@ -227,7 +226,7 @@ describe('connectLobstr — error paths', () => {
   });
 
   it('throws when connect() returns an empty publicKey string', async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     w.lobstr = {
       connect: vi.fn().mockResolvedValue({ publicKey: '' }),
       signTransaction: vi.fn(),
@@ -236,7 +235,7 @@ describe('connectLobstr — error paths', () => {
   });
 
   it('throws when connect() returns a whitespace-only publicKey', async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     w.lobstr = {
       connect: vi.fn().mockResolvedValue({ publicKey: '   ' }),
       signTransaction: vi.fn(),
@@ -245,7 +244,7 @@ describe('connectLobstr — error paths', () => {
   });
 
   it('throws when connect() returns a non-string publicKey', async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     w.lobstr = {
       connect: vi.fn().mockResolvedValue({ publicKey: 12345 }),
       signTransaction: vi.fn(),
@@ -254,7 +253,7 @@ describe('connectLobstr — error paths', () => {
   });
 
   it('does not expose raw internal error details', async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     w.lobstr = {
       connect: vi.fn().mockRejectedValue(new Error('INTERNAL_STACK_TRACE_XYZ')),
       signTransaction: vi.fn(),
@@ -301,7 +300,7 @@ describe('connectLobstr — idempotency and concurrency', () => {
   });
 
   it('propagates rejection to all concurrent callers', async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     w.lobstr = {
       connect: vi.fn().mockRejectedValue(new Error('User declined')),
       signTransaction: vi.fn(),
@@ -364,7 +363,7 @@ describe('signTransaction — Lobstr', () => {
   });
 
   it('throws user-friendly error when signing is rejected', async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     const provider = {
       connect: vi.fn().mockResolvedValue({ publicKey: VALID_KEY }),
       signTransaction: vi.fn().mockRejectedValue(new Error('User declined')),
@@ -378,7 +377,7 @@ describe('signTransaction — Lobstr', () => {
   });
 
   it('throws when signedXdr is empty', async () => {
-    const w = global.window as any;
+    const w = global.window as unknown as Record<string, unknown>;
     w.lobstr = {
       connect: vi.fn().mockResolvedValue({ publicKey: VALID_KEY }),
       signTransaction: vi.fn().mockResolvedValue({ signedXdr: '' }),

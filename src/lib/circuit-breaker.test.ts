@@ -3,7 +3,7 @@
  * Covers: CLOSED→OPEN transition, OPEN rejection, HALF_OPEN probe, fallback, timeout.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { CircuitBreaker, CircuitOpenError, CircuitTimeoutError } from './circuit-breaker';
 
 describe('CircuitBreaker', () => {

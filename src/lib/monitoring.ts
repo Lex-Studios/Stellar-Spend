@@ -14,6 +14,7 @@ import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
+import { logger } from '@/lib/logger';
 
 // Enable debug logging in development
 if (process.env.NODE_ENV === 'development') {
@@ -38,10 +39,6 @@ function getExporter() {
  * Create and configure the OpenTelemetry SDK
  */
 export function createTracingSDK(): NodeSDK {
-  // Configure sampling
-  const sampleRate = parseFloat(process.env.OTEL_SAMPLE_RATE || '1.0');
-  const sampler = sampleRate < 1.0 ? new TraceIdRatioBasedSampler(sampleRate) : undefined;
-
   const resource = new Resource({
     [SemanticResourceAttributes.SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'stellar-spend',
     [SemanticResourceAttributes.SERVICE_VERSION]: process.env.npm_package_version || '1.0.0',
@@ -78,8 +75,9 @@ export function createTracingSDK(): NodeSDK {
           span.setAttribute('http.route', route);
 
           // Add user ID if available
-          if ((request as any).user?.id) {
-            span.setAttribute('user.id', (request as any).user.id);
+          const reqUser = (request as { user?: { id?: unknown } }).user;
+          if (reqUser?.id !== undefined) {
+            span.setAttribute('user.id', String(reqUser.id));
           }
         },
       }),
@@ -108,17 +106,17 @@ export function createTracingSDK(): NodeSDK {
 export function initializeTracing(): NodeSDK | undefined {
   // Skip tracing if disabled
   if (process.env.OTEL_DISABLED === 'true') {
-    console.log('OpenTelemetry tracing is disabled');
+    logger.info('otel.tracing.disabled', {});
     return undefined;
   }
 
   try {
     const sdk = createTracingSDK();
     sdk.start();
-    console.log('OpenTelemetry tracing initialized');
+    logger.info('otel.tracing.initialized', {});
     return sdk;
   } catch (error) {
-    console.error('Failed to initialize OpenTelemetry:', error);
+    logger.error('otel.tracing.init.failed', {}, error);
     return undefined;
   }
 }
@@ -129,32 +127,8 @@ export function initializeTracing(): NodeSDK | undefined {
 export async function shutdownTracing(sdk: NodeSDK): Promise<void> {
   try {
     await sdk.shutdown();
-    console.log('OpenTelemetry tracing shut down successfully');
+    logger.info('otel.tracing.shutdown', {});
   } catch (error) {
-    console.error('Error shutting down OpenTelemetry:', error);
-  }
-}
-
-// Note: TraceIdRatioBasedSampler needs to be imported
-// This is a placeholder - the actual import should be:
-// import { TraceIdRatioBasedSampler } from '@opentelemetry/sdk-trace-node';
-
-// For now, we'll use a simple wrapper
-class TraceIdRatioBasedSampler {
-  constructor(private ratio: number) {}
-  shouldSample(
-    context: any,
-    traceId: string,
-    spanName: string,
-    spanKind: any,
-    attributes: any,
-    links: any,
-  ) {
-    // Simple random sampling
-    const random = Math.random();
-    return {
-      decision: random < this.ratio ? 1 : 0, // 1 = RECORD_AND_SAMPLED, 0 = NOT_RECORD
-      attributes: {},
-    };
+    logger.error('otel.tracing.shutdown.failed', {}, error);
   }
 }

@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo, FormEvent, ChangeEvent, FocusEvent } from 'react';
 import { z } from 'zod';
 
-export interface UseFormOptions<T extends Record<string, any>> {
+export interface UseFormOptions<T extends Record<string, unknown>> {
   initialValues: T;
-  schema?: z.ZodType<any, any, any>;
+  schema?: z.ZodType<unknown, z.ZodTypeDef, unknown>;
   validate?: (values: T) => Partial<Record<keyof T, string>> | Promise<Partial<Record<keyof T, string>>>;
   validateOnChange?: boolean;
   validateOnBlur?: boolean;
@@ -12,7 +12,7 @@ export interface UseFormOptions<T extends Record<string, any>> {
   onError?: (errors: Partial<Record<keyof T, string>>, error?: unknown) => void;
 }
 
-export interface UseFormReturn<T extends Record<string, any>> {
+export interface UseFormReturn<T extends Record<string, unknown>> {
   values: T;
   errors: Partial<Record<keyof T, string>>;
   touched: Partial<Record<keyof T, boolean>>;
@@ -29,7 +29,7 @@ export interface UseFormReturn<T extends Record<string, any>> {
   handleChange: (
     e:
       | ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-      | { target: { name: string; value: any } },
+      | { target: { name: string; value: unknown } },
   ) => void;
   handleBlur: (
     e:
@@ -42,13 +42,13 @@ export interface UseFormReturn<T extends Record<string, any>> {
   resetForm: (newValues?: Partial<T>) => void;
   getFieldProps: (field: keyof T) => {
     name: string;
-    value: any;
-    onChange: (e: ChangeEvent<any>) => void;
-    onBlur: (e: FocusEvent<any>) => void;
+    value: unknown;
+    onChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
+    onBlur: (e: FocusEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => void;
   };
 }
 
-export function parseZodErrors<T extends Record<string, any>>(
+export function parseZodErrors<T extends Record<string, unknown>>(
   zodError: z.ZodError,
 ): Partial<Record<keyof T, string>> {
   const errors: Partial<Record<keyof T, string>> = {};
@@ -61,7 +61,7 @@ export function parseZodErrors<T extends Record<string, any>>(
   return errors;
 }
 
-export function useForm<T extends Record<string, any>>({
+export function useForm<T extends Record<string, unknown>>({
   initialValues,
   schema,
   validate: customValidate,
@@ -188,11 +188,11 @@ export function useForm<T extends Record<string, any>>({
     (
       e:
         | ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-        | { target: { name: string; value: any } },
+        | { target: { name: string; value: unknown } },
     ) => {
       const { name, value } = e.target;
       if (name) {
-        setFieldValue(name as keyof T, value);
+        setFieldValue(name as keyof T, value as T[keyof T]);
       }
     },
     [setFieldValue],
@@ -260,7 +260,7 @@ export function useForm<T extends Record<string, any>>({
         setIsSubmitting(false);
         onSuccess?.(values);
         return true;
-      } catch (err: any) {
+      } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Form submission failed';
         setSubmitError(errorMsg);
         setIsSubmitting(false);

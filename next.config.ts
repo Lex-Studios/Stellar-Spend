@@ -103,7 +103,7 @@ const nextConfig: NextConfig = {
               test: /node_modules/,
               priority: 10,
               reuseExistingChunk: true,
-              name(module: any) {
+              name(module: import('webpack').Module) {
                 const packageName = module.context.match(
                   /[\\/]node_modules[\\/](.*?)([\\/]|$)/,
                 )?.[1];

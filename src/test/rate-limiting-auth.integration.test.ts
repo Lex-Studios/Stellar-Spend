@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import {
   SlidingWindowRateLimiter,
   RATE_LIMIT_REGISTRY,
@@ -447,9 +447,9 @@ describe('Rate Limiting — Auth Endpoints Integration', () => {
       expect(attempt3.remaining).toBe(2);
 
       // User gets blocked on excessive attempts
-      const attempt4 = await limiter.check(userIp);
-      const attempt5 = await limiter.check(userIp);
-      const attempt6 = await limiter.check(userIp);
+      await limiter.check(userIp);
+      await limiter.check(userIp);
+      await limiter.check(userIp);
 
       const lastAttempt = await limiter.check(userIp);
       expect(lastAttempt.allowed).toBe(false);

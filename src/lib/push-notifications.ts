@@ -19,7 +19,7 @@ export function usePushNotifications() {
     setPermission((prev) => ({ ...prev, isSupported }));
 
     if (isSupported && Notification.permission !== 'default') {
-      setPermission((prev) => ({ ...prev, status: Notification.permission as any }));
+      setPermission((prev) => ({ ...prev, status: Notification.permission }));
     }
   }, []);
 
@@ -31,7 +31,7 @@ export function usePushNotifications() {
 
     try {
       const result = await Notification.requestPermission();
-      setPermission((prev) => ({ ...prev, status: result as any }));
+      setPermission((prev) => ({ ...prev, status: result }));
       return result === 'granted';
     } catch (err) {
       logger.error('Failed to request notification permission:', {}, err);

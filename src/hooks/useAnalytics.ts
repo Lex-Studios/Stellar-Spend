@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
+import { logger } from '@/lib/logger';
 
 export interface AnalyticsEvent {
   category: string;
@@ -25,13 +26,13 @@ const DEFAULT_CONFIG: AnalyticsConfig = {
  * Tracks user interactions for analytics (#398)
  */
 export function useAnalytics(config: Partial<AnalyticsConfig> = {}) {
-  const finalConfig = { ...DEFAULT_CONFIG, ...config };
+  const finalConfig = useMemo(() => ({ ...DEFAULT_CONFIG, ...config }), [config]);
 
   const track = useCallback(
     (event: AnalyticsEvent) => {
       if (!finalConfig.enabled) {
         if (finalConfig.debug) {
-          console.log('[Analytics Debug]', event);
+          logger.debug('analytics.debug', { event });
         }
         return;
       }
@@ -57,7 +58,7 @@ export function useAnalytics(config: Partial<AnalyticsConfig> = {}) {
           keepalive: true,
         }).catch((err) => {
           if (finalConfig.debug) {
-            console.error('[Analytics Error]', err);
+            logger.error('analytics.send_failed', {}, err);
           }
         });
       }

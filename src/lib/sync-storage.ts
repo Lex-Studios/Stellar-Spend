@@ -128,7 +128,10 @@ export class SyncStorage {
       const queue = stored ? JSON.parse(stored) : [];
 
       // Remove duplicate entry if exists
-      const filtered = queue.filter((item: any) => item.transactionId !== transactionId);
+      const filtered = queue.filter(
+        (item: { transactionId: string; action: 'create' | 'update' | 'delete'; queuedAt: number }) =>
+          item.transactionId !== transactionId,
+      );
 
       filtered.push({
         transactionId,
@@ -186,7 +189,7 @@ export class SyncStorage {
   /**
    * Mark sync complete
    */
-  static markSyncComplete(userAddress: string): void {
+  static markSyncComplete(_userAddress: string): void {
     this.updateSettings({
       lastSyncAt: Date.now(),
       lastServerSyncAt: Date.now(),

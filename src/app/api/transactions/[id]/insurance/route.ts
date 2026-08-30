@@ -76,7 +76,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   return withIdempotency(
     request,
     async () => {
-      const { id: _transactionId } = await params;
+      await params;
 
       let body: { insuranceId?: unknown; reason?: unknown; evidence?: unknown };
       try {

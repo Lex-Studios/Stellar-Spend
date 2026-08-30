@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type {
+  ChainDetailsWithTokens,
+  TokenWithChainDetails,
+} from '@allbridge/bridge-core-sdk';
 import { env } from '@/lib/env';
 import { validateAmount, validateAddress } from '@/lib/offramp';
 import { extractErrorMessage } from '@/lib/offramp';
@@ -119,11 +123,11 @@ export async function POST(request: NextRequest) {
       throw err;
     }
 
-    let stellarChain: any = null;
-    let baseChain: any = null;
+    let stellarChain: ChainDetailsWithTokens | null = null;
+    let baseChain: ChainDetailsWithTokens | null = null;
 
     for (const [, chain] of Object.entries(chainDetails)) {
-      const chainObj = chain as any;
+      const chainObj = chain;
       if (
         chainObj.name?.toLowerCase().includes('stellar') ||
         chainObj.name?.toLowerCase().includes('soroban')
@@ -147,8 +151,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Find USDC tokens
-    const sourceToken = stellarChain.tokens.find((t: any) => t.symbol === 'USDC');
-    const destinationToken = baseChain.tokens.find((t: any) => t.symbol === 'USDC');
+    type BridgeToken = TokenWithChainDetails & { contract?: string; chain?: string };
+    const sourceToken = stellarChain.tokens.find((t) => t.symbol === 'USDC') as
+      | BridgeToken
+      | undefined;
+    const destinationToken = baseChain.tokens.find((t) => t.symbol === 'USDC') as
+      | BridgeToken
+      | undefined;
 
     if (!sourceToken || !destinationToken) {
       logger.logError(500, 'USDC token not found on one or both chains');
@@ -170,12 +179,17 @@ export async function POST(request: NextRequest) {
       feePaymentMethod === 'native'
         ? FeePaymentMethod.WITH_NATIVE_CURRENCY
         : FeePaymentMethod.WITH_STABLECOIN;
+    const feeOptionsTyped = feeOptions as unknown as {
+      native?: { float?: number | string };
+      stablecoin?: { float?: number | string };
+      [key: string]: { float?: number | string } | undefined;
+    };
     const selectedFee =
       feePaymentMethod === 'native'
-        ? ((feeOptions as any).native?.float ??
-          (feeOptions as any)[FeePaymentMethod.WITH_NATIVE_CURRENCY]?.float)
-        : ((feeOptions as any).stablecoin?.float ??
-          (feeOptions as any)[FeePaymentMethod.WITH_STABLECOIN]?.float);
+        ? (feeOptionsTyped.native?.float ??
+          feeOptionsTyped[FeePaymentMethod.WITH_NATIVE_CURRENCY]?.float)
+        : (feeOptionsTyped.stablecoin?.float ??
+          feeOptionsTyped[FeePaymentMethod.WITH_STABLECOIN]?.float);
 
     // Build raw transaction
     const rawTx = await sdk.bridge.rawTxBuilder.send({
@@ -191,7 +205,9 @@ export async function POST(request: NextRequest) {
 
     // rawTx for Stellar/Soroban is an XDR string
     const xdr =
-      typeof rawTx === 'string' ? rawTx : ((rawTx as any).toXDR?.() ?? JSON.stringify(rawTx));
+      typeof rawTx === 'string'
+        ? rawTx
+        : ((rawTx as { toXDR?: () => string }).toXDR?.() ?? JSON.stringify(rawTx));
 
     const response = NextResponse.json({
       xdr,
@@ -211,8 +227,8 @@ export async function POST(request: NextRequest) {
     response.headers.set('X-Request-Id', requestId);
     logger.logSuccess(200);
     return response;
-  } catch (error: any) {
-    logger.error('Build TX error:', {}, error);
+  } catch (error: unknown) {
+    logger.logError(500, extractErrorMessage(error));
 
     const message = extractErrorMessage(error);
 

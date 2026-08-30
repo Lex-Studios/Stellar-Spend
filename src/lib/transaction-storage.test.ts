@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { TransactionStorage, type Transaction } from './transaction-storage';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { TransactionStorage } from './transaction-storage';
 import { createTestTransaction, createLocalStorageMock } from '@/test/test-helpers';
 
 describe('TransactionStorage', () => {

@@ -9,7 +9,6 @@ export interface QuoteResponse {
   estimatedTime: number;
 }
 
-const CURRENCIES = ['NGN', 'KES', 'GHS', 'UGX'] as const;
 const RATES: Record<string, number> = { NGN: 1598, KES: 130, GHS: 12, UGX: 3700 };
 
 export function makeQuote(
@@ -31,7 +30,7 @@ export function makeQuote(
 }
 
 export function makeQuoteForCurrency(
-  currency: (typeof CURRENCIES)[number],
+  currency: 'NGN' | 'KES' | 'GHS' | 'UGX',
   overrides: Partial<QuoteResponse> = {},
   rng?: Rng,
 ): QuoteResponse {

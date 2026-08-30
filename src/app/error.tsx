@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
+import { logger } from '@/lib/logger';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -10,7 +11,7 @@ interface ErrorProps {
 
 export default function Error({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error('Root error:', error);
+    logger.error('error.root', { message: error.message, digest: error.digest }, error);
   }, [error]);
 
   return (

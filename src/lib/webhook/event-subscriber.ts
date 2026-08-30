@@ -4,7 +4,7 @@ import { getSubscriptionsByEvent } from './subscription-store';
 import { enqueue, attempt, markDelivered, markFailed } from './dispatcher';
 import { logDelivery } from './delivery-log';
 import { subscriptionRateLimiter } from './subscription-rate-limiter';
-import { scheduleNext, hasRemainingAttempts } from './retry-scheduler';
+import { scheduleNext } from './retry-scheduler';
 import { updateRecord } from './delivery-store';
 import type { WebhookEvent } from './subscription-types';
 import { buildPayloadForVersion, DEFAULT_SCHEMA_VERSION } from './schema-versions';

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
+import { logger } from '@/lib/logger';
 
 describe('Dependency Pinning', () => {
   const criticalDeps = [
@@ -28,7 +29,7 @@ describe('Dependency Pinning', () => {
     }
     
     if (looseVersions.length > 0) {
-      console.log('❌ Loose versions found:', looseVersions);
+      logger.warn('❌ Loose versions found:', looseVersions);
     }
     
     expect(looseVersions).toHaveLength(0);

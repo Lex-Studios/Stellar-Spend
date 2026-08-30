@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { HttpClient, CircuitOpenError, HttpClientError } from '@/lib/clients';
 import { getCacheClient, resetCacheClient } from '@/lib/cache';
-import { getCachedRate, getCachedQuote, getCachedCurrencies } from '@/lib/cache';
+import { getCachedRate } from '@/lib/cache';
 
 // ─── Provider Timeout / 5xx Injection ────────────────────────────────────────
 

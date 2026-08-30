@@ -246,7 +246,7 @@ describe('Allbridge contract tests', () => {
 
   describe('error fixtures structure', () => {
     it('all error entries have status and body', () => {
-      for (const [key, entry] of Object.entries(allbridgeErrors)) {
+      for (const [, entry] of Object.entries(allbridgeErrors)) {
         expect(entry).toHaveProperty('status');
         expect(entry).toHaveProperty('body');
         expect(entry.body).toHaveProperty('error');

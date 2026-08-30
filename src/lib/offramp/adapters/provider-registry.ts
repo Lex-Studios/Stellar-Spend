@@ -96,7 +96,7 @@ export class BridgeProviderRegistry {
 
     const start = Date.now();
     try {
-      const status = await adapter.getTransferStatus('test-id');
+      await adapter.getTransferStatus('test-id');
       const latency = Date.now() - start;
       const health: ProviderHealth = { ok: true, latencyMs: latency, lastChecked: Date.now() };
       this.healthCache.set(name, health);

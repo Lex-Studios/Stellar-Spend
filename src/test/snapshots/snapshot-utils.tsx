@@ -15,10 +15,10 @@ export interface SnapshotTestOptions {
  * Create a snapshot test for a component
  */
 export function createComponentSnapshot(
-  Component: React.ComponentType<any>,
+  Component: React.ComponentType<Record<string, unknown>>,
   options?: SnapshotTestOptions,
 ) {
-  const { props = {}, children, errorBoundary = false } = options || {};
+  const { props = {}, children } = options || {};
 
   const element = children ? (
     <Component {...props}>{children}</Component>
@@ -34,7 +34,7 @@ export function createComponentSnapshot(
  * Test component with different prop variations
  */
 export function testComponentVariations(
-  Component: React.ComponentType<any>,
+  Component: React.ComponentType<Record<string, unknown>>,
   variations: Array<{ name: string; props: Record<string, unknown> }>,
 ) {
   return variations.map(({ name, props }) => ({
@@ -47,7 +47,7 @@ export function testComponentVariations(
  * Test component error states
  */
 export function testComponentErrorStates(
-  Component: React.ComponentType<any>,
+  Component: React.ComponentType<Record<string, unknown>>,
   errorProps: Record<string, unknown>[],
 ) {
   return errorProps.map((props, index) => ({

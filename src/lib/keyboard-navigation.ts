@@ -17,13 +17,14 @@ export function useFocusTrap(options: FocusTrapOptions = {}) {
   const previousActiveElement = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container) return;
 
     // Store the previously focused element
     previousActiveElement.current = document.activeElement as HTMLElement;
 
     // Get all focusable elements
-    const focusableElements = containerRef.current.querySelectorAll(
+    const focusableElements = container.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
 
@@ -54,10 +55,10 @@ export function useFocusTrap(options: FocusTrapOptions = {}) {
       }
     };
 
-    containerRef.current.addEventListener('keydown', handleKeyDown);
+    container.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      containerRef.current?.removeEventListener('keydown', handleKeyDown);
+      container.removeEventListener('keydown', handleKeyDown);
       if (returnFocus && previousActiveElement.current) {
         previousActiveElement.current.focus();
       }

@@ -1,4 +1,3 @@
-import { env } from './env';
 import type { ResourceFeeEstimate } from './stellar/resource-fee-estimator';
 import { FEE_CONSTANTS } from '@stellar-spend/shared';
 

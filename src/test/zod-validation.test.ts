@@ -90,7 +90,7 @@ function makeRequest(body: unknown, url = 'http://localhost/api/test') {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-  }) as any; // cast: route handlers accept NextRequest which extends Request
+  }) as unknown as NextRequest; // cast: route handlers accept NextRequest which extends Request
 }
 
 // ── Assertion helpers ─────────────────────────────────────────────────────────
@@ -104,7 +104,7 @@ async function expectValidation400(response: Response) {
 
 // ── POST /api/offramp/quote ────────────────────────────────────────────────────
 describe('POST /api/offramp/quote — zod validation', () => {
-  let POST: (req: any) => Promise<Response>;
+  let POST: (req: Request) => Promise<Response>;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -149,7 +149,7 @@ describe('POST /api/offramp/quote — zod validation', () => {
 
 // ── POST /api/offramp/verify-account ─────────────────────────────────────────
 describe('POST /api/offramp/verify-account — zod validation', () => {
-  let POST: (req: any) => Promise<Response>;
+  let POST: (req: Request) => Promise<Response>;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -174,7 +174,7 @@ describe('POST /api/offramp/verify-account — zod validation', () => {
 
 // ── POST /api/merchant ────────────────────────────────────────────────────────
 describe('POST /api/merchant — zod validation', () => {
-  let POST: (req: any) => Promise<Response>;
+  let POST: (req: Request) => Promise<Response>;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -209,7 +209,7 @@ describe('POST /api/merchant — zod validation', () => {
 
 // ── POST /api/merchant/payouts ────────────────────────────────────────────────
 describe('POST /api/merchant/payouts — zod validation', () => {
-  let POST: (req: any) => Promise<Response>;
+  let POST: (req: Request) => Promise<Response>;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -258,7 +258,7 @@ describe('POST /api/merchant/payouts — zod validation', () => {
 
 // ── POST /api/queue/manage ────────────────────────────────────────────────────
 describe('POST /api/queue/manage — zod validation', () => {
-  let POST: (req: any) => Promise<Response>;
+  let POST: (req: Request) => Promise<Response>;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -295,7 +295,7 @@ describe('POST /api/queue/manage — zod validation', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: 'not-json',
-    }) as any;
+    });
     const res = await POST(req);
     expect(res.status).toBe(400);
   });

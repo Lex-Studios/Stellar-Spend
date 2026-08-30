@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { KYCFlowProvider, useKycFlow, KYCFlowState, UserLimits } from '../useKycFlow';
+import type { ReactNode } from 'react';
+import { KYCFlowProvider, useKycFlow, UserLimits } from '../useKycFlow';
 
 const mockLimits: UserLimits = {
   tier: 'tier1',
@@ -11,7 +12,7 @@ const mockLimits: UserLimits = {
   limitIncreaseRequests: [],
 };
 
-function wrapper({ children }: any) {
+function wrapper({ children }: { children: ReactNode }) {
   return <KYCFlowProvider>{children}</KYCFlowProvider>;
 }
 

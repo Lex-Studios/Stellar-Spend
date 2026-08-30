@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useTransition } from 'react';
 import type { FxRate } from '@/app/api/fx-rates/route';
+import { logger } from '@/lib/logger';
 
 const QUOTE_TTL = 30; // seconds
 
@@ -52,7 +53,7 @@ export function useCurrencyConverter(): CurrencyConverterState {
         startTransition(() => setCurrencies(data.currencies ?? []));
       }
     } catch (error) {
-      console.error('Failed to fetch currencies:', error);
+      logger.error('currency.fetch_currencies_failed', {}, error);
     }
   }, []);
 
@@ -68,7 +69,7 @@ export function useCurrencyConverter(): CurrencyConverterState {
         rateUpdatedTimer.current = setTimeout(() => setRateUpdated(false), 1_500);
       }
     } catch (error) {
-      console.error('Failed to fetch rate:', error);
+      logger.error('currency.fetch_rate_failed', {}, error);
     } finally {
       setLoading(false);
     }

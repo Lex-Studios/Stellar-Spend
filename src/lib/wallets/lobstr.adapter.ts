@@ -89,13 +89,14 @@ export class LobstrAdapter implements WalletAdapter {
 
   private resolveLobstrProvider(): LobstrProvider | null {
     if (typeof window === 'undefined') return null;
-    const w = window as any;
+    const w = window as unknown as {
+      lobstr?: unknown;
+      stellar?: { isLobstr?: boolean };
+    };
     const candidate: unknown = w.lobstr ?? (w.stellar?.isLobstr ? w.stellar : null);
     if (!candidate || typeof candidate !== 'object') return null;
-    if (
-      typeof (candidate as any).connect !== 'function' ||
-      typeof (candidate as any).signTransaction !== 'function'
-    ) {
+    const provider = candidate as Record<string, unknown>;
+    if (typeof provider.connect !== 'function' || typeof provider.signTransaction !== 'function') {
       return null;
     }
     return candidate as LobstrProvider;

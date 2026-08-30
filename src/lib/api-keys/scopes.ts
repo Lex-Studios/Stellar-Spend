@@ -137,7 +137,7 @@ export function getRequiredScope(method: string, pathname: string): Scope | null
 }
 
 export function hasRequiredScope(apiKey: ApiKeyRecord, requiredScope: Scope): boolean {
-  if (apiKey.scopes.includes('admin:*' as any) || apiKey.scopes.includes('admin' as any)) {
+  if (apiKey.scopes.includes('admin:*') || apiKey.scopes.includes('admin')) {
     return true;
   }
 

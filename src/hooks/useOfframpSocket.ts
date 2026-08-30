@@ -83,7 +83,6 @@ export function useOfframpSocket({ id, onStatusUpdate, enabled = true }: UseOffr
       retryCount.current = 0;
       setSocketState('disconnected');
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, enabled]);
 
   return { socketState, isConnected: socketState === 'connected' };

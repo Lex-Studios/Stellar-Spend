@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 describe('Security Tests', () => {
   describe('XSS Vulnerabilities', () => {
@@ -144,7 +144,7 @@ function completeTransaction(): void {
   // Mock implementation
 }
 
-function checkWalletConnection(wallet: any): boolean {
+function checkWalletConnection(wallet: unknown): boolean {
   return wallet !== null && wallet !== undefined;
 }
 
@@ -152,7 +152,11 @@ function validateWalletSignature(signature: string): boolean {
   return signature.length > 20;
 }
 
-function isSessionValid(session: any): boolean {
+interface MockSession {
+  timestamp: number;
+}
+
+function isSessionValid(session: MockSession): boolean {
   const maxAge = 3600000; // 1 hour
   return Date.now() - session.timestamp < maxAge;
 }
@@ -163,9 +167,10 @@ function authorizeAPIKey(key: string): boolean {
 
 function checkRateLimit(apiKey: string): boolean {
   // Mock rate limiting (100 requests per minute)
+  const store = globalThis as unknown as Record<string, number>;
   const key = `ratelimit:${apiKey}`;
-  const count = (globalThis as any)[key] || 0;
-  (globalThis as any)[key] = count + 1;
+  const count = store[key] || 0;
+  store[key] = count + 1;
   return count < 100;
 }
 

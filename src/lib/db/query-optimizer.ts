@@ -1,4 +1,3 @@
-import { pool } from './client';
 import { logger } from '../logger';
 
 export interface QueryMetrics {

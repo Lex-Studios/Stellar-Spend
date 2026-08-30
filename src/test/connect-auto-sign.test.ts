@@ -27,11 +27,25 @@ const MAINNET = 'Public Global Stellar Network ; September 2015';
 
 // ── Window helpers ─────────────────────────────────────────────────────────────
 
+type TestWindow = Window & {
+  freighter?: unknown;
+  lobstr?: unknown;
+  stellar?: unknown;
+};
+
+function getTestWindow(): TestWindow {
+  return (globalThis.window as unknown as TestWindow) ?? ({} as TestWindow);
+}
+
+function setTestWindow(w: TestWindow): void {
+  (globalThis as unknown as { window: TestWindow }).window = w;
+}
+
 function setFreighterWindow(present: boolean) {
-  const w = (global.window as any) ?? {};
+  const w = getTestWindow();
   if (present) w.freighter = true;
   else delete w.freighter;
-  global.window = w;
+  setTestWindow(w);
 }
 
 function makeLobstrProvider(
@@ -48,19 +62,19 @@ function makeLobstrProvider(
 }
 
 function setLobstrWindow(provider: ReturnType<typeof makeLobstrProvider> | null) {
-  const w = (global.window as any) ?? {};
+  const w = getTestWindow();
   if (provider) w.lobstr = provider;
   else delete w.lobstr;
   if (w.stellar) delete w.stellar;
-  global.window = w;
+  setTestWindow(w);
 }
 
 function clearAllWallets() {
-  const w = (global.window as any) ?? {};
+  const w = getTestWindow();
   delete w.freighter;
   delete w.lobstr;
   if (w.stellar) delete w.stellar;
-  global.window = w;
+  setTestWindow(w);
 }
 
 // Default Freighter mocks — "not connected, no address" so Freighter is

@@ -1,16 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 vi.mock('./src/lib/performance', () => ({ recordApiTiming: vi.fn() }));
 vi.mock('./src/lib/logger', () => ({
   logger: { withContext: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() }) },
 }));
 vi.mock('./src/lib/security/headers', () => ({
-  addSecurityHeaders: (res: any) => res,
+  addSecurityHeaders: (res: NextResponse) => res,
 }));
 vi.mock('./src/lib/middleware/geo', () => ({
   geoMiddleware: () => null,
-  attachGeoHeaders: (res: any, req: any) => res,
+  attachGeoHeaders: (res: NextResponse, _req: NextRequest) => res,
 }));
 vi.mock('./src/lib/middleware/auth', () => ({
   authMiddleware: () => null,

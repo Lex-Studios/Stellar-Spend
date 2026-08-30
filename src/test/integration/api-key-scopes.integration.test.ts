@@ -18,7 +18,7 @@ import {
   type Scope,
 } from '@/lib/api-keys';
 import { enforceScope } from '@/lib/middleware';
-import type { ApiKeyRecord } from '@/lib/api-keys/types';
+import type { ApiKeyRecord, ApiKeyScope } from '@/lib/api-keys/types';
 import { NextRequest } from 'next/server';
 
 // ── Mock logger and audit service so tests don't require real infra ───────────
@@ -33,13 +33,13 @@ vi.mock('@/lib/audit-logging', () => ({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function makeKey(scopes: string[]): ApiKeyRecord {
+function makeKey(scopes: ApiKeyScope[]): ApiKeyRecord {
   return {
     id: 'test-key',
     name: 'Test Key',
     keyPrefix: 'test',
     status: 'active',
-    scopes: scopes as any,
+    scopes,
     rateLimitMaxRequests: 60,
     rateLimitWindowMs: 60_000,
     usageCount: 0,

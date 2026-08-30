@@ -38,15 +38,19 @@ interface LobstrProvider {
   signTransaction(xdr: string, opts: { networkPassphrase: string }): Promise<{ signedXdr: string }>;
 }
 
+interface WindowWallets {
+  lobstr?: unknown;
+  stellar?: { isLobstr?: boolean };
+  freighter?: unknown;
+}
+
 function resolveLobstrProvider(): LobstrProvider | null {
   if (typeof window === 'undefined') return null;
-  const w = window as any;
+  const w = window as unknown as WindowWallets;
   const candidate: unknown = w.lobstr ?? (w.stellar?.isLobstr ? w.stellar : null);
   if (!candidate || typeof candidate !== 'object') return null;
-  if (
-    typeof (candidate as any).connect !== 'function' ||
-    typeof (candidate as any).signTransaction !== 'function'
-  ) {
+  const provider = candidate as Record<string, unknown>;
+  if (typeof provider.connect !== 'function' || typeof provider.signTransaction !== 'function') {
     return null;
   }
   return candidate as LobstrProvider;
@@ -68,7 +72,7 @@ export class StellarWalletAdapter {
    */
   async isFreighterAvailable(): Promise<boolean> {
     try {
-      if (typeof window !== 'undefined' && (window as any).freighter) return true;
+      if (typeof window !== 'undefined' && (window as unknown as WindowWallets).freighter) return true;
       const result = await freighterApi.isConnected();
       return !!result.isConnected;
     } catch {
@@ -200,7 +204,7 @@ export class StellarWalletAdapter {
       throw new Error('Lobstr returned an unexpected response. Please try again.');
     }
 
-    const publicKey = (result as any).publicKey;
+    const publicKey = result.publicKey;
     if (typeof publicKey !== 'string' || publicKey.trim() === '') {
       throw new Error(
         'Lobstr did not return a valid public key. ' +

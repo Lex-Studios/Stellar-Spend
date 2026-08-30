@@ -19,6 +19,9 @@
 const { execSync } = require('child_process');
 const path = require('path');
 
+const log = (...msgs) => process.stdout.write(msgs.join(' ') + '\n');
+const error = (...msgs) => process.stderr.write(msgs.join(' ') + '\n');
+
 // ---------------------------------------------------------------------------
 // Approved licenses (SPDX identifiers and common variants)
 // Any license NOT on this list triggers a failure unless it is explicitly
@@ -115,7 +118,7 @@ try {
   });
   packages = JSON.parse(raw);
 } catch (err) {
-  console.error('❌  Failed to run license-checker:', err.message);
+  error('❌  Failed to run license-checker:', err.message);
   process.exit(1);
 }
 
@@ -153,34 +156,34 @@ for (const [pkg, info] of Object.entries(packages)) {
 // Output
 // ---------------------------------------------------------------------------
 if (showReport) {
-  console.log('\n✅  Approved packages:');
-  for (const { pkg, license } of approved) {
-    console.log(`   ${pkg}  (${license})`);
-  }
+   log('\n✅  Approved packages:');
+   for (const { pkg, license } of approved) {
+     log(`   ${pkg}  (${license})`);
+   }
 }
 
 if (accepted.length > 0) {
-  console.log('\n⚠️   Explicitly accepted (review at next upgrade):');
-  for (const { pkg, license, reason } of accepted) {
-    console.log(`   ${pkg}  (${license})`);
-    console.log(`     → ${reason}`);
-  }
+   log('\n⚠️   Explicitly accepted (review at next upgrade):');
+   for (const { pkg, license, reason } of accepted) {
+     log(`   ${pkg}  (${license})`);
+     log(`     → ${reason}`);
+   }
 }
 
 if (violations.length > 0) {
-  console.error('\n❌  License violations found — these packages require review:\n');
-  for (const { pkg, license } of violations) {
-    console.error(`   ${pkg}  (${license})`);
-  }
-  console.error(
-    '\nTo resolve: either remove the package, find a compatible alternative, ' +
-      'or add an entry to ACCEPTED_EXCEPTIONS in scripts/check-licenses.js ' +
-      'with a written rationale, then re-run this check.',
-  );
+   error('\n❌  License violations found — these packages require review:\n');
+   for (const { pkg, license } of violations) {
+     error(`   ${pkg}  (${license})`);
+   }
+   error(
+     '\nTo resolve: either remove the package, find a compatible alternative, ' +
+       'or add an entry to ACCEPTED_EXCEPTIONS in scripts/check-licenses.js ' +
+       'with a written rationale, then re-run this check.',
+   );
   process.exit(1);
 }
 
-console.log(
+log(
   `\n✅  License check passed — ${approved.length} approved, ` +
     `${accepted.length} explicitly accepted, 0 violations.`,
 );

@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useStellarWallet } from '../useStellarWallet';
 
 jest.mock('@/lib/wallets/manager', () => ({

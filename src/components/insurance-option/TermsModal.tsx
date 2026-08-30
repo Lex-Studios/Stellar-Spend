@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, KeyboardEvent } from 'react';
+import { useEffect } from 'react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 import { PROVIDER_LABELS, PROVIDER_DESCRIPTIONS } from './types';

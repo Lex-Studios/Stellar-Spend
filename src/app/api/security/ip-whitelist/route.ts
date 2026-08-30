@@ -4,14 +4,6 @@ import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
 
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
-  }
-  return request.headers.get('x-real-ip') || 'unknown';
-}
-
 export async function GET(request: NextRequest) {
   try {
     const userAddress = request.headers.get('x-user-address');

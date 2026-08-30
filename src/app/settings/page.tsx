@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/hooks/useTheme';
 import { useSyncSettings } from '@/hooks/useSyncSettings';

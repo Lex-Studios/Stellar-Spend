@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import {
   DateFormatter,
   formatTransaction,
@@ -17,9 +17,9 @@ vi.mock('./datetime', async (importOriginal) => {
   };
 });
 
-const mockFormatUtc = datetimeModule.formatUtc as any;
-const mockFormatDate = datetimeModule.formatDate as any;
-const mockParseUtc = datetimeModule.parseUtc as any;
+const mockFormatUtc = datetimeModule.formatUtc as unknown as Mock;
+const mockFormatDate = datetimeModule.formatDate as unknown as Mock;
+const mockParseUtc = datetimeModule.parseUtc as unknown as Mock;
 
 describe('formatters.ts', () => {
   beforeEach(() => {

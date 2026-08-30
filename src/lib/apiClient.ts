@@ -69,6 +69,19 @@ async function parseJsonResponse(response: Response): Promise<unknown> {
   }
 }
 
+function extractErrorMessage(body: unknown): string | null {
+  if (typeof body === 'string') return body;
+  if (body && typeof body === 'object') {
+    const err = (body as Record<string, unknown>).error;
+    if (typeof err === 'string') return err;
+    if (err && typeof err === 'object' && 'message' in err) {
+      const msg = (err as Record<string, unknown>).message;
+      if (typeof msg === 'string') return msg;
+    }
+  }
+  return null;
+}
+
 /**
  * Make a typed GET request
  */
@@ -172,9 +185,7 @@ async function apiRequest<T = unknown>(url: string, config: ApiRequestConfig = {
 
     if (!response.ok) {
       const errorMessage =
-        (responseBody as any)?.error?.message ||
-        (responseBody as any)?.error ||
-        (typeof responseBody === 'string' ? responseBody : null) ||
+        extractErrorMessage(responseBody) ||
         `Request failed with status ${response.status}`;
 
       throw new ApiErrorClass(errorMessage, response.status, responseBody);

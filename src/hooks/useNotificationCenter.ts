@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { PriceAlertStorage, type PriceAlert } from '@/lib/price-alerts';
+import { PriceAlertStorage } from '@/lib/price-alerts';
 import type { NotificationDeliveryRecord } from '@/lib/notifications';
+import { logger } from '@/lib/logger';
 
 export type NotificationCenterEventType =
   | 'price_alert'
@@ -66,7 +67,7 @@ export function useNotificationCenter(userAddress: string | null) {
         return events.sort((a, b) => b.createdAt - a.createdAt);
       }
     } catch (err) {
-      console.error('Failed to load persisted events:', err);
+      logger.error('notification_center.load_persisted_failed', {}, err);
     }
     return [];
   }, []);
@@ -79,7 +80,7 @@ export function useNotificationCenter(userAddress: string | null) {
       const toSave = events.slice(0, MAX_EVENTS);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     } catch (err) {
-      console.error('Failed to persist events:', err);
+      logger.error('notification_center.persist_failed', {}, err);
     }
   }, []);
 
@@ -214,7 +215,7 @@ export function useNotificationCenter(userAddress: string | null) {
         }
       });
     } catch (err) {
-      console.error('Failed to aggregate price alerts:', err);
+      logger.error('notification_center.aggregate_price_alerts_failed', {}, err);
     }
   }, [addEvent]);
 
@@ -254,7 +255,7 @@ export function useNotificationCenter(userAddress: string | null) {
           addEvent(event);
         });
       } catch (err) {
-        console.error('Failed to aggregate transaction updates:', err);
+        logger.error('notification_center.aggregate_transaction_updates_failed', {}, err);
       }
     },
     [addEvent],
@@ -299,7 +300,7 @@ export function useNotificationCenter(userAddress: string | null) {
           addEvent(event);
         });
       } catch (err) {
-        console.error('Failed to aggregate payout updates:', err);
+        logger.error('notification_center.aggregate_payout_updates_failed', {}, err);
       }
     },
     [addEvent],

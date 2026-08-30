@@ -61,24 +61,6 @@ function shouldSendForEvent(
   return prefs.notifyOnFailed;
 }
 
-async function attemptDelivery(
-  adapter: ChannelAdapter,
-  destination: string,
-  subject: string,
-  message: string,
-): Promise<DeliveryResult> {
-  let lastResult: DeliveryResult = { status: 'failed', errorMessage: 'No attempt made' };
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    lastResult = await adapter.send(destination, subject, message).catch((err: unknown) => ({
-      status: 'failed' as const,
-      errorMessage: err instanceof Error ? err.message : String(err),
-    }));
-    if (lastResult.status !== 'failed') break;
-    if (attempt < MAX_ATTEMPTS) await sleep(RETRY_DELAY_MS * attempt);
-  }
-  return lastResult;
-}
-
 export async function getOrCreateNotificationPreferences(
   userAddress: string,
 ): Promise<NotificationPreferences> {

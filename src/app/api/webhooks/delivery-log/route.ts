@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ErrorHandler } from '@/lib/error-handler';
-import { getDeliveryLogs, getDeliveryLogById } from '@/lib/webhook';
+import { getDeliveryLogs } from '@/lib/webhook';
 import { requireApiKeyAdmin } from '@/app/api/api-keys/_utils';
 import { decodeCursor, createPaginatedResponse } from '@/lib/pagination';
 

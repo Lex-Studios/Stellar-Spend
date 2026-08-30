@@ -62,8 +62,9 @@ export async function recordEntry(
       now,
     ]);
     return rowToEntry(result.rows[0]);
-  } catch (err: any) {
-    if (err?.code === '23505' && err?.constraint?.includes('entry_hash')) {
+  } catch (err) {
+    const pgErr = err as { code?: string; constraint?: string };
+    if (pgErr?.code === '23505' && pgErr?.constraint?.includes('entry_hash')) {
       throw new LedgerError('Duplicate ledger entry detected', err);
     }
     throw new LedgerError('Failed to record ledger entry', err);
