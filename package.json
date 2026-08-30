@@ -82,6 +82,7 @@
     "jsdom": "^29.0.1",
     "knip": "^5.88.1",
     "license-checker": "^25.0.1",
+    "msw": "^2.15.0",
     "node-mocks-http": "^1.14.1",
     "playwright": "^1.61.1",
     "prettier": "^3.4.2",
