@@ -1,7 +1,13 @@
 # rustfmt.toml — Stellar-Spend Soroban workspace formatting rules
 #
-# Run `cargo fmt --workspace` to apply.
-# CI enforces this via `cargo fmt --check` in .github/workflows/contract.yml.
+# These options are all stable-channel features so that `cargo fmt --check`
+# works under the stable toolchain CI uses (see .github/workflows/contract.yml).
+# Nightly-only knobs (imports_granularity, group_imports, imports_layout,
+# trailing_comma, blank_lines_upper_bound/lower_bound, comment_width,
+# wrap_comments, normalize_comments, normalize_doc_attributes) were removed so
+# formatting is deterministic on stable Rust.
+#
+# Run `cargo fmt` to apply. CI enforces this via `cargo fmt --check`.
 
 edition = "2021"
 
@@ -12,24 +18,6 @@ hard_tabs = false
 # Line length
 max_width = 100
 use_small_heuristics = "Default"
-
-# Imports: merge + group by std / external / crate
-imports_granularity = "Crate"
-group_imports = "StdExternalCrate"
-imports_layout = "HorizontalVertical"
-
-# Trailing commas in multi-line structures
-trailing_comma = "Vertical"
-
-# Blank lines
-blank_lines_upper_bound = 2
-blank_lines_lower_bound = 0
-
-# Comments
-comment_width = 100
-wrap_comments = false
-normalize_comments = true
-normalize_doc_attributes = true
 
 # Misc
 newline_style = "Unix"

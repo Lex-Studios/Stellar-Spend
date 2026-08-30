@@ -1,7 +1,6 @@
 //! Multisig-authority unit tests.
 //!
 //! All setup comes from [`crate::test_utils`] (issue #818).
-
 use soroban_sdk::{testutils::Address as _, Address, Vec};
 use stellar_spend_shared::errors::ContractError;
 
@@ -9,9 +8,35 @@ use crate::test_utils::{
     assert_fresh_init_is_current, MultisigTest, DEFAULT_HIGH_VALUE_LIMIT, DEFAULT_THRESHOLD,
 };
 use crate::SCHEMA_VERSION;
+use soroban_sdk::testutils::Events as _;
 
 // ── Initialisation ───────────────────────────────────────────────────────────
 
+fn assert_event<T>(
+    event: (
+        soroban_sdk::Address,
+        soroban_sdk::Vec<soroban_sdk::Val>,
+        soroban_sdk::Val,
+    ),
+    address: &soroban_sdk::Address,
+    env: &soroban_sdk::Env,
+    expected_topic: soroban_sdk::Symbol,
+    expected_data: T,
+) where
+    T: soroban_sdk::TryFromVal<soroban_sdk::Env, soroban_sdk::Val>
+        + core::cmp::PartialEq
+        + core::fmt::Debug,
+{
+    let (addr, topics, data) = event;
+    assert_eq!(addr, *address);
+    let topic_val = topics.get(0).unwrap();
+    let expected_topic_val: soroban_sdk::Val =
+        soroban_sdk::IntoVal::<soroban_sdk::Env, soroban_sdk::Val>::into_val(&expected_topic, env);
+    assert!(topic_val.shallow_eq(&expected_topic_val));
+    let decoded: T =
+        soroban_sdk::TryFromVal::try_from_val(env, &data).expect("failed to decode event data");
+    assert_eq!(decoded, expected_data);
+}
 #[test]
 fn init_persists_signers_threshold_and_schema() {
     let t = MultisigTest::setup();
@@ -471,7 +496,10 @@ fn signer_removed_after_signing_invalidates_their_pending_vote() {
     t.client().sign(&t.signer(1), &id);
     let (sigs, _, executable) = t.client().proposal_status(&id);
     assert_eq!(sigs, 2);
-    assert!(executable, "two signatures should be executable before removal");
+    assert!(
+        executable,
+        "two signatures should be executable before removal"
+    );
 
     // Admin removes signer(1).
     t.client().remove_signer(&t.admin, &t.signer(1));
@@ -547,7 +575,8 @@ fn threshold_change_is_recorded_and_reflected_by_required_threshold() {
 
     // `required_threshold` must use the new threshold for high-value queries.
     assert_eq!(
-        t.client().required_threshold(&(DEFAULT_HIGH_VALUE_LIMIT + 1)),
+        t.client()
+            .required_threshold(&(DEFAULT_HIGH_VALUE_LIMIT + 1)),
         3,
         "required_threshold must reflect the updated threshold"
     );
@@ -611,177 +640,168 @@ fn pending_proposal_under_old_threshold_requires_new_threshold_at_execution() {
 
 #[test]
 fn init_emits_event_with_admin_threshold_high_value_limit() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = MultisigTest::registered();
-    t.client().init(&t.admin, &t.signers, &DEFAULT_THRESHOLD, &DEFAULT_HIGH_VALUE_LIMIT);
+    t.client().init(
+        &t.admin,
+        &t.signers,
+        &DEFAULT_THRESHOLD,
+        &DEFAULT_HIGH_VALUE_LIMIT,
+    );
 
-    assert_eq!(
-        t.env.events().all(),
-        soroban_sdk::vec![
-            &t.env,
-            (
-                t.contract_id.clone(),
-                (symbol_short!("init"),).into_val(&t.env),
-                (t.admin.clone(), DEFAULT_THRESHOLD, DEFAULT_HIGH_VALUE_LIMIT).into_val(&t.env),
-            ),
-        ]
+    let events = t.env.events().all();
+    assert_eq!(events.len(), 1);
+    let event = events.get(0).unwrap();
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("init"),
+        (t.admin.clone(), DEFAULT_THRESHOLD, DEFAULT_HIGH_VALUE_LIMIT),
     );
 }
 
 #[test]
 fn propose_emits_event_with_id_proposer_target_value() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = MultisigTest::setup();
     let target = soroban_sdk::Address::generate(&t.env);
-    let before = t.env.events().all().len();
 
     let id = t.id("evt-p1");
-    t.client().propose(&t.signer(0), &id, &t.id("desc"), &target, &100);
+    t.client()
+        .propose(&t.signer(0), &id, &t.id("desc"), &target, &100);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("proposed"),).into_val(&t.env),
-            (id, t.signer(0), target, 100i128).into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("proposed"),
+        (id, t.signer(0), target, 100i128),
     );
 }
 
 #[test]
 fn sign_emits_event_with_proposal_id_signer_count() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = MultisigTest::setup();
     let target = soroban_sdk::Address::generate(&t.env);
     let id = t.propose_high_value("evt-sign", &target);
-    let before = t.env.events().all().len();
 
     let count = t.client().sign(&t.signer(1), &id);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("signed"),).into_val(&t.env),
-            (id, t.signer(1), count).into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("signed"),
+        (id, t.signer(1), count),
     );
 }
 
 #[test]
 fn execute_emits_event_with_proposal_id_executor_value_sig_count() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = MultisigTest::setup();
     let target = soroban_sdk::Address::generate(&t.env);
     let id = t.propose_low_value("evt-exec", &target);
-    let before = t.env.events().all().len();
 
     // Low-value proposal: 1 signer (the proposer).
     let value = DEFAULT_HIGH_VALUE_LIMIT / 2;
     t.client().execute(&t.signer(0), &id);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
     // Data: (proposal_id, executor, value, sig_count=1)
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("executed"),).into_val(&t.env),
-            (id, t.signer(0), value, 1u32).into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("executed"),
+        (id, t.signer(0), value, 1u32),
     );
 }
 
 #[test]
 fn add_signer_emits_event_with_new_signer_address() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = MultisigTest::setup();
     let new_signer = soroban_sdk::Address::generate(&t.env);
-    let before = t.env.events().all().len();
 
     t.client().add_signer(&t.admin, &new_signer);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("add_sgn"),).into_val(&t.env),
-            new_signer.into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("add_sgn"),
+        new_signer,
     );
 }
 
 #[test]
 fn remove_signer_emits_event_with_removed_signer_address() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = MultisigTest::setup();
-    let before = t.env.events().all().len();
 
     t.client().remove_signer(&t.admin, &t.signer(2));
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("rm_sgn"),).into_val(&t.env),
-            t.signer(2).into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("rm_sgn"),
+        t.signer(2),
     );
 }
 
 #[test]
 fn set_threshold_emits_event_with_new_threshold() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = MultisigTest::setup();
-    let before = t.env.events().all().len();
 
     t.client().set_threshold(&t.admin, &3);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("set_thr"),).into_val(&t.env),
-            3u32.into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("set_thr"),
+        3u32,
     );
 }
 
 #[test]
 fn set_high_value_limit_emits_event_with_new_limit() {
-    use soroban_sdk::{symbol_short, IntoVal};
+    use soroban_sdk::symbol_short;
 
     let t = MultisigTest::setup();
-    let before = t.env.events().all().len();
 
     t.client().set_high_value_limit(&t.admin, &5_000);
     let all_events = t.env.events().all();
-    let event = all_events.get(before).unwrap();
+    let event = all_events.get(0).unwrap();
 
-    assert_eq!(
+    assert_event(
         event,
-        (
-            t.contract_id.clone(),
-            (symbol_short!("set_hvl"),).into_val(&t.env),
-            5_000i128.into_val(&t.env),
-        )
+        &t.contract_id,
+        &t.env,
+        symbol_short!("set_hvl"),
+        5_000i128,
     );
 }
