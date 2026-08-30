@@ -70,6 +70,7 @@ export function BankField({ type, value, onChange, label, placeholder, disabled 
           disabled={disabled}
           aria-invalid={showError}
           aria-describedby={showError ? `bank-field-${type}-error` : undefined}
+          data-testid={type === 'account' ? 'account-number-input' : `bank-field-${type}-input`}
           className={cn(
             'flex-1 bg-transparent border-0 outline-none text-text text-sm font-ibm-plex-mono tracking-[0.04em]',
             disabled ? 'opacity-50' : 'opacity-100',

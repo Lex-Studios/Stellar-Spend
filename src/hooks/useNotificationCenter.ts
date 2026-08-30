@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { PriceAlertStorage, type PriceAlert } from '@/lib/price-alerts';
 import type { NotificationDeliveryRecord } from '@/lib/notifications';
+import { formatNumber } from '@/lib/format';
 
 export type NotificationCenterEventType =
   | 'price_alert'
@@ -195,7 +196,7 @@ export function useNotificationCenter(userAddress: string | null) {
             id: alertEventId,
             type: 'price_alert',
             title: `Price Alert: ${alert.currency}`,
-            description: `Your alert for ${alert.currency} at ₦${alert.targetPrice.toLocaleString()} has been triggered at ₦${lastTrigger.priceAtTrigger.toLocaleString()}`,
+            description: `Your alert for ${alert.currency} at ₦${formatNumber(alert.targetPrice)} has been triggered at ₦${formatNumber(lastTrigger.priceAtTrigger)}`,
             read: false,
             createdAt: lastTrigger.timestamp,
             link: {

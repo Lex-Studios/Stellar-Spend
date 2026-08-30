@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { ErrorHandler } from '@/lib/error-handler';
 import {
   processRefund,
@@ -7,16 +8,30 @@ import {
 } from '@/lib/refund';
 import { dal } from '@/lib/db';
 import { withIdempotency } from '@/lib/idempotency';
+import { validateBody } from '@/lib/validation/validate-request';
 import type { NextRequest } from 'next/server';
 
 export const maxDuration = 30;
+
+const refundBodySchema = z
+  .object({
+    userAddress: z.string().min(1).optional(),
+    transactionId: z.string().min(1).optional(),
+    reason: z.string().min(1).optional(),
+    partial: z.boolean().optional(),
+  })
+  .refine((data) => Boolean(data.userAddress || data.transactionId), {
+    message: 'userAddress or transactionId is required',
+  });
 
 export async function POST(request: NextRequest) {
   return withIdempotency(
     request,
     async () => {
       try {
-        const body = await request.json();
+        const validation = await validateBody(request, refundBodySchema);
+        if (!validation.success) return validation.response;
+        const body = validation.data;
 
         if (body.userAddress && !body.transactionId) {
           const results = await processEligibleRefunds(body.userAddress);

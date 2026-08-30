@@ -28,6 +28,7 @@ export const WalletOptionButton = forwardRef<HTMLButtonElement, WalletOptionButt
         disabled={isConnecting}
         aria-label={`Connect with ${wallet.name}`}
         aria-busy={isThisConnecting}
+        data-testid={`wallet-option-${wallet.type}`}
         className={cn(
           'flex items-center gap-4 w-full px-4 py-4 border text-left',
           'transition-all duration-150',

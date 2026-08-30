@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/cn';
+import { formatNumber } from '@/lib/format';
 
 export interface ProviderQuote {
   id: string;
@@ -120,7 +121,7 @@ export function QuoteComparison({ quotes, selectedId, onSelect, isLoading }: Quo
             {/* Destination amount */}
             <div className="flex flex-col gap-0.5">
               <span className="text-[13px] text-text">
-                {parseFloat(q.destinationAmount).toLocaleString()}
+                {formatNumber(parseFloat(q.destinationAmount))}
               </span>
               <span className="text-[10px] text-muted">{q.currency}</span>
             </div>

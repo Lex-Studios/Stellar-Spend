@@ -14,6 +14,7 @@ import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
+import { logger } from './logger';
 
 // Enable debug logging in development
 if (process.env.NODE_ENV === 'development') {
@@ -108,17 +109,17 @@ export function createTracingSDK(): NodeSDK {
 export function initializeTracing(): NodeSDK | undefined {
   // Skip tracing if disabled
   if (process.env.OTEL_DISABLED === 'true') {
-    console.log('OpenTelemetry tracing is disabled');
+    logger.info('tracing.disabled');
     return undefined;
   }
 
   try {
     const sdk = createTracingSDK();
     sdk.start();
-    console.log('OpenTelemetry tracing initialized');
+    logger.info('tracing.initialized');
     return sdk;
   } catch (error) {
-    console.error('Failed to initialize OpenTelemetry:', error);
+    logger.error('tracing.init_failed', {}, error);
     return undefined;
   }
 }
@@ -129,9 +130,9 @@ export function initializeTracing(): NodeSDK | undefined {
 export async function shutdownTracing(sdk: NodeSDK): Promise<void> {
   try {
     await sdk.shutdown();
-    console.log('OpenTelemetry tracing shut down successfully');
+    logger.info('tracing.shutdown');
   } catch (error) {
-    console.error('Error shutting down OpenTelemetry:', error);
+    logger.error('tracing.shutdown_failed', {}, error);
   }
 }
 

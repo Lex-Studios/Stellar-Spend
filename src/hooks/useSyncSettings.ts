@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { SyncStorage } from '@/lib/sync-storage';
 import type { SyncSettings } from '@/lib/sync-storage';
 import { apiPost } from '@/lib/api/client';
+import { formatDateTime } from '@/lib/format';
 
 export interface UseSyncSettingsReturn {
   settings: SyncSettings;
@@ -67,7 +68,7 @@ export function useSyncSettings(userAddress?: string): UseSyncSettingsReturn {
 
   const queue = SyncStorage.getQueue();
   const formattedLastSync =
-    settings.lastSyncAt > 0 ? new Date(settings.lastSyncAt).toLocaleString() : 'Never';
+    settings.lastSyncAt > 0 ? formatDateTime(settings.lastSyncAt) : 'Never';
 
   return {
     settings,

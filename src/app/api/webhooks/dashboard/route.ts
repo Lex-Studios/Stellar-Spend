@@ -3,6 +3,8 @@ import { list as listDLQ, replay as replayDLQ } from '../../../../lib/webhook/dl
 import { attempt, markDelivered, markFailed } from '../../../../lib/webhook/dispatcher';
 import { hasRemainingAttempts, scheduleNext } from '../../../../lib/webhook/retry-scheduler';
 import { updateRecord } from '../../../../lib/webhook/delivery-store';
+import { ApiError } from '../../../../lib/error-types';
+import { ErrorHandler } from '../../../../lib/error-handler';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -46,7 +48,7 @@ export async function GET(request: Request) {
       })),
     });
   } catch (err) {
-    return Response.json({ error: (err as Error).message }, { status: 500 });
+    return ErrorHandler.handle(err);
   }
 }
 
@@ -55,7 +57,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: 'Invalid JSON' }, { status: 400 });
+    return ErrorHandler.handle(ApiError.validation('Invalid JSON'));
   }
 
   const { action, deliveryId, dlqEntryId } = body;
@@ -70,7 +72,7 @@ export async function POST(request: Request) {
       const records = await getRecordsByStatus('failed');
       const record = records.find((r) => r.id === deliveryId);
       if (!record) {
-        return Response.json({ error: 'Delivery not found' }, { status: 404 });
+        return ErrorHandler.handle(ApiError.notFound('Delivery'));
       }
       // Reset to pending for next scheduler run
       const updated = await updateRecord(deliveryId, {
@@ -84,7 +86,7 @@ export async function POST(request: Request) {
       const records = await getRecordsByStatus('pending');
       const record = records.find((r) => r.id === deliveryId);
       if (!record) {
-        return Response.json({ error: 'Pending delivery not found' }, { status: 404 });
+        return ErrorHandler.handle(ApiError.notFound('Pending delivery'));
       }
 
       const result = await attempt(record);
@@ -104,8 +106,8 @@ export async function POST(request: Request) {
       return Response.json({ success: false, scheduled: false, result });
     }
 
-    return Response.json({ error: 'Unknown action' }, { status: 400 });
+    return ErrorHandler.handle(ApiError.validation('Unknown action'));
   } catch (err) {
-    return Response.json({ error: (err as Error).message }, { status: 500 });
+    return ErrorHandler.handle(err);
   }
 }

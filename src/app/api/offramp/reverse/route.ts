@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { TransactionStorage } from '@/lib/transaction-storage';
 import { withIdempotency } from '@/lib/idempotency';
 import { ErrorHandler } from '@/lib/error-handler';
+import { validateBody } from '@/lib/validation/validate-request';
+
+const createReversalSchema = z.object({
+  transactionId: z.string().min(1),
+  amount: z.string().min(1),
+  reason: z.string().min(1),
+});
+
+const reviewReversalSchema = z.object({
+  requestId: z.string().min(1),
+  action: z.enum(['approve', 'reject']),
+  notes: z.string().optional(),
+});
+
+const reversalActionSchema = z.object({
+  action: z.string().min(1),
+});
 
 const REVERSAL_FEE_RATE = 0.01;
 const REVERSAL_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -87,11 +105,9 @@ export async function POST(req: NextRequest) {
     req,
     async () => {
       try {
-        const { transactionId, amount, reason } = await req.json();
-
-        if (!transactionId || !amount || !reason) {
-          return ErrorHandler.validation('Missing required fields: transactionId, amount, reason');
-        }
+        const validation = await validateBody(req, createReversalSchema);
+        if (!validation.success) return validation.response;
+        const { transactionId, amount, reason } = validation.data;
 
         const tx = TransactionStorage.getById(transactionId);
         if (!tx) {
@@ -149,15 +165,9 @@ export async function PATCH(req: NextRequest) {
     req,
     async () => {
       try {
-        const { requestId, action, notes } = await req.json();
-
-        if (!requestId || !action) {
-          return ErrorHandler.validation('Missing required fields: requestId, action');
-        }
-
-        if (!['approve', 'reject'].includes(action)) {
-          return ErrorHandler.validation('action must be "approve" or "reject"');
-        }
+        const validation = await validateBody(req, reviewReversalSchema);
+        if (!validation.success) return validation.response;
+        const { requestId, action, notes } = validation.data;
 
         const request = reversalRequests.get(requestId);
         if (!request) {
@@ -196,7 +206,9 @@ export async function PATCH(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const { action } = await req.json();
+    const validation = await validateBody(req, reversalActionSchema);
+    if (!validation.success) return validation.response;
+    const { action } = validation.data;
 
     if (action === 'analytics') {
       const requests = Array.from(reversalRequests.values());

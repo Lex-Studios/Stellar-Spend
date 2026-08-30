@@ -1,3 +1,5 @@
+import { getCurrencySymbol, formatFiatAmount } from '@/lib/format';
+
 export interface RightPanelProps {
   isConnected: boolean;
   isConnecting: boolean;
@@ -8,47 +10,10 @@ export interface RightPanelProps {
   onConnect: () => void;
 }
 
-const NGN_FORMATTER = new Intl.NumberFormat('en-NG', {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-});
-
-export function getCurrencySymbol(currency: string): string {
-  const symbols: Record<string, string> = {
-    NGN: '₦',
-    USD: '$',
-    EUR: '€',
-    GBP: '£',
-    KES: 'KSh',
-    GHS: '₵',
-    ZAR: 'R',
-  };
-  return symbols[currency.toUpperCase()] || currency.toUpperCase();
-}
+export { getCurrencySymbol };
 
 export function formatFiat(value: string | number, currency: string): string {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (isNaN(num)) return '—';
-
-  const symbol = getCurrencySymbol(currency);
-
-  if (currency.toUpperCase() === 'NGN') {
-    return `${symbol}${NGN_FORMATTER.format(num)}`;
-  }
-
-  try {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency.toUpperCase(),
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(num);
-  } catch {
-    return `${symbol} ${new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(num)}`;
-  }
+  return formatFiatAmount(value, currency);
 }
 
 export function formatRate(rate: number, currency: string): string {

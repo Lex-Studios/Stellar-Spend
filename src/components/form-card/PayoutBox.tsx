@@ -1,4 +1,5 @@
 import { cn } from '@/lib/cn';
+import { formatNumber } from '@/lib/format';
 import { QuoteResult, getCurrencySymbol, formatPayout } from './types';
 
 export interface PayoutBoxProps {
@@ -22,7 +23,7 @@ export function PayoutBox({
       : quote.destinationAmount;
 
   return (
-    <div className="border border-[#c9a962]/30 bg-[#c9a962]/5 px-4 py-3 flex items-center justify-between gap-4">
+    <div className="border border-[#c9a962]/30 bg-[#c9a962]/5 px-4 py-3 flex items-center justify-between gap-4" data-testid="quote-result">
       <div className="flex flex-col gap-0.5">
         <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
           Estimated Payout
@@ -30,7 +31,7 @@ export function PayoutBox({
         <span className="text-[10px] text-[#777777]">
           Rate:{' '}
           {currency.toUpperCase() === 'NGN'
-            ? `${getCurrencySymbol(currency)}${new Intl.NumberFormat('en-NG').format(effectiveRate)}`
+            ? `${getCurrencySymbol(currency)}${formatNumber(effectiveRate)}`
             : `${getCurrencySymbol(currency)} ${effectiveRate.toFixed(4)}`}{' '}
           / USDC
         </span>

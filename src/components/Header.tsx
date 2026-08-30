@@ -10,6 +10,7 @@ import { NotificationCenter } from './NotificationCenter';
 import { useFxRate } from '@/hooks/useFxRate';
 import { useNotificationCenter } from '@/hooks/useNotificationCenter';
 import type { WalletType } from '@/lib/stellar';
+import { formatNumber } from '@/lib/format';
 
 export interface HeaderProps {
   subtitle: string;
@@ -70,6 +71,7 @@ function WalletButton({
         onClick={isConnected ? onDisconnect : onOpenModal}
         disabled={disabled}
         aria-label={isConnected ? 'Disconnect wallet' : 'Connect wallet'}
+        data-testid={isConnected ? 'wallet-button' : 'connect-wallet-button'}
         className={cn(
           'px-4 py-2 min-h-[44px] text-xs tracking-widest border transition-colors duration-150',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a962] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]',
@@ -154,7 +156,7 @@ export function Header({
             )}
           >
             {rate != null
-              ? `LIVE RATE: ₦${Math.round(rate).toLocaleString()} / USDC`
+              ? `LIVE RATE: ₦${formatNumber(Math.round(rate))} / USDC`
               : 'LIVE RATE: —'}
           </span>
         </div>

@@ -106,17 +106,23 @@ class PerformanceMonitor {
    */
   private triggerAlert(slo: SLO, status: SLOStatus): void {
     const severity = status.status === 'critical' ? 'CRITICAL' : 'WARNING';
-    const message = `
-[${severity}] SLO Alert: ${slo.name}
-  Description: ${slo.description}
-  Objective: ${(slo.objective * 100).toFixed(1)}%
-  Current Value: ${(status.current_value * 100).toFixed(1)}%
-  Error Budget Remaining: ${(status.error_budget_remaining * 100).toFixed(1)}%
-  Burn Rate: ${status.burn_rate.toFixed(2)}
-  Runbook: ${slo.alerting.runbook_url}
-`;
 
-    console.error(message);
+    process.stdout.write(
+      JSON.stringify({
+        level: status.status === 'critical' ? 'error' : 'warn',
+        event: 'slo.alert',
+        timestamp: new Date().toISOString(),
+        service: 'stellar-spend',
+        severity,
+        slo: slo.name,
+        description: slo.description,
+        objective: slo.objective,
+        currentValue: status.current_value,
+        errorBudgetRemaining: status.error_budget_remaining,
+        burnRate: status.burn_rate,
+        runbookUrl: slo.alerting.runbook_url,
+      }) + '\n',
+    );
 
     // Send to alerting system
     if (typeof window !== 'undefined' && window.fetch) {
@@ -127,10 +133,19 @@ class PerformanceMonitor {
         body: JSON.stringify({
           severity: status.status,
           slo: slo.name,
-          message,
           timestamp: new Date().toISOString(),
         }),
-      }).catch(console.error);
+      }).catch((err: unknown) => {
+        process.stdout.write(
+          JSON.stringify({
+            level: 'error',
+            event: 'slo.alert.send.failed',
+            timestamp: new Date().toISOString(),
+            service: 'stellar-spend',
+            error: err instanceof Error ? { message: err.message } : String(err),
+          }) + '\n',
+        );
+      });
     }
   }
 
