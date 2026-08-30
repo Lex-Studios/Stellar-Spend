@@ -143,10 +143,7 @@ export function Header({
       >
         {/* Left: title + subtitle + FX chip */}
         <div className="flex flex-col gap-1">
-          <h1
-            className="font-space-grotesk font-bold text-white leading-none tracking-tight"
-            style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}
-          >
+          <h1 className="font-space-grotesk font-bold text-white leading-none tracking-tight text-[clamp(1.5rem,4vw,2.5rem)]">
             STELLAR-SPEND
           </h1>
           <p className="text-xs text-[#777777] tracking-widest uppercase">{subtitle}</p>

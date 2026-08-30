@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { cn } from '@/lib/cn';
 import {
   validateBankField,
   type BankFieldType,
@@ -44,28 +45,19 @@ export function BankField({ type, value, onChange, label, placeholder, disabled 
   const showError = touched && !result.valid;
   const showSuccess = touched && result.valid && value.trim().length > 0;
 
-  const borderColor = showError ? '#ef4444' : showSuccess ? '#22c55e' : 'var(--line)';
+  const borderColorClass = showError ? 'border-error' : showSuccess ? 'border-success' : 'border-line';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label
-        htmlFor={`bank-field-${type}`}
-        style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.08em' }}
-      >
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={`bank-field-${type}`} className="text-[11px] text-muted tracking-[0.08em]">
         {label ?? defaults.label}
       </label>
 
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          height: 46,
-          border: '1px solid',
-          borderColor,
-          padding: '0 12px',
-          gap: 8,
-          transition: 'border-color 0.15s',
-        }}
+        className={cn(
+          'flex items-center h-[46px] border px-3 gap-2 transition-colors duration-150',
+          borderColorClass,
+        )}
       >
         <input
           id={`bank-field-${type}`}
@@ -79,37 +71,25 @@ export function BankField({ type, value, onChange, label, placeholder, disabled 
           aria-invalid={showError}
           aria-describedby={showError ? `bank-field-${type}-error` : undefined}
           data-testid={type === 'account' ? 'account-number-input' : `bank-field-${type}-input`}
-          style={{
-            flex: 1,
-            background: 'none',
-            border: 0,
-            outline: 'none',
-            color: 'var(--text)',
-            font: 'inherit',
-            fontSize: 14,
-            opacity: disabled ? 0.5 : 1,
-            fontFamily: 'var(--font-ibm-plex-mono)',
-            letterSpacing: '0.04em',
-          }}
+          className={cn(
+            'flex-1 bg-transparent border-0 outline-none text-text text-sm font-ibm-plex-mono tracking-[0.04em]',
+            disabled ? 'opacity-50' : 'opacity-100',
+          )}
         />
         {showSuccess && (
-          <span style={{ color: '#22c55e', fontSize: 14, flexShrink: 0 }} aria-hidden>
+          <span className="text-success text-sm shrink-0" aria-hidden>
             ✓
           </span>
         )}
         {showError && (
-          <span style={{ color: '#ef4444', fontSize: 14, flexShrink: 0 }} aria-hidden>
+          <span className="text-error text-sm shrink-0" aria-hidden>
             ✕
           </span>
         )}
       </div>
 
       {showError && (
-        <p
-          id={`bank-field-${type}-error`}
-          role="alert"
-          style={{ fontSize: 11, color: '#ef4444', margin: 0 }}
-        >
+        <p id={`bank-field-${type}-error`} role="alert" className="text-[11px] text-error m-0">
           {result.error}
         </p>
       )}
@@ -153,24 +133,17 @@ export function BankAccountInput({
   disabled,
 }: BankAccountInputProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="flex flex-col gap-3">
       {/* Mode tabs */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--line)' }}>
+      <div className="flex gap-0 border-b border-line">
         {(['local', 'us', 'iban'] as BankMode[]).map((m) => (
           <button
             key={m}
             onClick={() => onModeChange(m)}
-            style={{
-              fontSize: 11,
-              padding: '6px 14px',
-              border: 'none',
-              borderBottom: mode === m ? '2px solid var(--accent)' : '2px solid transparent',
-              color: mode === m ? 'var(--accent)' : 'var(--muted)',
-              background: 'none',
-              cursor: 'pointer',
-              marginBottom: -1,
-              letterSpacing: '0.06em',
-            }}
+            className={cn(
+              'text-[11px] px-3.5 py-1.5 border-0 border-b-2 bg-transparent cursor-pointer -mb-px tracking-[0.06em]',
+              mode === m ? 'border-accent text-accent' : 'border-transparent text-muted',
+            )}
           >
             {MODE_LABELS[m]}
           </button>

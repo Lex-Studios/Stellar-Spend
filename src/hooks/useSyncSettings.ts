@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { SyncStorage } from '@/lib/sync-storage';
 import type { SyncSettings } from '@/lib/sync-storage';
+import { apiPost } from '@/lib/api/client';
 import { formatDateTime } from '@/lib/format';
 
 export interface UseSyncSettingsReturn {
@@ -43,19 +44,11 @@ export function useSyncSettings(userAddress?: string): UseSyncSettingsReturn {
 
       try {
         // Update server settings
-        const response = await fetch('/api/v1/sync/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            wallet: userAddress,
-            syncEnabled: enabled,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to update sync settings on server');
-        }
+        await apiPost(
+          '/api/v1/sync/settings',
+          { wallet: userAddress, syncEnabled: enabled },
+          { credentials: 'include' },
+        );
 
         // Update local settings
         const updated = SyncStorage.toggleSync(enabled);

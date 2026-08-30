@@ -2,6 +2,7 @@
 
 import { forwardRef } from 'react';
 import { cn } from '@/lib/cn';
+import { Icon } from '@/components/Icon';
 import type { WalletType } from '@/lib/stellar';
 import type { WalletOption } from './types';
 
@@ -58,22 +59,7 @@ export const WalletOptionButton = forwardRef<HTMLButtonElement, WalletOptionButt
         </div>
 
         {!isThisConnecting && (
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            className="shrink-0 text-[#555555]"
-            aria-hidden="true"
-          >
-            <path
-              d="M6 3L11 8L6 13"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Icon name="chevron-right" size={16} className="shrink-0 text-[#555555]" />
         )}
       </button>
     );

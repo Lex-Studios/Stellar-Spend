@@ -2,6 +2,10 @@
   "name": "stellar-spend",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/shared",
+    "packages/mobile"
+  ],
   "scripts": {
     "dev": "node ./scripts/run-next.cjs dev --hostname localhost --port 3001",
     "build": "node ./scripts/run-next.cjs build",
@@ -21,6 +25,7 @@
     "audit:fix": "npm audit fix",
     "openapi:validate": "node scripts/validate-openapi.cjs",
     "openapi:generate": "node scripts/generate-openapi.cjs",
+    "routes:audit": "node scripts/audit-api-routes.cjs",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test-storybook": "test-storybook",
@@ -39,6 +44,7 @@
     "@sentry/nextjs": "^10.46.0",
     "@stellar/freighter-api": "^6.0.1",
     "@stellar/stellar-sdk": "^14.6.1",
+    "@stellar-spend/shared": "*",
     "@zxing/browser": "^0.2.0",
     "class-variance-authority": "^0.7.1",
     "isomorphic-dompurify": "^2.11.0",

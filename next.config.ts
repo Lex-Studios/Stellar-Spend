@@ -84,6 +84,7 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year
   },
   serverExternalPackages: [...externalServerPackages],
+  transpilePackages: ['@stellar-spend/shared'],
   assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || '',
   webpack: (config, { isServer }) => {
     // Tree shaking and code splitting optimization
