@@ -87,6 +87,14 @@ pub const MAX_SINGLE_FEE_BP: u32 = 500;
 /// scan within a predictable instruction budget.
 pub const MAX_FEE_TIERS: u32 = 16;
 
+/// Treasury invariants:
+/// - `fee_for_amount(amount)` is always determined by the highest stored tier
+///   whose threshold is less than or equal to `amount`.
+/// - A valid schedule is monotonic in threshold order: increasing `amount` must not
+///   decrease the selected rate for a fixed schedule.
+/// - Fees are non-negative and never exceed the configured basis-point cap for a
+///   tier.
+
 /// Instance TTL extension (~30 days) applied on state-changing calls.
 pub const INSTANCE_TTL_EXTEND_TO: u32 = 518_400;
 /// Only pay to extend when remaining TTL drops below ~6 days.
