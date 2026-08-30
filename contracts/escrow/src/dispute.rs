@@ -7,8 +7,11 @@
 use soroban_sdk::{symbol_short, Env};
 use stellar_spend_shared::errors::ContractError;
 
-use crate::{DataKey, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD, MAX_TIMEOUT_LEDGERS, MIN_TIMEOUT_LEDGERS};
 use crate::release::{load_deposits, require_admin};
+use crate::{
+    DataKey, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD, MAX_TIMEOUT_LEDGERS,
+    MIN_TIMEOUT_LEDGERS,
+};
 
 /// Update the refund timeout applied to *future* deposits. Authority only.
 ///
@@ -36,9 +39,7 @@ pub fn set_timeout(env: &Env, timeout_ledgers: u32) -> Result<(), ContractError>
 /// Returns `false` if the deposit is already released or refunded.
 pub fn can_refund(env: &Env, deposit_id: u64) -> Result<bool, ContractError> {
     let deposits = load_deposits(env)?;
-    let deposit = deposits
-        .get(deposit_id)
-        .ok_or(ContractError::NotFound)?;
+    let deposit = deposits.get(deposit_id).ok_or(ContractError::NotFound)?;
     if deposit.released || deposit.refunded {
         return Ok(false);
     }

@@ -14,7 +14,7 @@
  * or real credentials.
  */
 
-import { test, expect, type Page, type Route } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import {
   KYC_USERS,
   KYC_DOCUMENTS,
@@ -43,61 +43,6 @@ async function stubFreighterWallet(page: Page, walletAddress: string): Promise<v
       }),
     };
   }, walletAddress);
-}
-
-/** Routes all KYC API calls to controlled mock responses. */
-async function routeKycApi(
-  page: Page,
-  handlers: {
-    getStatus?: object;
-    postAction?: object;
-    patchAction?: object;
-  },
-): Promise<void> {
-  if (handlers.getStatus !== undefined) {
-    const body = handlers.getStatus;
-    await page.route('**/api/kyc**', async (route: Route) => {
-      if (route.request().method() === 'GET') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify(body),
-        });
-      } else {
-        await route.continue();
-      }
-    });
-  }
-
-  if (handlers.postAction !== undefined) {
-    const body = handlers.postAction;
-    await page.route('**/api/kyc**', async (route: Route) => {
-      if (route.request().method() === 'POST') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify(body),
-        });
-      } else {
-        await route.continue();
-      }
-    });
-  }
-
-  if (handlers.patchAction !== undefined) {
-    const body = handlers.patchAction;
-    await page.route('**/api/kyc**', async (route: Route) => {
-      if (route.request().method() === 'PATCH') {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify(body),
-        });
-      } else {
-        await route.continue();
-      }
-    });
-  }
 }
 
 /** Routes common non-KYC API calls so they don't 502 during tests. */
@@ -174,8 +119,6 @@ test.describe('KYC Rejection & Resubmission Flow', () => {
   test('user submits KYC documents and status transitions to pending', async ({ page }) => {
     await stubFreighterWallet(page, KYC_USERS.unverified.walletAddress);
 
-    let submissionPayload: unknown = null;
-
     // Intercept the POST to capture payload and return success
     await page.route('**/api/kyc**', async (route) => {
       const method = route.request().method();
@@ -186,7 +129,7 @@ test.describe('KYC Rejection & Resubmission Flow', () => {
           body: JSON.stringify(KYC_API_RESPONSES.getUnverified),
         });
       } else if (method === 'POST') {
-        submissionPayload = await route
+        await route
           .request()
           .postDataJSON()
           .catch(() => null);

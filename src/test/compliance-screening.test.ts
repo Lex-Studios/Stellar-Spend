@@ -5,9 +5,7 @@ import {
   addScreeningOverride,
   removeScreeningOverride,
   getScreeningOverrides,
-  clearScreeningCache,
   isHighValue,
-  type ScreeningRequest,
 } from '@/lib/compliance-screening';
 
 function createLocalStorageMock() {
@@ -36,8 +34,8 @@ function createLocalStorageMock() {
 describe('Compliance Screening', () => {
   beforeEach(() => {
     if (typeof globalThis !== 'undefined') {
-      (globalThis as any).window = {};
-      (globalThis as any).localStorage = createLocalStorageMock();
+      (globalThis as unknown as { window: Record<string, unknown> }).window = {};
+      (globalThis as unknown as { localStorage: unknown }).localStorage = createLocalStorageMock();
     }
   });
 

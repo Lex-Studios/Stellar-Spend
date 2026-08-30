@@ -65,12 +65,12 @@ export async function POST(req: NextRequest) {
         const totalAmount = transactions.reduce((sum, t) => sum + (t.amount ?? 0), 0);
         const batch = await createBatch(userId, totalAmount);
 
-        for (const tx of transactions) {
+        for (const tx of transactions ?? []) {
           await addTransactionToBatch(batch.id, tx);
         }
 
         return NextResponse.json({ batchId: batch.id, status: 'created' });
-      } catch (error) {
+      } catch (_error) {
         return ErrorHandler.handle(
           new ApiError(ErrorType.SERVER_ERROR, 'Failed to process batch request'),
         );

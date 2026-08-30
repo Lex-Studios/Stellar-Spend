@@ -43,7 +43,7 @@ export async function submitTransactionWithTimeout(submitFn: () => Promise<{ txH
 
 // ── Real-world example combining multiple operations ────────────────────────
 
-export async function executeOfframpFlowWithTimeouts(sourceAddress: string, amount: string) {
+export async function executeOfframpFlowWithTimeouts(_sourceAddress: string, _amount: string) {
   try {
     // Step 1: Get quote (15s)
     const quote = await getBridgeQuoteWithTimeout(async () => {
@@ -52,7 +52,7 @@ export async function executeOfframpFlowWithTimeouts(sourceAddress: string, amou
     });
 
     // Step 2: Build transaction (30s)
-    const txXdr = await buildTransactionWithTimeout(async () => {
+    await buildTransactionWithTimeout(async () => {
       // Simulated transaction building
       return 'AAAAAgAAAABmXvHaOfxfXwVPTVw+qX...';
     });

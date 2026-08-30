@@ -30,10 +30,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
  */
 const queryMocks = new Map<string, ReturnType<typeof vi.fn>>();
 
-function registerQuery(sqlPrefix: string, mockFn: ReturnType<typeof vi.fn>) {
-  queryMocks.set(sqlPrefix.trim().toUpperCase().slice(0, 40), mockFn);
-}
-
 const mockPoolQuery = vi.fn(async (sql: string, params?: unknown[]) => {
   const key = sql.trim().toUpperCase().slice(0, 40);
   for (const [prefix, fn] of queryMocks.entries()) {

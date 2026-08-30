@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { env } from '@/lib/env';
 import { ErrorHandler } from '@/lib/error-handler';
 import { generateRequestId, createRequestLogger } from '@/lib/offramp';
-import { mapPaycrestStatus } from '@/lib/offramp';
 import { dal, DatabaseError } from '@/lib/db';
 import { enqueue } from '@/lib/webhook';
 import { verifyWebhookSignature, createNonceTable } from '@/lib/webhookVerify';

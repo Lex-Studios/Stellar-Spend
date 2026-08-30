@@ -10,13 +10,8 @@
  * - Database state consistency across lifecycle
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type {
-  OnrampQuoteRequest,
-  OnrampQuoteResponse,
-  OnrampOrderRequest,
-  OnrampOrderResponse,
-  OnrampOrderStatus,
   OnrampState,
   OnrampWebhookPayload,
 } from '@/lib/onramp';
@@ -405,7 +400,7 @@ describe('Onramp Transaction Lifecycle - Integration Tests', () => {
 
       // Simulate webhook
       const txHash = '0x' + 'a'.repeat(64);
-      const webhook = await webhookHandler.simulateWebhookDelivery(orderId, 'deposit_confirmed');
+      await webhookHandler.simulateWebhookDelivery(orderId, 'deposit_confirmed');
 
       db.updateOrder(orderId, {
         state: 'deposit_confirmed',

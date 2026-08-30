@@ -19,6 +19,20 @@ export interface ReconciliationHistoryEntry {
   alerts: ReconciliationAlert[];
 }
 
+export interface StellarTxData {
+  successful?: boolean;
+  [key: string]: unknown;
+}
+
+export interface PaycrestOrderData {
+  status?: string;
+  amount?: unknown;
+  senderAmount?: unknown;
+  [key: string]: unknown;
+}
+
+export type BaseTxData = Record<string, unknown>;
+
 export interface ReconciliationDiscrepancy {
   transactionId: string;
   type:
@@ -30,9 +44,9 @@ export interface ReconciliationDiscrepancy {
     | 'unsettled_order';
   description: string;
   severity: 'low' | 'medium' | 'high';
-  stellarData?: any;
-  baseData?: any;
-  paycrestData?: any;
+  stellarData?: StellarTxData;
+  baseData?: BaseTxData;
+  paycrestData?: PaycrestOrderData;
 }
 
 export interface ReconciliationReport {
@@ -79,7 +93,7 @@ export interface DailySettlementReport {
   downloadUrl?: string;
 }
 
-async function fetchStellarTransaction(txHash: string): Promise<any> {
+async function fetchStellarTransaction(txHash: string): Promise<StellarTxData | null> {
   try {
     const response = await fetch(`${env.server.STELLAR_HORIZON_URL}/transactions/${txHash}`, {
       signal: AbortSignal.timeout(5000),
@@ -91,7 +105,7 @@ async function fetchStellarTransaction(txHash: string): Promise<any> {
   }
 }
 
-async function fetchBaseTransaction(txHash: string): Promise<any> {
+async function fetchBaseTransaction(txHash: string): Promise<BaseTxData | null> {
   try {
     const response = await fetch(env.server.BASE_RPC_URL, {
       method: 'POST',
@@ -112,7 +126,7 @@ async function fetchBaseTransaction(txHash: string): Promise<any> {
   }
 }
 
-async function fetchPaycrestOrder(orderId: string): Promise<any> {
+async function fetchPaycrestOrder(orderId: string): Promise<PaycrestOrderData | null> {
   try {
     const response = await fetch(`https://api.paycrest.io/aggregator/orders/${orderId}`, {
       headers: { 'x-api-key': env.server.PAYCREST_API_KEY },
@@ -327,10 +341,10 @@ export async function performManualReconciliation(
     resolvedBy: action.resolvedBy,
   });
 
-  if (action.action === 'retry') {
-    const { default: txModule } = await import('./transaction-timeout');
+   if (action.action === 'retry') {
+    const txModule = await import('./transaction-timeout');
     try {
-      await (txModule as any).attemptTimeoutRecovery(action.transactionId);
+      await txModule.attemptTimeoutRecovery(action.transactionId);
       return {
         success: true,
         message: `Manual retry initiated for transaction ${action.transactionId}`,
@@ -401,12 +415,14 @@ export async function getReconciliationHistory(): Promise<ReconciliationHistoryE
   const sql = 'SELECT * FROM reconciliation_history ORDER BY run_at DESC LIMIT 30';
   try {
     const result = await pool.query(sql);
-    return result.rows.map((row: any) => ({
-      id: row.id,
-      runAt: row.run_at.toISOString(),
-      report: row.report,
-      alerts: row.alerts,
-    }));
+    return result.rows.map(
+      (row: { id: string; run_at: string | Date; report: ReconciliationReport; alerts: ReconciliationAlert[] }) => ({
+        id: row.id,
+        runAt: new Date(row.run_at).toISOString(),
+        report: row.report,
+        alerts: row.alerts,
+      }),
+    );
   } catch {
     return [];
   }

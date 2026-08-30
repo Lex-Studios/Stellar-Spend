@@ -10,10 +10,17 @@
 //! - The helpers **only** check – they do not mutate storage.  State changes
 //!   remain the responsibility of the calling contract so the control-flow
 //!   stays clear.
+//!
+//! # Policy invariants
+//! These invariants are intentional and must hold for every valid threshold setup:
+//! - For any `value`, if `high_value_limit > 0 && value <= high_value_limit`, the
+//!   required threshold is exactly 1.
+//! - Otherwise the required threshold is the full quorum threshold.
+//! - `verify_threshold` must accept iff `sig_count >= required_threshold(...)`.
 
 use soroban_sdk::{Address, Env, Symbol, Vec};
 
-use crate::errors::ContractError;
+use crate::{errors::ContractError, policy::{required_threshold, verify_threshold}};
 
 // ── Signer / admin checks ─────────────────────────────────────────────────────
 
@@ -57,36 +64,9 @@ pub fn assert_is_admin(env: &Env, addr: &Address, admin_key: &str) -> Result<(),
 
 /// Compute the required threshold for a given `value` and return it.
 ///
-/// | Condition                              | Returned threshold |
-/// |----------------------------------------|--------------------|
-/// | `high_value_limit > 0 && value <= limit` | `1`              |
-/// | otherwise                              | `full_threshold`   |
-///
-/// This mirrors the existing logic in `multisig-authority` but is now
-/// centralised and independently tested.
-pub fn required_threshold(full_threshold: u32, high_value_limit: i128, value: i128) -> u32 {
-    if high_value_limit > 0 && value <= high_value_limit {
-        1
-    } else {
-        full_threshold
-    }
-}
-
-/// Returns `Ok(sig_count)` if `sig_count >= required_threshold(…)`,
-/// otherwise `Err(ContractError::BelowThreshold)`.
-pub fn verify_threshold(
-    sig_count: u32,
-    full_threshold: u32,
-    high_value_limit: i128,
-    value: i128,
-) -> Result<u32, ContractError> {
-    let needed = required_threshold(full_threshold, high_value_limit, value);
-    if sig_count >= needed {
-        Ok(sig_count)
-    } else {
-        Err(ContractError::BelowThreshold)
-    }
-}
+/// The policy logic is isolated in `crate::policy` so the auth layer can remain
+/// storage-focused while business rules stay in one place.
+pub use crate::policy::{required_threshold, verify_threshold};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tests
@@ -95,6 +75,7 @@ pub fn verify_threshold(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use proptest::prelude::*;
 
     // ── required_threshold ────────────────────────────────────────────────────
 
@@ -168,5 +149,38 @@ mod tests {
         // Even for low-value ops, 0 sigs is insufficient
         let err = verify_threshold(0, 5, 1_000, 500).unwrap_err();
         assert_eq!(err, ContractError::BelowThreshold);
+    }
+
+    proptest! {
+        #[test]
+        fn required_threshold_policy_invariant_holds(
+            full_threshold in 1u32..=32u32,
+            high_value_limit in 0i128..=1_000_000_000i128,
+            value in 0i128..=1_000_000_000i128,
+        ) {
+            let required = required_threshold(full_threshold, high_value_limit, value);
+            if high_value_limit > 0 && value <= high_value_limit {
+                prop_assert_eq!(required, 1);
+            } else {
+                prop_assert_eq!(required, full_threshold);
+            }
+        }
+
+        #[test]
+        fn verify_threshold_matches_the_policy_invariant(
+            sig_count in 0u32..=32u32,
+            full_threshold in 1u32..=32u32,
+            high_value_limit in 0i128..=1_000_000_000i128,
+            value in 0i128..=1_000_000_000i128,
+        ) {
+            let required = required_threshold(full_threshold, high_value_limit, value);
+            let ok = verify_threshold(sig_count, full_threshold, high_value_limit, value);
+
+            if sig_count >= required {
+                prop_assert!(ok.is_ok());
+            } else {
+                prop_assert_eq!(ok.unwrap_err(), ContractError::BelowThreshold);
+            }
+        }
     }
 }

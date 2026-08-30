@@ -1,6 +1,7 @@
+import { PoolClient, QueryResult } from 'pg';
 import { pool } from './client';
 
-export type TransactionCallback<T> = (client: any) => Promise<T>;
+export type TransactionCallback<T> = (client: PoolClient) => Promise<T>;
 
 /**
  * Execute a function within a database transaction.
@@ -27,11 +28,11 @@ export async function withTransaction<T>(callback: TransactionCallback<T>): Prom
  */
 export async function executeAtomic(
   queries: Array<{ text: string; values?: unknown[] }>,
-): Promise<any[]> {
+): Promise<QueryResult[]> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const results = [];
+    const results: QueryResult[] = [];
     for (const query of queries) {
       const result = await client.query(query.text, query.values);
       results.push(result);

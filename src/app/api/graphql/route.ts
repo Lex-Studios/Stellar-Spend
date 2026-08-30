@@ -1,4 +1,4 @@
-import { graphql, parse, validate, type DocumentNode, type ValidationRule } from 'graphql';
+import { graphql, parse, validate, type DocumentNode, type ValidationRule, type ASTNode } from 'graphql';
 import { schema } from '../../../../lib/graphql/schema';
 // Resolvers are now split by domain under src/lib/graphql/resolvers/
 // The re-export from resolvers.ts keeps this import path unchanged.
@@ -48,25 +48,28 @@ const complexityRule: ValidationRule = (ctx) => ({
   },
 });
 
-function getDepth(node: any, d = 0): number {
-  if (!node.selectionSet) return d;
-  return Math.max(...node.selectionSet.selections.map((s: any) => getDepth(s, d + 1)), d);
+function getDepth(node: ASTNode, d = 0): number {
+  if (!('selectionSet' in node) || !node.selectionSet) return d;
+  return Math.max(...node.selectionSet.selections.map((s) => getDepth(s, d + 1)), d);
 }
 
 // ─── Error formatting (aligned with REST middleware) ───────────────────────────
 
-function formatError(err: any): Record<string, unknown> {
+function formatError(err: unknown): Record<string, unknown> {
   // Align with StandardErrorResponse from error-handler.middleware.ts
   const code =
     err instanceof GraphQLError
       ? ((err.extensions?.code as string) ?? 'SERVER_ERROR')
       : 'SERVER_ERROR';
 
+  const message = err instanceof Error ? err.message : 'Internal server error';
+  const stack = err instanceof Error ? err.stack : undefined;
+
   return {
     error: code,
-    message: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV !== 'production' && err.stack
-      ? { details: { stack: err.stack } }
+    message,
+    ...(process.env.NODE_ENV !== 'production' && stack
+      ? { details: { stack } }
       : {}),
   };
 }

@@ -187,7 +187,7 @@ describe('POST /api/offramp/bridge/build-tx (integration)', () => {
     vi.mocked(rateLimiter.buildTxLimiter.check).mockReturnValueOnce({
       allowed: false,
       retryAfter: 60,
-    } as any);
+    } as unknown as { allowed: false; retryAfter: number });
     const res = await POST(
       makeReq({ amount: '10', fromAddress: VALID_STELLAR, toAddress: VALID_BASE }),
     );

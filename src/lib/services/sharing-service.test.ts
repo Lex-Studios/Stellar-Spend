@@ -17,7 +17,7 @@
  *      returns null — route returns 404
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { ShareableTransaction } from '@shared/types/sharing';
 import { SharingService } from '@/lib/services';
 

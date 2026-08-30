@@ -39,10 +39,6 @@ function getExporter() {
  * Create and configure the OpenTelemetry SDK
  */
 export function createTracingSDK(): NodeSDK {
-  // Configure sampling
-  const sampleRate = parseFloat(process.env.OTEL_SAMPLE_RATE || '1.0');
-  const sampler = sampleRate < 1.0 ? new TraceIdRatioBasedSampler(sampleRate) : undefined;
-
   const resource = new Resource({
     [SemanticResourceAttributes.SERVICE_NAME]: process.env.OTEL_SERVICE_NAME || 'stellar-spend',
     [SemanticResourceAttributes.SERVICE_VERSION]: process.env.npm_package_version || '1.0.0',
@@ -79,8 +75,9 @@ export function createTracingSDK(): NodeSDK {
           span.setAttribute('http.route', route);
 
           // Add user ID if available
-          if ((request as any).user?.id) {
-            span.setAttribute('user.id', (request as any).user.id);
+          const reqUser = (request as { user?: { id?: unknown } }).user;
+          if (reqUser?.id !== undefined) {
+            span.setAttribute('user.id', String(reqUser.id));
           }
         },
       }),

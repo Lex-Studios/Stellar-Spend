@@ -26,11 +26,10 @@ export class TransactionService {
   }
 
   async listTransactions(filter: TransactionFilter): Promise<Transaction[]> {
-    const limit = Math.min(filter.limit || 50, 100);
-    const offset = filter.offset || 0;
+    // Query logic would go here, applying the supplied filter (status, currency,
+    // date range, limit, offset) to the transaction store
+    void filter;
 
-    // Query logic would go here
-    // This would filter transactions based on criteria
     return [];
   }
 
@@ -56,7 +55,7 @@ export class TransactionService {
     return true;
   }
 
-  async getTransactionStats(filter?: TransactionFilter): Promise<{
+  async getTransactionStats(_filter?: TransactionFilter): Promise<{
     total: number;
     completed: number;
     failed: number;

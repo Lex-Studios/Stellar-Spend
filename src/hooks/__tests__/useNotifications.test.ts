@@ -36,7 +36,6 @@ import {
 } from '@/lib/notifications';
 import type {
   NotificationPreferences,
-  NotificationDeliveryRecord,
 } from '@/lib/notifications';
 
 // Cast to mocked function type for easy mock setup
@@ -59,23 +58,6 @@ const MOCK_PREFERENCES: NotificationPreferences = {
   createdAt: 1_000_000,
   updatedAt: 1_000_000,
 };
-
-function buildDelivery(id: string, read = false): NotificationDeliveryRecord {
-  return {
-    id,
-    transactionId: 'tx-1',
-    userAddress: TEST_ADDRESS,
-    eventType: 'completed',
-    channel: 'email',
-    status: 'sent',
-    templateId: 'tpl-1',
-    message: 'Your transaction is complete.',
-    attemptCount: 1,
-    metadata: { read },
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
-}
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 

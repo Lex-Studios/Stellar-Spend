@@ -8,7 +8,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { seed, makeUser, makeTransaction } from '@/test/factories';
 import { AuditLoggingService } from '@/lib/audit-logging';
-import { NextRequest } from 'next/server';
 
 describe('Audit Logging — Completeness', () => {
   let auditService: AuditLoggingService;

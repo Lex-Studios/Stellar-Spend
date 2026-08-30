@@ -38,7 +38,7 @@ export async function createBatch(userId: string, totalAmount: number) {
   return result.rows[0];
 }
 
-export async function addTransactionToBatch(batchId: string, transactionData: any) {
+export async function addTransactionToBatch(batchId: string, transactionData: Record<string, unknown>) {
   const result = await db.query(
     `INSERT INTO batch_transactions (batch_id, status, payload)
      VALUES ($1, 'pending', $2)
@@ -134,12 +134,12 @@ export async function executeBatch(
       const transactionId = await handler(tx.payload ?? {});
       await updateBatchTransactionStatus(tx.id, 'completed', transactionId);
       succeeded++;
-    } catch (err: any) {
+    } catch (err) {
       await updateBatchTransactionStatus(
         tx.id,
         'failed',
         undefined,
-        err?.message ?? 'Unknown error',
+        err instanceof Error ? err.message : 'Unknown error',
       );
       failed++;
     }

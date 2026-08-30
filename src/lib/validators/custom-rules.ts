@@ -1,4 +1,4 @@
-import { createValidationError, createValidationResult, type ValidationResult } from './types';
+import { createValidationError, type ValidationResult } from './types';
 import { ValidationService } from './service';
 
 export function validateAddressLegacy(

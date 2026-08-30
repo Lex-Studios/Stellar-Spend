@@ -43,7 +43,7 @@ export default function DashboardClient() {
     setResetKey((prev) => prev + 1);
   }, []);
 
-  const handleSubmit = useCallback(async (payload: OfframpPayload) => {
+  const handleSubmit = useCallback(async (_payload: OfframpPayload) => {
     // Implement actual submission logic
     await new Promise((resolve) => setTimeout(resolve, 2000));
     alert('Offramp initiated successfully!');

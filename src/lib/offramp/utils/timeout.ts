@@ -2,6 +2,8 @@
  * Timeout utilities for external service calls
  */
 
+import { logger } from '@/lib/logger';
+
 /**
  * Custom error class for timeout scenarios
  */
@@ -171,7 +173,15 @@ function logTimeoutEvent(entry: TimeoutLogEntry): void {
   const logLevel =
     entry.status === 'timeout' ? 'error' : entry.status === 'near_timeout' ? 'warn' : 'info';
 
-  console[logLevel]('Timeout event:', entry);
+  const eventData = { status: entry.status, service: entry.service, operation: entry.operation };
+
+  if (logLevel === 'error') {
+    logger.error('timeout.event', eventData);
+  } else if (logLevel === 'warn') {
+    logger.warn('timeout.event', eventData);
+  } else {
+    logger.info('timeout.event', eventData);
+  }
 }
 
 /**
@@ -205,7 +215,7 @@ export async function withTimeout<T>(
  */
 export async function withAllbridgeTimeout<T>(promise: Promise<T>, operation?: string): Promise<T> {
   return createAbortablePromise(
-    async (signal) => {
+    async (_signal) => {
       // For promises that don't natively support AbortSignal,
       // we race the promise with the timeout
       return promise;
@@ -221,7 +231,7 @@ export async function withAllbridgeTimeout<T>(promise: Promise<T>, operation?: s
  */
 export async function withPaycrestTimeout<T>(promise: Promise<T>, operation?: string): Promise<T> {
   return createAbortablePromise(
-    async (signal) => {
+    async (_signal) => {
       return promise;
     },
     TIMEOUT_CONFIG.PAYCREST_API.duration,
@@ -235,7 +245,7 @@ export async function withPaycrestTimeout<T>(promise: Promise<T>, operation?: st
  */
 export async function withSorobanTimeout<T>(promise: Promise<T>, operation?: string): Promise<T> {
   return createAbortablePromise(
-    async (signal) => {
+    async (_signal) => {
       return promise;
     },
     TIMEOUT_CONFIG.SOROBAN_RPC.duration,

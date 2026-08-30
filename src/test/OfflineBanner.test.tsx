@@ -1,5 +1,5 @@
 import { render, screen, act } from '@testing-library/react';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import OfflineBanner from '@/components/OfflineBanner';
 
 function setOnline(value: boolean) {

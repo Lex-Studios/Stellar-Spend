@@ -6,7 +6,6 @@
  * and returns 200/503 depending on dependency availability.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NextResponse } from 'next/server';
 
 // ── Mock health-check module ──────────────────────────────────────────────────
 const mockPerformHealthCheck = vi.fn();

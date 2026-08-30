@@ -56,7 +56,7 @@ function makeMerchant(overrides = {}) {
 
 // ── GET /api/merchant ─────────────────────────────────────────────────────────
 describe('GET /api/merchant', () => {
-  let GET: (req: any) => Promise<Response>;
+  let GET: (req: NextRequest) => Promise<Response>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -108,7 +108,7 @@ describe('GET /api/merchant', () => {
 
 // ── POST /api/merchant ────────────────────────────────────────────────────────
 describe('POST /api/merchant', () => {
-  let POST: (req: any) => Promise<Response>;
+  let POST: (req: NextRequest) => Promise<Response>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -167,7 +167,7 @@ describe('POST /api/merchant', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: 'not-valid-json',
-    }) as any;
+    }) as unknown as NextRequest;
     const res = await POST(req);
     expect(res.status).toBe(400);
     expect(mockCreateMerchant).not.toHaveBeenCalled();
@@ -176,7 +176,7 @@ describe('POST /api/merchant', () => {
 
 // ── GET /api/merchant/payouts ─────────────────────────────────────────────────
 describe('GET /api/merchant/payouts', () => {
-  let GET: (req: any) => Promise<Response>;
+  let GET: (req: NextRequest) => Promise<Response>;
   const BASE = 'http://localhost/api/merchant/payouts';
 
   beforeEach(async () => {
@@ -211,7 +211,7 @@ describe('GET /api/merchant/payouts', () => {
 
 // ── POST /api/merchant/payouts ────────────────────────────────────────────────
 describe('POST /api/merchant/payouts', () => {
-  let POST: (req: any) => Promise<Response>;
+  let POST: (req: NextRequest) => Promise<Response>;
   const BASE = 'http://localhost/api/merchant/payouts';
 
   const validPayoutBody = {

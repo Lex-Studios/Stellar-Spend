@@ -1,8 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { WalletManager } from '../manager';
-import { FreighterAdapter } from '../freighter.adapter';
-import { LobstrAdapter } from '../lobstr.adapter';
-import { WalletNotAvailableError } from '../adapter';
 
 // Mock the adapters
 vi.mock('../freighter.adapter');

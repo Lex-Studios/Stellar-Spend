@@ -168,7 +168,7 @@ describe('POST /api/offramp/paycrest/order (integration)', () => {
     vi.mocked(rateLimiter.paycrestOrderLimiter.check).mockReturnValueOnce({
       allowed: false,
       retryAfter: 30,
-    } as any);
+    } as unknown as { allowed: false; retryAfter: number });
     const res = await POST(makeReq(VALID_BODY));
     expect(res.status).toBe(429);
     expect(res.headers.get('Retry-After')).toBe('30');

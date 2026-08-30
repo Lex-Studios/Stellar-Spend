@@ -1,5 +1,4 @@
 import { fetchPaycrestQuote, buildQuote, type QuoteResult } from './offramp/utils/quote-fetcher';
-import { providerRegistry } from './offramp/adapters/provider-registry';
 import { getCacheClient } from './cache';
 
 export interface ProviderQuote extends QuoteResult {

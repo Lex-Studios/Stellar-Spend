@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 
 // Mock DB client before importing the service
 vi.mock('../db/client', () => ({
@@ -12,6 +12,9 @@ vi.mock('../db/client', () => ({
 
 import { db } from '../db/client';
 
+type DbResult = { rows: Array<Record<string, unknown>> };
+const queryMock = db.query as unknown as Mock;
+
 // Set dummy env var
 process.env.DATABASE_URL = 'postgres://localhost:5432/dummy';
 
@@ -19,8 +22,6 @@ import {
   calculateRiskScore,
   calculateInsurancePremium,
   createInsurance,
-  getInsuranceStatus,
-  getInsuranceById,
   fileClaim,
   verifyClaim,
   approveClaim,
@@ -90,7 +91,7 @@ describe('Insurance Service', () => {
     };
 
     it('should create insurance record in pending/active state', async () => {
-      (db.query as any).mockResolvedValueOnce({
+      queryMock.mockResolvedValueOnce({
         rows: [{ ...mockActivePolicyRow }],
       });
 
@@ -99,11 +100,11 @@ describe('Insurance Service', () => {
         expect.stringContaining('INSERT INTO transaction_insurance'),
         [mockTxId, 15.0, 1100.0, 'premium'],
       );
-      expect((res as any).rows[0].status).toBe('active');
+      expect((res as unknown as DbResult).rows[0].status).toBe('active');
     });
 
     it('should file claim successfully on existing insurance policy fixture', async () => {
-      (db.query as any).mockResolvedValueOnce({
+      queryMock.mockResolvedValueOnce({
         rows: [{ ...mockActivePolicyRow, status: 'claimed', claim_id: 'CLAIM-1001' }],
       });
 
@@ -117,11 +118,11 @@ describe('Insurance Service', () => {
           mockInsuranceId,
         ]),
       );
-      expect((result as any).rows[0].status).toBe('claimed');
+      expect((result as unknown as DbResult).rows[0].status).toBe('claimed');
     });
 
     it('should verify claim eligibility correctly for valid claims', async () => {
-      (db.query as any).mockResolvedValueOnce({
+      queryMock.mockResolvedValueOnce({
         rows: [mockClaimedPolicyRow],
       });
 
@@ -130,7 +131,7 @@ describe('Insurance Service', () => {
     });
 
     it('should fail claim verification if policy is not in claimed status', async () => {
-      (db.query as any).mockResolvedValueOnce({
+      queryMock.mockResolvedValueOnce({
         rows: [mockActivePolicyRow],
       });
 
@@ -140,7 +141,7 @@ describe('Insurance Service', () => {
     });
 
     it('should fail claim verification if claim is missing stated reason', async () => {
-      (db.query as any).mockResolvedValueOnce({
+      queryMock.mockResolvedValueOnce({
         rows: [{ ...mockClaimedPolicyRow, claim_reason: null }],
       });
 
@@ -151,7 +152,7 @@ describe('Insurance Service', () => {
 
     it('should approve verified claim successfully', async () => {
       // Mock verifyClaim lookup
-      (db.query as any)
+      queryMock
         .mockResolvedValueOnce({ rows: [mockClaimedPolicyRow] }) // verifyClaim
         .mockResolvedValueOnce({ rows: [{ ...mockClaimedPolicyRow, status: 'claim_approved' }] }); // approveClaim UPDATE
 
@@ -160,11 +161,11 @@ describe('Insurance Service', () => {
         expect.stringContaining("SET status = 'claim_approved'"),
         [mockInsuranceId],
       );
-      expect((res as any).rows[0].status).toBe('claim_approved');
+      expect((res as unknown as DbResult).rows[0].status).toBe('claim_approved');
     });
 
     it('should reject claim with specific rejection reason', async () => {
-      (db.query as any).mockResolvedValueOnce({
+      queryMock.mockResolvedValueOnce({
         rows: [
           {
             ...mockClaimedPolicyRow,
@@ -179,23 +180,23 @@ describe('Insurance Service', () => {
         expect.stringContaining("SET status = 'claim_rejected'"),
         ['Insufficient evidence', mockInsuranceId],
       );
-      expect((res as any).rows[0].rejection_reason).toBe('Insufficient evidence');
+      expect((res as unknown as DbResult).rows[0].rejection_reason).toBe('Insufficient evidence');
     });
 
     it('should process insurance payout for approved claims', async () => {
       const approvedRow = { ...mockClaimedPolicyRow, status: 'claim_approved' };
-      (db.query as any)
+      queryMock
         .mockResolvedValueOnce({ rows: [approvedRow] }) // get insurance record
         .mockResolvedValueOnce({
           rows: [{ ...approvedRow, status: 'paid', payout_reference: 'PAY-123' }],
         }); // payout UPDATE
 
       const res = await processInsurancePayout(mockInsuranceId);
-      expect((res as any).rows[0].status).toBe('paid');
+      expect((res as unknown as DbResult).rows[0].status).toBe('paid');
     });
 
     it('should throw error if attempting payout on unapproved claim', async () => {
-      (db.query as any).mockResolvedValueOnce({ rows: [mockClaimedPolicyRow] });
+      queryMock.mockResolvedValueOnce({ rows: [mockClaimedPolicyRow] });
 
       await expect(processInsurancePayout(mockInsuranceId)).rejects.toThrow(
         'Claim must be approved before payout',
@@ -203,7 +204,7 @@ describe('Insurance Service', () => {
     });
 
     it('should aggregate insurance analytics correctly', async () => {
-      (db.query as any).mockResolvedValueOnce({
+      queryMock.mockResolvedValueOnce({
         rows: [
           {
             total_policies: 10,

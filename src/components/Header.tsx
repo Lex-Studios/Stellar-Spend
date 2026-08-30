@@ -116,7 +116,6 @@ export function Header({
   // Expose openModal to parent via callback ref
   useEffect(() => {
     onModalRef?.(handleOpenModal);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onModalRef]);
 
   const handleCloseModal = () => {

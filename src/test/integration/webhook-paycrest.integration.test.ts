@@ -50,6 +50,7 @@ import { POST } from '@/app/api/webhooks/paycrest/route';
 import { dal } from '@/lib/db';
 import { notifyTransactionStatusUpdate } from '@/lib/notifications';
 import { enqueue } from '@/lib/webhook';
+import type { Transaction } from '@/lib/repositories';
 
 async function hmacHex(body: string, secret: string): Promise<string> {
   const enc = new TextEncoder();
@@ -79,12 +80,19 @@ function makeRequest(body: string, signature: string, timestamp?: string, nonce?
 
 const FAKE_TRANSACTION = {
   id: 'tx-1',
+  timestamp: 1_700_000_000_000,
   status: 'pending',
   payoutStatus: undefined,
   userAddress: 'GABC',
   amount: '100',
   currency: 'NGN',
-};
+  beneficiary: {
+    institution: 'ACCESS',
+    accountIdentifier: '123456',
+    accountName: 'Test User',
+    currency: 'NGN',
+  },
+} satisfies Transaction;
 
 describe('POST /api/webhooks/paycrest (integration)', () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;
@@ -95,7 +103,7 @@ describe('POST /api/webhooks/paycrest (integration)', () => {
     vi.mocked(dal.update).mockReset().mockResolvedValue(undefined);
     vi.mocked(dal.getById)
       .mockReset()
-      .mockResolvedValue(FAKE_TRANSACTION as any);
+      .mockResolvedValue(FAKE_TRANSACTION);
     vi.mocked(enqueue).mockReset().mockResolvedValue(undefined);
     vi.mocked(notifyTransactionStatusUpdate).mockReset().mockResolvedValue(undefined);
     consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -144,7 +152,7 @@ describe('POST /api/webhooks/paycrest (integration)', () => {
   });
 
   it('updates transaction to completed on payment_order.settled', async () => {
-    vi.mocked(dal.getByPayoutOrderId).mockResolvedValue(FAKE_TRANSACTION as any);
+    vi.mocked(dal.getByPayoutOrderId)      .mockResolvedValue(FAKE_TRANSACTION as Parameters<typeof dal.getByPayoutOrderId>[0] extends string ? Awaited<ReturnType<typeof dal.getByPayoutOrderId>> : never);
     const body = JSON.stringify({
       event: 'payment_order.settled',
       data: { id: 'order-settled-1' },
@@ -158,7 +166,7 @@ describe('POST /api/webhooks/paycrest (integration)', () => {
   });
 
   it('updates transaction to failed on payment_order.refunded', async () => {
-    vi.mocked(dal.getByPayoutOrderId).mockResolvedValue(FAKE_TRANSACTION as any);
+    vi.mocked(dal.getByPayoutOrderId).mockResolvedValue(FAKE_TRANSACTION);
     const body = JSON.stringify({
       event: 'payment_order.refunded',
       data: { id: 'order-refunded-1' },
@@ -175,7 +183,7 @@ describe('POST /api/webhooks/paycrest (integration)', () => {
   });
 
   it('updates transaction to failed on payment_order.expired', async () => {
-    vi.mocked(dal.getByPayoutOrderId).mockResolvedValue(FAKE_TRANSACTION as any);
+    vi.mocked(dal.getByPayoutOrderId).mockResolvedValue(FAKE_TRANSACTION);
     const body = JSON.stringify({
       event: 'payment_order.expired',
       data: { id: 'order-expired-1' },
@@ -192,7 +200,7 @@ describe('POST /api/webhooks/paycrest (integration)', () => {
   });
 
   it('updates payoutStatus to pending on payment_order.pending', async () => {
-    vi.mocked(dal.getByPayoutOrderId).mockResolvedValue(FAKE_TRANSACTION as any);
+    vi.mocked(dal.getByPayoutOrderId).mockResolvedValue(FAKE_TRANSACTION);
     const body = JSON.stringify({
       event: 'payment_order.pending',
       data: { id: 'order-pending-1' },
@@ -214,7 +222,7 @@ describe('POST /api/webhooks/paycrest (integration)', () => {
   });
 
   it('fires notification after status update', async () => {
-    vi.mocked(dal.getByPayoutOrderId).mockResolvedValue(FAKE_TRANSACTION as any);
+    vi.mocked(dal.getByPayoutOrderId).mockResolvedValue(FAKE_TRANSACTION);
     const body = JSON.stringify({ event: 'payment_order.settled', data: { id: 'order-notify-1' } });
     const sig = await hmacHex(body, 'test-webhook-secret');
     await POST(makeRequest(body, sig, String(Date.now()), 'int-nonce-8'));

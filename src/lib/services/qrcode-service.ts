@@ -5,7 +5,7 @@ export class QRCodeService {
    * Generate QR code data from transaction details
    * Uses a simple deterministic pattern for client-side generation
    */
-  generateQRData(data: QRCodeData, options: QRCodeOptions = {}): string {
+  generateQRData(data: QRCodeData, _options: QRCodeOptions = {}): string {
     const json = JSON.stringify({
       txId: data.transactionId,
       amount: data.amount,
@@ -82,7 +82,7 @@ export class QRCodeService {
   /**
    * Get QR code by transaction ID
    */
-  async getQRCode(transactionId: string): Promise<GeneratedQRCode | null> {
+  async getQRCode(_transactionId: string): Promise<GeneratedQRCode | null> {
     // TODO: Fetch from database
     return null;
   }

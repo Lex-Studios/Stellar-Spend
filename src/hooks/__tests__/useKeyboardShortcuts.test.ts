@@ -22,8 +22,8 @@
  *     [14] reset removes localStorage key and clears state
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { renderHook } from '@testing-library/react';
 
 // ---------------------------------------------------------------------------
 // localStorage mock — set up before importing the module under test so that
@@ -48,60 +48,12 @@ import {
   saveShortcutOverride,
   resetShortcutOverrides,
   shortcutHint,
-  useKeyboardShortcuts,
   useShortcutCustomizer,
-  type Shortcut,
 } from '../useKeyboardShortcuts';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Dispatch a synthetic keydown event on window. */
-function fireKey(options: {
-  key: string;
-  ctrlKey?: boolean;
-  metaKey?: boolean;
-  shiftKey?: boolean;
-  target?: HTMLElement;
-}): KeyboardEvent {
-  const event = new KeyboardEvent('keydown', {
-    key: options.key,
-    ctrlKey: options.ctrlKey ?? false,
-    metaKey: options.metaKey ?? false,
-    shiftKey: options.shiftKey ?? false,
-    bubbles: true,
-    cancelable: true,
-  });
-
-  if (options.target) {
-    // Fake the target by defining a non-writable property via defineProperty.
-    Object.defineProperty(event, 'target', { value: options.target, configurable: true });
-  }
-
-  window.dispatchEvent(event);
-  return event;
-}
-
-/** Create a minimal Shortcut object. */
-function makeShortcut(
-  key: string,
-  action: () => void,
-  opts: Partial<Pick<Shortcut, 'ctrl' | 'shift' | 'description'>> = {}
-): Shortcut {
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value.toString();
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      store = {};
-    },
-  };
-}
 
 // ---------------------------------------------------------------------------
 // saveShortcutOverride / resetShortcutOverrides

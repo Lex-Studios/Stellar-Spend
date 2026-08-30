@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, ChangeEvent } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/lib/i18n';
 
@@ -53,11 +54,14 @@ export function FileUploadZone({
         {filePreview ? (
           <div className="flex flex-col items-center gap-2">
             {selectedFile?.type.startsWith('image/') ? (
-              <img
-                src={filePreview}
-                alt="Preview"
-                className="h-20 w-auto object-contain border border-[#333333]"
-              />
+              <span className="relative block h-20 w-20">
+                <Image
+                  src={filePreview}
+                  alt="Preview"
+                  fill
+                  className="object-contain border border-[#333333]"
+                />
+              </span>
             ) : (
               <div className="w-12 h-12 bg-[#222222] flex items-center justify-center text-xs">
                 PDF

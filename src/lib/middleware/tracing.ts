@@ -49,7 +49,7 @@ export function tracingMiddleware(req: Request, res: Response, next: NextFunctio
 
   // Handle request completion
   const originalEnd = res.end;
-  res.end = function (chunk?: any, encoding?: any, callback?: any) {
+  res.end = function (this: Response, ...args: Parameters<typeof originalEnd>) {
     // Add response attributes
     span.setAttribute('http.status_code', res.statusCode);
 
@@ -67,7 +67,7 @@ export function tracingMiddleware(req: Request, res: Response, next: NextFunctio
     span.end();
 
     // Call original end
-    return originalEnd.call(this, chunk, encoding, callback);
+    return originalEnd.apply(this, args);
   };
 
   // Handle errors
@@ -89,23 +89,33 @@ export function tracingMiddleware(req: Request, res: Response, next: NextFunctio
 /**
  * Middleware to add tracing to outbound HTTP calls
  */
-export function traceOutboundRequest(url: string, options: any) {
+interface OutboundResponse {
+  statusCode: number;
+}
+
+interface OutboundOptions {
+  method?: string;
+  headers?: Record<string, string>;
+  callback?: (response: OutboundResponse) => void;
+}
+
+export function traceOutboundRequest(url: string, options: OutboundOptions) {
   const tracer = trace.getTracer('stellar-spend-outbound');
   const span = tracer.startSpan(`HTTP ${options.method || 'GET'} ${url}`);
 
   // Inject trace context into request headers
   const ctx = trace.setSpan(propagation.activeContext(), span);
-  const headers = propagation.inject(ctx);
+  const injected = propagation.inject(ctx) as Record<string, string>;
 
   // Merge headers with options
   options.headers = {
     ...options.headers,
-    ...headers,
+    ...injected,
   };
 
   // Track request completion
   const originalCallback = options.callback;
-  options.callback = (response: any) => {
+  options.callback = (response: OutboundResponse) => {
     span.setAttribute('http.status_code', response.statusCode);
     if (response.statusCode >= 400) {
       span.setStatus({

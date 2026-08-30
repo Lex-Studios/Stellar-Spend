@@ -106,7 +106,8 @@ export async function POST(req: NextRequest) {
         logger.logError(err.status, err.message);
         return withRequestId(ErrorHandler.handle(err, err.status), requestId);
       }
-    },
+    }
+  },
     { required: true },
   );
 }

@@ -2,6 +2,7 @@
  * Performance Monitoring - SLO Tracking and Alerting
  */
 
+import { logger } from '@/lib/logger';
 import { sloConfig, SLO } from './slo-config';
 
 interface MetricPoint {
@@ -107,22 +108,16 @@ class PerformanceMonitor {
   private triggerAlert(slo: SLO, status: SLOStatus): void {
     const severity = status.status === 'critical' ? 'CRITICAL' : 'WARNING';
 
-    process.stdout.write(
-      JSON.stringify({
-        level: status.status === 'critical' ? 'error' : 'warn',
-        event: 'slo.alert',
-        timestamp: new Date().toISOString(),
-        service: 'stellar-spend',
-        severity,
-        slo: slo.name,
-        description: slo.description,
-        objective: slo.objective,
-        currentValue: status.current_value,
-        errorBudgetRemaining: status.error_budget_remaining,
-        burnRate: status.burn_rate,
-        runbookUrl: slo.alerting.runbook_url,
-      }) + '\n',
-    );
+    logger.error('slo.alert', {
+      severity,
+      slo: slo.name,
+      description: slo.description,
+      objective: slo.objective,
+      currentValue: status.current_value,
+      errorBudgetRemaining: status.error_budget_remaining,
+      burnRate: status.burn_rate,
+      runbook: slo.alerting.runbook_url,
+    });
 
     // Send to alerting system
     if (typeof window !== 'undefined' && window.fetch) {
@@ -135,17 +130,7 @@ class PerformanceMonitor {
           slo: slo.name,
           timestamp: new Date().toISOString(),
         }),
-      }).catch((err: unknown) => {
-        process.stdout.write(
-          JSON.stringify({
-            level: 'error',
-            event: 'slo.alert.send.failed',
-            timestamp: new Date().toISOString(),
-            service: 'stellar-spend',
-            error: err instanceof Error ? { message: err.message } : String(err),
-          }) + '\n',
-        );
-      });
+      }).catch((err) => logger.error('slo.alert.send_failed', {}, err));
     }
   }
 

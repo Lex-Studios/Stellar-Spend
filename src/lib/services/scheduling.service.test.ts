@@ -10,7 +10,6 @@ vi.mock('@/lib/db/client', () => ({
 import { db } from '@/lib/db';
 import {
   scheduleTransaction,
-  getScheduledTransactions,
   getPendingScheduledTransactions,
   executeScheduledTransaction,
   cancelScheduledTransaction,
@@ -37,7 +36,7 @@ describe('Scheduling Service - Execution & Timing Edge Cases', () => {
       // Target schedule time during DST shift: March 8, 2026 07:30 UTC (03:30 EDT)
       const scheduledTime = new Date('2026-03-08T07:30:00.000Z');
 
-      (db.query as any).mockResolvedValueOnce({
+      vi.mocked(db.query).mockResolvedValueOnce({
         rows: [
           {
             id: 'sched-dst-spring',
@@ -57,7 +56,7 @@ describe('Scheduling Service - Execution & Timing Edge Cases', () => {
       // Advance mock timer past the DST shift (to 08:00 UTC)
       vi.setSystemTime(new Date('2026-03-08T08:00:00.000Z'));
 
-      (db.query as any).mockResolvedValueOnce({
+      vi.mocked(db.query).mockResolvedValueOnce({
         rows: [
           {
             id: 'sched-dst-spring',
@@ -82,7 +81,7 @@ describe('Scheduling Service - Execution & Timing Edge Cases', () => {
       // 2026 Fall Back in US Eastern: Nov 1, 2026, 02:00 -> 01:00
       const scheduledTime = new Date('2026-11-01T06:00:00.000Z'); // 02:00 EDT / 01:00 EST equivalent in UTC
 
-      (db.query as any).mockResolvedValueOnce({
+      vi.mocked(db.query).mockResolvedValueOnce({
         rows: [
           {
             id: 'sched-dst-fall',
@@ -127,7 +126,7 @@ describe('Scheduling Service - Execution & Timing Edge Cases', () => {
         },
       ];
 
-      (db.query as any).mockResolvedValueOnce({ rows: pastDueRows });
+      vi.mocked(db.query).mockResolvedValueOnce({ rows: pastDueRows });
 
       const pending = await getPendingScheduledTransactions();
 
@@ -143,7 +142,7 @@ describe('Scheduling Service - Execution & Timing Edge Cases', () => {
       const scheduledId = 'sched-past-1';
       const executedTxId = 'tx-executed-999';
 
-      (db.query as any).mockResolvedValueOnce({
+      vi.mocked(db.query).mockResolvedValueOnce({
         rows: [
           {
             id: scheduledId,
@@ -159,8 +158,8 @@ describe('Scheduling Service - Execution & Timing Edge Cases', () => {
         expect.stringContaining("UPDATE scheduled_transactions SET status = 'executed'"),
         [executedTxId, scheduledId],
       );
-      expect((result as any).rows[0].status).toBe('executed');
-      expect((result as any).rows[0].transaction_id).toBe(executedTxId);
+      expect((result as { rows: Array<Record<string, unknown>> }).rows[0].status).toBe('executed');
+      expect((result as { rows: Array<Record<string, unknown>> }).rows[0].transaction_id).toBe(executedTxId);
     });
   });
 
@@ -168,7 +167,7 @@ describe('Scheduling Service - Execution & Timing Edge Cases', () => {
     it('should cancel a pending scheduled transaction', async () => {
       const scheduledId = 'sched-cancel-123';
 
-      (db.query as any).mockResolvedValueOnce({
+      vi.mocked(db.query).mockResolvedValueOnce({
         rows: [
           {
             id: scheduledId,
@@ -183,14 +182,14 @@ describe('Scheduling Service - Execution & Timing Edge Cases', () => {
         expect.stringContaining("UPDATE scheduled_transactions SET status = 'cancelled'"),
         [scheduledId],
       );
-      expect((result as any).rows[0].status).toBe('cancelled');
+      expect((result as { rows: Array<Record<string, unknown>> }).rows[0].status).toBe('cancelled');
     });
 
     it('should allow updating schedule time for pending transactions', async () => {
       const scheduledId = 'sched-update-456';
       const newScheduledTime = new Date('2026-08-01T15:00:00.000Z');
 
-      (db.query as any).mockResolvedValueOnce({
+      vi.mocked(db.query).mockResolvedValueOnce({
         rows: [
           {
             id: scheduledId,
@@ -206,7 +205,7 @@ describe('Scheduling Service - Execution & Timing Edge Cases', () => {
         expect.stringContaining('UPDATE scheduled_transactions SET scheduled_for = $1'),
         [newScheduledTime, scheduledId],
       );
-      expect((result as any).rows[0].scheduled_for).toEqual(newScheduledTime);
+      expect((result as { rows: Array<Record<string, unknown>> }).rows[0].scheduled_for).toEqual(newScheduledTime);
     });
   });
 });

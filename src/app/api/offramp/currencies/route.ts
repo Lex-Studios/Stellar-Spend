@@ -40,19 +40,19 @@ class PaycrestAdapter {
       throw new Error(`Failed to fetch currencies: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as
+      | Array<Record<string, unknown>>
+      | { currencies?: Array<Record<string, unknown>> };
+
+    const mapCurrency = (c: Record<string, unknown>) => ({
+      code: (c.code as string) || (c.currency as string) || '',
+      name: (c.name as string) || '',
+      symbol: (c.symbol as string) || '',
+    });
 
     const currencies = Array.isArray(data)
-      ? data.map((c: any) => ({
-          code: c.code || c.currency || '',
-          name: c.name || '',
-          symbol: c.symbol || '',
-        }))
-      : data.currencies?.map((c: any) => ({
-          code: c.code || c.currency || '',
-          name: c.name || '',
-          symbol: c.symbol || '',
-        })) || [];
+      ? data.map(mapCurrency)
+      : (data.currencies?.map(mapCurrency) ?? []);
 
     return currencies;
   }

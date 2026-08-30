@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["node", "jest"],
+    "types": ["node"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "commonjs",
     "target": "ES2020"
   },

@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { WalletManager } from '@/lib/wallets';
-import { WalletType, WalletConnection, WalletError } from '@/lib/wallets';
+import { WalletType, WalletError } from '@/lib/wallets';
+import { logger } from '@/lib/logger';
 
 interface FreighterWindow extends Window {
   freighter?: {
@@ -105,7 +106,7 @@ export function useStellarWallet(networkPassphrase: string = 'Test SDF Network ;
         setSettings(JSON.parse(stored));
       }
     } catch (err) {
-      console.error('Failed to load wallet settings:', err);
+      logger.error('wallet.load_settings_failed', {}, err);
     }
   }, []);
 
@@ -116,7 +117,7 @@ export function useStellarWallet(networkPassphrase: string = 'Test SDF Network ;
       localStorage.setItem(STORAGE_KEYS.WALLET_SETTINGS, JSON.stringify(newSettings));
       setSettings(newSettings);
     } catch (err) {
-      console.error('Failed to save wallet settings:', err);
+      logger.error('wallet.save_settings_failed', {}, err);
     }
   }, []);
 
@@ -130,7 +131,7 @@ export function useStellarWallet(networkPassphrase: string = 'Test SDF Network ;
         return lastWallet;
       }
     } catch (err) {
-      console.error('Failed to load last wallet:', err);
+      logger.error('wallet.load_last_wallet_failed', {}, err);
     }
     return null;
   }, []);
@@ -142,7 +143,7 @@ export function useStellarWallet(networkPassphrase: string = 'Test SDF Network ;
       localStorage.setItem(STORAGE_KEYS.LAST_WALLET, walletType);
       setState((prev) => ({ ...prev, lastUsedWallet: walletType }));
     } catch (err) {
-      console.error('Failed to save last wallet:', err);
+      logger.error('wallet.save_last_wallet_failed', {}, err);
     }
   }, []);
 
@@ -178,7 +179,7 @@ export function useStellarWallet(networkPassphrase: string = 'Test SDF Network ;
           });
         }
       } catch (err) {
-        console.error('Failed to setup Freighter listener:', err);
+        logger.error('wallet.setup_freighter_listener_failed', {}, err);
       }
     } else if (walletType === 'lobstr') {
       try {
@@ -203,7 +204,7 @@ export function useStellarWallet(networkPassphrase: string = 'Test SDF Network ;
           });
         }
       } catch (err) {
-        console.error('Failed to setup Lobstr listener:', err);
+        logger.error('wallet.setup_lobstr_listener_failed', {}, err);
       }
     }
   }, []);
@@ -274,7 +275,7 @@ export function useStellarWallet(networkPassphrase: string = 'Test SDF Network ;
             error: null,
           }));
           setupAccountChangeListener(lastWallet);
-        } catch (err) {
+        } catch (_err) {
           // Auto-reconnect failed, but don't show error initially
           setState((prev) => ({
             ...prev,

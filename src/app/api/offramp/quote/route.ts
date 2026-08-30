@@ -1,5 +1,6 @@
 import { logger } from '@/lib/logger';
 import { NextResponse, type NextRequest } from 'next/server';
+import type { ChainDetailsWithTokens } from '@allbridge/bridge-core-sdk';
 import { env } from '@/lib/env';
 import { fetchPaycrestQuote, buildQuote, calculateBridgeAmount } from '@/lib/offramp';
 import { ErrorHandler } from '@/lib/error-handler';
@@ -81,11 +82,11 @@ export async function POST(request: NextRequest) {
       });
 
       const chainDetails = await sdk.chainDetailsMap();
-      let stellarChain: any = null;
-      let baseChain: any = null;
+      let stellarChain: ChainDetailsWithTokens | null = null;
+      let baseChain: ChainDetailsWithTokens | null = null;
 
       for (const [, chain] of Object.entries(chainDetails)) {
-        const c = chain as any;
+        const c = chain;
         if (c.name?.toLowerCase().includes('stellar') || c.name?.toLowerCase().includes('soroban'))
           stellarChain = c;
         if (c.name?.toLowerCase().includes('ethereum') || c.name?.toLowerCase().includes('base'))
@@ -94,8 +95,8 @@ export async function POST(request: NextRequest) {
 
       if (!stellarChain || !baseChain) throw new Error('Chain details unavailable');
 
-      const stellarUsdc = stellarChain.tokens.find((t: any) => t.symbol === 'USDC');
-      const baseUsdc = baseChain.tokens.find((t: any) => t.symbol === 'USDC');
+      const stellarUsdc = stellarChain.tokens.find((t) => t.symbol === 'USDC');
+      const baseUsdc = baseChain.tokens.find((t) => t.symbol === 'USDC');
 
       if (!stellarUsdc || !baseUsdc) throw new Error('USDC token not found');
 

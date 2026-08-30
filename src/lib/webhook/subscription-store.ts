@@ -1,4 +1,4 @@
-import { randomUUID, createHash } from 'crypto';
+import { randomUUID } from 'crypto';
 import { pool } from '../db/client';
 import type { WebhookSubscription, WebhookEvent, SubscriptionStatus } from './subscription-types';
 import {

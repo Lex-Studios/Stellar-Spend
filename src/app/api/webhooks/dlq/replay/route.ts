@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { replay, list, get } from '@/lib/webhook';
+import { replay } from '@/lib/webhook';
 import { attempt } from '@/lib/webhook';
 import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';

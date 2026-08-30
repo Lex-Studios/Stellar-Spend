@@ -188,7 +188,7 @@ describe('POST /api/offramp/reconciliation — report generation', () => {
     const req = makeRequest({ records: [UNMATCHED_RECORD_AMOUNT_MISMATCH] });
     const res = await reconciliationPost(req);
     const report = await res.json();
-    expect(report.discrepancies.some((d: any) => d.type === 'amount_mismatch')).toBe(true);
+    expect(report.discrepancies.some((d: Record<string, unknown>) => d.type === 'amount_mismatch')).toBe(true);
   });
 
   it('detects unsettled order for pending settlement fixture', async () => {
@@ -196,7 +196,7 @@ describe('POST /api/offramp/reconciliation — report generation', () => {
     const req = makeRequest({ records: [PENDING_SETTLEMENT_RECORD] });
     const res = await reconciliationPost(req);
     const report = await res.json();
-    expect(report.discrepancies.some((d: any) => d.type === 'unsettled_order')).toBe(true);
+    expect(report.discrepancies.some((d: Record<string, unknown>) => d.type === 'unsettled_order')).toBe(true);
     expect(report.summary.unsettledOrders).toBeGreaterThan(0);
   });
 
@@ -304,7 +304,7 @@ describe('POST /api/offramp/reconciliation/alerts — mismatch detection & alert
     });
     const res = await alertsPost(req);
     const body = await res.json();
-    expect(body.alerts.some((a: any) => a.severity === 'high')).toBe(true);
+    expect(body.alerts.some((a: Record<string, unknown>) => a.severity === 'high')).toBe(true);
   });
 
   it('includes optional daily report when includeDaily=true', async () => {

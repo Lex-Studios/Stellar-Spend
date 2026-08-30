@@ -46,10 +46,7 @@
 #![no_std]
 
 use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Map};
-use stellar_spend_shared::{
-    errors::ContractError,
-    validation::{check_schema_version, require_basis_points, require_positive_amount, MAX_BASIS_POINTS},
-};
+use stellar_spend_shared::{errors::ContractError, validation::check_schema_version};
 
 // ── Sub-modules (issue #812) ──────────────────────────────────────────────────
 

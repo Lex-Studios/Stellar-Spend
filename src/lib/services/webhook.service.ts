@@ -1,4 +1,3 @@
-import { mapPaycrestStatus } from '@/lib/offramp';
 import { dal, DatabaseError } from '@/lib/db';
 import { notifyTransactionStatusUpdate } from '@/lib/notifications';
 

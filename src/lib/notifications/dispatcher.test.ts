@@ -69,7 +69,7 @@ function makeAdapter(channel: 'email' | 'sms' | 'push', result: DeliveryResult):
 
 function setupPrefs(prefs: NotificationPreferences) {
   getPrefsMock.mockResolvedValue(prefs);
-  createDeliveryMock.mockResolvedValue({ id: 'delivery-1' } as any);
+  createDeliveryMock.mockResolvedValue({ id: 'delivery-1' } as Awaited<ReturnType<typeof createNotificationDelivery>>);
   retryDeliveryMock.mockResolvedValue(undefined);
 }
 

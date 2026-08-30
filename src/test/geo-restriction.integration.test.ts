@@ -4,8 +4,8 @@
  * Verifies IP whitelisting and geo-based restrictions per 012_add_ip_whitelisting.sql
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { NextRequest, NextResponse } from 'next/server';
+import { describe, it, expect } from 'vitest';
+import { NextRequest } from 'next/server';
 import { resolveGeo, getCountryOverride, hasDeniedGeoConsent } from '@/lib/geo';
 
 // Mock function helpers
@@ -129,7 +129,7 @@ describe('Geo/IP Restriction Coverage — Allowed Paths', () => {
       // Second request from same IP but without geo header
       // (should hit cache in real implementation)
       const req2 = makeRequest({ ip });
-      const geo2 = resolveGeo(req2);
+      resolveGeo(req2);
 
       // In the actual implementation, this would return cached 'NG'
       // For this test, we're verifying the request structure
@@ -426,7 +426,7 @@ describe('Geo/IP Restriction Coverage — Compliance', () => {
       'KP': 'blocked',
     };
 
-    Object.entries(jurisdictions).forEach(([country, status]) => {
+    Object.entries(jurisdictions).forEach(([country]) => {
       const req = makeRequest({ country: country as string });
       const geo = resolveGeo(req);
 

@@ -1,8 +1,7 @@
 import { http, HttpResponse } from 'msw';
-import { createQuoteFactory, createApiResponseFactory } from '../test-helpers';
+import { createQuoteFactory } from '../test-helpers';
 
 const quoteFactory = createQuoteFactory();
-const apiFactory = createApiResponseFactory();
 
 // ============================================================================
 // PAYCREST API MOCKS (backed by fixtures)

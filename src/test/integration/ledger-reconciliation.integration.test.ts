@@ -77,17 +77,11 @@ type ReconciliationRow = {
 let ledgerEntries: Map<string, EntryRow>;
 let reconciliationRows: Map<string, ReconciliationRow>;
 let seenHashes: Set<string>;
-let counter: number;
 
 function resetLedger() {
   ledgerEntries = new Map();
   reconciliationRows = new Map();
   seenHashes = new Set();
-  counter = 0;
-}
-
-function nextId() {
-  return `row-${++counter}`;
 }
 
 // Simulate aggregate SQL that `verifyAllAccountsBalanced` and `verifyBalances`
@@ -126,7 +120,7 @@ function buildQueryMock() {
 
       // Enforce UNIQUE constraint on entry_hash (mirrors DB constraint)
       if (seenHashes.has(entryHash)) {
-        const err: any = new Error('unique constraint violation');
+        const err = new Error('unique constraint violation') as Error & { code: string; constraint: string };
         err.code = '23505';
         err.constraint = 'ledger_entries_entry_hash_key';
         throw err;

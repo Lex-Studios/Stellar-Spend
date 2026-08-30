@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { DeliveryRecord } from '@/lib/webhook/types';
 import {
   TransactionPriorityQueue,
   TransactionPriority,
   DeliveryRetryQueue,
   getTransactionQueue,
-  getDeliveryRetryQueue,
   calculatePriorityFee,
   inferPriorityFromAmount,
 } from './priority-queue';
@@ -21,7 +21,7 @@ vi.mock('@/lib/logger', () => ({
 
 vi.mock('@/lib/webhook/retry-scheduler', () => ({
   calculateBackoff: vi.fn((attempt: number) => 1000 * Math.pow(2, attempt - 1)),
-  hasRemainingAttempts: vi.fn((record: any) => record.attemptCount < record.maxAttempts),
+  hasRemainingAttempts: vi.fn((record: DeliveryRecord) => record.attemptCount < record.maxAttempts),
 }));
 
 describe('TransactionPriorityQueue', () => {

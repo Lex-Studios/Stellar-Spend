@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { z } from 'zod';
-import { KYCLimitService, KYCStatus, LimitTier } from '@/lib/kyc-limits';
+import { KYCLimitService, KYCStatus, LimitTier, UserLimits, LimitIncreaseRequest } from '@/lib/kyc-limits';
 import { Button, Card } from '@/components/design-system';
 import { useForm } from '@/hooks/useForm';
 
@@ -17,7 +17,7 @@ const kycFormSchema = z.object({
 
 export function KYCLimitManager({ userId }: KYCLimitManagerProps) {
   const [kycStatus, setKycStatus] = useState<KYCStatus>('unverified');
-  const [limits, setLimits] = useState<any>(null);
+  const [limits, setLimits] = useState<UserLimits | null>(null);
   const [showKYCForm, setShowKYCForm] = useState(false);
   const [showLimitRequest, setShowLimitRequest] = useState(false);
   const [requestedTier, setRequestedTier] = useState<LimitTier>('tier2');
@@ -164,7 +164,7 @@ export function KYCLimitManager({ userId }: KYCLimitManagerProps) {
           {limits.limitIncreaseRequests.length > 0 && (
             <div className="mt-4">
               <p className="text-sm font-medium mb-2">Pending Requests:</p>
-              {limits.limitIncreaseRequests.map((req: any) => (
+              {limits.limitIncreaseRequests.map((req: LimitIncreaseRequest) => (
                 <div key={req.id} className="text-sm p-2 bg-gray-100 rounded">
                   {req.requestedTier} - <span className="capitalize">{req.status}</span>
                 </div>

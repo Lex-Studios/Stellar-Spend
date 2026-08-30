@@ -75,12 +75,6 @@ export const ErrorState: Story = {
 };
 
 // LoadingState story
-const LoadingMeta = {
-  title: 'Components/ListLoadingState',
-  component: ListLoadingState,
-  tags: ['autodocs'],
-} satisfies Meta<typeof ListLoadingState>;
-
 export const LoadingStateMeta = {
   default: {
     args: {
@@ -90,12 +84,6 @@ export const LoadingStateMeta = {
 };
 
 // EmptyState story
-const EmptyMeta = {
-  title: 'Components/ListEmptyState',
-  component: ListEmptyState,
-  tags: ['autodocs'],
-} satisfies Meta<typeof ListEmptyState>;
-
 export const EmptyStateMeta = {
   default: {
     args: {
@@ -117,12 +105,6 @@ export const EmptyStateMeta = {
 };
 
 // ErrorState story
-const ErrorMeta = {
-  title: 'Components/ListErrorState',
-  component: ListErrorState,
-  tags: ['autodocs'],
-} satisfies Meta<typeof ListErrorState>;
-
 export const ErrorStateMeta = {
   default: {
     args: {

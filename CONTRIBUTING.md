@@ -490,6 +490,43 @@ will be flagged in code review.
 
 ---
 
+## Version Pinning
+
+Stellar-Spend uses a two-tier dependency versioning strategy to balance security with automation.
+
+### Hard-pinned (exact versions)
+
+The following packages **must** use exact version strings (no `^` or `~`) in `package.json`:
+
+| Package | Reason |
+|---|---|
+| `react` | Major/minor bumps require coordinated changes; silent upgrades cause hydration mismatches |
+| `react-dom` | Must always match `react` exactly |
+| `typescript` | Compiler version is a build contract — drift between developer and CI compiler versions causes false-positive type errors |
+
+If you need to update a hard-pinned dependency, open a dedicated PR with a changelog entry explaining the reason and test coverage for any API changes.
+
+### Range-versioned (Renovate-managed)
+
+All other dependencies may use caret ranges (`^`). Renovate automatically opens pull requests for each version bump. The PR must pass CI before merging.
+
+The Renovate configuration lives at `.github/renovate.json`. If you add a new dependency category that needs special handling (e.g. pinned major version), add a `packageRules` entry there.
+
+### Checking the current state
+
+```bash
+# List all range-versioned dependencies
+node -e "
+  const p = require('./package.json');
+  const all = {...p.dependencies, ...p.devDependencies};
+  Object.entries(all)
+    .filter(([,v]) => v.startsWith('^') || v.startsWith('~'))
+    .forEach(([k,v]) => console.log(k, v));
+"
+```
+
+---
+
 ## Dependency License Compliance
 
 All npm dependencies must carry a license from the **approved list** below.

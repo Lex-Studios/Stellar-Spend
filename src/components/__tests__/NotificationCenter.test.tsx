@@ -450,7 +450,7 @@ describe('NotificationCenter', () => {
   describe('panel closing', () => {
     it('should close panel when clicking outside', async () => {
       const user = userEvent.setup();
-      const { container } = render(
+      render(
         <div>
           <div data-testid="outside">Outside</div>
           <NotificationCenter

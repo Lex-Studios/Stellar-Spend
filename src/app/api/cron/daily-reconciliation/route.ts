@@ -5,14 +5,17 @@ import { logger } from '@/lib/logger';
 import type { ReconciliationRecord } from '@/lib/reconciliation';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
+import type { Transaction } from '@/lib/transaction-storage';
+
+type ReconciliationTransaction = Transaction & { baseTxHash?: string };
 
 async function fetchDailyRecords(): Promise<ReconciliationRecord[]> {
   const yesterday = Date.now() - 24 * 60 * 60 * 1000;
   try {
     const transactions = await dal.getByUser('*').catch(() => []);
     return transactions
-      .filter((tx: any) => tx.timestamp >= yesterday)
-      .map((tx: any) => ({
+      .filter((tx: ReconciliationTransaction) => tx.timestamp >= yesterday)
+      .map((tx: ReconciliationTransaction) => ({
         transactionId: tx.id,
         stellarTxHash: tx.stellarTxHash,
         baseTxHash: tx.baseTxHash,

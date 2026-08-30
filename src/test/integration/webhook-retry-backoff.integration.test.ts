@@ -60,7 +60,6 @@ vi.mock('@/lib/webhook/security', () => ({
 import { pool } from '@/lib/db';
 import { calculateBackoff, hasRemainingAttempts } from '@/lib/webhook';
 import { attempt, markFailed } from '@/lib/webhook';
-import { updateRecord } from '@/lib/webhook';
 import type { DeliveryRecord, WebhookPayload } from '@/lib/webhook';
 
 // ---------------------------------------------------------------------------

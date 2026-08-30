@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import axe from 'axe-core';
+import Image from 'next/image';
 
 // ─── Axe helper ───────────────────────────────────────────────────────────────
 
@@ -186,11 +187,11 @@ describe('Accessibility: Modals', () => {
         <h2 id="wallet-modal-title">Select Wallet</h2>
         <ul role="listbox" aria-label="Available wallets">
           <li role="option" aria-selected="false" tabIndex={0}>
-            <img src="" alt="Freighter wallet logo" />
+            <Image src="" alt="Freighter wallet logo" width={24} height={24} />
             Freighter
           </li>
           <li role="option" aria-selected="false" tabIndex={0}>
-            <img src="" alt="xBull wallet logo" />
+            <Image src="" alt="xBull wallet logo" width={24} height={24} />
             xBull
           </li>
         </ul>

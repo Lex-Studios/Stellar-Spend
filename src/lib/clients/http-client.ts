@@ -114,7 +114,7 @@ export class HttpClient {
 
         if (!response.ok) {
           const err = new HttpClientError(
-            (data as any)?.message || response.statusText || 'Unknown error',
+            (data as { message?: string })?.message || response.statusText || 'Unknown error',
             response.status,
             data,
           );
@@ -127,8 +127,8 @@ export class HttpClient {
         }
 
         this.recordSuccess();
-        return ((data as any)?.data ?? data) as T;
-      } catch (error: any) {
+        return ((data as { data?: T })?.data ?? data) as T;
+      } catch (error) {
         clearTimeout(timerId);
         if (
           error instanceof HttpClientError &&
@@ -140,12 +140,13 @@ export class HttpClient {
         }
         if (error instanceof CircuitOpenError) throw error;
 
-        if (error.name === 'AbortError') {
+        const err = error as { name?: string; message?: string };
+        if (err.name === 'AbortError') {
           lastError = new HttpClientError('Request timeout', 504);
         } else if (error instanceof HttpClientError) {
           lastError = error;
         } else {
-          lastError = new HttpClientError(error.message || 'Network error', 502);
+          lastError = new HttpClientError(err.message || 'Network error', 502);
         }
 
         if (attempt < this.config.retries) {

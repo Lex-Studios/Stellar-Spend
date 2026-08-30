@@ -53,7 +53,7 @@ describe('useForm Hook', () => {
     act(() => {
       result.current.handleChange({
         target: { name: 'email', value: 'test@example.com' },
-      } as any);
+      });
     });
 
     expect(result.current.values.email).toBe('test@example.com');
@@ -93,7 +93,7 @@ describe('useForm Hook', () => {
     act(() => {
       result.current.handleBlur({
         target: { name: 'username' },
-      } as any);
+      });
     });
 
     expect(result.current.touched.username).toBe(true);

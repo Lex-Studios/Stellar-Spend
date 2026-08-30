@@ -397,7 +397,7 @@ describe('Dispute state machine unit tests (#846)', () => {
     it('counts disputes per status accurately', async () => {
       const d1 = await repo.createDispute('0xUser1', makeCreateRequest());
       const d2 = await repo.createDispute('0xUser2', makeCreateRequest({ transactionId: 'tx_2' }));
-      const d3 = await repo.createDispute('0xUser3', makeCreateRequest({ transactionId: 'tx_3' }));
+      await repo.createDispute('0xUser3', makeCreateRequest({ transactionId: 'tx_3' }));
 
       await repo.updateDispute(d1.id, { status: 'in_review' });
       await repo.updateDispute(d1.id, { status: 'resolved' });

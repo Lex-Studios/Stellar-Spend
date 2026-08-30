@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger';
-import { Pool, PoolClient } from 'pg';
+import { Pool } from 'pg';
 import { recordDbQuery } from '../performance';
 
 if (!process.env.DATABASE_URL) {

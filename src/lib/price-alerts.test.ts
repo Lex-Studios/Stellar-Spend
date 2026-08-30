@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { PriceAlertStorage, PriceAlert } from './price-alerts';
+import { PriceAlertStorage } from './price-alerts';
 
 describe('PriceAlertStorage', () => {
   beforeEach(() => {

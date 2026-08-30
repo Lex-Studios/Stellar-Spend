@@ -603,7 +603,7 @@ describe('Issue #834 — OpenAPI Contract Tests', () => {
 
     it('all documented paths use valid HTTP methods', () => {
       const validMethods = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options']);
-      for (const [pathKey, pathItem] of Object.entries(openapiDoc.paths)) {
+      for (const [, pathItem] of Object.entries(openapiDoc.paths)) {
         for (const method of Object.keys(pathItem)) {
           // parameters/summary/description are not method keys — skip
           if (['parameters', 'summary', 'description'].includes(method)) continue;

@@ -16,7 +16,6 @@ import { notifyTransactionStatusUpdate } from '@/lib/notifications';
 import type { ChannelAdapter } from '@/lib/notifications';
 import {
   getNotificationPreferences,
-  upsertNotificationPreferences,
 } from '@/lib/notifications';
 import {
   createNotificationDelivery,
@@ -58,7 +57,7 @@ describe('notifyTransactionStatusUpdate', () => {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-    createDeliveryMock.mockResolvedValue({ id: 'delivery-1' } as any);
+    createDeliveryMock.mockResolvedValue({ id: 'delivery-1' } as Awaited<ReturnType<typeof createNotificationDelivery>>);
     vi.mocked(retryNotificationDelivery).mockResolvedValue(undefined);
   });
 

@@ -5,11 +5,13 @@
  * Supports zero-downtime rolling deploys with expand/contract pattern
  */
 
-import { Pool } from 'pg';
+import { Pool, type QueryResult } from 'pg';
 import fs from 'fs';
-import path from 'path';
-import { execSync } from 'child_process';
 import { lintMigrationSql } from '../migrations/lint/rules';
+
+const info = (...msgs: unknown[]) => process.stdout.write(msgs.join(' ') + '\n');
+const fail = (...msgs: unknown[]) => process.stderr.write(msgs.join(' ') + '\n');
+const warn = (...msgs: unknown[]) => process.stderr.write(msgs.join(' ') + '\n');
 
 interface Migration {
   id: string;
@@ -62,14 +64,14 @@ class MigrationRunner {
     `);
   }
 
-  async query(sql: string, params?: any[]): Promise<any> {
+  async query(sql: string, params?: unknown[]): Promise<QueryResult> {
     if (this.dryRun) {
-      console.log(`[DRY RUN] Would execute: ${sql.substring(0, 200)}...`);
+      info(`[DRY RUN] Would execute: ${sql.substring(0, 200)}...`);
       return { rows: [] };
     }
 
     if (this.verbose) {
-      console.log(`[VERBOSE] Executing: ${sql.substring(0, 100)}...`);
+      info(`[VERBOSE] Executing: ${sql.substring(0, 100)}...`);
     }
 
     const result = await this.pool.query(sql, params);
@@ -83,7 +85,7 @@ class MigrationRunner {
       ORDER BY id
     `);
 
-    return result.rows.map((row: any) => ({
+    return result.rows.map((row: { id: string; name: string; applied_at?: Date }) => ({
       id: row.id,
       name: row.name,
       applied: true,
@@ -138,12 +140,12 @@ class MigrationRunner {
 
   async applyMigration(migration: Migration): Promise<void> {
     // Phase 1: Expand (add new columns/tables)
-    console.log(`[EXPAND] Applying ${migration.name}...`);
+    info(`[EXPAND] Applying ${migration.name}...`);
 
     // Check if migration is safe (no blocking locks)
     const isSafe = this.lintMigration(migration.up);
     if (!isSafe) {
-      console.error(`❌ Migration ${migration.name} failed linting!`);
+      fail(`❌ Migration ${migration.name} failed linting!`);
       throw new Error('Migration safety check failed');
     }
 
@@ -162,11 +164,11 @@ class MigrationRunner {
     // Phase 2: Contract (remove old columns/tables after validation)
     // This is handled in a separate migration step (deprecated phase)
 
-    console.log(`✅ Migration ${migration.name} applied successfully`);
+    info(`✅ Migration ${migration.name} applied successfully`);
   }
 
   async rollbackMigration(migration: Migration): Promise<void> {
-    console.log(`[CONTRACT] Rolling back ${migration.name}...`);
+    info(`[CONTRACT] Rolling back ${migration.name}...`);
 
     // Execute down migration
     await this.query(migration.down);
@@ -179,22 +181,22 @@ class MigrationRunner {
       [migration.id],
     );
 
-    console.log(`✅ Migration ${migration.name} rolled back successfully`);
+    info(`✅ Migration ${migration.name} rolled back successfully`);
   }
 
   lintMigration(sql: string): boolean {
     const result = lintMigrationSql(sql);
 
     for (const violation of result.violations) {
-      console.warn(`⚠️ Unsafe pattern detected: ${violation}`);
+      warn(`⚠️ Unsafe pattern detected: ${violation}`);
     }
     if (result.violations.some((v) => v.includes('DROP') || v.includes('TRUNCATE'))) {
-      console.warn(
+      warn(
         '   Destructive operations require an "-- lint:allow-destructive" comment in the migration to proceed.',
       );
     }
     for (const override of result.overridden) {
-      console.warn(`⚠️ Destructive operation allowed via override: ${override}`);
+      warn(`⚠️ Destructive operation allowed via override: ${override}`);
     }
 
     return result.safe;
@@ -206,18 +208,18 @@ class MigrationRunner {
   }
 
   async run(): Promise<void> {
-    console.log('🔍 Checking pending migrations...');
+    info('🔍 Checking pending migrations...');
 
     const pending = await this.getPendingMigrations();
 
     if (pending.length === 0) {
-      console.log('✅ No pending migrations');
+      info('✅ No pending migrations');
       return;
     }
 
-    console.log(`📋 Found ${pending.length} pending migrations:`);
+    info(`📋 Found ${pending.length} pending migrations:`);
     for (const migration of pending) {
-      console.log(`  - ${migration.name} (${migration.id})`);
+      info(`  - ${migration.name} (${migration.id})`);
     }
 
     // Run migrations
@@ -225,16 +227,16 @@ class MigrationRunner {
       await this.applyMigration(migration);
     }
 
-    console.log('✅ All migrations applied successfully');
+    info('✅ All migrations applied successfully');
   }
 
   async rollback(steps: number = 1): Promise<void> {
-    console.log(`🔍 Rolling back ${steps} migration(s)...`);
+    info(`🔍 Rolling back ${steps} migration(s)...`);
 
     const applied = await this.getAppliedMigrations();
 
     if (applied.length === 0) {
-      console.log('✅ No migrations to rollback');
+      info('✅ No migrations to rollback');
       return;
     }
 
@@ -253,34 +255,34 @@ class MigrationRunner {
       });
     }
 
-    console.log(`✅ Rolled back ${toRollback.length} migration(s)`);
+    info(`✅ Rolled back ${toRollback.length} migration(s)`);
   }
 
   async dryRunMigrations(): Promise<void> {
-    console.log('🔍 DRY RUN: Checking migrations...');
+    info('🔍 DRY RUN: Checking migrations...');
     const pending = await this.getPendingMigrations();
 
     if (pending.length === 0) {
-      console.log('✅ No pending migrations');
+      info('✅ No pending migrations');
       return;
     }
 
-    console.log(`📋 Would apply ${pending.length} migrations:`);
+    info(`📋 Would apply ${pending.length} migrations:`);
     for (const migration of pending) {
-      console.log(`  - ${migration.name} (${migration.id})`);
-      console.log(`    UP: ${migration.up.substring(0, 100)}...`);
+      info(`  - ${migration.name} (${migration.id})`);
+      info(`    UP: ${migration.up.substring(0, 100)}...`);
     }
   }
 
   async verifyRollback(migrationId: string): Promise<boolean> {
-    console.log(`🔍 Verifying rollback for ${migrationId}...`);
+    info(`🔍 Verifying rollback for ${migrationId}...`);
 
     // Apply migration
     const pending = await this.getPendingMigrations();
     const migration = pending.find((m) => m.id === migrationId);
 
     if (!migration) {
-      console.log(`⚠️ Migration ${migrationId} not found or already applied`);
+      info(`⚠️ Migration ${migrationId} not found or already applied`);
       return false;
     }
 
@@ -295,16 +297,16 @@ class MigrationRunner {
     const found = applied.find((m) => m.id === migrationId);
 
     if (!found) {
-      console.log(`✅ Rollback verification passed for ${migrationId}`);
+      info(`✅ Rollback verification passed for ${migrationId}`);
       return true;
     } else {
-      console.log(`❌ Rollback verification failed for ${migrationId}`);
+      info(`❌ Rollback verification failed for ${migrationId}`);
       return false;
     }
   }
 
   async lintAllMigrations(): Promise<boolean> {
-    console.log('🔍 Linting migration files against safety rules...');
+    info('🔍 Linting migration files against safety rules...');
     const files = fs
       .readdirSync('./migrations')
       .filter((f) => f.endsWith('.sql'))
@@ -316,13 +318,13 @@ class MigrationRunner {
       const [up] = this.extractUpDown(content);
       const isSafe = this.lintMigration(up || content);
       if (!isSafe) {
-        console.error(`❌ Migration ${file} failed linting!`);
+        fail(`❌ Migration ${file} failed linting!`);
         allPassed = false;
       }
     }
 
     if (allPassed) {
-      console.log('✅ Linting passed for all migrations');
+      info('✅ Linting passed for all migrations');
       return true;
     } else {
       throw new Error('Migration linting failed');
@@ -369,14 +371,14 @@ async function main() {
       case 'verify':
         const migrationId = args[1];
         if (!migrationId) {
-          console.error('❌ Migration ID required for verify command');
+          fail('❌ Migration ID required for verify command');
           process.exit(1);
         }
         await runner.verifyRollback(migrationId);
         break;
 
       default:
-        console.log(`
+        info(`
 Usage: migrate.ts [command] [options]
 
 Commands:
@@ -392,7 +394,7 @@ Options:
         `);
     }
   } catch (error) {
-    console.error('❌ Migration failed:', error);
+    fail('❌ Migration failed:', error);
     process.exit(1);
   } finally {
     if (command !== 'lint') {

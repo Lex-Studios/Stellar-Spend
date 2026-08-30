@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const retentionDays = await auditLoggingService.getRetentionPolicy();
     return NextResponse.json({ retentionDays });

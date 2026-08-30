@@ -12,6 +12,7 @@ class EventBus {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   on<T = any>(type: EventType, handler: EventHandler<T>): void {
     if (!this.handlers.has(type)) {
       this.handlers.set(type, []);
@@ -34,6 +35,7 @@ class EventBus {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async emit<T = any>(type: EventType, data: T): Promise<void> {
     const event: Event<T> = {
       type,
@@ -58,6 +60,7 @@ class EventBus {
     await Promise.all(promises);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   once<T = any>(type: EventType, handler: EventHandler<T>): void {
     const wrapper: EventHandler<T> = async (event: Event<T>) => {
       await handler(event);

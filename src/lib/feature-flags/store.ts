@@ -14,7 +14,7 @@ export class FeatureFlagStore {
   private cache = getCacheClient();
   private overrides: Partial<FeatureFlags> = {};
 
-  async get(userId?: string): Promise<FeatureFlags> {
+  async get(_userId?: string): Promise<FeatureFlags> {
     const cached = await this.cache.get(`${CACHE_PREFIX}current`);
     let flags: FeatureFlags;
 
@@ -55,7 +55,7 @@ export class FeatureFlagStore {
 
   private resolveFlags(): FeatureFlags {
     const env = process.env.NODE_ENV || 'development';
-    const envOverrides = ENV_OVERRIDE_FLAGS[env] ?? {};
+    const envOverrides = ENV_OVERRIED_FLAGS[env] ?? {};
 
     const merged = this.deepMerge(DEFAULT_FLAGS, envOverrides);
     return this.deepMerge(merged, this.overrides) as FeatureFlags;

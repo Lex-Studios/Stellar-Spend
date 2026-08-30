@@ -7,6 +7,7 @@
 
 import type { GraphQLContext } from '../context';
 import { requireAuth, requireRole } from '../auth-guards';
+import type { ScreeningVerdict } from '../../compliance-screening';
 
 // ─── Query Resolvers ──────────────────────────────────────────────────────────
 
@@ -54,7 +55,7 @@ export const merchantMutations = {
   ) {
     requireRole(ctx, 'ops');
     const { addScreeningOverride } = await import('../../compliance-screening');
-    addScreeningOverride(address, verdict as any, reason, ctx.userId!);
+    addScreeningOverride(address, verdict as ScreeningVerdict, reason, ctx.userId!);
     return true;
   },
 

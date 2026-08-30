@@ -1,5 +1,4 @@
 import { logger } from '@/lib/logger';
-import type { NotificationContext } from '@/lib/notifications';
 
 /**
  * Shows a browser notification if permissions are granted

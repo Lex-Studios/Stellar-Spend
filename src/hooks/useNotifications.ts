@@ -4,13 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import type {
   NotificationPreferences,
   NotificationDeliveryRecord,
-  NotificationChannel,
 } from '@/lib/notifications';
 import {
   getOrCreateNotificationPreferences,
   upsertNotificationPreferences,
   getTransactionNotificationDeliveries,
 } from '@/lib/notifications';
+import { logger } from '@/lib/logger';
 
 interface NotificationState {
   preferences: NotificationPreferences | null;
@@ -55,6 +55,9 @@ export function useNotifications(userAddress: string | null) {
         // For simplicity, we'll load all deliveries for the user
         // In a real app, you might want to paginate or filter this
         // This would require a new API endpoint
+        logger.debug('notifications.fetch_all_deliveries_skipped', {
+          reason: 'endpoint_required',
+        });
       }
 
       const unreadCount = deliveries.filter((d) => !d.metadata?.read).length;

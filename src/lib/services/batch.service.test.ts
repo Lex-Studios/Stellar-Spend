@@ -11,10 +11,7 @@ import { pool as db } from '@/lib/db';
 import {
   createBatch,
   addTransactionToBatch,
-  updateBatchTransactionStatus,
-  getBatchStatus,
   getBatchProgress,
-  completeBatch,
   cancelBatch,
   executeBatch,
   getBatchAnalytics,
@@ -34,7 +31,7 @@ describe('Batch Transaction Processing Service - Partial Failures & Analytics', 
         status: 'pending',
       };
 
-      (db.query as any).mockResolvedValueOnce({ rows: [mockBatchRow] });
+      vi.mocked(db.query).mockResolvedValueOnce({ rows: [mockBatchRow] });
 
       const batch = await createBatch('user-batch-1', 1000.0);
 
@@ -54,7 +51,7 @@ describe('Batch Transaction Processing Service - Partial Failures & Analytics', 
         payload: JSON.stringify(mockTxData),
       };
 
-      (db.query as any).mockResolvedValueOnce({ rows: [mockBatchTxRow] });
+      vi.mocked(db.query).mockResolvedValueOnce({ rows: [mockBatchTxRow] });
 
       const added = await addTransactionToBatch('batch-uuid-1', mockTxData);
 
@@ -90,7 +87,7 @@ describe('Batch Transaction Processing Service - Partial Failures & Analytics', 
         payload: { amount: 300 },
       };
 
-      (db.query as any)
+      vi.mocked(db.query)
         // getBatchStatus queries
         .mockResolvedValueOnce({ rows: [mockBatchHeader] })
         .mockResolvedValueOnce({ rows: [mockTx1, mockTx2, mockTx3] })
@@ -108,11 +105,12 @@ describe('Batch Transaction Processing Service - Partial Failures & Analytics', 
         // final batch status update
         .mockResolvedValueOnce({ rowCount: 1 });
 
-      const handler = vi.fn().mockImplementation(async (payload: any) => {
-        if (payload.amount === 200) {
+      const handler = vi.fn().mockImplementation(async (payload: Record<string, unknown>) => {
+        const amount = payload.amount as number;
+        if (amount === 200) {
           throw new Error('Insufficient funds on ledger');
         }
-        return `tx-hash-${payload.amount}`;
+        return `tx-hash-${amount}`;
       });
 
       const result = await executeBatch(mockBatchId, handler);
@@ -139,7 +137,7 @@ describe('Batch Transaction Processing Service - Partial Failures & Analytics', 
         payload: { amount: 500 },
       };
 
-      (db.query as any)
+      vi.mocked(db.query)
         // getBatchStatus
         .mockResolvedValueOnce({ rows: [mockBatchHeader] })
         .mockResolvedValueOnce({ rows: [mockTx1] })
@@ -167,7 +165,7 @@ describe('Batch Transaction Processing Service - Partial Failures & Analytics', 
     it('should throw error if attempting to execute a cancelled batch', async () => {
       const cancelledBatchHeader = { id: mockBatchId, status: 'cancelled' };
 
-      (db.query as any)
+      vi.mocked(db.query)
         .mockResolvedValueOnce({ rows: [cancelledBatchHeader] })
         .mockResolvedValueOnce({ rows: [] });
 
@@ -187,7 +185,7 @@ describe('Batch Transaction Processing Service - Partial Failures & Analytics', 
         { status: 'pending' },
       ];
 
-      (db.query as any)
+      vi.mocked(db.query)
         .mockResolvedValueOnce({ rows: [mockBatchHeader] })
         .mockResolvedValueOnce({ rows: mockTransactions });
 
@@ -203,7 +201,7 @@ describe('Batch Transaction Processing Service - Partial Failures & Analytics', 
     it('should cancel pending transactions and mark batch as cancelled', async () => {
       const mockBatchId = 'batch-cancel-99';
 
-      (db.query as any)
+      vi.mocked(db.query)
         .mockResolvedValueOnce({ rowCount: 2 }) // UPDATE batch_transactions
         .mockResolvedValueOnce({ rows: [{ id: mockBatchId, status: 'cancelled' }] }); // UPDATE transaction_batches
 
@@ -217,7 +215,7 @@ describe('Batch Transaction Processing Service - Partial Failures & Analytics', 
         expect.stringContaining("UPDATE transaction_batches SET status = 'cancelled'"),
         [mockBatchId],
       );
-      expect((result as any).rows[0].status).toBe('cancelled');
+      expect((result as { rows: Array<{ status: string }> }).rows[0].status).toBe('cancelled');
     });
 
     it('should retrieve batch analytics aggregate stats', async () => {
@@ -236,7 +234,7 @@ describe('Batch Transaction Processing Service - Partial Failures & Analytics', 
         ],
       };
 
-      (db.query as any).mockResolvedValueOnce(mockBatchRows).mockResolvedValueOnce(mockTxRows);
+      vi.mocked(db.query).mockResolvedValueOnce(mockBatchRows).mockResolvedValueOnce(mockTxRows);
 
       const analytics = await getBatchAnalytics('user-analytics-1');
 

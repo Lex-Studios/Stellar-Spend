@@ -18,6 +18,15 @@ export interface IndexerState {
   lastProcessedAt: Date;
 }
 
+interface RawRpcEvent {
+  id?: string;
+  type?: string;
+  data?: Record<string, unknown>;
+  txHash?: string;
+  ledgerSequence?: number;
+  timestamp?: number;
+}
+
 export class SorobanEventIndexer {
   private db: Database;
   private rpcUrl: string;
@@ -141,14 +150,14 @@ export class SorobanEventIndexer {
         return [];
       }
 
-      return (result.result?.events || []).map((event: any) => ({
-        id: event.id,
+      return (result.result?.events || []).map((event: RawRpcEvent) => ({
+        id: event.id ?? '',
         contractId,
-        type: event.type,
-        data: event.data,
-        txHash: event.txHash,
-        ledgerSequence: event.ledgerSequence,
-        timestamp: new Date(event.timestamp * 1000),
+        type: event.type ?? '',
+        data: event.data ?? {},
+        txHash: event.txHash ?? '',
+        ledgerSequence: event.ledgerSequence ?? 0,
+        timestamp: new Date((event.timestamp ?? 0) * 1000),
         indexed: false,
       }));
     } catch (error) {

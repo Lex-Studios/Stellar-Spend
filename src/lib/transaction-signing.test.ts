@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { TransactionSigningService, TransactionSignature } from './transaction-signing';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
+import { TransactionSigningService } from './transaction-signing';
 
 // Mock the database pool and logger
 vi.mock('./db/client', () => ({
@@ -28,9 +28,13 @@ import { pool } from './db/client';
 import { logger } from './logger';
 import * as crypto from 'crypto';
 
-const mockPool = pool as any;
-const mockLogger = logger as any;
-const mockCrypto = crypto as any;
+const mockPool = pool as unknown as { query: Mock };
+const mockLogger = logger as unknown as Record<string, Mock>;
+const mockCrypto = crypto as unknown as Record<string, Mock>;
+
+type VerifyService = {
+  verifySignatureData: (signature: string, publicKey: string, algorithm: string) => boolean;
+};
 
 describe('TransactionSigningService', () => {
   let service: TransactionSigningService;
@@ -39,7 +43,6 @@ describe('TransactionSigningService', () => {
     service = new TransactionSigningService();
     vi.clearAllMocks();
     // Mock Date.now() for consistent testing
-    const realDate = Date;
     vi.spyOn(global.Date, 'now').mockReturnValue(1000000);
   });
 
@@ -545,7 +548,7 @@ describe('TransactionSigningService', () => {
       const validPublicKey = 'b'.repeat(64);
 
       // Use 'any' to access private method for testing
-      const result = (service as any).verifySignatureData(
+      const result = (service as unknown as VerifyService).verifySignatureData(
         validSignature,
         validPublicKey,
         'ed25519',
@@ -558,7 +561,7 @@ describe('TransactionSigningService', () => {
       const invalidSignature = 'a'.repeat(127);
       const validPublicKey = 'b'.repeat(64);
 
-      const result = (service as any).verifySignatureData(
+      const result = (service as unknown as VerifyService).verifySignatureData(
         invalidSignature,
         validPublicKey,
         'ed25519',
@@ -571,7 +574,7 @@ describe('TransactionSigningService', () => {
       const invalidSignature = 'a'.repeat(129);
       const validPublicKey = 'b'.repeat(64);
 
-      const result = (service as any).verifySignatureData(
+      const result = (service as unknown as VerifyService).verifySignatureData(
         invalidSignature,
         validPublicKey,
         'ed25519',
@@ -584,7 +587,7 @@ describe('TransactionSigningService', () => {
       const invalidSignature = 'x'.repeat(128);
       const validPublicKey = 'b'.repeat(64);
 
-      const result = (service as any).verifySignatureData(
+      const result = (service as unknown as VerifyService).verifySignatureData(
         invalidSignature,
         validPublicKey,
         'ed25519',
@@ -597,7 +600,7 @@ describe('TransactionSigningService', () => {
       const validSignature = 'a'.repeat(128);
       const invalidPublicKey = 'b'.repeat(63);
 
-      const result = (service as any).verifySignatureData(
+      const result = (service as unknown as VerifyService).verifySignatureData(
         validSignature,
         invalidPublicKey,
         'ed25519',
@@ -610,7 +613,7 @@ describe('TransactionSigningService', () => {
       const validSignature = 'a'.repeat(128);
       const invalidPublicKey = 'b'.repeat(65);
 
-      const result = (service as any).verifySignatureData(
+      const result = (service as unknown as VerifyService).verifySignatureData(
         validSignature,
         invalidPublicKey,
         'ed25519',
@@ -623,7 +626,7 @@ describe('TransactionSigningService', () => {
       const validSignature = 'a'.repeat(128);
       const invalidPublicKey = 'x'.repeat(64);
 
-      const result = (service as any).verifySignatureData(
+      const result = (service as unknown as VerifyService).verifySignatureData(
         validSignature,
         invalidPublicKey,
         'ed25519',
@@ -636,7 +639,7 @@ describe('TransactionSigningService', () => {
       const validSignature = 'a'.repeat(128);
       const validPublicKey = 'b'.repeat(64);
 
-      const result = (service as any).verifySignatureData(validSignature, validPublicKey, 'rsa');
+      const result = (service as unknown as VerifyService).verifySignatureData(validSignature, validPublicKey, 'rsa');
 
       expect(result).toBe(false);
     });
@@ -645,7 +648,7 @@ describe('TransactionSigningService', () => {
       const validSignature = 'a'.repeat(128);
       const validPublicKey = 'b'.repeat(64);
 
-      const result = (service as any).verifySignatureData(validSignature, validPublicKey, '');
+      const result = (service as unknown as VerifyService).verifySignatureData(validSignature, validPublicKey, '');
 
       expect(result).toBe(false);
     });

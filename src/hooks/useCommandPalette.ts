@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { CommandAction } from '@/lib/command-registry';
+import { logger } from '@/lib/logger';
 
 const RECENT_COMMANDS_KEY = 'stellar_spend_recent_commands';
 const MAX_RECENT = 5;
@@ -18,7 +18,7 @@ export function useCommandPalette() {
         setRecentCommands(JSON.parse(stored));
       }
     } catch (error) {
-      console.error('Failed to load recent commands:', error);
+      logger.error('command_palette.load_recent_failed', {}, error);
     }
   }, []);
 
@@ -35,7 +35,7 @@ export function useCommandPalette() {
       try {
         localStorage.setItem(RECENT_COMMANDS_KEY, JSON.stringify(updated));
       } catch (error) {
-        console.error('Failed to save recent command:', error);
+        logger.error('command_palette.save_recent_failed', {}, error);
       }
 
       return updated;

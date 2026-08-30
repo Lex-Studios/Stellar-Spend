@@ -5,11 +5,16 @@ import * as dalModule from '@/lib/db';
 
 vi.mock('@/lib/db/dal');
 
+type MockDal = {
+  getByUser: ReturnType<typeof vi.fn>;
+  save: ReturnType<typeof vi.fn>;
+};
+
 describe('Transactions API Route', () => {
-  let mockDal: any;
+  let mockDal: MockDal;
 
   beforeEach(() => {
-    mockDal = dalModule.dal as any;
+    mockDal = dalModule.dal as unknown as MockDal;
     vi.clearAllMocks();
   });
 

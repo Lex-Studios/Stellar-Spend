@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useStellarWallet } from '../useStellarWallet';
-import * as WalletModule from '@/lib/wallets';
+import type { WalletError } from '@/lib/wallets';
 
 // Mock the wallet module
 vi.mock('@/lib/wallets', () => ({
@@ -69,7 +69,7 @@ describe('useStellarWallet', () => {
     });
 
     it('should update lastUsedWallet when loaded', async () => {
-      (window.localStorage.getItem as any).mockReturnValue('freighter');
+      (window.localStorage.getItem as unknown as ReturnType<typeof vi.fn>).mockReturnValue('freighter');
 
       const { result } = renderHook(() => useStellarWallet());
 
@@ -101,9 +101,11 @@ describe('useStellarWallet', () => {
         rememberLastWallet: false,
       };
 
-      (window.localStorage.getItem as any).mockReturnValue(JSON.stringify(savedSettings));
+      (window.localStorage.getItem as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
+        JSON.stringify(savedSettings),
+      );
 
-      const { result } = renderHook(() => useStellarWallet());
+      renderHook(() => useStellarWallet());
 
       await waitFor(() => {
         // Settings should be loaded on mount
@@ -120,7 +122,7 @@ describe('useStellarWallet', () => {
         name: 'WalletConnectionError',
         message: 'User declined connection',
         code: 'WALLET_CONNECTION_ERROR',
-      } as any;
+      } as WalletError;
 
       const message = result.current.getErrorMessage(error);
       expect(message).toContain('rejected');
@@ -133,7 +135,7 @@ describe('useStellarWallet', () => {
         name: 'WalletConnectionError',
         message: 'Wallet is locked',
         code: 'WALLET_CONNECTION_ERROR',
-      } as any;
+      } as WalletError;
 
       const message = result.current.getErrorMessage(error);
       expect(message).toContain('locked');
@@ -146,7 +148,7 @@ describe('useStellarWallet', () => {
         name: 'WalletConnectionError',
         message: 'Wrong network selected',
         code: 'WALLET_CONNECTION_ERROR',
-      } as any;
+      } as WalletError;
 
       const message = result.current.getErrorMessage(error);
       expect(message).toBeTruthy();
@@ -159,7 +161,7 @@ describe('useStellarWallet', () => {
         name: 'WalletNotAvailableError',
         message: 'freighter wallet is not available',
         code: 'WALLET_NOT_AVAILABLE',
-      } as any;
+      } as WalletError;
 
       const message = result.current.getErrorMessage(error);
       expect(message).toContain('not found');
@@ -172,7 +174,7 @@ describe('useStellarWallet', () => {
         name: 'WalletAccountChanged',
         message: 'Your wallet account has changed',
         code: 'ACCOUNT_CHANGED',
-      } as any;
+      } as WalletError;
 
       const message = result.current.getErrorMessage(error);
       expect(message).toContain('account has changed');
@@ -185,7 +187,7 @@ describe('useStellarWallet', () => {
         name: 'Error',
         message: 'Unknown error occurred',
         code: 'UNKNOWN',
-      } as any;
+      } as WalletError;
 
       const message = result.current.getErrorMessage(error);
       expect(message).toBe('Unknown error occurred');
@@ -193,11 +195,6 @@ describe('useStellarWallet', () => {
 
     it('should clear error state', async () => {
       const { result } = renderHook(() => useStellarWallet());
-
-      const error = {
-        name: 'Error',
-        message: 'Test error',
-      } as any;
 
       // Simulate setting an error
       await act(async () => {
@@ -220,12 +217,14 @@ describe('useStellarWallet', () => {
     });
 
     it('should load last used wallet if available', async () => {
-      (window.localStorage.getItem as any).mockImplementation((key: string) => {
-        if (key === 'stellar.lastWallet') return 'lobstr';
-        return null;
-      });
+      (window.localStorage.getItem as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        (key: string) => {
+          if (key === 'stellar.lastWallet') return 'lobstr';
+          return null;
+        },
+      );
 
-      const { result } = renderHook(() => useStellarWallet());
+      renderHook(() => useStellarWallet());
 
       await waitFor(() => {
         // The hook should attempt to load the last wallet

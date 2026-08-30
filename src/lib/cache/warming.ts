@@ -5,6 +5,7 @@
  * Run on server startup or via scheduled cron.
  */
 
+import { logger } from '@/lib/logger';
 import { cache } from './index';
 import { CACHE_KEYS, generateCacheKey, HOT_CORRIDORS } from './keys';
 import { logger } from '@/lib/logger';

@@ -2,6 +2,14 @@ import { logger } from '@/lib/logger';
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { randomBytes } from 'crypto';
 
+interface AuthEntry {
+  credentials?: {
+    address?: {
+      signatureExpirationLedger?: number;
+    };
+  };
+}
+
 /**
  * Convert float amount to on-chain integer representation
  */
@@ -136,7 +144,7 @@ export async function buildSwapAndBridgeTx(params: BuildSwapAndBridgeTxParams): 
 
   // Extend auth entry expiration by setting to latestLedger + 500 (~40 minutes)
   if (simulationResponse.result?.auth) {
-    simulationResponse.result.auth.forEach((entry: any) => {
+    simulationResponse.result.auth.forEach((entry: AuthEntry) => {
       // Check for address credentials (sorobanCredentialsAddress in the requirement)
       if (entry.credentials?.address) {
         const oldExp = entry.credentials.address.signatureExpirationLedger;
@@ -161,7 +169,7 @@ export async function buildSwapAndBridgeTx(params: BuildSwapAndBridgeTxParams): 
   );
 
   // Mutate the assembled tx fee
-  (assembledTx as any)._fee = targetFee.toString();
+  (assembledTx as { _fee?: string })._fee = targetFee.toString();
 
   // Return base64 XDR
   return assembledTx.toXDR();

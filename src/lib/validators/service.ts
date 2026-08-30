@@ -14,10 +14,8 @@ import {
   bridgeTransactionSchema,
   payoutOrderSchema,
   offrampRequestSchema,
-  formatZodErrors,
   FormattedValidationError,
   validateWithSchema,
-  createValidationResult,
 } from './schemas';
 import { type ValidationResult } from './types';
 
@@ -35,7 +33,7 @@ export class ValidationService {
   /**
    * Validate amount with legacy method (returns ValidationResult)
    */
-  static validateAmountLegacy(amount: string, field = 'amount'): ValidationResult {
+  static validateAmountLegacy(amount: string, _field = 'amount'): ValidationResult {
     const result = this.validateAmount(amount);
     return {
       valid: result.valid,
@@ -139,7 +137,7 @@ export class ValidationService {
    */
   static validateBeneficiary(data: unknown): {
     valid: boolean;
-    data?: any;
+    data?: unknown;
     errors?: FormattedValidationError[];
   } {
     return validateWithSchema(beneficiarySchema, data);
@@ -150,7 +148,7 @@ export class ValidationService {
    */
   static validateQuoteRequest(data: unknown): {
     valid: boolean;
-    data?: any;
+    data?: unknown;
     errors?: FormattedValidationError[];
   } {
     return validateWithSchema(quoteRequestSchema, data);
@@ -161,7 +159,7 @@ export class ValidationService {
    */
   static validateBridgeTransaction(data: unknown): {
     valid: boolean;
-    data?: any;
+    data?: unknown;
     errors?: FormattedValidationError[];
   } {
     return validateWithSchema(bridgeTransactionSchema, data);
@@ -172,7 +170,7 @@ export class ValidationService {
    */
   static validatePayoutOrder(data: unknown): {
     valid: boolean;
-    data?: any;
+    data?: unknown;
     errors?: FormattedValidationError[];
   } {
     return validateWithSchema(payoutOrderSchema, data);
@@ -183,7 +181,7 @@ export class ValidationService {
    */
   static validateOfframpRequest(data: unknown): {
     valid: boolean;
-    data?: any;
+    data?: unknown;
     errors?: FormattedValidationError[];
   } {
     return validateWithSchema(offrampRequestSchema, data);
@@ -192,7 +190,7 @@ export class ValidationService {
   /**
    * Validate amount with minimum (legacy)
    */
-  static validateMinAmountLegacy(amount: string, min: number, field = 'amount'): ValidationResult {
+  static validateMinAmountLegacy(amount: string, min: number, _field = 'amount'): ValidationResult {
     const result = this.validateMinAmount(amount, min);
     return {
       valid: result.valid,
@@ -203,7 +201,7 @@ export class ValidationService {
   /**
    * Validate amount with maximum (legacy)
    */
-  static validateMaxAmountLegacy(amount: string, max: number, field = 'amount'): ValidationResult {
+  static validateMaxAmountLegacy(amount: string, max: number, _field = 'amount'): ValidationResult {
     const result = this.validateMaxAmount(amount, max);
     return {
       valid: result.valid,
@@ -218,7 +216,7 @@ export class ValidationService {
     amount: string,
     min: number,
     max: number,
-    field = 'amount',
+    _field = 'amount',
   ): ValidationResult {
     const result = this.validateAmountRange(amount, min, max);
     return {

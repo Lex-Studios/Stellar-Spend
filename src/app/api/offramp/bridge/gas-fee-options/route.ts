@@ -1,5 +1,6 @@
 import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
+import type { ChainDetailsWithTokens } from '@allbridge/bridge-core-sdk';
 import { env } from '@/lib/env';
 import { withAllbridgeTimeout } from '@/lib/offramp';
 import { ErrorHandler } from '@/lib/error-handler';
@@ -50,11 +51,11 @@ export async function GET(): Promise<NextResponse<GasFeeOptions | { error: strin
     // Get chain details to find USDC tokens
     const chainDetails = await withAllbridgeTimeout(sdk.chainDetailsMap(), 'chainDetailsMap');
 
-    let stellarChain: any = null;
-    let baseChain: any = null;
+    let stellarChain: ChainDetailsWithTokens | null = null;
+    let baseChain: ChainDetailsWithTokens | null = null;
 
     for (const [, chain] of Object.entries(chainDetails)) {
-      const chainObj = chain as any;
+      const chainObj = chain;
       if (
         chainObj.name?.toLowerCase().includes('stellar') ||
         chainObj.name?.toLowerCase().includes('soroban')
@@ -74,8 +75,8 @@ export async function GET(): Promise<NextResponse<GasFeeOptions | { error: strin
     }
 
     // Find USDC tokens on both chains
-    const stellarUsdc = stellarChain.tokens.find((t: any) => t.symbol === 'USDC');
-    const baseUsdc = baseChain.tokens.find((t: any) => t.symbol === 'USDC');
+    const stellarUsdc = stellarChain.tokens.find((t) => t.symbol === 'USDC');
+    const baseUsdc = baseChain.tokens.find((t) => t.symbol === 'USDC');
 
     if (!stellarUsdc || !baseUsdc) {
       throw new Error('USDC token not found on one or both chains');
@@ -88,11 +89,16 @@ export async function GET(): Promise<NextResponse<GasFeeOptions | { error: strin
     );
 
     // Normalize fee options — SDK returns keyed by FeePaymentMethod enum values
+    type FeeAmount = { int?: string; float?: string; [key: string]: unknown };
+    const gasFeeOptionsTyped = gasFeeOptions as unknown as {
+      native?: FeeAmount;
+      stablecoin?: FeeAmount;
+      [key: string]: FeeAmount | undefined;
+    };
     const nativeFee =
-      (gasFeeOptions as any)[FeePaymentMethod.WITH_NATIVE_CURRENCY] ??
-      (gasFeeOptions as any).native;
+      gasFeeOptionsTyped[FeePaymentMethod.WITH_NATIVE_CURRENCY] ?? gasFeeOptionsTyped.native;
     const stablecoinFee =
-      (gasFeeOptions as any)[FeePaymentMethod.WITH_STABLECOIN] ?? (gasFeeOptions as any).stablecoin;
+      gasFeeOptionsTyped[FeePaymentMethod.WITH_STABLECOIN] ?? gasFeeOptionsTyped.stablecoin;
 
     const result: GasFeeOptions = {
       feeOptions: {

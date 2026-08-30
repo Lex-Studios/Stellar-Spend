@@ -147,13 +147,6 @@ describe('#854 partial-channel failure', () => {
     expect(pushCall).toBeDefined();
     expect((pushCall![0] as Record<string, unknown>).status).toBe('sent');
 
-    // push succeeded first try → no retries for push
-    const pushRetries = mockRetryDelivery.mock.calls.filter((args) => {
-      // retry calls use delivery id; push delivery id is 'delivery-N' where N
-      // corresponds to push channel order — we just verify retry count for email
-      return true; // examined below
-    });
-
     // email was attempted 3 times → 2 retry calls (attempt 2, attempt 3)
     expect(emailAdapter.send).toHaveBeenCalledTimes(3);
 
