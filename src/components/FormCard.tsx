@@ -176,7 +176,7 @@ export function FormCard(props: FormCardProps) {
         />
 
         {verifyError && (
-          <span role="alert" className="text-[10px] text-red-400 tracking-wide">
+          <span role="alert" data-testid="error-message" className="text-[10px] text-red-400 tracking-wide">
             {verifyError}
           </span>
         )}
@@ -206,6 +206,7 @@ export function FormCard(props: FormCardProps) {
           onClick={ctaState === 'disconnected' ? onConnect : () => void submitOfframp()}
           disabled={ctaDisabled}
           aria-label={getCtaLabel(ctaState)}
+          data-testid="offramp-cta-button"
           className={cn(
             'w-full py-4 min-h-[52px] text-xs font-bold tracking-[0.2em] transition-all duration-200',
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a962] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111]',

@@ -335,17 +335,42 @@ export class SessionManagementService {
     logger.debug('Session revoked', { sessionId, reason });
   }
 
+  // Batched instead of looping revokeSession() per row — the previous
+  // implementation issued 1 (list) + 3*N (select/update/insert) queries for
+  // N active sessions. This does it in exactly 2 queries regardless of N.
   async revokeAllUserSessions(userAddress: string, reason?: string): Promise<void> {
     const result = await pool.query(
-      `SELECT id FROM sessions WHERE user_address = $1 AND is_active = true`,
+      `UPDATE sessions SET is_active = false
+       WHERE user_address = $1 AND is_active = true
+       RETURNING id`,
       [userAddress],
     );
 
-    for (const row of result.rows) {
-      await this.revokeSession(row.id, reason);
+    const sessionIds: string[] = result.rows.map((row: { id: string }) => row.id);
+    if (sessionIds.length === 0) {
+      logger.debug('All sessions revoked for user', { reason, count: 0 });
+      return;
     }
 
-    logger.debug('All sessions revoked for user', { reason });
+    const now = Date.now();
+    const placeholders: string[] = [];
+    const values: unknown[] = [];
+    sessionIds.forEach((sessionId, i) => {
+      const revocationId = `revocation_${now}_${crypto.randomBytes(8).toString('hex')}`;
+      const base = i * 5;
+      placeholders.push(
+        `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5})`,
+      );
+      values.push(revocationId, sessionId, userAddress, reason || null, now);
+    });
+
+    await pool.query(
+      `INSERT INTO session_revocations (id, session_id, user_address, reason, revoked_at)
+       VALUES ${placeholders.join(', ')}`,
+      values,
+    );
+
+    logger.debug('All sessions revoked for user', { reason, count: sessionIds.length });
   }
 
   // ---------------------------------------------------------------------------

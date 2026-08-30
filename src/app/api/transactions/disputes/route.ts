@@ -1,10 +1,18 @@
 import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { disputeRepository } from '@/lib/repositories';
-import { CreateDisputeRequest } from '@shared/types/disputes';
 import { withIdempotency } from '@/lib/idempotency';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
+import { validateBody } from '@/lib/validation/validate-request';
+
+const createDisputeSchema = z.object({
+  transactionId: z.string().min(1),
+  reason: z.string().min(1),
+  description: z.string().optional(),
+  priority: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+});
 
 export async function POST(req: NextRequest) {
   return withIdempotency(
@@ -16,11 +24,9 @@ export async function POST(req: NextRequest) {
           return ErrorHandler.unauthorized('User address required');
         }
 
-        const body: CreateDisputeRequest = await req.json();
-
-        if (!body.transactionId || !body.reason) {
-          return ErrorHandler.validation('Transaction ID and reason are required');
-        }
+        const validation = await validateBody(req, createDisputeSchema);
+        if (!validation.success) return validation.response;
+        const body = validation.data;
 
         const dispute = await disputeRepository.createDispute(userAddress, body);
 

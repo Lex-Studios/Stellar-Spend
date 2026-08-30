@@ -37,6 +37,7 @@ export function HistoryRow({
       tabIndex={isFocused ? 0 : -1}
       onFocus={onRowFocus}
       onKeyDown={onRowKeyDown}
+      data-testid="transaction-entry"
       aria-label={`Transaction on ${formatDate(tx.timestamp)}, ${tx.amount} USDC, ${getCurrencySymbol(tx.currency)} ${tx.currency}, status ${tx.status}`}
       className={cn(
         'border-b border-[#222222] transition-colors duration-100 focus:outline-none',
@@ -81,7 +82,7 @@ export function HistoryRow({
       <td className="px-5 py-3 text-xs text-[#aaaaaa] whitespace-nowrap">
         {tx.beneficiary.institution}
       </td>
-      <td className="px-5 py-3 whitespace-nowrap">
+      <td className="px-5 py-3 whitespace-nowrap" data-testid="transaction-status">
         <StatusBadge status={tx.status} />
       </td>
       <td className="px-5 py-3 text-xs max-w-[200px]">

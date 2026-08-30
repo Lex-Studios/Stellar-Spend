@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { TwoFAService } from '@/lib/two-fa';
 import { ErrorHandler } from '@/lib/error-handler';
+import { validateBody } from '@/lib/validation/validate-request';
+
+const verifySchema = z.object({
+  userId: z.string().min(1),
+  code: z.string().min(1),
+  method: z.string().min(1),
+  secret: z.string().optional(),
+  backupCodes: z.array(z.string()).optional(),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, code, method, secret, backupCodes } = await req.json();
-
-    if (!userId || !code || !method) {
-      return ErrorHandler.validation('Missing required fields');
-    }
+    const validation = await validateBody(req, verifySchema);
+    if (!validation.success) return validation.response;
+    const { userId, code, method, secret, backupCodes } = validation.data;
+    void userId;
 
     if (method === 'totp') {
       if (!secret) {

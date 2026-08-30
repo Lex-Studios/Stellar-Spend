@@ -28,14 +28,14 @@ export function HistoryStats({ transactions }: HistoryStatsProps) {
   }, [transactions]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4" data-testid="transaction-stats">
       <div className="border border-[#333333] bg-[#111111] p-4">
         <p className="text-[10px] tracking-widest uppercase text-[#777777]">Insured Transactions</p>
         <p className="mt-2 text-2xl font-semibold text-white tabular-nums">{insuredCount}</p>
       </div>
       <div className="border border-[#333333] bg-[#111111] p-4">
         <p className="text-[10px] tracking-widest uppercase text-[#777777]">Active Coverage</p>
-        <p className="mt-2 text-2xl font-semibold text-[#4ade80] tabular-nums">
+        <p className="mt-2 text-2xl font-semibold text-[#4ade80] tabular-nums" data-testid="total-amount">
           {formatUsdc(activeCoverage)} USDC
         </p>
       </div>

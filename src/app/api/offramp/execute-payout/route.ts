@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { dal } from '@/lib/db';
 import type { Transaction } from '@/lib/transaction-storage';
@@ -9,6 +10,7 @@ import { isSupportedCurrency } from '@/lib/currencies';
 import { screenAddress, isHighValue } from '@/lib/compliance-screening';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
+import { validateBody } from '@/lib/validation/validate-request';
 
 type FeeMethodInput = 'USDC' | 'XLM' | 'stablecoin' | 'native';
 
@@ -19,32 +21,31 @@ function normalizeFeeMethod(feeMethod?: FeeMethodInput): Transaction['feeMethod'
   return undefined;
 }
 
+const executePayoutSchema = z.object({
+  userAddress: z.string().min(1),
+  amount: z.string().min(1),
+  currency: z.string().min(1),
+  beneficiary: z
+    .object({
+      institution: z.string().min(1),
+      accountIdentifier: z.string().min(1),
+      accountName: z.string().min(1),
+      currency: z.string().min(1),
+    })
+    .passthrough(),
+  receiveAmount: z.string().optional(),
+  feeMethod: z.enum(['USDC', 'XLM', 'stablecoin', 'native']).optional(),
+});
+
 export async function POST(request: NextRequest) {
   return withIdempotency(
     request,
     async () => {
-      let body: Partial<Transaction> & {
-        userAddress?: string;
-        feeMethod?: FeeMethodInput;
-        receiveAmount?: string;
-      };
-      try {
-        body = await request.json();
-      } catch {
-        return ErrorHandler.validation('invalid request body');
-      }
+      const validation = await validateBody(request, executePayoutSchema);
+      if (!validation.success) return validation.response;
+      const body = validation.data;
 
-      const { userAddress, amount, currency, beneficiary, receiveAmount } = body as {
-        userAddress?: string;
-        amount?: string;
-        currency?: string;
-        beneficiary?: Transaction['beneficiary'];
-        receiveAmount?: string;
-      };
-
-      if (!userAddress || !amount || !currency || !beneficiary) {
-        return ErrorHandler.validation('missing required fields');
-      }
+      const { userAddress, amount, currency, beneficiary, receiveAmount } = body;
 
       if (!isSupportedCurrency(currency)) {
         return ErrorHandler.validation(`Unsupported currency: ${currency}`);

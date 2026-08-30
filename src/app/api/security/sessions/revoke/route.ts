@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { sessionManagementService } from '@/lib/session-management';
 import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';
+import { validateBody } from '@/lib/validation/validate-request';
+
+const revokeSessionSchema = z.object({
+  sessionId: z.string().min(1).optional(),
+  revokeAll: z.boolean().optional(),
+  reason: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,8 +18,9 @@ export async function POST(request: NextRequest) {
       return ErrorHandler.validation('User address required');
     }
 
-    const body = await request.json();
-    const { sessionId, revokeAll, reason } = body;
+    const validation = await validateBody(request, revokeSessionSchema);
+    if (!validation.success) return validation.response;
+    const { sessionId, revokeAll, reason } = validation.data;
 
     if (revokeAll) {
       await sessionManagementService.revokeAllUserSessions(userAddress, reason);

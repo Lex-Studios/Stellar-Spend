@@ -23,7 +23,7 @@ export function PayoutBox({
       : quote.destinationAmount;
 
   return (
-    <div className="border border-[#c9a962]/30 bg-[#c9a962]/5 px-4 py-3 flex items-center justify-between gap-4">
+    <div className="border border-[#c9a962]/30 bg-[#c9a962]/5 px-4 py-3 flex items-center justify-between gap-4" data-testid="quote-result">
       <div className="flex flex-col gap-0.5">
         <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
           Estimated Payout
