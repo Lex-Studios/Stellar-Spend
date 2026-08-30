@@ -58,6 +58,19 @@ npx tsc --noEmit      # TypeScript
 npm test              # Unit + integration tests
 ```
 
+> **Commit hooks (automatic):** After running `npm install`, [husky](https://typicode.github.io/husky/) installs two Git hooks automatically via the `prepare` lifecycle script:
+>
+> | Hook | What it does |
+> |------|--------------|
+> | `pre-commit` | Runs `tsc --noEmit --skipLibCheck` — fast type-check to catch compile errors before the commit lands |
+> | `commit-msg` | Runs `commitlint` against your commit message. The commit is **rejected** if the message does not follow the [Conventional Commits](#commit-message-format) format documented below. |
+>
+> **To skip the hooks in an emergency** (not recommended):
+> ```bash
+> git commit --no-verify -m "your message"
+> ```
+> Skipped hooks are visible in the PR diff and must be justified in the PR description.
+
 ### Contract development (Soroban smart contracts)
 
 If you modify files in the `contracts/` directory, you must:
@@ -140,7 +153,7 @@ Include the issue number when relevant: `feat/issue-42-add-kes-corridor`.
 
 ## Commit Message Format
 
-We use [Conventional Commits](https://www.conventionalcommits.org/):
+We use [Conventional Commits](https://www.conventionalcommits.org/). This format is **automatically enforced** by the `commit-msg` husky hook (see [Run checks before committing](#run-checks-before-committing)). A commit with a non-conforming message will be rejected locally before it reaches CI.
 
 ```
 <type>[optional scope]: <description>

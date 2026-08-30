@@ -1,0 +1,3 @@
+# Run TypeScript type-check on staged files (fast, catches obvious errors).
+# For a full check run: npm run lint && npx tsc --noEmit
+npx tsc --noEmit --skipLibCheck

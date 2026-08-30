@@ -13,6 +13,8 @@ RUN --mount=type=cache,target=/root/.npm \
 # ── Stage 2: Build ───────────────────────────────────────────────────────────
 FROM node:20.19.2-alpine3.21@sha256:b861f7e5ba2f58fe6f7e53d6f0cd9f3f2e63b7e8c09c3a8a33e97d05c6ac0d6b AS builder
 WORKDIR /app
+# Disable telemetry during `next build` so no outbound calls are made in CI.
+# (Also set in the runner stage to disable it for the running process.)
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

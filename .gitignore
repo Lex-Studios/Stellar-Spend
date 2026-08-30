@@ -65,6 +65,14 @@ IMPLEMENTATION_*.md
 # PR description scratch files (use CHANGELOG.md / the PR body instead)
 PR_DESCRIPTION*.md
 
+# Scratch / task notes — should never be committed
+# Pattern: taskN.md, task-N.md, scratch.md, notes.md, TODO.md (root-level only)
+/task[0-9]*.md
+/task-[0-9]*.md
+/scratch.md
+/notes.md
+/TODO.md
+
 *storybook.log
 storybook-static
 
