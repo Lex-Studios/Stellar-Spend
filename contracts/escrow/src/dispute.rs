@@ -1,4 +1,17 @@
-use soroban_sdk::{Address, Env, panic_with_error};
+//! Dispute / timeout-configuration logic for the escrow contract.
+//!
+//! Extracted from `lib.rs` as part of #812 (modularisation). Contains the
+//! `set_timeout` (admin) and `can_refund` (read-only) entrypoints that relate to
+//! the lifecycle of a contested or time-locked deposit.
+
+use soroban_sdk::{symbol_short, Address, Env, panic_with_error};
+use stellar_spend_shared::errors::ContractError;
+
+use crate::release::{load_deposits, require_admin};
+use crate::{
+    DataKey, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD, MAX_TIMEOUT_LEDGERS,
+    MIN_TIMEOUT_LEDGERS,
+};
 
 /// Dispute error types
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -34,6 +47,39 @@ pub struct Dispute {
     pub created_at: u64,
     pub resolved_at: Option<u64>,
     pub resolution_notes: Option<String>,
+}
+
+/// Update the refund timeout applied to *future* deposits. Authority only.
+///
+/// Existing deposits keep the `timeout_ledger` fixed at creation, so lengthening
+/// the timeout cannot retroactively trap funds that are already refundable.
+pub fn set_timeout(env: &Env, timeout_ledgers: u32) -> Result<(), ContractError> {
+    require_admin(env)?;
+    if !(MIN_TIMEOUT_LEDGERS..=MAX_TIMEOUT_LEDGERS).contains(&timeout_ledgers) {
+        return Err(ContractError::InvalidInput);
+    }
+
+    env.storage()
+        .instance()
+        .set(&DataKey::Timeout, &timeout_ledgers);
+    env.storage()
+        .instance()
+        .extend_ttl(INSTANCE_TTL_THRESHOLD, INSTANCE_TTL_EXTEND_TO);
+    env.events()
+        .publish((symbol_short!("timeout"),), timeout_ledgers);
+    Ok(())
+}
+
+/// Whether `refund` would currently succeed for this deposit.
+///
+/// Returns `false` if the deposit is already released or refunded.
+pub fn can_refund(env: &Env, deposit_id: u64) -> Result<bool, ContractError> {
+    let deposits = load_deposits(env)?;
+    let deposit = deposits.get(deposit_id).ok_or(ContractError::NotFound)?;
+    if deposit.released || deposit.refunded {
+        return Ok(false);
+    }
+    Ok(env.ledger().sequence() >= deposit.timeout_ledger)
 }
 
 /// Dispute resolution handler
@@ -196,7 +242,6 @@ impl DisputeHandler {
 
     /// Store dispute (implementation specific)
     fn store_dispute(env: &Env, dispute: &Dispute) {
-        // Store in contract storage
         let key = format!("dispute_{}", dispute.escrow_id);
         env.storage().set(&String::from_str(env, &key), dispute);
     }
@@ -209,8 +254,6 @@ impl DisputeHandler {
 
     /// Authorize resolver
     fn authorize_resolver(env: &Env, resolver: &Address) -> Result<(), DisputeError> {
-        // In production, this would check against a stored arbitrator address
-        // For now, require auth
         resolver.require_auth();
         Ok(())
     }
@@ -224,8 +267,6 @@ impl DisputeHandler {
     /// with proper validation. Keeping this as a reference for the dead code audit.
     #[allow(dead_code)]
     fn legacy_invalid_dispute_creation() -> Result<(), DisputeError> {
-        // This code path is unreachable after the validation refactor
-        // It would have allowed disputes without proper authorization
         Err(DisputeError::Unauthorized)
     }
 
@@ -233,7 +274,6 @@ impl DisputeHandler {
     /// Now, all disputes have a status, making this branch unreachable.
     #[allow(dead_code)]
     fn legacy_status_check() -> Result<bool, DisputeError> {
-        // This is dead code - disputes always have a status now
         Ok(false)
     }
 
@@ -241,7 +281,6 @@ impl DisputeHandler {
     /// and `resolve_for_seller` functions.
     #[allow(dead_code)]
     fn legacy_resolve_old_way() -> Result<(), DisputeError> {
-        // This code is unreachable and will be removed
         Err(DisputeError::AlreadyResolved)
     }
 }
