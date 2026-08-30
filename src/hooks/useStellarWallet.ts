@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { WalletManager } from '@/lib/wallets/manager';
-import { WalletType, WalletConnection, WalletError } from '@/lib/wallets/adapter';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { WalletManager } from '@/lib/wallets';
+import { WalletType, WalletError } from '@/lib/wallets';
+import { logger } from '@/lib/logger';
 
 interface FreighterWindow extends Window {
   freighter?: {
@@ -48,7 +49,7 @@ export interface WalletSettings {
 
 /**
  * useStellarWallet
- * 
+ *
  * Comprehensive wallet hook that handles:
  * - Wallet detection (Freighter, Lobstr, none installed)
  * - Auto-reconnect on page reload
@@ -58,9 +59,7 @@ export interface WalletSettings {
  * - Last-used wallet persistence
  * - Event listener cleanup
  */
-export function useStellarWallet(
-  networkPassphrase: string = 'Test SDF Network ; September 2015'
-) {
+export function useStellarWallet(networkPassphrase: string = 'Test SDF Network ; September 2015') {
   const [state, setState] = useState<WalletState>({
     isConnected: false,
     publicKey: null,
@@ -93,8 +92,8 @@ export function useStellarWallet(
   const detectWallets = useCallback(() => {
     if (!managerRef.current) return [];
     const available = managerRef.current.getAvailableWallets();
-    const walletTypes = available.map(w => w.type);
-    setState(prev => ({ ...prev, detectedWallets: walletTypes }));
+    const walletTypes = available.map((w) => w.type);
+    setState((prev) => ({ ...prev, detectedWallets: walletTypes }));
     return walletTypes;
   }, []);
 
@@ -107,7 +106,7 @@ export function useStellarWallet(
         setSettings(JSON.parse(stored));
       }
     } catch (err) {
-      console.error('Failed to load wallet settings:', err);
+      logger.error('wallet.load_settings_failed', {}, err);
     }
   }, []);
 
@@ -118,7 +117,7 @@ export function useStellarWallet(
       localStorage.setItem(STORAGE_KEYS.WALLET_SETTINGS, JSON.stringify(newSettings));
       setSettings(newSettings);
     } catch (err) {
-      console.error('Failed to save wallet settings:', err);
+      logger.error('wallet.save_settings_failed', {}, err);
     }
   }, []);
 
@@ -128,11 +127,11 @@ export function useStellarWallet(
     try {
       const lastWallet = localStorage.getItem(STORAGE_KEYS.LAST_WALLET) as WalletType | null;
       if (lastWallet && managerRef.current?.isWalletAvailable(lastWallet)) {
-        setState(prev => ({ ...prev, lastUsedWallet: lastWallet }));
+        setState((prev) => ({ ...prev, lastUsedWallet: lastWallet }));
         return lastWallet;
       }
     } catch (err) {
-      console.error('Failed to load last wallet:', err);
+      logger.error('wallet.load_last_wallet_failed', {}, err);
     }
     return null;
   }, []);
@@ -142,9 +141,9 @@ export function useStellarWallet(
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(STORAGE_KEYS.LAST_WALLET, walletType);
-      setState(prev => ({ ...prev, lastUsedWallet: walletType }));
+      setState((prev) => ({ ...prev, lastUsedWallet: walletType }));
     } catch (err) {
-      console.error('Failed to save last wallet:', err);
+      logger.error('wallet.save_last_wallet_failed', {}, err);
     }
   }, []);
 
@@ -153,14 +152,14 @@ export function useStellarWallet(
     if (typeof window === 'undefined') return;
 
     // Clean up existing listeners
-    accountChangeListenersRef.current.forEach(cleanup => cleanup());
+    accountChangeListenersRef.current.forEach((cleanup) => cleanup());
     accountChangeListenersRef.current = [];
 
     if (walletType === 'freighter') {
       try {
         const handler = () => {
           // Account changed in Freighter
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             accountChanged: true,
             error: {
@@ -180,12 +179,12 @@ export function useStellarWallet(
           });
         }
       } catch (err) {
-        console.error('Failed to setup Freighter listener:', err);
+        logger.error('wallet.setup_freighter_listener_failed', {}, err);
       }
     } else if (walletType === 'lobstr') {
       try {
         const handler = () => {
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             accountChanged: true,
             error: {
@@ -205,7 +204,7 @@ export function useStellarWallet(
           });
         }
       } catch (err) {
-        console.error('Failed to setup Lobstr listener:', err);
+        logger.error('wallet.setup_lobstr_listener_failed', {}, err);
       }
     }
   }, []);
@@ -215,12 +214,12 @@ export function useStellarWallet(
     async (walletType: WalletType) => {
       if (!managerRef.current) return;
 
-      setState(prev => ({ ...prev, isConnecting: true, error: null, accountChanged: false }));
+      setState((prev) => ({ ...prev, isConnecting: true, error: null, accountChanged: false }));
 
       try {
         const connection = await managerRef.current.connect(walletType);
-        
-        setState(prev => ({
+
+        setState((prev) => ({
           ...prev,
           isConnected: true,
           publicKey: connection.publicKey,
@@ -241,7 +240,7 @@ export function useStellarWallet(
         return connection;
       } catch (err) {
         const error = err as WalletError;
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isConnecting: false,
           error: error,
@@ -252,22 +251,22 @@ export function useStellarWallet(
         throw error;
       }
     },
-    [settings.rememberLastWallet, saveLastWallet, setupAccountChangeListener]
+    [settings.rememberLastWallet, saveLastWallet, setupAccountChangeListener],
   );
 
   // Auto-reconnect on page reload
   const autoReconnect = useCallback(async () => {
     if (!managerRef.current || !settings.autoReconnect) return;
 
-    setState(prev => ({ ...prev, isAutoReconnecting: true }));
+    setState((prev) => ({ ...prev, isAutoReconnecting: true }));
 
     try {
       const lastWallet = loadLastWallet();
-      
+
       if (lastWallet) {
         try {
           const connection = await managerRef.current.connect(lastWallet);
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             isConnected: true,
             publicKey: connection.publicKey,
@@ -276,19 +275,19 @@ export function useStellarWallet(
             error: null,
           }));
           setupAccountChangeListener(lastWallet);
-        } catch (err) {
+        } catch (_err) {
           // Auto-reconnect failed, but don't show error initially
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             isAutoReconnecting: false,
             error: null,
           }));
         }
       } else {
-        setState(prev => ({ ...prev, isAutoReconnecting: false }));
+        setState((prev) => ({ ...prev, isAutoReconnecting: false }));
       }
     } catch (err) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isAutoReconnecting: false,
         error: err as WalletError,
@@ -305,7 +304,7 @@ export function useStellarWallet(
         return; // Already connected to this wallet
       }
 
-      setState(prev => ({ ...prev, isSwitching: true, error: null }));
+      setState((prev) => ({ ...prev, isSwitching: true, error: null }));
 
       try {
         // Disconnect from current wallet
@@ -314,7 +313,7 @@ export function useStellarWallet(
         // Connect to new wallet
         const connection = await managerRef.current.connect(newWalletType);
 
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isConnected: true,
           publicKey: connection.publicKey,
@@ -333,7 +332,7 @@ export function useStellarWallet(
         return connection;
       } catch (err) {
         const error = err as WalletError;
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isSwitching: false,
           error: error,
@@ -341,7 +340,7 @@ export function useStellarWallet(
         throw error;
       }
     },
-    [state.walletType, settings.rememberLastWallet, saveLastWallet, setupAccountChangeListener]
+    [state.walletType, settings.rememberLastWallet, saveLastWallet, setupAccountChangeListener],
   );
 
   // Disconnect from wallet
@@ -350,12 +349,12 @@ export function useStellarWallet(
 
     try {
       await managerRef.current.disconnect();
-      
+
       // Clean up listeners
-      accountChangeListenersRef.current.forEach(cleanup => cleanup());
+      accountChangeListenersRef.current.forEach((cleanup) => cleanup());
       accountChangeListenersRef.current = [];
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isConnected: false,
         publicKey: null,
@@ -365,7 +364,7 @@ export function useStellarWallet(
       }));
     } catch (err) {
       const error = err as WalletError;
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         error: error,
       }));
@@ -374,7 +373,7 @@ export function useStellarWallet(
 
   // Clear account changed flag and error
   const clearAccountChanged = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       accountChanged: false,
       error: prev.accountChanged ? null : prev.error,
@@ -383,11 +382,32 @@ export function useStellarWallet(
 
   // Clear error state
   const clearError = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       error: null,
     }));
   }, []);
+
+  // Sign a transaction with the currently connected wallet's adapter.
+  const signTransaction = useCallback(
+    async (xdr: string): Promise<string> => {
+      if (!managerRef.current) {
+        throw new Error('Wallet manager is not ready. Please try again.');
+      }
+      return managerRef.current.signTransaction(xdr, { networkPassphrase });
+    },
+    [networkPassphrase],
+  );
+
+  // Convenience object mirroring the shape consumers expect: a single
+  // `wallet` value that is non-null exactly when a wallet is connected.
+  const wallet = useMemo(
+    () =>
+      state.isConnected && state.publicKey && state.walletType
+        ? { publicKey: state.publicKey, type: state.walletType }
+        : null,
+    [state.isConnected, state.publicKey, state.walletType],
+  );
 
   // Initialize on mount
   useEffect(() => {
@@ -406,7 +426,7 @@ export function useStellarWallet(
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      accountChangeListenersRef.current.forEach(cleanup => cleanup());
+      accountChangeListenersRef.current.forEach((cleanup) => cleanup());
     };
   }, []);
 
@@ -448,6 +468,7 @@ export function useStellarWallet(
   return {
     // State
     ...state,
+    wallet,
     error: state.error,
     errorMessage: getErrorMessage(state.error),
 
@@ -459,6 +480,7 @@ export function useStellarWallet(
     connect,
     disconnect,
     switchWallet,
+    signTransaction,
     autoReconnect,
     clearError,
     clearAccountChanged,

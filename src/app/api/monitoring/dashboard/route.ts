@@ -3,17 +3,18 @@ import { getDashboardMetrics, recordUptimeCheck } from '@/lib/monitoring';
 import { getTransactionQueue } from '@/lib/priority-queue';
 import { getTransactionAnalytics } from '@/lib/transaction-analytics';
 import { getApiMetrics, getDbMetrics, getVitalsMetrics, getPerfAlerts } from '@/lib/performance';
+import { withApiErrorHandling } from '@/lib/error-handler';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export const GET = withApiErrorHandling(async () => {
   // Ping the health endpoint and record uptime
   const start = Date.now();
   let healthOk = false;
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001'}/api/health`,
-      { signal: AbortSignal.timeout(5000) }
+      { signal: AbortSignal.timeout(5000) },
     );
     healthOk = res.ok;
   } catch {
@@ -39,4 +40,4 @@ export async function GET() {
       alerts: getPerfAlerts(),
     },
   });
-}
+});
