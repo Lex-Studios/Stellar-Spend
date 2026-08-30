@@ -262,22 +262,33 @@ export async function seedStandardAccounts(): Promise<void> {
   ];
 
   const now = Date.now();
-  for (const account of accounts) {
-    await pool.query(
-      `INSERT INTO ledger_accounts (id, code, name, type, category, description, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
-       ON CONFLICT (id) DO NOTHING`,
-      [
-        account.id,
-        account.code,
-        account.name,
-        account.type,
-        account.category,
-        account.description ?? null,
-        now,
-      ],
+
+  // Single multi-row INSERT instead of one round trip per account — avoids
+  // N+1 query amplification for what is otherwise a fixed, small seed list.
+  const placeholders: string[] = [];
+  const values: unknown[] = [];
+  accounts.forEach((account, i) => {
+    const base = i * 7;
+    placeholders.push(
+      `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 7})`,
     );
-  }
+    values.push(
+      account.id,
+      account.code,
+      account.name,
+      account.type,
+      account.category,
+      account.description ?? null,
+      now,
+    );
+  });
+
+  await pool.query(
+    `INSERT INTO ledger_accounts (id, code, name, type, category, description, created_at, updated_at)
+     VALUES ${placeholders.join(', ')}
+     ON CONFLICT (id) DO NOTHING`,
+    values,
+  );
 }
 
 function rowToEntry(row: Record<string, unknown>): LedgerEntry {

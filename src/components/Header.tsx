@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
+import { bpClasses } from '@/lib/breakpoints';
 import { ThemeToggle } from './ThemeToggle';
 import { CopyButton } from './CopyButton';
 import { WalletModal } from './WalletModal';
@@ -10,6 +11,7 @@ import { NotificationCenter } from './NotificationCenter';
 import { useFxRate } from '@/hooks/useFxRate';
 import { useNotificationCenter } from '@/hooks/useNotificationCenter';
 import type { WalletType } from '@/lib/stellar';
+import { formatNumber } from '@/lib/format';
 
 export interface HeaderProps {
   subtitle: string;
@@ -59,7 +61,7 @@ function WalletButton({
   return (
     <div className="flex items-center gap-2 flex-wrap">
       {isConnected && walletType && (
-        <span className="text-xs text-slate-500 tracking-widest hidden sm:inline">
+        <span className={`text-xs text-slate-500 tracking-widest ${bpClasses.hiddenBelowSm}`}>
           {walletType.toUpperCase()}
         </span>
       )}
@@ -70,6 +72,7 @@ function WalletButton({
         onClick={isConnected ? onDisconnect : onOpenModal}
         disabled={disabled}
         aria-label={isConnected ? 'Disconnect wallet' : 'Connect wallet'}
+        data-testid={isConnected ? 'wallet-button' : 'connect-wallet-button'}
         className={cn(
           'px-4 py-2 min-h-[44px] text-xs tracking-widest border transition-colors duration-150',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a962] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]',
@@ -136,15 +139,12 @@ export function Header({
   return (
     <>
       <header
-        className="w-full px-6 py-5 flex items-start justify-between gap-6 max-[720px]:flex-col max-[720px]:items-start"
+        className={`w-full px-6 py-5 flex items-start justify-between gap-6 ${bpClasses.headerCollapseFlexCol} ${bpClasses.headerCollapseItemsStart}`}
         role="banner"
       >
         {/* Left: title + subtitle + FX chip */}
         <div className="flex flex-col gap-1">
-          <h1
-            className="font-space-grotesk font-bold text-white leading-none tracking-tight"
-            style={{ fontSize: 'clamp(1.5rem, 4vw, 2.5rem)' }}
-          >
+          <h1 className="font-space-grotesk font-bold text-white leading-none tracking-tight text-[clamp(1.5rem,4vw,2.5rem)]">
             STELLAR-SPEND
           </h1>
           <p className="text-xs text-[#777777] tracking-widest uppercase">{subtitle}</p>
@@ -157,13 +157,13 @@ export function Header({
             )}
           >
             {rate != null
-              ? `LIVE RATE: ₦${Math.round(rate).toLocaleString()} / USDC`
+              ? `LIVE RATE: ₦${formatNumber(Math.round(rate))} / USDC`
               : 'LIVE RATE: —'}
           </span>
         </div>
 
         {/* Right: notifications + wallet button + balances */}
-        <div className="flex flex-col items-end gap-2 max-[720px]:items-start">
+        <div className={`flex flex-col items-end gap-2 ${bpClasses.headerCollapseItemsStart}`}>
           <div className="flex items-center gap-2">
             <LanguageSelector />
             <button
@@ -212,7 +212,7 @@ export function Header({
           </div>
 
           {isConnected && (
-            <div className="flex flex-col items-end gap-0.5 max-[720px]:items-start">
+            <div className={`flex flex-col items-end gap-0.5 ${bpClasses.headerCollapseItemsStart}`}>
               {isBalanceLoading ? (
                 <span className="text-xs text-[#777777] tracking-widest">loading...</span>
               ) : (

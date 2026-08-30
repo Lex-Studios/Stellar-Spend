@@ -58,10 +58,9 @@ export default function RightPanel(props: RightPanelProps) {
           <span className="text-xs tracking-widest text-[#777777] uppercase">Payout Total</span>
           <span
             className={cn(
-              'font-space-grotesk font-bold tabular-nums leading-none transition-colors duration-300',
+              'font-space-grotesk font-bold tabular-nums leading-none transition-colors duration-300 text-[clamp(1.1rem,2.5vw,1.5rem)]',
               isLoadingQuote ? 'text-[#777777]' : flash ? 'text-white' : 'text-[#c9a962]',
             )}
-            style={{ fontSize: 'clamp(1.1rem, 2.5vw, 1.5rem)' }}
           >
             {payoutTotal}
           </span>

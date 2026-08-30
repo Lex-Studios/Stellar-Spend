@@ -43,15 +43,9 @@ export function HeroPanel({
     heroLabel = 'CALCULATING';
     heroValue = (
       <span className="text-[#c9a962] flex items-center gap-1">
-        <span className="dot-bounce" style={{ animationDelay: '0ms' }}>
-          .
-        </span>
-        <span className="dot-bounce" style={{ animationDelay: '150ms' }}>
-          .
-        </span>
-        <span className="dot-bounce" style={{ animationDelay: '300ms' }}>
-          .
-        </span>
+        <span className="dot-bounce [animation-delay:0ms]">.</span>
+        <span className="dot-bounce [animation-delay:150ms]">.</span>
+        <span className="dot-bounce [animation-delay:300ms]">.</span>
       </span>
     );
     heroMeta = 'Fetching live rate...';
@@ -78,10 +72,7 @@ export function HeroPanel({
     >
       <span className="text-[10px] tracking-[0.2em] text-[#777777] uppercase">{heroLabel}</span>
 
-      <div
-        className="font-space-grotesk font-bold leading-none"
-        style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.4rem)' }}
-      >
+      <div className="font-space-grotesk font-bold leading-none text-[clamp(1.6rem,3.5vw,2.4rem)]">
         {heroValue}
       </div>
 

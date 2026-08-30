@@ -73,6 +73,12 @@ export class TransactionStorage {
     }
   }
 
+  static remove(id: string): void {
+    if (typeof window === 'undefined') return;
+    const all = this.getAll().filter((tx) => tx.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  }
+
   static getAll(): Transaction[] {
     if (typeof window === 'undefined') return [];
     try {

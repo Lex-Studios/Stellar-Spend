@@ -1,17 +1,27 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { useTransactionHistory } from '../useTransactionHistory';
 import type { Transaction } from '@/lib/transaction-storage';
+import { ToastProvider } from '@/contexts/ToastContext';
 
 vi.mock('@/lib/transaction-storage', () => ({
   TransactionStorage: {
     getByUser: vi.fn(() => []),
     applyOptimistic: vi.fn(() => vi.fn()),
     update: vi.fn(),
+    save: vi.fn(),
+    remove: vi.fn(),
   },
 }));
 
 import { TransactionStorage } from '@/lib/transaction-storage';
+
+const wrapper = ({ children }: { children: ReactNode }) => (
+  <ToastProvider>{children}</ToastProvider>
+);
+const renderTransactionHistoryHook = (walletAddress?: string) =>
+  renderHook(() => useTransactionHistory(walletAddress), { wrapper });
 
 const tx = (overrides: Partial<Transaction> = {}): Transaction => ({
   id: 'tx-1',
@@ -34,7 +44,7 @@ describe('useTransactionHistory', () => {
   afterEach(() => vi.restoreAllMocks());
 
   it('returns empty state when no wallet address is provided', () => {
-    const { result } = renderHook(() => useTransactionHistory(undefined));
+    const { result } = renderTransactionHistoryHook(undefined);
     expect(result.current.transactions).toEqual([]);
     expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBeNull();
@@ -46,7 +56,7 @@ describe('useTransactionHistory', () => {
     (TransactionStorage.getByUser as ReturnType<typeof vi.fn>).mockReturnValue([localTx]);
     global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => [apiTx] });
 
-    const { result } = renderHook(() => useTransactionHistory('GABC'));
+    const { result } = renderTransactionHistoryHook('GABC');
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.transactions.map((t) => t.id).sort()).toEqual(['tx-1', 'tx-2']);
@@ -57,7 +67,7 @@ describe('useTransactionHistory', () => {
     (TransactionStorage.getByUser as ReturnType<typeof vi.fn>).mockReturnValue([]);
     global.fetch = vi.fn().mockRejectedValue(new Error('network down'));
 
-    const { result } = renderHook(() => useTransactionHistory('GABC'));
+    const { result } = renderTransactionHistoryHook('GABC');
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.error).toBe('network down');
@@ -68,7 +78,7 @@ describe('useTransactionHistory', () => {
     (TransactionStorage.getByUser as ReturnType<typeof vi.fn>).mockReturnValue([tx()]);
     global.fetch = vi.fn().mockRejectedValue(new Error('network down'));
 
-    const { result } = renderHook(() => useTransactionHistory('GABC'));
+    const { result } = renderTransactionHistoryHook('GABC');
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.error).toBeNull();
@@ -81,7 +91,7 @@ describe('useTransactionHistory', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => [tx()] })
       .mockResolvedValueOnce({ ok: true, json: async () => ({}) });
 
-    const { result } = renderHook(() => useTransactionHistory('GABC'));
+    const { result } = renderTransactionHistoryHook('GABC');
     await waitFor(() => expect(result.current.transactions).toHaveLength(1));
 
     let outcome: string | null = 'unset';
@@ -102,7 +112,7 @@ describe('useTransactionHistory', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => [tx({ note: 'old' })] })
       .mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({ error: 'boom' }) });
 
-    const { result } = renderHook(() => useTransactionHistory('GABC'));
+    const { result } = renderTransactionHistoryHook('GABC');
     await waitFor(() => expect(result.current.transactions).toHaveLength(1));
 
     let outcome: string | null = null;
@@ -117,7 +127,7 @@ describe('useTransactionHistory', () => {
 
   it('updateTransaction patches state and persists to storage', async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => [tx()] });
-    const { result } = renderHook(() => useTransactionHistory('GABC'));
+    const { result } = renderTransactionHistoryHook('GABC');
     await waitFor(() => expect(result.current.transactions).toHaveLength(1));
 
     act(() => result.current.updateTransaction('tx-1', { note: 'patched' }));

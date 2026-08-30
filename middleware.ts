@@ -3,13 +3,31 @@ import { addSecurityHeaders } from './src/lib/security/headers';
 import { authMiddleware } from './src/lib/middleware/auth';
 import { geoMiddleware, attachGeoHeaders } from './src/lib/middleware/geo';
 import { createLoggingMiddleware } from './src/lib/middleware/logging';
-import { compressionMiddleware, addCompressionHeaders } from './src/lib/middleware/compression.middleware';
-import { publicApiRateLimitMiddleware, addRateLimitHeaders } from './src/lib/middleware/public-api-rate-limit.middleware';
+import {
+  compressionMiddleware,
+  addCompressionHeaders,
+} from './src/lib/middleware/compression.middleware';
+import {
+  publicApiRateLimitMiddleware,
+  addRateLimitHeaders,
+} from './src/lib/middleware/public-api-rate-limit.middleware';
+import { composeGuards, composeTransforms } from './src/lib/middleware/pipeline';
 
-export function middleware(request: NextRequest): NextResponse {
+// Guards run in order; the first one to return a response short-circuits
+// the chain (e.g. a geo block or an auth/versioning rejection).
+const runGuards = composeGuards(geoMiddleware, authMiddleware);
+
+// Transforms always run, regardless of which guard (if any) produced the
+// response, decorating it with the headers every response needs.
+const runTransforms = composeTransforms(
+  (response, request) => attachGeoHeaders(response, request),
+  (response, request) => addCompressionHeaders(response, new URL(request.url).pathname),
+  (response, request) => addRateLimitHeaders(response, request),
+  (response) => addSecurityHeaders(response),
+);
+
+export async function middleware(request: NextRequest): Promise<NextResponse> {
   const start = Date.now();
-  const loggingMiddleware = createLoggingMiddleware();
-  const pathname = new URL(request.url).pathname;
 
   // Resolve the correlation ID once, up front, so the value logged here is
   // the exact same value route handlers see via request.headers.get('x-request-id').
@@ -17,7 +35,8 @@ export function middleware(request: NextRequest): NextResponse {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-request-id', requestId);
 
-  // 0. Apply compression middleware to request
+  // Apply compression middleware to the request before running guards, so
+  // guards see the (possibly rewritten) request.
   let modifiedRequest = request;
   const compressionReq = compressionMiddleware(request);
   if (compressionReq) {
@@ -25,48 +44,18 @@ export function middleware(request: NextRequest): NextResponse {
     modifiedRequest.headers.set('x-request-id', requestId);
   }
 
-  let response: NextResponse;
-
-  // 1. Check rate limiting first (issue #967)
+  // Check rate limiting first (issue #967), ahead of the geo/auth guard chain.
   const isAuthenticated = !!request.headers.get('x-account-id');
-  const rateLimitResponse = publicApiRateLimitMiddleware(modifiedRequest, isAuthenticated);
-  if (rateLimitResponse instanceof Promise) {
-    // Handle async rate limiting (shouldn't be needed for sync version)
-    response = NextResponse.next({ request: { headers: modifiedRequest.headers } });
-  } else if (rateLimitResponse) {
-    response = rateLimitResponse;
-  } else {
-    // 2. Check geo restrictions
-    const geoResponse = geoMiddleware(modifiedRequest);
-    if (geoResponse) {
-      response = geoResponse;
-    } else {
-      // 3. Check auth/versioning
-      const authResponse = authMiddleware(modifiedRequest);
-      if (authResponse) {
-        response = authResponse;
-      } else {
-        // 4. Pass through all other requests, forwarding the resolved
-        // request ID so the route handler can correlate its own logs.
-        response = NextResponse.next({ request: { headers: modifiedRequest.headers } });
-      }
-    }
-  }
+  const rateLimitResponse = await publicApiRateLimitMiddleware(modifiedRequest, isAuthenticated);
 
-  // 5. Attach geo headers
-  response = attachGeoHeaders(response, request);
+  const guardResponse = rateLimitResponse ?? runGuards(modifiedRequest);
+  let response =
+    guardResponse ?? NextResponse.next({ request: { headers: modifiedRequest.headers } });
 
-  // 6. Add compression headers
-  response = addCompressionHeaders(response, pathname);
+  response = runTransforms(response, request);
 
-  // 7. Add rate limit headers to response
-  response = addRateLimitHeaders(response, modifiedRequest);
-
-  // 8. Add security headers
-  response = addSecurityHeaders(response);
-
-  // 9. Log and add request ID
   const durationMs = Date.now() - start;
+  const loggingMiddleware = createLoggingMiddleware();
   response = loggingMiddleware(request, response, durationMs, requestId);
 
   return response;

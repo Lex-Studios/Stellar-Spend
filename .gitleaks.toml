@@ -10,6 +10,10 @@ paths = [
   '''\.env\.sample$''',
   '''\.env\.template$''',
   '''tests/fixtures/.*''',
+  # Issue #1014 regression fixtures/test (synthetic secrets, must stay scanned
+  # by the dedicated .gitleaks-regression.toml, not the repo-wide scan).
+  '''src/test/fixtures/.*''',
+  '''src/test/gitleaks-regression\.test\.ts$''',
   '''__snapshots__/.*''',
   '''\.example$''',
   '''docs/.*\.md$''',
