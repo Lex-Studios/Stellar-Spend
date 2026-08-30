@@ -1,20 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { formatUsdcAmount } from '@/lib/format';
 
 const HORIZON_URL = 'https://horizon.stellar.org';
 const USDC_ISSUER =
   process.env.NEXT_PUBLIC_STELLAR_USDC_ISSUER ||
   'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN';
-
-function fmt(value: string, fractions: { min: number; max: number }): string {
-  const n = parseFloat(value);
-  if (isNaN(n)) return '0.00';
-  return n.toLocaleString('en-US', {
-    minimumFractionDigits: fractions.min,
-    maximumFractionDigits: fractions.max,
-  });
-}
 
 async function fetchStellarBalances(publicKey: string): Promise<{ usdc: string; xlm: string }> {
   try {
@@ -37,8 +29,8 @@ async function fetchStellarBalances(publicKey: string): Promise<{ usdc: string; 
         b.asset_issuer === USDC_ISSUER,
     );
     return {
-      xlm: xlmEntry ? fmt(xlmEntry.balance, { min: 2, max: 6 }) : '0.00',
-      usdc: usdcEntry ? fmt(usdcEntry.balance, { min: 2, max: 6 }) : '0.00',
+      xlm: xlmEntry ? formatUsdcAmount(xlmEntry.balance) : '0.00',
+      usdc: usdcEntry ? formatUsdcAmount(usdcEntry.balance) : '0.00',
     };
   } catch {
     return { usdc: '0.00', xlm: '0.00' };

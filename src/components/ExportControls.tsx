@@ -98,6 +98,7 @@ export default function ExportControls({ transactions, walletAddress }: Props) {
         onClick={() => handleExport('csv')}
         disabled={disabled || exporting !== null}
         aria-label="Export as CSV"
+        data-testid="export-button"
         className={buttonCls('csv')}
       >
         {exporting === 'csv' ? '⟳ CSV' : '↓ CSV'}

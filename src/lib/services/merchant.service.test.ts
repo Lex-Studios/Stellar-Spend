@@ -250,6 +250,34 @@ describe('#852 — MerchantService unit tests', () => {
     });
   });
 
+  // ─── createBulkPayout — batched item insert (no N+1) ─────────────────────
+
+  describe('createBulkPayout() — batched item insert', () => {
+    it('issues exactly one INSERT for merchant_payout_items regardless of item count', async () => {
+      const manyItems = Array.from({ length: 5 }, (_, i) => ({
+        beneficiaryInstitution: 'GTBank',
+        beneficiaryAccount: `100000000${i}`,
+        beneficiaryName: `Recipient ${i}`,
+        amount: 100,
+        currency: 'NGN',
+      }));
+
+      poolQueryMock.mockResolvedValueOnce({ rows: [] }); // no existing idempotency key
+      poolQueryMock.mockResolvedValueOnce({ rows: [makePayoutRow()] }); // INSERT merchant_payouts
+      poolQueryMock.mockResolvedValueOnce({ rows: [] }); // single batched item INSERT
+
+      await service.createBulkPayout('merchant-uuid-001', 'idem-key-005', manyItems);
+
+      // 3 total queries no matter how many items: idempotency check, payout
+      // insert, and one multi-row item insert — not one insert per item.
+      expect(poolQueryMock).toHaveBeenCalledTimes(3);
+
+      const [itemsSql, itemsValues] = poolQueryMock.mock.calls[2];
+      expect(itemsSql).toEqual(expect.stringContaining('INSERT INTO merchant_payout_items'));
+      expect(itemsValues).toHaveLength(manyItems.length * 6);
+    });
+  });
+
   // ─── createBulkPayout — idempotency key deduplication ────────────────────
 
   describe('createBulkPayout() — idempotency key deduplication', () => {

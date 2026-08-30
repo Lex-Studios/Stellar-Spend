@@ -8,6 +8,11 @@ soroban-sdk = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
+proptest = { workspace = true }
 
 [lib]
 crate-type = ["rlib"]
+
+[[test]]
+name = "gas_regression"
+path = "tests/gas_regression.rs"

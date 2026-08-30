@@ -157,4 +157,17 @@ export default [
       ],
     },
   },
+
+  // ---------------------------------------------------------------------------
+  // Ban console.log/console.debug in application source (#943).
+  // console.warn/console.error remain allowed for genuine error reporting.
+  // Test files are exempt since they legitimately spy on/assert console calls.
+  // ---------------------------------------------------------------------------
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/**/__tests__/**', 'src/**/*.test.{ts,tsx}', 'src/**/*.spec.{ts,tsx}'],
+    rules: {
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  },
 ];

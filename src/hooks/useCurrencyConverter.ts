@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useTransition } from 'react';
 import type { FxRate } from '@/app/api/fx-rates/route';
 import { logger } from '@/lib/logger';
+import { apiGet } from '@/lib/api/client';
 
 const QUOTE_TTL = 30; // seconds
 
@@ -47,11 +48,8 @@ export function useCurrencyConverter(): CurrencyConverterState {
 
   const fetchCurrencies = useCallback(async () => {
     try {
-      const res = await fetch('/api/offramp/currencies');
-      if (res.ok) {
-        const data = (await res.json()) as { currencies?: string[] };
-        startTransition(() => setCurrencies(data.currencies ?? []));
-      }
+      const data = await apiGet<{ currencies?: string[] }>('/api/offramp/currencies');
+      startTransition(() => setCurrencies(data.currencies ?? []));
     } catch (error) {
       logger.error('currency.fetch_currencies_failed', {}, error);
     }
@@ -60,14 +58,11 @@ export function useCurrencyConverter(): CurrencyConverterState {
   const fetchRate = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/offramp/rate');
-      if (res.ok) {
-        const data = (await res.json()) as FxRate;
-        setRate(data.rate);
-        if (rateUpdatedTimer.current) clearTimeout(rateUpdatedTimer.current);
-        setRateUpdated(true);
-        rateUpdatedTimer.current = setTimeout(() => setRateUpdated(false), 1_500);
-      }
+      const data = await apiGet<FxRate>('/api/offramp/rate');
+      setRate(data.rate);
+      if (rateUpdatedTimer.current) clearTimeout(rateUpdatedTimer.current);
+      setRateUpdated(true);
+      rateUpdatedTimer.current = setTimeout(() => setRateUpdated(false), 1_500);
     } catch (error) {
       logger.error('currency.fetch_rate_failed', {}, error);
     } finally {

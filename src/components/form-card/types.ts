@@ -2,6 +2,7 @@ import type { BankMode } from '@/components/BankAccountInput';
 import type { InsuranceQuote } from '@/components/InsuranceOption';
 import type { ProviderQuote } from '@/components/QuoteComparison';
 import type { QuoteResult as QuoteFetcherResult } from '@/lib/offramp';
+import { formatFiatAmount } from '@/lib/format';
 
 export type FeeMethod = 'USDC' | 'XLM';
 
@@ -51,37 +52,10 @@ export interface FormCardProps {
   isInitialLoading?: boolean;
 }
 
-export const CURRENCY_SYMBOLS: Record<string, string> = {
-  NGN: '₦',
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  KES: 'KSh',
-  GHS: '₵',
-  ZAR: 'R',
-};
-
-export function getCurrencySymbol(currency: string): string {
-  return CURRENCY_SYMBOLS[currency.toUpperCase()] || currency.toUpperCase();
-}
+export { CURRENCY_SYMBOLS, getCurrencySymbol } from '@/lib/format';
 
 export function formatPayout(amount: string, currency: string): string {
-  const num = parseFloat(amount);
-  if (isNaN(num)) return '—';
-  const symbol = getCurrencySymbol(currency);
-  if (currency.toUpperCase() === 'NGN') {
-    return `${symbol}${new Intl.NumberFormat('en-NG', { maximumFractionDigits: 0 }).format(num)}`;
-  }
-  try {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency.toUpperCase(),
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(num);
-  } catch {
-    return `${symbol} ${num.toFixed(2)}`;
-  }
+  return formatFiatAmount(amount, currency);
 }
 
 export function buildProviderQuotes(quote: QuoteResult, currency: string): ProviderQuote[] {

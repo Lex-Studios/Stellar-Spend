@@ -86,6 +86,7 @@ function HistoryPageContent() {
 
       <section
         id="main-content"
+        data-testid="transaction-history"
         className="border border-[#333333] px-[2.6rem] py-8 max-[1100px]:p-4 mt-6"
       >
         <HistoryPageHeader

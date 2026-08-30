@@ -105,6 +105,7 @@ export function WalletModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="wallet-modal-title"
+      data-testid="wallet-modal"
     >
       <div className="relative w-full max-w-sm mx-4 bg-[#111111] border border-[#333333] shadow-2xl">
         <WalletModalHeader isConnecting={isConnecting} onClose={onClose} />

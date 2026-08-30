@@ -8,12 +8,13 @@
 import { logger } from '@/lib/logger';
 import { cache } from './index';
 import { CACHE_KEYS, generateCacheKey, HOT_CORRIDORS } from './keys';
+import { logger } from '@/lib/logger';
 
 /**
  * Warm quote cache for popular corridors
  */
 export async function warmQuoteCache(): Promise<void> {
-  logger.info('cache.warming.quotes.start', { corridors: HOT_CORRIDORS.length });
+  logger.info('cache.warming.quotes.start');
 
   const results = await Promise.allSettled(
     HOT_CORRIDORS.map(async ({ currency, amount }) => {
@@ -30,7 +31,7 @@ export async function warmQuoteCache(): Promise<void> {
 
         const key = generateCacheKey(CACHE_KEYS.QUOTE, amount, currency, 'USDC');
         await cache.set(key, quote, CACHE_KEYS.QUOTE);
-        logger.info('cache.warming.quote.warmed', { currency, amount });
+        logger.debug('cache.warming.quote.warmed', { currency, amount });
       } catch (error) {
         logger.error('cache.warming.quote.failed', { currency, amount }, error);
       }
@@ -38,14 +39,14 @@ export async function warmQuoteCache(): Promise<void> {
   );
 
   const succeeded = results.filter((r) => r.status === 'fulfilled').length;
-  logger.info('cache.warming.quotes.completed', { succeeded, total: HOT_CORRIDORS.length });
+  logger.info('cache.warming.quotes.complete', { succeeded, total: HOT_CORRIDORS.length });
 }
 
 /**
  * Warm currencies cache
  */
 export async function warmCurrenciesCache(): Promise<void> {
-  logger.info('cache.warming.currencies.start', {});
+  logger.info('cache.warming.currencies.start');
 
   try {
     // Mock currency list - replace with actual API call
@@ -58,7 +59,7 @@ export async function warmCurrenciesCache(): Promise<void> {
 
     const key = generateCacheKey(CACHE_KEYS.CURRENCIES);
     await cache.set(key, currencies, CACHE_KEYS.CURRENCIES);
-    logger.info('cache.warming.currencies.warmed', {});
+    logger.info('cache.warming.currencies.complete');
   } catch (error) {
     logger.error('cache.warming.currencies.failed', {}, error);
   }
@@ -68,11 +69,11 @@ export async function warmCurrenciesCache(): Promise<void> {
  * Warm all enabled caches
  */
 export async function warmAllCaches(): Promise<void> {
-  logger.info('cache.warming.all.start', {});
+  logger.info('cache.warming.start');
   const start = Date.now();
 
   await Promise.allSettled([warmQuoteCache(), warmCurrenciesCache()]);
 
-  const duration = Date.now() - start;
-  logger.info('cache.warming.all.completed', { durationMs: duration });
+  const durationMs = Date.now() - start;
+  logger.info('cache.warming.complete', { durationMs });
 }

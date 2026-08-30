@@ -223,6 +223,18 @@ fn refund_is_not_repeatable() {
 }
 
 #[test]
+fn refund_by_non_depositor_is_rejected() {
+    let t = EscrowTest::setup();
+    let id = t.deposit(400);
+    t.advance_past_timeout();
+
+    assert_eq!(
+        t.client().try_refund(&id),
+        Err(Ok(ContractError::Unauthorized))
+    );
+}
+
+#[test]
 fn refund_is_blocked_after_a_release() {
     let t = EscrowTest::setup();
     let id = t.deposit(400);

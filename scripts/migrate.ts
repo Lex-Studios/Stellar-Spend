@@ -7,6 +7,7 @@
 
 import { Pool, type QueryResult } from 'pg';
 import fs from 'fs';
+import { lintMigrationSql } from '../migrations/lint/rules';
 
 const info = (...msgs: unknown[]) => process.stdout.write(msgs.join(' ') + '\n');
 const fail = (...msgs: unknown[]) => process.stderr.write(msgs.join(' ') + '\n');
@@ -184,24 +185,21 @@ class MigrationRunner {
   }
 
   lintMigration(sql: string): boolean {
-    // Check for potentially dangerous operations
-    const dangerousPatterns = [
-      /ALTER TABLE.*ADD.*DEFAULT.*\bDEFAULT\b/, // Adding default to large table
-      /ALTER TABLE.*DROP\s+COLUMN/, // Dropping columns (should be done in contract phase)
-      /CREATE\s+INDEX.*CONCURRENTLY/, // Should be done concurrently
-      /ALTER TABLE.*RENAME\s+COLUMN/, // Renaming columns (requires expansion)
-    ];
+    const result = lintMigrationSql(sql);
 
-    for (const pattern of dangerousPatterns) {
-      if (pattern.test(sql)) {
-        warn(`⚠️ Dangerous pattern detected: ${pattern}`);
-        return false;
-      }
+    for (const violation of result.violations) {
+      warn(`⚠️ Unsafe pattern detected: ${violation}`);
+    }
+    if (result.violations.some((v) => v.includes('DROP') || v.includes('TRUNCATE'))) {
+      warn(
+        '   Destructive operations require an "-- lint:allow-destructive" comment in the migration to proceed.',
+      );
+    }
+    for (const override of result.overridden) {
+      warn(`⚠️ Destructive operation allowed via override: ${override}`);
     }
 
-    // Check for large table operations
-    // This would require analyzing table sizes in production
-    return true;
+    return result.safe;
   }
 
   calculateChecksum(content: string): string {

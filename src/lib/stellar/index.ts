@@ -24,3 +24,9 @@ export type {
   MultiSigStatusCode,
 } from './multisig';
 export { ResourceFeeEstimator } from './resource-fee-estimator';
+export { StellarClient, getStellarClient, _resetStellarClient } from './client';
+export type {
+  RetryConfig,
+  TransactionResponse,
+  AccountResponse,
+} from './client';

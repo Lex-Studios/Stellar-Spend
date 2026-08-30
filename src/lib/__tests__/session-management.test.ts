@@ -186,53 +186,52 @@ describe('Session Management Service - Expiry & Revocation Workflow', () => {
       );
     });
 
-    it('should perform forced-revocation of all user sessions (e.g., password change / security reset)', async () => {
+    it('should perform forced-revocation of all user sessions in a bounded number of queries (no N+1)', async () => {
       const now = new Date('2026-07-28T12:20:00.000Z').getTime();
       vi.setSystemTime(now);
 
-      const activeUserSessions = [
+      const revokedRows = [
         { id: 'sess-device-mobile' },
         { id: 'sess-device-desktop' },
         { id: 'sess-device-tablet' },
       ];
 
-      queryMock
-        .mockResolvedValueOnce({ rows: activeUserSessions }) // SELECT user sessions
-        // Revoke 1
-        .mockResolvedValueOnce({ rows: [{ user_address: mockUserAddress }] })
-        .mockResolvedValueOnce({ rowCount: 1 })
-        .mockResolvedValueOnce({ rowCount: 1 })
-        // Revoke 2
-        .mockResolvedValueOnce({ rows: [{ user_address: mockUserAddress }] })
-        .mockResolvedValueOnce({ rowCount: 1 })
-        .mockResolvedValueOnce({ rowCount: 1 })
-        // Revoke 3
-        .mockResolvedValueOnce({ rows: [{ user_address: mockUserAddress }] })
-        .mockResolvedValueOnce({ rowCount: 1 })
-        .mockResolvedValueOnce({ rowCount: 1 });
+      (pool.query as any)
+        .mockResolvedValueOnce({ rows: revokedRows }) // UPDATE ... RETURNING id
+        .mockResolvedValueOnce({ rowCount: 3 }); // bulk INSERT session_revocations
 
       await sessionService.revokeAllUserSessions(mockUserAddress, 'Password changed by user');
 
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'SELECT id FROM sessions WHERE user_address = $1 AND is_active = true',
-        ),
+      // Exactly 2 queries regardless of how many sessions were active — no N+1.
+      expect(pool.query).toHaveBeenCalledTimes(2);
+
+      expect(pool.query).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('UPDATE sessions SET is_active = false'),
         [mockUserAddress],
       );
 
-      // Verify that all 3 active sessions were revoked
-      expect(pool.query).toHaveBeenCalledWith(
-        'UPDATE sessions SET is_active = false WHERE id = $1',
-        ['sess-device-mobile'],
+      const [insertSql, insertValues] = (pool.query as any).mock.calls[1];
+      expect(insertSql).toEqual(expect.stringContaining('INSERT INTO session_revocations'));
+      expect(insertValues).toEqual(
+        expect.arrayContaining([
+          'sess-device-mobile',
+          'sess-device-desktop',
+          'sess-device-tablet',
+          mockUserAddress,
+        ]),
       );
-      expect(pool.query).toHaveBeenCalledWith(
-        'UPDATE sessions SET is_active = false WHERE id = $1',
-        ['sess-device-desktop'],
-      );
-      expect(pool.query).toHaveBeenCalledWith(
-        'UPDATE sessions SET is_active = false WHERE id = $1',
-        ['sess-device-tablet'],
-      );
+    });
+
+    it('should issue no session_revocations INSERT when the user has no active sessions', async () => {
+      const now = new Date('2026-07-28T12:20:00.000Z').getTime();
+      vi.setSystemTime(now);
+
+      (pool.query as any).mockResolvedValueOnce({ rows: [] }); // UPDATE ... RETURNING id (none)
+
+      await sessionService.revokeAllUserSessions(mockUserAddress, 'No active sessions');
+
+      expect(pool.query).toHaveBeenCalledTimes(1);
     });
   });
 

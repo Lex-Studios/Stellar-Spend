@@ -107,15 +107,6 @@ class PerformanceMonitor {
    */
   private triggerAlert(slo: SLO, status: SLOStatus): void {
     const severity = status.status === 'critical' ? 'CRITICAL' : 'WARNING';
-    const message = `
-[${severity}] SLO Alert: ${slo.name}
-  Description: ${slo.description}
-  Objective: ${(slo.objective * 100).toFixed(1)}%
-  Current Value: ${(status.current_value * 100).toFixed(1)}%
-  Error Budget Remaining: ${(status.error_budget_remaining * 100).toFixed(1)}%
-  Burn Rate: ${status.burn_rate.toFixed(2)}
-  Runbook: ${slo.alerting.runbook_url}
-`;
 
     logger.error('slo.alert', {
       severity,
@@ -137,7 +128,6 @@ class PerformanceMonitor {
         body: JSON.stringify({
           severity: status.status,
           slo: slo.name,
-          message,
           timestamp: new Date().toISOString(),
         }),
       }).catch((err) => logger.error('slo.alert.send_failed', {}, err));

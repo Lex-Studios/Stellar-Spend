@@ -14,7 +14,7 @@ import { Resource } from '@opentelemetry/resources';
 import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
-import { logger } from '@/lib/logger';
+import { logger } from './logger';
 
 // Enable debug logging in development
 if (process.env.NODE_ENV === 'development') {
@@ -106,17 +106,17 @@ export function createTracingSDK(): NodeSDK {
 export function initializeTracing(): NodeSDK | undefined {
   // Skip tracing if disabled
   if (process.env.OTEL_DISABLED === 'true') {
-    logger.info('otel.tracing.disabled', {});
+    logger.info('tracing.disabled');
     return undefined;
   }
 
   try {
     const sdk = createTracingSDK();
     sdk.start();
-    logger.info('otel.tracing.initialized', {});
+    logger.info('tracing.initialized');
     return sdk;
   } catch (error) {
-    logger.error('otel.tracing.init.failed', {}, error);
+    logger.error('tracing.init_failed', {}, error);
     return undefined;
   }
 }
@@ -127,8 +127,32 @@ export function initializeTracing(): NodeSDK | undefined {
 export async function shutdownTracing(sdk: NodeSDK): Promise<void> {
   try {
     await sdk.shutdown();
-    logger.info('otel.tracing.shutdown', {});
+    logger.info('tracing.shutdown');
   } catch (error) {
-    logger.error('otel.tracing.shutdown.failed', {}, error);
+    logger.error('tracing.shutdown_failed', {}, error);
+  }
+}
+
+// Note: TraceIdRatioBasedSampler needs to be imported
+// This is a placeholder - the actual import should be:
+// import { TraceIdRatioBasedSampler } from '@opentelemetry/sdk-trace-node';
+
+// For now, we'll use a simple wrapper
+class TraceIdRatioBasedSampler {
+  constructor(private ratio: number) {}
+  shouldSample(
+    context: any,
+    traceId: string,
+    spanName: string,
+    spanKind: any,
+    attributes: any,
+    links: any,
+  ) {
+    // Simple random sampling
+    const random = Math.random();
+    return {
+      decision: random < this.ratio ? 1 : 0, // 1 = RECORD_AND_SAMPLED, 0 = NOT_RECORD
+      attributes: {},
+    };
   }
 }

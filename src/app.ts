@@ -15,7 +15,7 @@ app.use(tracingMiddleware);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  logger.info('app.shutdown.sigterm', { signal: 'SIGTERM' });
+  logger.info('shutdown.signal', { signal: 'SIGTERM' });
   if (tracingSDK) {
     await tracingSDK.shutdown();
   }
@@ -23,7 +23,7 @@ process.on('SIGTERM', async () => {
 });
 
 process.on('SIGINT', async () => {
-  logger.info('app.shutdown.sigint', { signal: 'SIGINT' });
+  logger.info('shutdown.signal', { signal: 'SIGINT' });
   if (tracingSDK) {
     await tracingSDK.shutdown();
   }
