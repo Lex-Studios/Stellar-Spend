@@ -19,7 +19,7 @@ test.describe('Complete Offramp Flow', () => {
 
     // Select Freighter
     await page.click('[data-testid="wallet-option-freighter"]');
-    await page.waitForNavigation();
+    await page.waitForSelector('input[placeholder="Enter amount"]');
 
     // Step 2: Enter amount
     await page.fill('#amount', '100');
@@ -60,7 +60,7 @@ test.describe('Complete Offramp Flow', () => {
     await page.click('[data-testid="connect-wallet-button"]');
     await page.waitForSelector('[data-testid="wallet-modal"]');
     await page.click('[data-testid="wallet-option-freighter"]');
-    await page.waitForNavigation();
+    await page.waitForSelector('input[placeholder="Enter amount"]');
 
     // Step 2: Enter invalid amount first
     await page.fill('#amount', '-100');
@@ -98,7 +98,7 @@ test.describe('Complete Offramp Flow', () => {
     await page.click('[data-testid="connect-wallet-button"]');
     await page.waitForSelector('[data-testid="wallet-modal"]');
     await page.click('[data-testid="wallet-option-freighter"]');
-    await page.waitForNavigation();
+    await page.waitForSelector('[data-testid="wallet-button"]');
 
     // Verify connected state — button flips to wallet-button once connected
     const walletButton = await page.locator('[data-testid="wallet-button"]');
@@ -118,7 +118,7 @@ test.describe('Complete Offramp Flow', () => {
     await page.click('[data-testid="connect-wallet-button"]');
     await page.waitForSelector('[data-testid="wallet-modal"]');
     await page.click('[data-testid="wallet-option-freighter"]');
-    await page.waitForNavigation();
+    await page.waitForSelector('input[name="accountNumber"]');
 
     // Enter invalid account number
     await page.fill('[data-testid="account-number-input"]', 'invalid');

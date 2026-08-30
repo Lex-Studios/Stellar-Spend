@@ -14,7 +14,7 @@ test.describe('Transaction History', () => {
     await page.click('[data-testid="connect-wallet-button"]');
     await page.waitForSelector('[data-testid="wallet-modal"]');
     await page.click('[data-testid="wallet-option-freighter"]');
-    await page.waitForNavigation();
+    await page.waitForSelector('[data-testid="wallet-button"]');
   });
 
   test('should display transaction history', async ({ page }) => {
