@@ -1,6 +1,7 @@
 import { ChangeEvent } from 'react';
 import { cn } from '@/lib/cn';
 import { Tooltip } from '@/components/Tooltip';
+import { Icon } from '@/components/Icon';
 
 export interface InputFieldProps {
   label: string;
@@ -105,38 +106,9 @@ export function InputField({
               aria-label="Validating…"
             />
           )}
-          {!validating && showError && (
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 16 16"
-              fill="none"
-              className="text-red-400"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M8 4.5V8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              <circle cx="8" cy="11" r="0.75" fill="currentColor" />
-            </svg>
-          )}
+          {!validating && showError && <Icon name="alert-circle" size={14} className="text-red-400" />}
           {!validating && showSuccess && (
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 16 16"
-              fill="none"
-              className="text-green-400"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-              <path
-                d="M5 8L7 10L11 6"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <Icon name="check-circle" size={14} className="text-green-400" />
           )}
           {suffix && !showError && !showSuccess && !validating && (
             <span className="text-xs text-[#777777]">{suffix}</span>

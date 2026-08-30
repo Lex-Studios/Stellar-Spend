@@ -1,4 +1,5 @@
 import { cn } from '@/lib/cn';
+import { Icon } from '@/components/Icon';
 
 export interface ResolvedFieldProps {
   label: string;
@@ -21,6 +22,7 @@ export function ResolvedField({
           'bg-[#0a0a0a] border px-3 py-2.5 text-sm min-h-[42px] flex items-center justify-between',
           value && !loading ? 'border-green-500/40' : 'border-[#333333]',
         )}
+        data-testid={value && !loading ? 'resolved-account-name' : undefined}
       >
         <span>
           {loading ? (
@@ -32,23 +34,7 @@ export function ResolvedField({
           )}
         </span>
         {value && !loading && (
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 16 16"
-            fill="none"
-            className="text-green-400 shrink-0"
-            aria-hidden="true"
-          >
-            <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
-            <path
-              d="M5 8L7 10L11 6"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Icon name="check-circle" size={14} className="text-green-400 shrink-0" />
         )}
       </div>
     </div>

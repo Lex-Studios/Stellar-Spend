@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import {
   StandardErrorResponse,
   ErrorContext,
@@ -365,4 +365,27 @@ export class ErrorHandler {
     const lowerKey = key.toLowerCase();
     return sensitiveKeys.some((sensitive) => lowerKey.includes(sensitive));
   }
+}
+
+/**
+ * Wraps a Next.js route handler so any thrown error (ApiError or otherwise)
+ * is converted to the standard { error, message?, details? } response shape
+ * via ErrorHandler, instead of every route repeating its own try/catch.
+ *
+ * Usage:
+ *   export const GET = withApiErrorHandling(async (request) => { ... });
+ */
+export function withApiErrorHandling<
+  Args extends unknown[] = [NextRequest, ...unknown[]],
+  Res = unknown,
+>(
+  handler: (...args: Args) => Promise<NextResponse<Res>>,
+): (...args: Args) => Promise<NextResponse<Res | StandardErrorResponse>> {
+  return async (...args: Args) => {
+    try {
+      return await handler(...args);
+    } catch (error) {
+      return ErrorHandler.handle(error);
+    }
+  };
 }

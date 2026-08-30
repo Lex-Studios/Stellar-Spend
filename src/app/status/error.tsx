@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -11,7 +13,8 @@ interface ErrorProps {
 
 export default function StatusError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    console.error('Status error:', error);
+    Sentry.captureException(error);
+    logger.error('status.error', { digest: error.digest }, error);
   }, [error]);
 
   return (

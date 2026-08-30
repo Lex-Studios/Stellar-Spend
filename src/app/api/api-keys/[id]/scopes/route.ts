@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { ErrorHandler } from '@/lib/error-handler';
 import { getApiKeyById } from '@/lib/api-keys';
 import { requireApiKeyAdmin } from '@/app/api/api-keys/_utils';
 import { pool } from '@/lib/db';
 import { SCOPE_CATALOG } from '@/lib/api-keys';
 import { auditLoggingService } from '@/lib/audit-logging';
+import { validateBody } from '@/lib/validation/validate-request';
+
+const updateScopesSchema = z.object({
+  scopes: z.array(z.string()),
+});
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const unauthorized = requireApiKeyAdmin(request);
@@ -35,16 +41,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params;
 
-  let body: { scopes?: string[] };
-  try {
-    body = await request.json();
-  } catch {
-    return ErrorHandler.validation('Invalid JSON body');
-  }
-
-  if (!body.scopes || !Array.isArray(body.scopes)) {
-    return ErrorHandler.validation('scopes array is required');
-  }
+  const validation = await validateBody(request, updateScopesSchema);
+  if (!validation.success) return validation.response;
+  const body = validation.data;
 
   const validScopeKeys = Object.keys(SCOPE_CATALOG);
   for (const s of body.scopes) {
