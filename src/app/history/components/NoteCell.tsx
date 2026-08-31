@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Transaction } from '@/lib/transaction-storage';
+import { sanitizeMemo } from '@/lib/sanitize';
 
 interface NoteCellProps {
   tx: Transaction;
@@ -15,7 +16,9 @@ export function NoteCell({ tx, onSave }: NoteCellProps) {
 
   const commit = () => {
     setEditing(false);
-    onSave(tx.id, value);
+    // Sanitize before passing up to the parent's saveNote handler so that
+    // XSS payloads are neutralised at every save point, not just at storage.
+    onSave(tx.id, sanitizeMemo(value));
   };
 
   if (editing) {
@@ -51,6 +54,10 @@ export function NoteCell({ tx, onSave }: NoteCellProps) {
     );
   }
 
+  // Sanitize the stored note before using it in title / aria-label so that
+  // data persisted before this fix is also safe to display.
+  const safeNote = tx.note ? sanitizeMemo(tx.note) : null;
+
   return (
     <button
       onClick={() => {
@@ -58,10 +65,10 @@ export function NoteCell({ tx, onSave }: NoteCellProps) {
         setEditing(true);
       }}
       className="text-left text-[#777777] hover:text-[#c9a962] transition-colors duration-150 truncate max-w-[180px] block"
-      title={tx.note || 'Add note'}
-      aria-label={tx.note ? `Edit note: ${tx.note}` : 'Add note'}
+      title={safeNote || 'Add note'}
+      aria-label={safeNote ? `Edit note: ${safeNote}` : 'Add note'}
     >
-      {tx.note || <span className="text-[#444444] italic">+ add note</span>}
+      {safeNote || <span className="text-[#444444] italic">+ add note</span>}
     </button>
   );
 }

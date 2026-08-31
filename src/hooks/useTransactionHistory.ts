@@ -5,6 +5,7 @@ import type { Transaction } from '@/lib/transaction-storage';
 import { TransactionStorage } from '@/lib/transaction-storage';
 import { apiGet, apiPatch, apiPost, ApiErrorClass } from '@/lib/api/client';
 import { useToast } from '@/contexts/ToastContext';
+import { sanitizeMemo } from '@/lib/sanitize';
 
 export interface UseTransactionHistoryResult {
   transactions: Transaction[];
@@ -81,7 +82,7 @@ export function useTransactionHistory(walletAddress?: string): UseTransactionHis
   }, [walletAddress]);
 
   const saveNote = useCallback(async (id: string, note: string): Promise<string | null> => {
-    const trimmed = note.slice(0, 500);
+    const trimmed = sanitizeMemo(note);
     let previous: string | undefined;
     setTransactions((prev) => {
       previous = prev.find((tx) => tx.id === id)?.note;
