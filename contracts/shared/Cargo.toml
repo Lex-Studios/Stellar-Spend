@@ -1,13 +1,13 @@
 [package]
-name = "stellar-spend-shared"
-version.workspace = true
-edition.workspace = true
+name = "shared"
+version = "0.1.0"
+edition = "2021"
 
 [dependencies]
-soroban-sdk = { workspace = true }
-
-[dev-dependencies]
-soroban-sdk = { workspace = true, features = ["testutils"] }
+soroban-sdk = { version = "21.0.0", default-features = false }
 
 [lib]
-crate-type = ["rlib"]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+testutils = ["soroban-sdk/testutils"]
