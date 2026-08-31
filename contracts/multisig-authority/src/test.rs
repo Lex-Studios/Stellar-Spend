@@ -1,7 +1,6 @@
 //! Multisig-authority unit tests.
 //!
 //! All setup comes from [`crate::test_utils`] (issue #818).
-
 use soroban_sdk::{testutils::Address as _, Address, Vec};
 use stellar_spend_shared::errors::ContractError;
 
@@ -9,9 +8,35 @@ use crate::test_utils::{
     assert_fresh_init_is_current, MultisigTest, DEFAULT_HIGH_VALUE_LIMIT, DEFAULT_THRESHOLD,
 };
 use crate::SCHEMA_VERSION;
+use soroban_sdk::testutils::Events as _;
 
 // ── Initialisation ───────────────────────────────────────────────────────────
 
+fn assert_event<T>(
+    event: (
+        soroban_sdk::Address,
+        soroban_sdk::Vec<soroban_sdk::Val>,
+        soroban_sdk::Val,
+    ),
+    address: &soroban_sdk::Address,
+    env: &soroban_sdk::Env,
+    expected_topic: soroban_sdk::Symbol,
+    expected_data: T,
+) where
+    T: soroban_sdk::TryFromVal<soroban_sdk::Env, soroban_sdk::Val>
+        + core::cmp::PartialEq
+        + core::fmt::Debug,
+{
+    let (addr, topics, data) = event;
+    assert_eq!(addr, *address);
+    let topic_val = topics.get(0).unwrap();
+    let expected_topic_val: soroban_sdk::Val =
+        soroban_sdk::IntoVal::<soroban_sdk::Env, soroban_sdk::Val>::into_val(&expected_topic, env);
+    assert!(topic_val.shallow_eq(&expected_topic_val));
+    let decoded: T =
+        soroban_sdk::TryFromVal::try_from_val(env, &data).expect("failed to decode event data");
+    assert_eq!(decoded, expected_data);
+}
 #[test]
 fn init_persists_signers_threshold_and_schema() {
     let t = MultisigTest::setup();
@@ -397,4 +422,386 @@ fn proposal_status_reports_executability() {
 fn schema_version_matches_the_constant() {
     let t = MultisigTest::setup();
     assert_eq!(t.client().schema_version(), SCHEMA_VERSION);
+}
+
+// ── Threshold-change edge cases (issue #813) ──────────────────────────────────
+//
+// Changing signers or thresholds mid-flight is a common source of contract bugs.
+// A signature collected under one threshold or signer set must be re-evaluated
+// against the current state at execution time, never the state at signing time.
+
+#[test]
+fn threshold_raised_after_signing_blocks_previously_executable_proposal() {
+    // Arrange: start 2-of-3, propose a high-value action, collect two signatures.
+    let t = MultisigTest::setup();
+    let target = soroban_sdk::Address::generate(&t.env);
+    let id = t.propose_high_value("p-raise", &target);
+    t.client().sign(&t.signer(1), &id);
+
+    // Two signatures satisfy the 2-of-3 threshold.
+    let (sigs, _threshold, executable) = t.client().proposal_status(&id);
+    assert_eq!(sigs, 2);
+    assert!(executable, "should be executable with 2 of 3 signatures");
+
+    // Admin raises the threshold to 3-of-3 before execution.
+    t.client().set_threshold(&t.admin, &3);
+
+    // Now the same two signatures are insufficient.
+    assert_eq!(
+        t.client().try_execute(&t.signer(0), &id),
+        Err(Ok(ContractError::BelowThreshold)),
+        "raising threshold must invalidate a previously-sufficient quorum"
+    );
+
+    // Adding the third signature now allows execution.
+    t.client().sign(&t.signer(2), &id);
+    assert!(
+        t.client().try_execute(&t.signer(0), &id).is_ok(),
+        "three signatures satisfy the raised 3-of-3 threshold"
+    );
+}
+
+#[test]
+fn threshold_lowered_after_signing_allows_execution_with_fewer_signatures() {
+    // Arrange: start 2-of-3, propose a high-value action that needs 2 signatures.
+    let t = MultisigTest::setup();
+    let target = soroban_sdk::Address::generate(&t.env);
+    let id = t.propose_high_value("p-lower", &target);
+
+    // Only the proposer's implicit signature; not yet executable.
+    assert_eq!(
+        t.client().try_execute(&t.signer(0), &id),
+        Err(Ok(ContractError::BelowThreshold)),
+    );
+
+    // Admin lowers the threshold to 1-of-3.
+    t.client().set_threshold(&t.admin, &1);
+
+    // One signature (the proposer's) now satisfies the new threshold.
+    assert!(
+        t.client().try_execute(&t.signer(0), &id).is_ok(),
+        "lowering threshold must allow execution with the now-sufficient signature count"
+    );
+}
+
+#[test]
+fn signer_removed_after_signing_invalidates_their_pending_vote() {
+    // This test is a dedicated re-assertion of the live-count behaviour:
+    // a signer's vote must not survive their removal.
+    let t = MultisigTest::setup();
+    let target = soroban_sdk::Address::generate(&t.env);
+    let id = t.propose_high_value("p-remove", &target);
+
+    // signer(1) adds their vote, reaching 2-of-3.
+    t.client().sign(&t.signer(1), &id);
+    let (sigs, _, executable) = t.client().proposal_status(&id);
+    assert_eq!(sigs, 2);
+    assert!(
+        executable,
+        "two signatures should be executable before removal"
+    );
+
+    // Admin removes signer(1).
+    t.client().remove_signer(&t.admin, &t.signer(1));
+
+    // signer(1)'s vote must no longer count toward quorum.
+    assert_eq!(
+        t.client().try_execute(&t.signer(0), &id),
+        Err(Ok(ContractError::BelowThreshold)),
+        "removed signer's earlier signature must not satisfy quorum"
+    );
+}
+
+#[test]
+fn adding_a_signer_does_not_lower_effective_live_count() {
+    // Verify that adding a new signer doesn't accidentally alter the live count
+    // of a pending proposal: the new signer hasn't signed, so the live count
+    // stays the same while the total signers increases.
+    let t = MultisigTest::setup();
+    let target = soroban_sdk::Address::generate(&t.env);
+    let id = t.propose_high_value("p-add", &target);
+    t.client().sign(&t.signer(1), &id);
+
+    // Two live signatures satisfy 2-of-3.
+    let (_, _, executable) = t.client().proposal_status(&id);
+    assert!(executable);
+
+    // A new signer is added (now 4 signers, threshold still 2).
+    let new_signer = soroban_sdk::Address::generate(&t.env);
+    t.client().add_signer(&t.admin, &new_signer);
+
+    // The proposal should still be executable: adding a signer doesn't clear votes.
+    let (_, _, still_executable) = t.client().proposal_status(&id);
+    assert!(
+        still_executable,
+        "adding a signer must not revoke existing valid signatures"
+    );
+}
+
+#[test]
+fn threshold_change_does_not_affect_already_executed_proposals() {
+    // A successfully executed proposal must remain executed regardless of
+    // any subsequent threshold changes.
+    let t = MultisigTest::setup();
+    let target = soroban_sdk::Address::generate(&t.env);
+    let id = t.propose_high_value("p-exec", &target);
+    t.client().sign(&t.signer(1), &id);
+    t.client().execute(&t.signer(0), &id);
+
+    // Raise the threshold after execution.
+    t.client().set_threshold(&t.admin, &3);
+
+    // The proposal is still marked executed.
+    let proposal = t.client().get_proposal(&id);
+    assert!(
+        proposal.executed,
+        "threshold change must not undo a completed execution"
+    );
+
+    // And cannot be executed again.
+    assert_eq!(
+        t.client().try_execute(&t.signer(0), &id),
+        Err(Ok(ContractError::AlreadyProcessed)),
+    );
+}
+
+#[test]
+fn threshold_change_is_recorded_and_reflected_by_required_threshold() {
+    let t = MultisigTest::setup();
+    assert_eq!(t.client().get_threshold(), DEFAULT_THRESHOLD);
+
+    t.client().set_threshold(&t.admin, &3);
+    assert_eq!(t.client().get_threshold(), 3);
+
+    // `required_threshold` must use the new threshold for high-value queries.
+    assert_eq!(
+        t.client()
+            .required_threshold(&(DEFAULT_HIGH_VALUE_LIMIT + 1)),
+        3,
+        "required_threshold must reflect the updated threshold"
+    );
+}
+
+#[test]
+fn all_signers_removed_until_minimum_then_threshold_must_stay_reachable() {
+    // Ensure that the threshold can never be set above the remaining signer count,
+    // even after interleaved adds and removes.
+    let t = MultisigTest::setup(); // 3 signers, threshold 2
+
+    // Remove down to 2 signers (minimum to satisfy threshold 2).
+    t.client().remove_signer(&t.admin, &t.signer(2));
+    assert_eq!(t.client().get_signers().len(), 2);
+
+    // Now trying to raise the threshold to 3 is invalid (only 2 signers left).
+    assert_eq!(
+        t.client().try_set_threshold(&t.admin, &3),
+        Err(Ok(ContractError::InvalidInput)),
+        "threshold cannot exceed current signer count"
+    );
+
+    // Can still set threshold to exactly the signer count.
+    assert!(t.client().try_set_threshold(&t.admin, &2).is_ok());
+}
+
+#[test]
+fn pending_proposal_under_old_threshold_requires_new_threshold_at_execution() {
+    // This is the "stale quorum" scenario: a proposal reaches quorum under the
+    // old threshold, the threshold is raised before anyone calls execute, and
+    // execute must use the *current* threshold — not the one at proposal time.
+    let t = MultisigTest::setup(); // threshold = 2
+    let target = soroban_sdk::Address::generate(&t.env);
+    let id = t.propose_high_value("p-stale", &target);
+
+    // Collect exactly enough signatures for the old threshold (2).
+    t.client().sign(&t.signer(1), &id);
+
+    // Raise to 3 before anyone calls execute.
+    t.client().set_threshold(&t.admin, &3);
+
+    // Must fail: only 2 live signatures, but 3 are now required.
+    assert_eq!(
+        t.client().try_execute(&t.signer(0), &id),
+        Err(Ok(ContractError::BelowThreshold)),
+        "execute must evaluate quorum against the threshold at execution time, not proposal time"
+    );
+
+    // Adding the missing signature unblocks execution.
+    t.client().sign(&t.signer(2), &id);
+    assert!(
+        t.client().try_execute(&t.signer(0), &id).is_ok(),
+        "three signatures satisfy the current threshold"
+    );
+}
+
+// ── Event assertions (issue #814) ────────────────────────────────────────────
+//
+// All state-changing functions in the multisig-authority contract emit events.
+// These tests assert the exact topic and data fields.
+
+#[test]
+fn init_emits_event_with_admin_threshold_high_value_limit() {
+    use soroban_sdk::symbol_short;
+
+    let t = MultisigTest::registered();
+    t.client().init(
+        &t.admin,
+        &t.signers,
+        &DEFAULT_THRESHOLD,
+        &DEFAULT_HIGH_VALUE_LIMIT,
+    );
+
+    let events = t.env.events().all();
+    assert_eq!(events.len(), 1);
+    let event = events.get(0).unwrap();
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("init"),
+        (t.admin.clone(), DEFAULT_THRESHOLD, DEFAULT_HIGH_VALUE_LIMIT),
+    );
+}
+
+#[test]
+fn propose_emits_event_with_id_proposer_target_value() {
+    use soroban_sdk::symbol_short;
+
+    let t = MultisigTest::setup();
+    let target = soroban_sdk::Address::generate(&t.env);
+
+    let id = t.id("evt-p1");
+    t.client()
+        .propose(&t.signer(0), &id, &t.id("desc"), &target, &100);
+    let all_events = t.env.events().all();
+    let event = all_events.get(0).unwrap();
+
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("proposed"),
+        (id, t.signer(0), target, 100i128),
+    );
+}
+
+#[test]
+fn sign_emits_event_with_proposal_id_signer_count() {
+    use soroban_sdk::symbol_short;
+
+    let t = MultisigTest::setup();
+    let target = soroban_sdk::Address::generate(&t.env);
+    let id = t.propose_high_value("evt-sign", &target);
+
+    let count = t.client().sign(&t.signer(1), &id);
+    let all_events = t.env.events().all();
+    let event = all_events.get(0).unwrap();
+
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("signed"),
+        (id, t.signer(1), count),
+    );
+}
+
+#[test]
+fn execute_emits_event_with_proposal_id_executor_value_sig_count() {
+    use soroban_sdk::symbol_short;
+
+    let t = MultisigTest::setup();
+    let target = soroban_sdk::Address::generate(&t.env);
+    let id = t.propose_low_value("evt-exec", &target);
+
+    // Low-value proposal: 1 signer (the proposer).
+    let value = DEFAULT_HIGH_VALUE_LIMIT / 2;
+    t.client().execute(&t.signer(0), &id);
+    let all_events = t.env.events().all();
+    let event = all_events.get(0).unwrap();
+
+    // Data: (proposal_id, executor, value, sig_count=1)
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("executed"),
+        (id, t.signer(0), value, 1u32),
+    );
+}
+
+#[test]
+fn add_signer_emits_event_with_new_signer_address() {
+    use soroban_sdk::symbol_short;
+
+    let t = MultisigTest::setup();
+    let new_signer = soroban_sdk::Address::generate(&t.env);
+
+    t.client().add_signer(&t.admin, &new_signer);
+    let all_events = t.env.events().all();
+    let event = all_events.get(0).unwrap();
+
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("add_sgn"),
+        new_signer,
+    );
+}
+
+#[test]
+fn remove_signer_emits_event_with_removed_signer_address() {
+    use soroban_sdk::symbol_short;
+
+    let t = MultisigTest::setup();
+
+    t.client().remove_signer(&t.admin, &t.signer(2));
+    let all_events = t.env.events().all();
+    let event = all_events.get(0).unwrap();
+
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("rm_sgn"),
+        t.signer(2),
+    );
+}
+
+#[test]
+fn set_threshold_emits_event_with_new_threshold() {
+    use soroban_sdk::symbol_short;
+
+    let t = MultisigTest::setup();
+
+    t.client().set_threshold(&t.admin, &3);
+    let all_events = t.env.events().all();
+    let event = all_events.get(0).unwrap();
+
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("set_thr"),
+        3u32,
+    );
+}
+
+#[test]
+fn set_high_value_limit_emits_event_with_new_limit() {
+    use soroban_sdk::symbol_short;
+
+    let t = MultisigTest::setup();
+
+    t.client().set_high_value_limit(&t.admin, &5_000);
+    let all_events = t.env.events().all();
+    let event = all_events.get(0).unwrap();
+
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("set_hvl"),
+        5_000i128,
+    );
 }
