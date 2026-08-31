@@ -579,3 +579,105 @@ fn migrate_emits_event_with_from_and_to_schema_versions() {
         (1u32, SCHEMA_VERSION),
     );
 }
+
+// ── Batch collection (issue #982) ────────────────────────────────────────────
+
+#[test]
+fn collect_fee_batch_sums_fees_and_writes_total_once() {
+    let t = TreasuryTest::setup();
+    let amounts = vec![&t.env, 1_000_000, 5_000_000, 10_000_000];
+    let recipient = Address::generate(&t.env);
+
+    // Each individual fee: 1M→2_500 (25bp), 5M→12_500 (25bp), 10M→10_000 (10bp)
+    let total_expected = 2_500 + 12_500 + 10_000; // 25_000
+
+    let fees = t.client().collect_fee_batch(&amounts, &recipient);
+    assert_eq!(fees.len(), 3);
+    assert_eq!(fees.get(0).unwrap(), 2_500);
+    assert_eq!(fees.get(1).unwrap(), 12_500);
+    assert_eq!(fees.get(2).unwrap(), 10_000);
+
+    // Total collected must be updated exactly once, not three times.
+    assert_eq!(t.client().total_collected(), total_expected);
+}
+
+#[test]
+fn collect_fee_batch_works_with_a_single_amount() {
+    let t = TreasuryTest::setup();
+    let amounts = vec![&t.env, 1_000_000];
+    let recipient = Address::generate(&t.env);
+
+    let fees = t.client().collect_fee_batch(&amounts, &recipient);
+    assert_eq!(fees.len(), 1);
+    assert_eq!(fees.get(0).unwrap(), 2_500);
+    assert_eq!(t.client().total_collected(), 2_500);
+}
+
+#[test]
+fn collect_fee_batch_rejects_non_positive_amounts() {
+    let t = TreasuryTest::setup();
+    let amounts = vec![&t.env, 1_000_000, 0, 5_000_000];
+    let recipient = Address::generate(&t.env);
+
+    assert_eq!(
+        t.client().try_collect_fee_batch(&amounts, &recipient),
+        Err(Ok(ContractError::InvalidAmount))
+    );
+}
+
+#[test]
+fn collect_fee_batch_reports_overflow_across_items() {
+    let t = TreasuryTest::setup();
+    // Force a 100% fee to make amounts directly equal fees.
+    t.force_schedule(&[(0, 10_000)]);
+    let amounts = vec![&t.env, i128::MAX, 1];
+    let recipient = Address::generate(&t.env);
+
+    assert_eq!(
+        t.client().try_collect_fee_batch(&amounts, &recipient),
+        Err(Ok(ContractError::Overflow))
+    );
+}
+
+#[test]
+fn collect_fee_batch_emits_a_single_event_with_summary() {
+    use soroban_sdk::symbol_short;
+
+    let t = TreasuryTest::setup();
+    let amounts = vec![&t.env, 1_000_000, 5_000_000];
+    let recipient = Address::generate(&t.env);
+
+    t.client().collect_fee_batch(&amounts, &recipient);
+    let all_events = t.env.events().all();
+    let event = all_events.get(0).unwrap();
+
+    // Data: (recipient, total_fee=2_500+12_500=15_000, count=2)
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("collect_batch"),
+        (recipient, 15_000i128, 2u32),
+    );
+}
+
+#[test]
+fn collect_fee_and_collect_fee_batch_accumulate_total_correctly() {
+    let t = TreasuryTest::setup();
+    let recipient = Address::generate(&t.env);
+
+    // First a single fee.
+    let fee1 = t.client().collect_fee(&1_000_000, &recipient); // 2_500
+    assert_eq!(t.client().total_collected(), fee1);
+
+    // Then a batch of three fees.
+    let amounts = vec![&t.env, 5_000_000, 10_000_000, 20_000_000];
+    let batch_fees = t.client().collect_fee_batch(&amounts, &recipient);
+    let batch_total: i128 = batch_fees.iter().sum();
+
+    assert_eq!(
+        t.client().total_collected(),
+        fee1 + batch_total,
+        "total must be the sum of the single call and the batch"
+    );
+}

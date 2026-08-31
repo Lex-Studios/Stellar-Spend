@@ -164,8 +164,19 @@ impl TreasuryContract {
         Self::require_current_schema(&env)?;
         require_positive_amount(amount)?;
 
+        // Load the schedule once, use it for the fee calculation.
         let schedule = Self::load_schedule(&env)?;
-        let fee = basis_points_of(amount, Self::select_tier(&schedule, amount))?;
+        Self::_collect_fee_with_schedule(&env, amount, recipient, &schedule)
+    }
+
+    /// Internal helper that already has a loaded schedule.
+    fn _collect_fee_with_schedule(
+        env: &Env,
+        amount: i128,
+        recipient: Address,
+        schedule: &Map<u64, u32>,
+    ) -> Result<i128, ContractError> {
+        let fee = basis_points_of(amount, Self::select_tier(schedule, amount))?;
 
         let total: i128 = env
             .storage()
@@ -176,7 +187,7 @@ impl TreasuryContract {
         env.storage()
             .instance()
             .set(&DataKey::TotalCollected, &new_total);
-        Self::bump_instance_ttl(&env);
+        Self::bump_instance_ttl(env);
 
         env.events()
             .publish((symbol_short!("collect"),), (amount, fee, recipient));
@@ -423,3 +434,46 @@ pub mod test_utils;
 
 #[cfg(test)]
 mod test;
+    /// Collect a batch of fees, totalling them into a single storage write.
+    /// 
+    /// More gas-efficient than iterating `collect_fee` because the schedule is
+    /// read once and the `TotalCollected` counter is updated only at the end.
+    pub fn collect_fee_batch(
+        env: Env,
+        amounts: Vec<i128>,
+        recipient: Address,
+    ) -> Result<Vec<i128>, ContractError> {
+        Self::require_current_schema(&env)?;
+
+        let schedule = Self::load_schedule(&env)?;
+        let mut fees = Vec::new(&env);
+        let mut total_fee = 0i128;
+
+        for amount in amounts.iter() {
+            require_positive_amount(*amount)?;
+            let fee = basis_points_of(*amount, Self::select_tier(&schedule, *amount))?;
+            total_fee = total_fee
+                .checked_add(fee)
+                .ok_or(ContractError::Overflow)?;
+            fees.push_back(fee);
+        }
+
+        let total: i128 = env
+            .storage()
+            .instance()
+            .get(&DataKey::TotalCollected)
+            .unwrap_or(0);
+        let new_total = total
+            .checked_add(total_fee)
+            .ok_or(ContractError::Overflow)?;
+        env.storage()
+            .instance()
+            .set(&DataKey::TotalCollected, &new_total);
+        Self::bump_instance_ttl(&env);
+
+        env.events().publish(
+            (symbol_short!("collect_batch"),),
+            (recipient, total_fee, fees.len() as u32),
+        );
+        Ok(fees)
+    }
