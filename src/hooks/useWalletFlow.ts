@@ -2,11 +2,11 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { buildProgressSteps, STATE_VARIANTS } from '@/data/stellaramp';
-import type { WalletFlowState } from '@/types/stellaramp';
+import type { WalletFlowState } from '@shared/types/stellaramp';
 
 /**
  * useWalletFlow
- * 
+ *
  * Manages the UI-related state machine for the wallet connection flow.
  * Returns the current state, progress steps, and UI variant data.
  */

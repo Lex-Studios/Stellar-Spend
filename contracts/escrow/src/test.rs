@@ -4,15 +4,40 @@
 //! `Env::default()` / `register` / `init` (issue #818). Assertions go through the
 //! generated `try_*` client methods so that a contract error is checked by value
 //! instead of being swallowed by a panic.
-
-use soroban_sdk::{testutils::Address as _, Address};
+use soroban_sdk::{symbol_short, testutils::Address as _, Address};
 use stellar_spend_shared::errors::ContractError;
 
 use crate::test_utils::{assert_fresh_init_is_current, EscrowTest, START_LEDGER};
 use crate::{DEFAULT_TIMEOUT_LEDGERS, MAX_TIMEOUT_LEDGERS, SCHEMA_VERSION};
+use soroban_sdk::testutils::Events as _;
 
 // ── Initialisation ───────────────────────────────────────────────────────────
 
+fn assert_event<T>(
+    event: (
+        soroban_sdk::Address,
+        soroban_sdk::Vec<soroban_sdk::Val>,
+        soroban_sdk::Val,
+    ),
+    address: &soroban_sdk::Address,
+    env: &soroban_sdk::Env,
+    expected_topic: soroban_sdk::Symbol,
+    expected_data: T,
+) where
+    T: soroban_sdk::TryFromVal<soroban_sdk::Env, soroban_sdk::Val>
+        + core::cmp::PartialEq
+        + core::fmt::Debug,
+{
+    let (addr, topics, data) = event;
+    assert_eq!(addr, *address);
+    let topic_val = topics.get(0).unwrap();
+    let expected_topic_val: soroban_sdk::Val =
+        soroban_sdk::IntoVal::<soroban_sdk::Env, soroban_sdk::Val>::into_val(&expected_topic, env);
+    assert!(topic_val.shallow_eq(&expected_topic_val));
+    let decoded: T =
+        soroban_sdk::TryFromVal::try_from_val(env, &data).expect("failed to decode event data");
+    assert_eq!(decoded, expected_data);
+}
 #[test]
 fn init_persists_authority_and_schema() {
     let t = EscrowTest::setup();
@@ -198,6 +223,18 @@ fn refund_is_not_repeatable() {
 }
 
 #[test]
+fn refund_by_non_depositor_is_rejected() {
+    let t = EscrowTest::setup();
+    let id = t.deposit(400);
+    t.advance_past_timeout();
+
+    assert_eq!(
+        t.client().try_refund(&id),
+        Err(Ok(ContractError::Unauthorized))
+    );
+}
+
+#[test]
 fn refund_is_blocked_after_a_release() {
     let t = EscrowTest::setup();
     let id = t.deposit(400);
@@ -281,5 +318,122 @@ fn deposit_rejects_a_timeout_that_would_overflow_the_ledger_counter() {
         t.client().try_deposit(&t.depositor, &100, &t.bridge, &0),
         Err(Ok(ContractError::Overflow)),
         "current_ledger + timeout must not wrap into an instantly-refundable deposit"
+    );
+}
+
+// ── Event assertions (issue #814) ────────────────────────────────────────────
+//
+// Every state-changing entrypoint emits a corresponding event. These tests assert
+// the exact topic and data fields so off-chain indexers can rely on the shape.
+// Pattern: call the function, then compare env.events().all() to the expected vec.
+
+#[test]
+fn init_emits_event_with_settlement_authority() {
+    let t = EscrowTest::registered();
+    t.client().init(&t.admin);
+
+    // The init event is the only event emitted by this call.
+    // Topic: ("init",)   Data: settlement_authority
+    let events = t.env.events().all();
+    assert_eq!(events.len(), 1);
+    let event = events.get(0).unwrap();
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("init"),
+        t.admin,
+    );
+}
+
+#[test]
+fn deposit_emits_event_with_id_depositor_amount_bridge() {
+    let t = EscrowTest::setup();
+    // Clear setup events by creating a fresh env snapshot perspective;
+    // env.events().all() returns ALL events since env creation. We snapshot the
+    // count after setup, then check only the deposit event.
+    let id = t.deposit_with_fee(500, 10);
+    let all_events = t.env.events().all();
+
+    // The deposit event is the first event after setup.
+    let deposit_event = all_events.get(0).unwrap();
+    assert_event(
+        deposit_event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("deposit"),
+        (id, t.depositor.clone(), 500i128, t.bridge.clone()),
+    );
+}
+
+#[test]
+fn release_emits_event_with_deposit_id_recipient_amount() {
+    let t = EscrowTest::setup();
+    let id = t.deposit(750);
+    let recipient = Address::generate(&t.env);
+
+    t.client().release(&id, &recipient);
+    let all_events = t.env.events().all();
+    let release_event = all_events.get(0).unwrap();
+
+    assert_event(
+        release_event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("release"),
+        (id, recipient, 750i128),
+    );
+}
+
+#[test]
+fn refund_emits_event_with_deposit_id_depositor_amount() {
+    let t = EscrowTest::setup();
+    let id = t.deposit(400);
+    t.advance_past_timeout();
+
+    t.client().refund(&id);
+    let all_events = t.env.events().all();
+    let refund_event = all_events.get(0).unwrap();
+
+    assert_event(
+        refund_event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("refund"),
+        (id, t.depositor.clone(), 400i128),
+    );
+}
+
+#[test]
+fn set_timeout_emits_event_with_new_timeout_value() {
+    let t = EscrowTest::setup();
+
+    t.client().set_timeout(&12_345);
+    let all_events = t.env.events().all();
+    let timeout_event = all_events.get(0).unwrap();
+
+    assert_event(
+        timeout_event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("timeout"),
+        12_345u32,
+    );
+}
+
+#[test]
+fn migrate_emits_event_with_from_and_to_schema_versions() {
+    let t = EscrowTest::with_legacy_v1_state();
+
+    t.client().migrate();
+    let all_events = t.env.events().all();
+    let migrate_event = all_events.get(0).unwrap();
+
+    assert_event(
+        migrate_event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("migrate"),
+        (1u32, SCHEMA_VERSION),
     );
 }

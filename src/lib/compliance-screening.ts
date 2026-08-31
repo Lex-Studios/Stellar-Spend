@@ -206,7 +206,7 @@ export async function screenAddress(
     const result = await activeProvider.screen(request);
     cacheResult(request.address, result);
     return result;
-  } catch (error) {
+  } catch (_error) {
     const failClosed = options?.failClosed ?? isHighValue(request.amount);
     if (failClosed) {
       const now = Date.now();

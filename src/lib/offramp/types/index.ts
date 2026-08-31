@@ -32,7 +32,7 @@ export interface BeneficiaryInfo {
   accountName: string;
   currency: string;
   memo?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ExecuteRequest {
