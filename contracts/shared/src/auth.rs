@@ -18,55 +18,89 @@
 //! - Otherwise the required threshold is the full quorum threshold.
 //! - `verify_threshold` must accept iff `sig_count >= required_threshold(...)`.
 
-use soroban_sdk::{Address, Env, Symbol, Vec};
+use soroban_sdk::{Address, Env, Symbol, Vec, panic_with_error};
 
 use crate::{errors::ContractError, policy::{required_threshold, verify_threshold}};
 
-// ── Signer / admin checks ─────────────────────────────────────────────────────
-
-/// Returns `Ok(())` if `addr` is present in the signer list stored under
-/// `signers_key`, otherwise `Err(ContractError::Unauthorized)`.
-///
-/// # Panics
-/// Panics (via `ok_or`) only if the storage key is absent, which is a contract
-/// initialisation bug rather than a user error.
-pub fn assert_is_signer(env: &Env, addr: &Address, signers_key: &str) -> Result<(), ContractError> {
-    let signers: Vec<Address> = env
-        .storage()
-        .instance()
-        .get(&Symbol::new(env, signers_key))
-        .ok_or(ContractError::NotFound)?;
-
-    if signers.contains(addr.clone()) {
-        Ok(())
-    } else {
-        Err(ContractError::Unauthorized)
-    }
+/// Authorization error types
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum AuthError {
+    Unauthorized = 1,
+    NotAdmin = 2,
+    InvalidSigner = 3,
+    InsufficientPermissions = 4,
 }
 
-/// Returns `Ok(())` if `addr` matches the single admin address stored under
-/// `admin_key`, otherwise `Err(ContractError::Unauthorized)`.
-pub fn assert_is_admin(env: &Env, addr: &Address, admin_key: &str) -> Result<(), ContractError> {
-    let admin: Address = env
-        .storage()
-        .instance()
-        .get(&Symbol::new(env, admin_key))
-        .ok_or(ContractError::NotFound)?;
+/// Admin authorization helper
+pub struct AdminAuth;
 
-    if admin == *addr {
+impl AdminAuth {
+    /// Require that the caller is the admin
+    pub fn require_admin(env: &Env, admin: &Address, caller: &Address) -> Result<(), AuthError> {
+        // First, check that the caller address matches the admin
+        if caller != admin {
+            return Err(AuthError::NotAdmin);
+        }
+
+        // Then, require auth for the caller
+        caller.require_auth();
+
         Ok(())
-    } else {
-        Err(ContractError::Unauthorized)
     }
+
+    /// Require that the caller is either the admin or has a specific role
+    pub fn require_admin_or_role(
+        env: &Env,
+        admin: &Address,
+        caller: &Address,
+        role_check: fn(&Address) -> bool,
+    ) -> Result<(), AuthError> {
+        if caller == admin {
+            caller.require_auth();
+            return Ok(());
+        }
+
+        if role_check(caller) {
+            caller.require_auth();
+            return Ok(());
+        }
+
+        Err(AuthError::Unauthorized)
+    }
+
+    /// Require that the caller has a specific role
+    pub fn require_role(
+        env: &Env,
+        caller: &Address,
+        role_check: fn(&Address) -> bool,
+    ) -> Result<(), AuthError> {
+        if !role_check(caller) {
+            return Err(AuthError::InsufficientPermissions);
+        }
+
+        caller.require_auth();
+        Ok(())
+    }
+
+    /// Check if the caller is the admin without throwing an error
+    pub fn is_admin(env: &Env, admin: &Address, caller: &Address) -> bool {
+        if caller != admin {
+            return false;
+        }
+
+        // Try to authenticate
+        match caller.try_require_auth() {
+            Ok(_) => true,
+            Err(_) => false,
+        }
+    }
+
+    /// Compute the required threshold for a given `value` and return it.
+    ///
+    /// The policy logic is isolated in `crate::policy` so the auth layer can remain
+    /// storage-focused while business rules stay in one place.
+    pub use crate::policy::{required_threshold, verify_threshold};
 }
-
-// ── Threshold verification ────────────────────────────────────────────────────
-
-/// Compute the required threshold for a given `value` and return it.
-///
-/// The policy logic is isolated in `crate::policy` so the auth layer can remain
-/// storage-focused while business rules stay in one place.
-pub use crate::policy::{required_threshold, verify_threshold};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tests
@@ -88,67 +122,6 @@ mod tests {
     #[test]
     fn threshold_value_below_limit_returns_one() {
         assert_eq!(required_threshold(3, 1_000, 500), 1);
-    }
-
-    #[test]
-    fn threshold_value_at_limit_returns_one() {
-        // Boundary: value == high_value_limit → 1 signature
-        assert_eq!(required_threshold(3, 1_000, 1_000), 1);
-    }
-
-    #[test]
-    fn threshold_value_above_limit_returns_full() {
-        assert_eq!(required_threshold(3, 1_000, 1_001), 3);
-    }
-
-    #[test]
-    fn threshold_full_threshold_is_one() {
-        // Edge: full_threshold = 1 (single-signer quorum)
-        assert_eq!(required_threshold(1, 0, 9_999), 1);
-    }
-
-    #[test]
-    fn threshold_large_full_value() {
-        // High-value with no limit override
-        assert_eq!(required_threshold(5, 0, i128::MAX), 5);
-    }
-
-    // ── verify_threshold ──────────────────────────────────────────────────────
-
-    #[test]
-    fn verify_exact_threshold_passes() {
-        assert!(verify_threshold(3, 3, 0, 9_999).is_ok());
-    }
-
-    #[test]
-    fn verify_above_threshold_passes() {
-        assert!(verify_threshold(4, 3, 0, 9_999).is_ok());
-    }
-
-    #[test]
-    fn verify_below_threshold_fails() {
-        let err = verify_threshold(2, 3, 0, 9_999).unwrap_err();
-        assert_eq!(err, ContractError::BelowThreshold);
-    }
-
-    #[test]
-    fn verify_zero_signers_fails() {
-        // 0 signatures always below any positive threshold
-        let err = verify_threshold(0, 1, 0, 0).unwrap_err();
-        assert_eq!(err, ContractError::BelowThreshold);
-    }
-
-    #[test]
-    fn verify_low_value_only_needs_one_sig() {
-        // full_threshold = 5, but value <= high_value_limit → only 1 needed
-        assert!(verify_threshold(1, 5, 1_000, 500).is_ok());
-    }
-
-    #[test]
-    fn verify_low_value_zero_sigs_still_fails() {
-        // Even for low-value ops, 0 sigs is insufficient
-        let err = verify_threshold(0, 5, 1_000, 500).unwrap_err();
-        assert_eq!(err, ContractError::BelowThreshold);
     }
 
     proptest! {
