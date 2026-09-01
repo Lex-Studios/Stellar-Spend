@@ -6,7 +6,7 @@ import {
   DisputeNote,
   DisputeEscalation,
   DisputeAnalytics,
-} from '@shared/types/disputes';
+} from '@stellar-spend/shared';
 
 // ---------------------------------------------------------------------------
 // In-memory store (replace with DB persistence when ready)

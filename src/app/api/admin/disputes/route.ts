@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { disputeRepository } from '@/lib/repositories';
-import { DisputeStatus, DisputeUpdate } from '@shared/types/disputes';
+import { DisputeStatus, DisputeUpdate } from '@stellar-spend/shared';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
 import { decodeCursor, createPaginatedResponse } from '@/lib/pagination';

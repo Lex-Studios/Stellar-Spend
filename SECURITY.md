@@ -98,9 +98,28 @@ export function middleware(req: NextRequest) {
 
 ## 5. Secret Scanning
 
-Gitleaks is used to detect secrets before they are committed or pushed.
+Gitleaks is used to detect secrets before they are committed or pushed. A **pre-commit hook** enforces this automatically on every commit.
 
-**Run gitleaks locally before pushing:**
+### 5.1 Pre-commit Hook
+
+The Husky pre-commit hook (`.husky/pre-commit`) runs `gitleaks detect` on staged changes. If a secret is detected, the commit is blocked.
+
+**To verify the hook works:**
+
+```bash
+# Stage a file containing a known fake secret pattern
+echo "STEST_SECRET_KEY_12345678901234567890123456789012345" > /tmp/test-secret.txt
+git add /tmp/test-secret.txt
+
+# Attempt to commit — this should FAIL with a gitleaks error
+git commit -m "test secret scan"
+
+# Clean up
+git reset HEAD /tmp/test-secret.txt
+rm /tmp/test-secret.txt
+```
+
+### 5.2 Running Gitleaks Manually
 
 ```bash
 # Install gitleaks (macOS)
@@ -109,12 +128,31 @@ brew install gitleaks
 # Scan the current directory for secrets
 gitleaks detect --source .
 
-# Scan a specific file or directory
+# Scan a specific file or directory (no git history)
 gitleaks detect --source src/test/fixtures/secret-scan/ --no-git
 
 # Run the secret scanning verification test
 npm test -- --testPathPattern="gitleaks"
 ```
+
+### 5.3 False Positive Handling & Bypass Process
+
+If gitleaks reports a finding that is a **legitimate false positive** (e.g., a test fixture, example code, or placeholder):
+
+1. **Investigate** — Verify the finding is not a real secret. Check the file path, context, and whether it matches allowlist patterns in `.gitleaks.toml`.
+
+2. **Legitimate test fixtures** — Add test fixture paths to the `allowlist.paths` array in `.gitleaks.toml` (e.g., `'''tests/fixtures/.*'''`).
+
+3. **Placeholder patterns** — If a pattern like `YOUR_API_KEY` or `test_secret` is flagged, add it to `allowlist.regexes` in `.gitleaks.toml`.
+
+4. **Justified bypass** — If a false positive cannot be addressed via the allowlist, you may bypass the pre-commit hook **once** for that commit:
+   ```bash
+   # ⚠️ Only use if you have VERIFIED it's a false positive
+   git commit --no-verify -m "commit message"
+   ```
+   **NEVER bypass for real credentials.** Real secrets must be rotated immediately.
+
+5. **Document** — If you add a new allowlist rule, include a comment in `.gitleaks.toml` explaining why it's safe.
 
 The fixture-based verification test in `src/test/gitleaks-verification.test.ts` confirms that gitleaks detects Stellar secret keys (`S` + 55 base58 chars). The `.gitleaks.toml` config contains the `stellar-secret-key` rule and allowlists known false positives and test fixtures.
 

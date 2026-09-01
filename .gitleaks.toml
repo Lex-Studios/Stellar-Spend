@@ -10,10 +10,12 @@ paths = [
   '''\.env\.sample$''',
   '''\.env\.template$''',
   '''tests/fixtures/.*''',
+  '''e2e/.*''',
   # Issue #1014 regression fixtures/test (synthetic secrets, must stay scanned
   # by the dedicated .gitleaks-regression.toml, not the repo-wide scan).
   '''src/test/fixtures/.*''',
   '''src/test/gitleaks-regression\.test\.ts$''',
+  '''src/test/.*\.test\.ts$''',
   '''__snapshots__/.*''',
   '''\.example$''',
   '''docs/.*\.md$''',
@@ -22,6 +24,8 @@ paths = [
   '''SECURITY\.md$''',
   '''package-lock\.json$''',
   '''src/test/fixtures/secret-scan/.*''',
+  '''contracts/target/.*''',
+  '''target/.*''',
 ]
 regexes = [
   '''(your_|YOUR_|REPLACE_|replace_|CHANGE_|change_|INSERT_|insert_|ENTER_|enter_)[a-zA-Z0-9_]*''',
@@ -50,6 +54,8 @@ regexes = [
   '''"(?:@[a-z0-9-]+\/)?[a-z0-9-]+"''',
   '''\b\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?\b''',
   '''(Test SDF Network ; September 2015|Public Global Stellar Network ; September 2015)''',
+  # False positives: performance threshold constants
+  '''PERF_THRESHOLDS\.(apiP95|apiP99|dbP95|dbP99)(Critical|Warn)Ms''',
 ]
 
 [[rules]]

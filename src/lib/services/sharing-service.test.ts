@@ -18,7 +18,7 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import type { ShareableTransaction } from '@shared/types/sharing';
+import type { ShareableTransaction } from '@stellar-spend/shared';
 import { SharingService } from '@/lib/services';
 
 // ── helpers ───────────────────────────────────────────────────────────────────

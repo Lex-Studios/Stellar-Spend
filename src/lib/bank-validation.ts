@@ -6,7 +6,8 @@ import { getCorridorConfig } from './corridor-config';
  * and pluggable per-country validators driven by corridor-config.
  */
 
-export type ValidationResult = { valid: boolean; error?: string };
+import type { ValidationResult } from '@/lib/validation/rules';
+export type { ValidationResult } from '@/lib/validation/rules';
 
 export type BankFieldType = 'account' | 'routing' | 'iban';
 
