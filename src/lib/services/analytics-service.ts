@@ -4,7 +4,7 @@ import {
   FeeAnalysis,
   SpendingPattern,
   AnalyticsPeriod,
-} from '@shared/types/analytics';
+} from '@stellar-spend/shared';
 
 interface RawTransaction {
   status?: string;

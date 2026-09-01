@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { buildProgressSteps, STATE_VARIANTS } from '@/data/stellaramp';
-import type { WalletFlowState } from '@shared/types/stellaramp';
+import type { WalletFlowState } from '@stellar-spend/shared';
 
 /**
  * useWalletFlow

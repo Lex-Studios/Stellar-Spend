@@ -1,4 +1,4 @@
-import { ShareableTransaction, ShareSettings } from '@shared/types/sharing';
+import { ShareableTransaction, ShareSettings } from '@stellar-spend/shared';
 
 export class SharingService {
   async createShareLink(
