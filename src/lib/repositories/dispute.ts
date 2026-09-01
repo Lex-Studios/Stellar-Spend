@@ -1,5 +1,5 @@
 import { disputeRepository } from './dispute-repository';
-import type { Dispute, DisputeStatus } from '@shared/types/disputes';
+import type { Dispute, DisputeStatus } from '@stellar-spend/shared';
 
 export interface DisputeRecord {
   id: string;

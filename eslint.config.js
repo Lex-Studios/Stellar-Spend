@@ -67,6 +67,13 @@ const BOUNDARY_PATTERNS = [
   // Deep lib module imports
   ...BOUNDARY_MODULES.map(deepLibPattern),
 
+  // Deep @shared/* imports bypass the barrel — use @stellar-spend/shared instead
+  {
+    group: ['@shared/**'],
+    message:
+      "Import from '@stellar-spend/shared' instead of '@shared/*' deep paths. The barrel re-exports all shared types.",
+  },
+
   // Contract internals must never be imported from TypeScript
   {
     group: ['**/contracts/**'],
@@ -137,22 +144,65 @@ export default [
   // ---------------------------------------------------------------------------
   // Module boundary enforcement
   //
-  // Applies to the three consumer layers: app, components, hooks.
+  // Applies to all application source under src/.
   // Each layer may only import from a lib module's public barrel, never from
   // internal sub-paths. This prevents accidental coupling to implementation
   // details and keeps the contract layer fully isolated.
   // ---------------------------------------------------------------------------
   {
-    files: [
-      'src/app/**/*.{ts,tsx}',
-      'src/components/**/*.{ts,tsx}',
-      'src/hooks/**/*.{ts,tsx}',
-    ],
+    files: ['src/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: BOUNDARY_PATTERNS,
+        },
+      ],
+    },
+  },
+
+  // ---------------------------------------------------------------------------
+  // Cross-package isolation
+  //
+  // packages/shared must be standalone — it cannot import from root src/ or
+  // packages/mobile. packages/mobile must not import from root src/.
+  // Shared types and utilities belong in @stellar-spend/shared.
+  // ---------------------------------------------------------------------------
+  {
+    files: ['packages/shared/**/*.{ts,tsx,js,jsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/*', '../src/**', '../../src/**'],
+              message:
+                'packages/shared must be standalone. It cannot import from root src/. Move shared logic into this package instead.',
+            },
+            {
+              group: ['@stellar-spend/mobile', '../mobile/**', '../../packages/mobile/**'],
+              message:
+                'packages/shared must be standalone. It cannot import from packages/mobile.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['packages/mobile/**/*.{ts,tsx,js,jsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/*', '../src/**', '../../src/**'],
+              message:
+                'packages/mobile must not import from root src/. Use @stellar-spend/shared for shared logic.',
+            },
+          ],
         },
       ],
     },

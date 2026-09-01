@@ -6,17 +6,8 @@
  * ergonomic namespaced entry point, or use the individual `api*` helpers.
  */
 
-export interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  status: number;
-}
-
-export interface ApiError {
-  message: string;
-  status: number;
-  details?: unknown;
-}
+import type { ApiError } from '@stellar-spend/shared';
+export type { ApiResponse, ApiError } from '@stellar-spend/shared';
 
 export class ApiErrorClass extends Error implements ApiError {
   constructor(
