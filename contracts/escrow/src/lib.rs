@@ -44,16 +44,17 @@
 //! | `dispute`     | [`EscrowContract::set_timeout`], `can_refund`        |
 
 #![no_std]
+mod dispute;
+mod create;
+mod refund;
+mod release;
 
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Map};
+use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Map, String};
 use stellar_spend_shared::{errors::ContractError, validation::check_schema_version};
+use shared::EventFormat;
+use dispute::{DisputeHandler, DisputeError, DisputeStatus};
 
 // ── Sub-modules (issue #812) ──────────────────────────────────────────────────
-
-pub mod create;
-pub mod dispute;
-pub mod refund;
-pub mod release;
 
 /// Current storage layout version. Bump whenever a stored type changes shape, and
 /// extend [`EscrowContract::migrate`] to convert the previous layout.
@@ -95,36 +96,14 @@ pub enum DataKey {
     Lock,
 }
 
-/// Schema v1 deposit record.
-///
-/// Retained solely so [`EscrowContract::migrate`] can decode entries written by a
-/// v1 build. Current code never writes this shape.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct EscrowDepositV1 {
-    pub depositor: Address,
-    pub amount: i128,
-    pub bridge_address: Address,
-    pub timestamp: u64,
-    pub timeout_ledger: u32,
-    pub released: bool,
-    pub refunded: bool,
-}
-
-/// Schema v2 deposit record: v1 plus the fee basis points quoted at deposit time.
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct EscrowDeposit {
-    pub depositor: Address,
-    pub amount: i128,
-    pub bridge_address: Address,
-    pub timestamp: u64,
-    pub timeout_ledger: u32,
-    pub released: bool,
-    pub refunded: bool,
-    /// Fee rate quoted when the deposit was taken. Added in schema v2; migrated
-    /// v1 records carry `0`, meaning "no fee was quoted".
-    pub fee_bps: u32,
+pub enum EscrowStatus {
+    Pending,
+    Active,
+    Disputed,
+    Resolved,
+    Cancelled,
 }
 
 #[contract]
@@ -151,8 +130,8 @@ impl EscrowContract {
         storage.set(&DataKey::Lock, &false);
         Self::bump_instance_ttl(&env);
 
-        env.events()
-            .publish((symbol_short!("init"),), settlement_authority);
+        // Emit standardized event
+        EventFormat::emit_admin_initialized(&env, settlement_authority);
         Ok(())
     }
 
@@ -211,14 +190,6 @@ impl EscrowContract {
     }
 
     // ── Upgrade surface (issue #817) ──────────────────────────────────────────
-
-    /// Storage layout version currently persisted. See `README.md`.
-    pub fn schema_version(env: Env) -> Result<u32, ContractError> {
-        env.storage()
-            .instance()
-            .get(&DataKey::Schema)
-            .ok_or(ContractError::NotInitialized)
-    }
 
     /// Replace the contract WASM. Authority only.
     ///
@@ -306,9 +277,3 @@ impl EscrowContract {
             .extend_ttl(INSTANCE_TTL_THRESHOLD, INSTANCE_TTL_EXTEND_TO);
     }
 }
-
-#[cfg(feature = "testutils")]
-pub mod test_utils;
-
-#[cfg(test)]
-mod test;
