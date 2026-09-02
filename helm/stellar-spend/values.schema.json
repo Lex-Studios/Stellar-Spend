@@ -1,0 +1,346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "stellar-spend Helm chart values",
+  "description": "Schema for helm/stellar-spend/values.yaml. Validated automatically by `helm lint` and `helm install --dry-run`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "replicaCount",
+    "image",
+    "service",
+    "resources",
+    "autoscaling",
+    "podDisruptionBudget",
+    "livenessProbe",
+    "readinessProbe",
+    "existingSecret"
+  ],
+  "properties": {
+    "replicaCount": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of pod replicas (ignored when autoscaling.enabled is true)."
+    },
+
+    "image": {
+      "type": "object",
+      "description": "Container image settings.",
+      "additionalProperties": false,
+      "required": ["repository", "tag", "pullPolicy"],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Container image repository (e.g. gcr.io/my-project/stellar-spend)."
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Image tag (e.g. latest, 1.2.3, or a git SHA)."
+        },
+        "pullPolicy": {
+          "type": "string",
+          "enum": ["Always", "IfNotPresent", "Never"],
+          "description": "Kubernetes imagePullPolicy."
+        }
+      }
+    },
+
+    "service": {
+      "type": "object",
+      "description": "Kubernetes Service settings.",
+      "additionalProperties": false,
+      "required": ["type", "port", "targetPort"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer"],
+          "description": "Service type."
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Port exposed by the Service."
+        },
+        "targetPort": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "Port the container listens on."
+        }
+      }
+    },
+
+    "ingress": {
+      "type": "object",
+      "description": "Kubernetes Ingress settings. Optional — disabled by default.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Set to true to create an Ingress resource."
+        },
+        "className": {
+          "type": "string",
+          "description": "Ingress class name (e.g. nginx, traefik)."
+        },
+        "annotations": {
+          "type": "object",
+          "description": "Annotations to add to the Ingress resource.",
+          "additionalProperties": { "type": "string" }
+        },
+        "hosts": {
+          "type": "array",
+          "description": "List of Ingress host rules.",
+          "items": {
+            "type": "object",
+            "required": ["host", "paths"],
+            "additionalProperties": false,
+            "properties": {
+              "host": {
+                "type": "string",
+                "description": "Hostname (e.g. stellar-spend.example.com)."
+              },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["path", "pathType"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "path": { "type": "string" },
+                    "pathType": {
+                      "type": "string",
+                      "enum": ["Exact", "Prefix", "ImplementationSpecific"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tls": {
+          "type": "array",
+          "description": "TLS configuration for the Ingress.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "hosts": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "secretName": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "resources": {
+      "type": "object",
+      "description": "CPU and memory resource requests/limits.",
+      "additionalProperties": false,
+      "required": ["requests", "limits"],
+      "properties": {
+        "requests": {
+          "type": "object",
+          "description": "Minimum guaranteed resources.",
+          "additionalProperties": false,
+          "required": ["memory", "cpu"],
+          "properties": {
+            "memory": {
+              "type": "string",
+              "pattern": "^[0-9]+(Mi|Gi|Ki|M|G|K)$",
+              "description": "Memory request (e.g. 256Mi)."
+            },
+            "cpu": {
+              "type": "string",
+              "pattern": "^([0-9]+m|[0-9]+(\\.[0-9]+)?)$",
+              "description": "CPU request (e.g. 100m or 0.1)."
+            }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "description": "Maximum allowed resources.",
+          "additionalProperties": false,
+          "required": ["memory", "cpu"],
+          "properties": {
+            "memory": {
+              "type": "string",
+              "pattern": "^[0-9]+(Mi|Gi|Ki|M|G|K)$",
+              "description": "Memory limit (e.g. 512Mi)."
+            },
+            "cpu": {
+              "type": "string",
+              "pattern": "^([0-9]+m|[0-9]+(\\.[0-9]+)?)$",
+              "description": "CPU limit (e.g. 500m or 1)."
+            }
+          }
+        }
+      }
+    },
+
+    "autoscaling": {
+      "type": "object",
+      "description": "Horizontal Pod Autoscaler configuration.",
+      "additionalProperties": false,
+      "required": ["enabled", "minReplicas", "maxReplicas"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Create an HPA resource. When true, the static replicaCount is ignored."
+        },
+        "minReplicas": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum number of replicas."
+        },
+        "maxReplicas": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum number of replicas."
+        },
+        "targetCPUUtilizationPercentage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Target CPU utilisation (%) that triggers scaling."
+        },
+        "targetMemoryUtilizationPercentage": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Target memory utilisation (%) that triggers scaling. Optional."
+        }
+      }
+    },
+
+    "podDisruptionBudget": {
+      "type": "object",
+      "description": "PodDisruptionBudget to maintain availability during voluntary disruptions.",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Create a PodDisruptionBudget resource."
+        },
+        "minAvailable": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Minimum number of pods that must be available. Required when enabled is true."
+        }
+      }
+    },
+
+    "livenessProbe": {
+      "type": "object",
+      "description": "Kubernetes liveness probe. Restarts the pod if it becomes unhealthy.",
+      "required": ["httpGet"],
+      "properties": {
+        "httpGet": {
+          "type": "object",
+          "required": ["path", "port"],
+          "properties": {
+            "path": { "type": "string" },
+            "port": { "type": "integer" }
+          }
+        },
+        "initialDelaySeconds": { "type": "integer", "minimum": 0 },
+        "periodSeconds": { "type": "integer", "minimum": 1 },
+        "timeoutSeconds": { "type": "integer", "minimum": 1 },
+        "failureThreshold": { "type": "integer", "minimum": 1 }
+      }
+    },
+
+    "readinessProbe": {
+      "type": "object",
+      "description": "Kubernetes readiness probe. Removes the pod from Service endpoints until it is ready.",
+      "required": ["httpGet"],
+      "properties": {
+        "httpGet": {
+          "type": "object",
+          "required": ["path", "port"],
+          "properties": {
+            "path": { "type": "string" },
+            "port": { "type": "integer" }
+          }
+        },
+        "initialDelaySeconds": { "type": "integer", "minimum": 0 },
+        "periodSeconds": { "type": "integer", "minimum": 1 },
+        "timeoutSeconds": { "type": "integer", "minimum": 1 },
+        "failureThreshold": { "type": "integer", "minimum": 1 }
+      }
+    },
+
+    "env": {
+      "type": "object",
+      "description": "Non-secret environment variables injected into the container. Values are quoted strings. Secrets must be referenced via existingSecret instead.",
+      "additionalProperties": { "type": "string" }
+    },
+
+    "existingSecret": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Name of the pre-existing Kubernetes Secret that contains the app's secrets (PAYCREST_API_KEY, PAYCREST_WEBHOOK_SECRET, BASE_PRIVATE_KEY, DATABASE_URL, etc.). The Secret must be created outside this chart before deploying."
+    },
+
+    "serviceAccount": {
+      "type": "object",
+      "description": "Kubernetes ServiceAccount configuration.",
+      "additionalProperties": false,
+      "properties": {
+        "create": {
+          "type": "boolean",
+          "description": "Create a ServiceAccount for the pod."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the ServiceAccount to use. Ignored when create is false."
+        }
+      }
+    },
+
+    "podAnnotations": {
+      "type": "object",
+      "description": "Annotations to add to every pod.",
+      "additionalProperties": { "type": "string" }
+    },
+
+    "nodeSelector": {
+      "type": "object",
+      "description": "Node labels for pod scheduling.",
+      "additionalProperties": { "type": "string" }
+    },
+
+    "tolerations": {
+      "type": "array",
+      "description": "Tolerations for pod scheduling.",
+      "items": {
+        "type": "object"
+      }
+    },
+
+    "affinity": {
+      "type": "object",
+      "description": "Affinity and anti-affinity rules for pod scheduling."
+    }
+  },
+
+  "if": {
+    "properties": {
+      "podDisruptionBudget": {
+        "properties": { "enabled": { "const": true } }
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "podDisruptionBudget": {
+        "required": ["minAvailable"]
+      }
+    }
+  }
+}
