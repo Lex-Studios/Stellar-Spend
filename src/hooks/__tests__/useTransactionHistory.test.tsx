@@ -3,7 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { useTransactionHistory } from '../useTransactionHistory';
 import type { Transaction } from '@/lib/transaction-storage';
-import { ToastProvider } from '@/contexts/ToastContext';
+import { NotificationProvider } from '@/contexts/NotificationProvider';
 
 vi.mock('@/lib/transaction-storage', () => ({
   TransactionStorage: {
@@ -18,7 +18,7 @@ vi.mock('@/lib/transaction-storage', () => ({
 import { TransactionStorage } from '@/lib/transaction-storage';
 
 const wrapper = ({ children }: { children: ReactNode }) => (
-  <ToastProvider>{children}</ToastProvider>
+  <NotificationProvider>{children}</NotificationProvider>
 );
 const renderTransactionHistoryHook = (walletAddress?: string) =>
   renderHook(() => useTransactionHistory(walletAddress), { wrapper });

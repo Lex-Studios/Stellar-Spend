@@ -1,6 +1,6 @@
 'use client';
 
-import { useToast } from '@/contexts/ToastContext';
+import { useToast } from '@/contexts/NotificationProvider';
 import { Icon } from '@/components/Icon';
 
 export function ToastContainer() {

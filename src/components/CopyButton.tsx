@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useClipboard } from '@/hooks/useClipboard';
-import { useToast } from '@/contexts/ToastContext';
+import { useToast } from '@/contexts/NotificationProvider';
 import { Icon } from '@/components/Icon';
 
 interface CopyButtonProps {

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { Header } from '@/components/Header';
-import { ToastProvider } from '@/contexts/ToastContext';
+import { NotificationProvider } from '@/contexts/NotificationProvider';
 
 beforeAll(() => {
   Object.defineProperty(window, 'matchMedia', {
@@ -30,9 +30,9 @@ const baseProps = {
 
 function renderHeader(props: Partial<typeof baseProps> & Record<string, unknown> = {}) {
   return render(
-    <ToastProvider>
+    <NotificationProvider>
       <Header {...baseProps} {...props} />
-    </ToastProvider>,
+    </NotificationProvider>,
   );
 }
 

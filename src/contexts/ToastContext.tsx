@@ -1,5 +1,18 @@
 'use client';
 
+/**
+ * @deprecated (#1042) — ToastContext is superseded by NotificationProvider.
+ *
+ * All new code should import `useToast` from `@/contexts/NotificationProvider`.
+ * This file is kept only to satisfy the standalone unit tests in
+ * `src/contexts/__tests__/toast-context.test.tsx` and will be removed
+ * once those tests are migrated.
+ *
+ * Migration path:
+ *   Before: import { useToast } from '@/contexts/ToastContext'
+ *   After:  import { useToast } from '@/contexts/NotificationProvider'
+ */
+
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';

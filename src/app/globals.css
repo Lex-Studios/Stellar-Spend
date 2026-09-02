@@ -46,13 +46,17 @@
   --line: #e0e0e0;
   --line-strong: #cccccc;
   --muted: #5f5f5f;
-  --accent: #a8821a;
-  --accent-hover: #8f6e15;
+  /* #1041 — darkened from #a8821a (3.28:1 on white) to pass WCAG AA (4.59:1) */
+  --accent: #8a6b15;
+  /* #1041 — darkened from #8f6e15 (4.37:1) to pass WCAG AA (5.42:1) */
+  --accent-hover: #7d6013;
   --text: #0a0a0a;
   --text-subtle: #333333;
-  --success: #16a34a;
+  /* #1041 — darkened from #16a34a (3.02:1 on #f5f5f5) to pass WCAG AA (4.99:1) */
+  --success: #0e7a38;
   --warning: #b45309;
-  --error: #dc2626;
+  /* #1041 — darkened from #dc2626 (4.43:1 on #f5f5f5) to pass WCAG AA (5.26:1) */
+  --error: #c81e1e;
   --info: #1d4ed8;
   color-scheme: light;
 }
