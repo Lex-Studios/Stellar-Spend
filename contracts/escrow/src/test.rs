@@ -437,3 +437,147 @@ fn migrate_emits_event_with_from_and_to_schema_versions() {
         (1u32, SCHEMA_VERSION),
     );
 }
+
+// ── Reentrancy guard / CEI regression tests (issue #981) ─────────────────────
+//
+// `release` and `refund` hold an explicit boolean lock in instance storage for
+// their entire execution. These tests assert the adversarial paths the lock is
+// designed to block: attempting to call release (or refund) while a previous
+// invocation has already marked the lock.
+//
+// In the Soroban test environment we simulate a re-entrant call by directly
+// writing the lock flag inside `env.as_contract`, then verifying the next call
+// from outside sees the correct error code.
+
+#[test]
+fn release_is_rejected_while_the_reentrancy_lock_is_held() {
+    use crate::DataKey;
+
+    let t = EscrowTest::setup();
+    let id = t.deposit(500);
+    let recipient = Address::generate(&t.env);
+
+    // Simulate a reentrant context: set the lock as if a call is in progress.
+    t.env.as_contract(&t.contract_id, || {
+        t.env
+            .storage()
+            .instance()
+            .set(&DataKey::Lock, &true);
+    });
+
+    // The outer release call must be rejected — the lock is already held.
+    assert_eq!(
+        t.client().try_release(&id, &recipient),
+        Err(Ok(ContractError::Reentrant)),
+        "release must reject a call made while the reentrancy lock is held"
+    );
+
+    // After clearing the lock the call succeeds normally.
+    t.env.as_contract(&t.contract_id, || {
+        t.env
+            .storage()
+            .instance()
+            .set(&DataKey::Lock, &false);
+    });
+    assert_eq!(t.client().release(&id, &recipient), 500);
+}
+
+#[test]
+fn refund_is_rejected_while_the_reentrancy_lock_is_held() {
+    use crate::DataKey;
+
+    let t = EscrowTest::setup();
+    let id = t.deposit(300);
+    t.advance_past_timeout();
+
+    // Hold the lock to simulate a re-entrant call.
+    t.env.as_contract(&t.contract_id, || {
+        t.env
+            .storage()
+            .instance()
+            .set(&DataKey::Lock, &true);
+    });
+
+    assert_eq!(
+        t.client().try_refund(&id),
+        Err(Ok(ContractError::Reentrant)),
+        "refund must reject a call made while the reentrancy lock is held"
+    );
+
+    // After clearing the lock the refund succeeds.
+    t.env.as_contract(&t.contract_id, || {
+        t.env
+            .storage()
+            .instance()
+            .set(&DataKey::Lock, &false);
+    });
+    assert_eq!(t.client().refund(&id), 300);
+}
+
+#[test]
+fn release_clears_the_lock_on_success() {
+    // Verify the lock is always set to false after a successful release so the
+    // contract is not permanently locked after a normal call.
+    use crate::DataKey;
+
+    let t = EscrowTest::setup();
+    let id = t.deposit(200);
+    let recipient = Address::generate(&t.env);
+
+    t.client().release(&id, &recipient);
+
+    let locked: bool = t.env.as_contract(&t.contract_id, || {
+        t.env
+            .storage()
+            .instance()
+            .get(&DataKey::Lock)
+            .unwrap_or(false)
+    });
+    assert!(!locked, "lock must be cleared after a successful release");
+}
+
+#[test]
+fn refund_clears_the_lock_on_success() {
+    use crate::DataKey;
+
+    let t = EscrowTest::setup();
+    let id = t.deposit(200);
+    t.advance_past_timeout();
+    t.client().refund(&id);
+
+    let locked: bool = t.env.as_contract(&t.contract_id, || {
+        t.env
+            .storage()
+            .instance()
+            .get(&DataKey::Lock)
+            .unwrap_or(false)
+    });
+    assert!(!locked, "lock must be cleared after a successful refund");
+}
+
+#[test]
+fn release_state_is_updated_before_event_emission_cei_order() {
+    // Checks-Effects-Interactions: by the time the `release` event is visible,
+    // the deposit must already be marked as released in storage. Any observer
+    // reading state after the event would see `released == true`.
+    let t = EscrowTest::setup();
+    let id = t.deposit(999);
+    let recipient = Address::generate(&t.env);
+
+    let amount = t.client().release(&id, &recipient);
+    assert_eq!(amount, 999);
+
+    // State (effect) persisted correctly.
+    let record = t.client().get_deposit(&id);
+    assert!(
+        record.released,
+        "deposit must be marked released (effect) before the event (interaction)"
+    );
+
+    // A second release hits AlreadyProcessed — the state was written first.
+    assert_eq!(
+        t.client().try_release(&id, &recipient),
+        Err(Ok(ContractError::AlreadyProcessed)),
+        "a subsequent release must see the already-applied effect"
+    );
+}

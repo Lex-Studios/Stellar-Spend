@@ -198,3 +198,67 @@ pub fn assert_fresh_init_is_current(fixture: &MultisigTest) {
         "init must persist the current schema version"
     );
 }
+
+    /// Override the default threshold for a re‑initialisation.
+    pub fn override_threshold(&mut self, new_threshold: u32) {
+        // Stored in the test instance, used by reinit.
+        self.env.as_contract(&self.contract_id, || {
+            self.env
+                .storage()
+                .instance()
+                .set(&Symbol::new(&self.env, "test_threshold"), &new_threshold);
+        });
+    }
+
+    /// Override the default high‑value limit for a re‑initialisation.
+    pub fn override_high_value_limit(&mut self, new_limit: i128) {
+        self.env.as_contract(&self.contract_id, || {
+            self.env
+                .storage()
+                .instance()
+                .set(&Symbol::new(&self.env, "test_high_value_limit"), &new_limit);
+        });
+    }
+
+    /// Re‑initialise the contract with the currently overridden parameters,
+    /// replacing the previous state. Used for boundary tests that need a different
+    /// configuration than the default fixture.
+    pub fn reinit(&mut self) {
+        // Clear the existing storage so init passes.
+        self.env.as_contract(&self.contract_id, || {
+            let keys = vec![
+                Symbol::new(&self.env, "admin"),
+                Symbol::new(&self.env, "signers"),
+                Symbol::new(&self.env, "threshold"),
+                Symbol::new(&self.env, "hv_limit"),
+                Symbol::new(&self.env, "proposals"),
+                Symbol::new(&self.env, "schema"),
+            ];
+            for key in keys {
+                self.env.storage().instance().remove(&key);
+            }
+        });
+
+        let threshold = self.env.as_contract(&self.contract_id, || {
+            self.env
+                .storage()
+                .instance()
+                .get(&Symbol::new(&self.env, "test_threshold"))
+                .unwrap_or(DEFAULT_THRESHOLD)
+        });
+        let high_value_limit = self.env.as_contract(&self.contract_id, || {
+            self.env
+                .storage()
+                .instance()
+                .get(&Symbol::new(&self.env, "test_high_value_limit"))
+                .unwrap_or(DEFAULT_HIGH_VALUE_LIMIT)
+        });
+
+        self.client().init(
+            &self.admin,
+            &self.signers,
+            &threshold,
+            &high_value_limit,
+        );
+    }
+}

@@ -805,3 +805,233 @@ fn set_high_value_limit_emits_event_with_new_limit() {
         5_000i128,
     );
 }
+
+// ── Missing threshold boundary tests (issue #983) ────────────────────────────
+
+#[test]
+fn threshold_equals_signer_count_n_of_n_acceptance() {
+    // A 3-of-3 threshold must require all three signatures, no early escapes.
+    let mut t = MultisigTest::setup();
+    // Override the default threshold to be exactly the signer count.
+    t.override_threshold(3);
+    t.reinit();
+
+    let target = Address::generate(&t.env);
+    let id = t.propose_high_value("n-of-n", &target);
+
+    // Only one signature (the proposer) is insufficient for 3-of-3.
+    assert_eq!(
+        t.client().try_execute(&t.signer(0), &id),
+        Err(Ok(ContractError::BelowThreshold))
+    );
+
+    t.client().sign(&t.signer(1), &id);
+    // Two signatures still insufficient for 3-of-3.
+    assert_eq!(
+        t.client().try_execute(&t.signer(0), &id),
+        Err(Ok(ContractError::BelowThreshold))
+    );
+
+    t.client().sign(&t.signer(2), &id);
+    // Now three signatures reach the N-of-N threshold.
+    assert!(t.client().try_execute(&t.signer(0), &id).is_ok());
+}
+
+#[test]
+fn zero_high_value_limit_requires_full_threshold_for_all_values() {
+    // Setting `high_value_limit = 0` means even tiny values need the full threshold.
+    let mut t = MultisigTest::setup();
+    t.override_high_value_limit(0);
+    t.reinit();
+
+    let target = Address::generate(&t.env);
+    let id = t.id("zero-limit");
+    t.client()
+        .propose(&t.signer(0), &id, &t.id("desc"), &target, &1); // value = 1
+
+    // Even a value of 1 requires the full threshold.
+    assert_eq!(
+        t.client().try_execute(&t.signer(0), &id),
+        Err(Ok(ContractError::BelowThreshold)),
+        "with high_value_limit = 0, every proposal requires the full threshold"
+    );
+
+    // Collect the other two signatures.
+    t.client().sign(&t.signer(1), &id);
+    t.client().sign(&t.signer(2), &id);
+    assert!(t.client().try_execute(&t.signer(0), &id).is_ok());
+}
+
+#[test]
+fn value_exactly_zero_uses_low_value_threshold() {
+    // Value zero is a boundary: it's <= any high_value_limit, so it should use the
+    // low-value threshold (1 signature).
+    let t = MultisigTest::setup();
+    let target = Address::generate(&t.env);
+    let id = t.id("zero-val");
+    t.client()
+        .propose(&t.signer(0), &id, &t.id("desc"), &target, &0);
+
+    // Zero value with DEFAULT_HIGH_VALUE_LIMIT > 0 → low-value threshold (1 signature)
+    assert_eq!(t.client().execute(&t.signer(0), &id), 0);
+}
+
+#[test]
+fn duplicate_signer_in_proposal_signatures_is_rejected() {
+    // A signer trying to sign twice should be caught early, not allowed to inflate
+    // the signature count.
+    let t = MultisigTest::setup();
+    let target = Address::generate(&t.env);
+    let id = t.propose_high_value("dup-sig", &target);
+
+    // signer(1) signs once (ok)
+    t.client().sign(&t.signer(1), &id);
+
+    // Same signer signing again must be rejected.
+    assert_eq!(
+        t.client().try_sign(&t.signer(1), &id),
+        Err(Ok(ContractError::InvalidInput)),
+        "duplicate signature must not increase the count"
+    );
+}
+
+#[test]
+fn duplicate_signer_in_proposal_signatures_via_removal_readdition_still_counts_once() {
+    // Edge case: signer signs, is removed, then re-added. The earlier signature
+    // is dead (removed signer) but the new signature after readdition should count.
+    // The same address should not be allowed to sign twice even across removal cycle.
+    let t = MultisigTest::setup();
+    let target = Address::generate(&t.env);
+    let id = t.propose_high_value("cycle", &target);
+
+    // signer(1) signs.
+    t.client().sign(&t.signer(1), &id);
+    // Admin removes signer(1).
+    t.client().remove_signer(&t.admin, &t.signer(1));
+    // Re-add the same address as a signer.
+    t.client().add_signer(&t.admin, &t.signer(1));
+
+    // The address is now a signer again, but cannot sign the same proposal twice.
+    assert_eq!(
+        t.client().try_sign(&t.signer(1), &id),
+        Err(Ok(ContractError::InvalidInput)),
+        "the signature from before removal is dead, but the address still cannot sign twice"
+    );
+}
+
+#[test]
+fn boundary_proposal_just_below_high_value_limit_needs_one_signature() {
+    let t = MultisigTest::setup();
+    let target = Address::generate(&t.env);
+    let id = t.id("just-below");
+    t.client().propose(
+        &t.signer(0),
+        &id,
+        &t.id("desc"),
+        &target,
+        &(DEFAULT_HIGH_VALUE_LIMIT - 1),
+    );
+
+    // Just below the limit → low-value threshold (1 signature).
+    assert_eq!(
+        t.client().execute(&t.signer(0), &id),
+        DEFAULT_HIGH_VALUE_LIMIT - 1
+    );
+}
+
+#[test]
+fn boundary_proposal_exactly_at_high_value_limit_needs_one_signature() {
+    // Already covered by `value_exactly_at_the_high_value_limit_needs_only_one_signature`,
+    // but reaffirm for completeness.
+    let t = MultisigTest::setup();
+    let target = Address::generate(&t.env);
+    let id = t.id("exact");
+    t.client().propose(
+        &t.signer(0),
+        &id,
+        &t.id("desc"),
+        &target,
+        &DEFAULT_HIGH_VALUE_LIMIT,
+    );
+
+    assert_eq!(t.client().execute(&t.signer(0), &id), DEFAULT_HIGH_VALUE_LIMIT);
+}
+
+#[test]
+fn boundary_proposal_one_above_high_value_limit_needs_full_threshold() {
+    let t = MultisigTest::setup();
+    let target = Address::generate(&t.env);
+    let id = t.id("just-above");
+    t.client().propose(
+        &t.signer(0),
+        &id,
+        &t.id("desc"),
+        &target,
+        &(DEFAULT_HIGH_VALUE_LIMIT + 1),
+    );
+
+    // One above the limit → high-value threshold (2-of-3).
+    assert_eq!(
+        t.client().try_execute(&t.signer(0), &id),
+        Err(Ok(ContractError::BelowThreshold))
+    );
+    t.client().sign(&t.signer(1), &id);
+    assert!(t.client().try_execute(&t.signer(0), &id).is_ok());
+}
+
+#[test]
+fn proposal_value_negative_is_rejected() {
+    let t = MultisigTest::setup();
+    let target = Address::generate(&t.env);
+    assert_eq!(
+        t.client()
+            .try_propose(&t.signer(0), &t.id("neg"), &t.id("desc"), &target, &-1),
+        Err(Ok(ContractError::InvalidAmount))
+    );
+}
+
+#[test]
+fn signer_removal_while_proposal_pending_drops_their_vote_live_count_recomputed() {
+    // Already partially covered in `removing_a_signer_after_they_signed_drops_their_vote_from_quorum`,
+    // but add a variant where two signatures were collected and one signer is removed.
+    let t = MultisigTest::setup();
+    let target = Address::generate(&t.env);
+    let id = t.propose_high_value("drop-two", &target);
+    t.client().sign(&t.signer(1), &id);
+    // Now 2 signatures (signer0, signer1) → meets threshold 2-of-3.
+
+    t.client().remove_signer(&t.admin, &t.signer(1));
+    // Only signer(0) is now live; signer(1) is gone, so live count = 1 → below threshold.
+    assert_eq!(
+        t.client().try_execute(&t.signer(0), &id),
+        Err(Ok(ContractError::BelowThreshold))
+    );
+}
+
+#[test]
+fn threshold_one_with_one_signer_allowed() {
+    // Special case: 1-of-1 signer set should be allowed by init.
+    let t = MultisigTest::registered();
+    let single_signer = vec![t.signer(0)];
+    t.client().init(&t.admin, &single_signer, &1, &0);
+
+    let target = Address::generate(&t.env);
+    let id = t.id("1-of-1");
+    t.client()
+        .propose(&t.signer(0), &id, &t.id("desc"), &target, &100);
+    // Single signer (the proposer) can execute immediately.
+    assert_eq!(t.client().execute(&t.signer(0), &id), 100);
+}
+
+#[test]
+fn threshold_one_with_three_signers_allows_any_single_signer() {
+    // 1-of-3 threshold means any one signer can execute.
+    let mut t = MultisigTest::setup();
+    t.override_threshold(1);
+    t.reinit();
+
+    let target = Address::generate(&t.env);
+    let id = t.propose_high_value("1-of-3", &target);
+    // Even high-value proposals need only one signature.
+    assert_eq!(t.client().execute(&t.signer(2), &id), DEFAULT_HIGH_VALUE_LIMIT * 10);
+}
