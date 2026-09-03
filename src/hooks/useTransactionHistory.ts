@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Transaction } from '@/lib/transaction-storage';
 import { TransactionStorage } from '@/lib/transaction-storage';
 import { apiGet, apiPatch, apiPost, ApiErrorClass } from '@/lib/api/client';
-import { useToast } from '@/contexts/ToastContext';
+import { useToast } from '@/contexts/NotificationProvider';
 
 export interface UseTransactionHistoryResult {
   transactions: Transaction[];

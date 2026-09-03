@@ -9,7 +9,7 @@ import { WalletModal } from './WalletModal';
 import { LanguageSelector } from '@/lib/i18n/LanguageSelector';
 import { NotificationCenter } from './NotificationCenter';
 import { useFxRate } from '@/hooks/useFxRate';
-import { useNotificationCenter } from '@/hooks/useNotificationCenter';
+import { useNotificationEvents } from '@/contexts/NotificationProvider';
 import type { WalletType } from '@/lib/stellar';
 import { formatNumber } from '@/lib/format';
 
@@ -106,8 +106,8 @@ export function Header({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [connectingWallet, setConnectingWallet] = useState<WalletType | null>(null);
 
-  // Load notifications
-  const notificationCenter = useNotificationCenter(isConnected ? walletAddress || null : null);
+  // Load notifications from the unified NotificationProvider (#1042)
+  const notificationCenter = useNotificationEvents();
 
   const handleOpenModal = () => {
     setIsModalOpen(true);

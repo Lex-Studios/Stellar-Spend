@@ -59,6 +59,7 @@ export function FileUploadZone({
                   src={filePreview}
                   alt="Preview"
                   fill
+                  sizes="80px"
                   className="object-contain border border-[#333333]"
                 />
               </span>

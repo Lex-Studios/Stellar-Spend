@@ -82,6 +82,30 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: __dirname,
   ...bundleOptimization,
   images: {
+    /**
+     * #1043 — Image domain audit (2026-09-02)
+     *
+     * remotePatterns is intentionally empty.  A full codebase scan confirmed:
+     *
+     *   - Only one `next/image` consumer in production source:
+     *     src/components/insurance-claim/FileUploadZone.tsx
+     *     → uses a local `blob:` / `data:` URL (File reader preview) — no
+     *       external hostname required.
+     *
+     *   - The CSP `img-src` already allows `data:` and `blob:` for this case.
+     *
+     *   - All other assets (icons, architecture SVG) are served from /public
+     *     and need no remote pattern entry.
+     *
+     * Do NOT add wildcard entries (hostname: '**').  When a new external image
+     * host is required, add a precise entry here with the exact hostname,
+     * protocol, and port.
+     *
+     * Sizing audit:
+     *   - FileUploadZone: uses `fill` + explicit `sizes="80px"` on an 80×80
+     *     px container — correct pattern, no LCP/CLS risk.
+     *   - Accessibility test fixtures use explicit width={24} height={24}.
+     */
     remotePatterns: [],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
