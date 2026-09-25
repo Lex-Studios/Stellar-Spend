@@ -165,6 +165,15 @@ export const queueManageSchema = z.discriminatedUnion('action', [
     id: z.string().min(1, 'id is required'),
     priority: z.number().int().min(1).max(4),
   }),
+  z.object({
+    action: z.literal('enqueue'),
+    id: z.string().min(1, 'id is required'),
+    priority: z.number().int().min(1).max(4),
+    amount: z.string().min(1, 'amount is required'),
+    currency: z.string().min(1, 'currency is required'),
+    feeMethod: z.enum(['stablecoin', 'native']),
+    payload: z.record(z.string(), z.unknown()).optional(),
+  }),
 ]);
 
 // Validation error formatting
