@@ -1,3 +1,12 @@
+// ---------------------------------------------------------------------------
+// #1182 — Decouple useCommandPalette from command-registry internals
+//
+// ICommandRegistry is the explicit contract between the hook and the registry.
+// The hook depends on this interface, never on the concrete buildAppCommands
+// implementation.  Swap the registry (e.g. for tests) by providing a
+// different implementation of ICommandRegistry.
+// ---------------------------------------------------------------------------
+
 export interface CommandAction {
   id: string;
   label: string;
@@ -7,6 +16,33 @@ export interface CommandAction {
   section?: string;
   action: () => void;
   shortcut?: string;
+}
+
+/**
+ * Minimal interface that consumers (e.g. useCommandPalette) depend on.
+ * Concrete implementations: buildAppCommands, or any stub used in tests.
+ */
+export interface ICommandRegistry {
+  /** Return the full list of available commands. */
+  getCommands(): CommandAction[];
+}
+
+/**
+ * Factory that creates an ICommandRegistry from app-level dependencies.
+ * This is the production registry; tests can supply a plain object that
+ * satisfies ICommandRegistry without wiring up a router or callbacks.
+ */
+export function createCommandRegistry(params: {
+  router: { push: (path: string) => void };
+  onNewOfframp?: () => void;
+  onConnectWallet?: () => void;
+  onOpenSettings?: () => void;
+  onToggleTheme?: () => void;
+  onOpenNotifications?: () => void;
+}): ICommandRegistry {
+  return {
+    getCommands: () => buildAppCommands(params),
+  };
 }
 
 export function buildAppCommands({

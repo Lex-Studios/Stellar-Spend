@@ -19,8 +19,16 @@ export { WalletModalError } from './components/modal/WalletModalError';
 export { WalletOptionButton } from './components/modal/WalletOptionButton';
 
 // --- Context ---
+// Aggregate (backward-compatible)
 export { WalletProvider, useWalletContext } from './context/WalletContext';
 export type { WalletContextValue } from './context/WalletContext';
+// Narrower context hooks (#1184)
+export { useWalletConnection, useWalletAccount, useWalletTransactionsContext } from './context/WalletContext';
+export type {
+  WalletConnectionContextValue,
+  WalletAccountContextValue,
+  WalletTransactionsContextValue,
+} from './context/WalletContext';
 
 // --- Hooks ---
 export { useStellarWallet } from './hooks/useStellarWallet';
