@@ -3,6 +3,7 @@ import type { Transaction } from '@/lib/transaction-storage';
 import { processRefund } from '@/lib/refund';
 import { notifyTransactionStatusUpdate } from '@/lib/notifications';
 import { logger } from '@/lib/logger';
+import type { CompensationStatus } from '@/lib/compensation-state-machine';
 
 export const TRANSACTION_TIMEOUT_MS = 30 * 60 * 1000;
 export const BRIDGE_TIMEOUT_MS = 60 * 60 * 1000;
@@ -40,6 +41,12 @@ export interface TimeoutCheckResult {
   ageMs: number;
   cancelled: boolean;
   refundTriggered: boolean;
+  /**
+   * Outcome of the refund this timeout triggered, on the shared compensation
+   * state machine (see `@/lib/compensation-state-machine`). Absent when the
+   * transaction wasn't timed out, so no compensation was attempted.
+   */
+  status?: CompensationStatus;
   error?: string;
 }
 
@@ -279,6 +286,7 @@ export async function cancelTimedOutTransaction(
     ageMs,
     cancelled: true,
     refundTriggered: refundResult.success,
+    status: refundResult.status,
     error: refundResult.success ? undefined : refundResult.error,
   };
 }
