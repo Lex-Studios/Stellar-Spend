@@ -9,6 +9,7 @@ import {
   resetNodeCount,
   GraphQLError,
 } from '../../../../lib/graphql/auth-guards';
+import { getResolverUsageReport, getUnusedResolvers } from '../../../../lib/graphql/resolver-usage';
 
 const PLAYGROUND_HTML = `<!DOCTYPE html>
 <html>
@@ -77,6 +78,14 @@ function formatError(err: unknown): Record<string, unknown> {
 // ─── Handlers ──────────────────────────────────────────────────────────────────
 
 export async function GET(request: Request) {
+  const url = new URL(request.url);
+  if (url.searchParams.get('diagnostics') === 'resolver-usage') {
+    return new Response(
+      JSON.stringify({ usage: getResolverUsageReport(), unused: getUnusedResolvers() }),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
   const accept = request.headers.get('accept') ?? '';
   if (accept.includes('text/html')) {
     return new Response(PLAYGROUND_HTML, {
