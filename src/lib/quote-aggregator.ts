@@ -22,6 +22,58 @@ export interface AggregatedQuoteResponse {
 
 export type QuoteProvider = 'paycrest' | 'allbridge';
 
+/**
+ * Explicit, documented provider fallback order.
+ *
+ * When `aggregateQuotes` is called without an explicit `providers` list, this
+ * ordered array is the source of truth for which providers are queried and in
+ * what priority order results are preferred when ranking ties occur:
+ *
+ *   1. paycrest  - primary settlement provider, always enabled.
+ *   2. allbridge - secondary/backup bridge provider, disabled by default
+ *                  (see PROVIDER_CONFIGS.allbridge.enabled) and only used
+ *                  once explicitly enabled or passed in `providers`.
+ *
+ * This replaces the previous implicit branching (if/else on provider name
+ * inside the retry closure) with a single declarative list that can be
+ * unit-tested directly via `getOrderedProviders()`.
+ */
+export const PROVIDER_FALLBACK_ORDER: readonly QuoteProvider[] = ['paycrest', 'allbridge'];
+
+/** Returns the enabled providers in documented fallback-priority order. */
+export function getOrderedProviders(
+  requested: QuoteProvider[] = [...PROVIDER_FALLBACK_ORDER],
+): QuoteProvider[] {
+  const requestedSet = new Set(requested);
+  return PROVIDER_FALLBACK_ORDER.filter(
+    (p) => requestedSet.has(p) && PROVIDER_CONFIGS[p].enabled,
+  );
+}
+
+type QuoteStrategy = (receiveAmount: string, currency: string) => Promise<ProviderQuote>;
+
+/** Ordered-strategy map: one explicit fetch strategy per provider, keyed by fallback order. */
+const PROVIDER_STRATEGIES: Record<QuoteProvider, QuoteStrategy> = {
+  paycrest: fetchQuoteFromPaycrestStrategy,
+  allbridge: fetchQuoteFromAllbridgeStrategy,
+};
+
+function fetchQuoteFromPaycrestStrategy(receiveAmount: string, currency: string) {
+  return fetchQuoteFromPaycrest(receiveAmount, currency);
+}
+
+function fetchQuoteFromAllbridgeStrategy(receiveAmount: string, currency: string) {
+  return fetchQuoteFromAllbridge(receiveAmount, currency);
+}
+
+function getStrategyForProvider(provider: QuoteProvider): QuoteStrategy {
+  const strategy = PROVIDER_STRATEGIES[provider];
+  if (!strategy) {
+    throw new Error(`Unknown provider: ${provider}`);
+  }
+  return strategy;
+}
+
 interface ProviderConfig {
   name: string;
   enabled: boolean;
@@ -217,7 +269,7 @@ export async function aggregateQuotes(
   currency: string,
   providers: QuoteProvider[] = ['paycrest'],
 ): Promise<AggregatedQuoteResponse> {
-  const enabledProviders = providers.filter((p) => PROVIDER_CONFIGS[p].enabled);
+  const enabledProviders = getOrderedProviders(providers);
 
   if (enabledProviders.length === 0) {
     throw new Error('No enabled providers available');
@@ -243,14 +295,8 @@ export async function aggregateQuotes(
           setTimeout(() => reject(new Error('Provider timeout')), config.timeout),
         );
 
-        let fetchPromise: Promise<ProviderQuote>;
-        if (provider === 'paycrest') {
-          fetchPromise = fetchQuoteFromPaycrest(receiveAmount, currency);
-        } else if (provider === 'allbridge') {
-          fetchPromise = fetchQuoteFromAllbridge(receiveAmount, currency);
-        } else {
-          throw new Error(`Unknown provider: ${provider}`);
-        }
+        const strategy = getStrategyForProvider(provider);
+        const fetchPromise = strategy(receiveAmount, currency);
 
         return await Promise.race([fetchPromise, timeoutPromise]);
       } catch (error) {
