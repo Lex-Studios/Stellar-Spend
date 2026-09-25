@@ -1,3 +1,8 @@
+/**
+ * Compliance screening rules and override behavior documented in
+ * docs/kyc-compliance-decision-boundaries.md (Compliance Screening & Overrides section)
+ */
+
 export type ScreeningVerdict = 'allow' | 'deny' | 'review';
 
 export interface ScreeningResult {

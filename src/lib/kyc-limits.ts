@@ -1,5 +1,16 @@
 import crypto from 'crypto';
 
+/**
+ * KYC/Compliance decision boundaries and jurisdiction tiers are documented in
+ * docs/kyc-compliance-decision-boundaries.md
+ * See that document for:
+ * - Jurisdiction classification (restricted, warning, allowed)
+ * - KYC verification levels and transaction limits
+ * - Provider fallback behavior
+ * - AML screening rules and risk scoring
+ * - Compliance reporting and audit trails
+ */
+
 export type KYCStatus = 'unverified' | 'pending' | 'verified' | 'rejected';
 export type LimitTier = 'tier1' | 'tier2' | 'tier3';
 export type AMLRiskLevel = 'low' | 'medium' | 'high' | 'blocked';
