@@ -1,5 +1,10 @@
 import type { KYCData } from './kyc-limits';
 
+/**
+ * KYC provider interface and fallback behavior documented in
+ * docs/kyc-compliance-decision-boundaries.md (KYC Provider Fallback Behavior section)
+ */
+
 export type VerificationLevel = 'basic' | 'advanced' | 'enhanced';
 
 export interface VerificationResponse {
