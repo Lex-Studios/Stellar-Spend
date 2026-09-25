@@ -300,3 +300,46 @@ fn migrate_emits_event_with_from_and_to_schema_versions() {
         (1u32, SCHEMA_VERSION),
     );
 }
+
+// ── Per-invocation storage cache (resource-fee reduction) ──────────────────
+
+#[test]
+fn pause_via_cached_guard_still_enforces_admin_auth() {
+    let t = FeeManagerTest::setup();
+    // The combined require_current_schema_and_admin() guard should still
+    // reject non-admin callers exactly like the two separate checks did.
+    t.env.mock_auths(&[]);
+    assert!(t.client().try_pause(&t.reason("incident")).is_err());
+}
+
+#[test]
+fn pause_then_unpause_round_trip_uses_one_cache_per_call() {
+    let t = FeeManagerTest::setup();
+
+    t.client().pause(&t.reason("incident"));
+    assert!(t.client().is_paused());
+
+    t.client().unpause();
+    assert!(!t.client().is_paused());
+
+    // A fresh InvocationCache is built per call, so a second pause/unpause
+    // cycle in the same test must behave identically to the first.
+    t.client().pause(&t.reason("incident 2"));
+    assert!(t.client().is_paused());
+}
+
+#[test]
+fn set_default_rate_via_cached_guard_persists_the_new_rate() {
+    let t = FeeManagerTest::setup();
+    t.client().set_default_rate(&250);
+    assert_eq!(t.client().default_rate(), 250);
+}
+
+#[test]
+fn set_default_rate_via_cached_guard_still_enforces_the_cap() {
+    let t = FeeManagerTest::setup();
+    assert_eq!(
+        t.client().try_set_default_rate(&(MAX_DEFAULT_FEE_BP + 1)),
+        Err(Ok(ContractError::InvalidInput))
+    );
+}

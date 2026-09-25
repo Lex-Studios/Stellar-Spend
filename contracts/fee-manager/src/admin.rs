@@ -8,6 +8,78 @@ use stellar_spend_shared::{
 
 use crate::{DataKey, FeeManagerContract, MAX_DEFAULT_FEE_BP, SCHEMA_VERSION};
 
+/// Per-invocation cache of instance storage reads.
+///
+/// Soroban meters every `storage().instance().get()` call as a resource cost.
+/// Several entrypoints (`pause`, `unpause`, `set_default_rate`) previously
+/// re-fetched `Schema` and `Admin` through separate helper calls
+/// (`require_current_schema` then `require_admin`), each independently
+/// touching the storage instance. This cache fetches a key at most once per
+/// invocation and hands back the cached value to any subsequent helper that
+/// needs it within the same call, avoiding repeat host-storage round trips.
+struct InvocationCache {
+    schema: Option<u32>,
+    admin: Option<Address>,
+    paused: Option<bool>,
+}
+
+impl InvocationCache {
+    fn new() -> Self {
+        Self {
+            schema: None,
+            admin: None,
+            paused: None,
+        }
+    }
+
+    fn schema(&mut self, env: &Env) -> Result<u32, ContractError> {
+        if let Some(v) = self.schema {
+            return Ok(v);
+        }
+        let v: u32 = env
+            .storage()
+            .instance()
+            .get(&DataKey::Schema)
+            .ok_or(ContractError::NotInitialized)?;
+        self.schema = Some(v);
+        Ok(v)
+    }
+
+    fn admin(&mut self, env: &Env) -> Result<Address, ContractError> {
+        if let Some(v) = self.admin.clone() {
+            return Ok(v);
+        }
+        let v: Address = env
+            .storage()
+            .instance()
+            .get(&DataKey::Admin)
+            .ok_or(ContractError::NotInitialized)?;
+        self.admin = Some(v.clone());
+        Ok(v)
+    }
+
+    fn paused(&mut self, env: &Env) -> bool {
+        if let Some(v) = self.paused {
+            return v;
+        }
+        let v = env
+            .storage()
+            .instance()
+            .get(&DataKey::Paused)
+            .unwrap_or(false);
+        self.paused = Some(v);
+        v
+    }
+
+    /// Validate schema and admin auth in one pass, reusing cached reads.
+    fn require_current_schema_and_admin(&mut self, env: &Env) -> Result<(), ContractError> {
+        check_schema_version(Some(self.schema(env)?), SCHEMA_VERSION)?;
+        let admin = self.admin(env)?;
+        admin.require_auth();
+        Ok(())
+    }
+}
+
 impl FeeManagerContract {
     /// Initialise with an admin and a starting fee rate.
     pub fn init(env: Env, admin: Address, default_fee_bp: u32) -> Result<(), ContractError> {
@@ -33,11 +105,11 @@ impl FeeManagerContract {
     /// `reason` is bounded because it is echoed into an event topic, and unbounded
     /// caller-supplied strings there are a metering hazard.
     pub fn pause(env: Env, reason: String) -> Result<(), ContractError> {
-        Self::require_current_schema(&env)?;
-        Self::require_admin(&env)?;
+        let mut cache = InvocationCache::new();
+        cache.require_current_schema_and_admin(&env)?;
         require_string_len(&reason, 128)?;
 
-        if Self::paused_flag(&env) {
+        if cache.paused(&env) {
             return Err(ContractError::Paused);
         }
 
@@ -49,10 +121,10 @@ impl FeeManagerContract {
 
     /// Reset the circuit breaker. Admin only.
     pub fn unpause(env: Env) -> Result<(), ContractError> {
-        Self::require_current_schema(&env)?;
-        Self::require_admin(&env)?;
+        let mut cache = InvocationCache::new();
+        cache.require_current_schema_and_admin(&env)?;
 
-        if !Self::paused_flag(&env) {
+        if !cache.paused(&env) {
             return Err(ContractError::InvalidInput);
         }
 
@@ -81,8 +153,8 @@ impl FeeManagerContract {
 
     /// Update the default fee rate. Admin only.
     pub fn set_default_rate(env: Env, fee_bp: u32) -> Result<(), ContractError> {
-        Self::require_current_schema(&env)?;
-        Self::require_admin(&env)?;
+        let mut cache = InvocationCache::new();
+        cache.require_current_schema_and_admin(&env)?;
         require_basis_points(fee_bp, MAX_DEFAULT_FEE_BP)?;
 
         env.storage().instance().set(&DataKey::DefaultRate, &fee_bp);
