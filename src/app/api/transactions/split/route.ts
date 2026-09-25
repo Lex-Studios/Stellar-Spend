@@ -8,7 +8,7 @@ import {
   reconcileSplit,
   type SplitRecipient,
   type SplitTransaction,
-} from '@/lib/transaction-split';
+} from '@/lib/transactions';
 import { withIdempotency } from '@/lib/idempotency';
 
 // GET: fetch split, reconciliation, or analytics

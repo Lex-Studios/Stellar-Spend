@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TransactionStorage } from '@/lib/transaction-storage';
-import { TransactionSearchService, type SearchFilters } from '@/lib/transaction-search';
-import type { TransactionStatus } from '@/lib/transaction-status';
+import { TransactionSearchService, type SearchFilters } from '@/lib/transactions';
+import type { TransactionStatus } from '@/lib/transactions';
 import { ErrorHandler } from '@/lib/error-handler';
 
 export async function GET(req: NextRequest) {
