@@ -4,6 +4,11 @@ import { TransactionStorage } from '@/lib/transaction-storage';
 import { withIdempotency } from '@/lib/idempotency';
 import { ErrorHandler } from '@/lib/error-handler';
 import { validateBody } from '@/lib/validation/validate-request';
+import {
+  transitionCompensation,
+  InvalidCompensationTransitionError,
+  type CompensationStatus,
+} from '@/lib/compensation-state-machine';
 
 const createReversalSchema = z.object({
   transactionId: z.string().min(1),
@@ -30,7 +35,7 @@ export interface ReversalRequest {
   amount: string;
   fee: string;
   reason: string;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  status: CompensationStatus;
   requestedAt: number;
   approvedAt?: number;
   completedAt?: number;
@@ -179,12 +184,16 @@ export async function PATCH(req: NextRequest) {
         }
 
         if (action === 'approve') {
+          transitionCompensation('reversal', requestId, request.status, 'approved');
           request.status = 'approved';
           request.approvedAt = Date.now();
+
+          transitionCompensation('reversal', requestId, request.status, 'completed');
           TransactionStorage.updateReversalStatus(request.transactionId, 'completed');
           request.status = 'completed';
           request.completedAt = Date.now();
         } else {
+          transitionCompensation('reversal', requestId, request.status, 'rejected');
           request.status = 'rejected';
           TransactionStorage.updateReversalStatus(request.transactionId, 'failed');
         }
@@ -197,6 +206,9 @@ export async function PATCH(req: NextRequest) {
           notes: notes || null,
         });
       } catch (error) {
+        if (error instanceof InvalidCompensationTransitionError) {
+          return ErrorHandler.validation(error.message);
+        }
         return ErrorHandler.serverError(error);
       }
     },
