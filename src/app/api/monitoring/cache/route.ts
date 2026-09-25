@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cache } from '@/lib/cache';
 import { ErrorHandler } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
+import { fetchMetricTimed, formatCacheMetrics, buildMetricsEnvelope } from '@/lib/monitoring-metrics';
 
 /**
  * GET /api/monitoring/cache
@@ -11,19 +12,10 @@ import { logger } from '@/lib/logger';
 export async function GET() {
   try {
     const metrics = cache.getMetrics();
-    const health = await cache.healthCheck();
+    const healthResult = await fetchMetricTimed(() => cache.healthCheck());
+    const health = healthResult.ok && Boolean(healthResult.value);
 
-    return NextResponse.json({
-      status: health ? 'healthy' : 'degraded',
-      metrics: {
-        hits: metrics.hits,
-        misses: metrics.misses,
-        sets: metrics.sets,
-        errors: metrics.errors,
-        hitRate: metrics.hitRate,
-      },
-      timestamp: new Date().toISOString(),
-    });
+    return NextResponse.json(buildMetricsEnvelope(health, formatCacheMetrics(metrics)));
   } catch (error) {
     logger.error('cache.metrics_failed', {}, error);
     return ErrorHandler.serverError(error);

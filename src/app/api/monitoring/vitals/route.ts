@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { recordVital, recordFunnelEvent } from '@/lib/performance';
 import { ErrorHandler } from '@/lib/error-handler';
+import { normalizeVitalRating } from '@/lib/monitoring-metrics';
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,11 +9,11 @@ export async function POST(request: NextRequest) {
 
     // Web Vitals payload: { name, value, rating?, url?, ts? }
     if (typeof body.name === 'string' && typeof body.value === 'number') {
-      const { name, value, rating, url, ts } = body;
+      const { name, value, url, ts } = body;
       recordVital({
         name,
         value,
-        rating: rating ?? 'unknown',
+        rating: normalizeVitalRating(body.rating),
         url: url ?? '/',
         timestamp: ts ?? Date.now(),
       });
