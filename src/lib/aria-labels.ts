@@ -47,6 +47,22 @@ export const ariaLabels = {
   transactionStatus: 'Transaction status updated',
   errorNotification: 'Error notification',
 
+  // Notification center (#1187)
+  notificationCenter: 'Notifications',
+  notificationPanel: 'Notifications panel',
+  notificationButton: (unreadCount: number) =>
+    `Notifications (${unreadCount} unread)`,
+  notificationUnreadBadge: (count: number) => `${count} unread notifications`,
+  notificationNew: (title: string) => `New notification: ${title}`,
+  notificationsNew: (count: number, titles: string) =>
+    `${count} new notifications: ${titles}`,
+  notificationItem: (title: string, description: string) =>
+    `${title}: ${description}`,
+  notificationRemove: 'Remove notification',
+  notificationMarkAllRead: 'Mark all notifications as read',
+  notificationClearAll: 'Clear all notifications',
+  notificationLiveRegion: 'Notification announcements',
+
   // Charts and graphs (#397)
   analyticsChart: 'Analytics chart showing transaction data',
   fxRateChart: 'Exchange rate chart',

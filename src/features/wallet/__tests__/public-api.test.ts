@@ -5,7 +5,8 @@ describe('Wallet Feature: Public API Boundary', () => {
   describe('Public API exports', () => {
     it('should export WalletModal component', () => {
       expect(walletBarrel).toHaveProperty('WalletModal');
-      expect(typeof walletBarrel.WalletModal).toBe('object');
+      // React components are functions (or forwardRef objects) — accept either
+      expect(['function', 'object']).toContain(typeof walletBarrel.WalletModal);
     });
 
     it('should export useStellarWallet hook', () => {
@@ -25,7 +26,8 @@ describe('Wallet Feature: Public API Boundary', () => {
 
     it('should export WalletProvider context', () => {
       expect(walletBarrel).toHaveProperty('WalletProvider');
-      expect(typeof walletBarrel.WalletProvider).toBe('object');
+      // React Context Providers are functions (or objects with $$typeof)
+      expect(['function', 'object']).toContain(typeof walletBarrel.WalletProvider);
     });
 
     it('should export useWalletContext hook', () => {
@@ -50,29 +52,11 @@ describe('Wallet Feature: Public API Boundary', () => {
       expect(Array.isArray(walletBarrel.WALLET_OPTIONS)).toBe(true);
     });
 
-    it('should export WalletModalProps type', () => {
-      expect(walletBarrel).toHaveProperty('WalletModalProps');
-    });
-
-    it('should export WalletOption type', () => {
-      expect(walletBarrel).toHaveProperty('WalletOption');
-    });
-
-    it('should export WalletContextValue type', () => {
-      expect(walletBarrel).toHaveProperty('WalletContextValue');
-    });
-
-    it('should export WalletState type', () => {
-      expect(walletBarrel).toHaveProperty('WalletState');
-    });
-
-    it('should export WalletSettings type', () => {
-      expect(walletBarrel).toHaveProperty('WalletSettings');
-    });
-
-    it('should export WalletTransactions type', () => {
-      expect(walletBarrel).toHaveProperty('WalletTransactions');
-    });
+    // TypeScript type exports (WalletModalProps, WalletOption, WalletContextValue,
+    // WalletState, WalletSettings, WalletTransactions) are compile-time only.
+    // They are erased by the TypeScript compiler and cannot be checked at runtime.
+    // Their presence is verified by TypeScript compilation succeeding, not by
+    // runtime property checks.
   });
 
   describe('Public API completeness', () => {
@@ -97,17 +81,23 @@ describe('Wallet Feature: Public API Boundary', () => {
       });
     });
 
-    it('should provide all necessary types through barrel', () => {
-      const typeExports = [
-        'WalletModalProps',
-        'WalletOption',
-        'WalletContextValue',
-        'WalletState',
-        'WalletSettings',
-        'WalletTransactions',
+    it('should provide all necessary value exports through barrel', () => {
+      // Only value exports can be checked at runtime.
+      // Type exports (WalletModalProps, WalletOption, etc.) are compile-time only.
+      const valueExports = [
+        'WalletModal',
+        'WalletModalHeader',
+        'WalletModalError',
+        'WalletOptionButton',
+        'WALLET_OPTIONS',
+        'WalletProvider',
+        'useWalletContext',
+        'useStellarWallet',
+        'useWalletFlow',
+        'useWalletTransactions',
       ];
 
-      typeExports.forEach((exportName) => {
+      valueExports.forEach((exportName) => {
         expect(walletBarrel).toHaveProperty(exportName);
       });
     });
@@ -131,27 +121,37 @@ describe('Wallet Feature: Public API Boundary', () => {
     it('should provide context management exports', () => {
       expect(walletBarrel.WalletProvider).toBeDefined();
       expect(walletBarrel.useWalletContext).toBeDefined();
-      expect(walletBarrel.WalletContextValue).toBeDefined();
+      // WalletContextValue is a TypeScript type — only verifiable at compile time
     });
   });
 
   describe('Type exports validation', () => {
-    it('should have type exports available', () => {
+    // TypeScript types are erased at runtime. The authoritative way to validate
+    // that type exports are correct is via `tsc --noEmit`. These tests confirm
+    // that the corresponding value exports (components, hooks) are present,
+    // which gives consumers confidence that the barrel is correctly assembled.
+
+    it('should have all value exports accessible from barrel', () => {
       const exports = Object.keys(walletBarrel);
 
-      // All types should be present
-      expect(exports).toContain('WalletModalProps');
-      expect(exports).toContain('WalletOption');
-      expect(exports).toContain('WalletContextValue');
+      // Value exports that must be present (types won't appear here)
+      expect(exports).toContain('WalletModal');
+      expect(exports).toContain('useWalletContext');
+      expect(exports).toContain('useStellarWallet');
     });
 
-    it('should provide WalletState and WalletSettings types', () => {
-      expect(walletBarrel.WalletState).toBeDefined();
-      expect(walletBarrel.WalletSettings).toBeDefined();
+    it('should provide WalletState and WalletSettings via their hook export', () => {
+      // useStellarWallet returns an object with WalletState/WalletSettings shapes.
+      // At runtime we can verify the hook is exported; types are compile-time only.
+      expect(walletBarrel.useStellarWallet).toBeDefined();
+      expect(typeof walletBarrel.useStellarWallet).toBe('function');
     });
 
-    it('should provide WalletTransactions type for hook', () => {
-      expect(walletBarrel.WalletTransactions).toBeDefined();
+    it('should provide WalletTransactions via its hook export', () => {
+      // useWalletTransactions returns a WalletTransactions-shaped object.
+      // At runtime we verify the hook is exported; the type is compile-time only.
+      expect(walletBarrel.useWalletTransactions).toBeDefined();
+      expect(typeof walletBarrel.useWalletTransactions).toBe('function');
     });
   });
 
