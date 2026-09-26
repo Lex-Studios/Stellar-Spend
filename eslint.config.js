@@ -67,6 +67,14 @@ const BOUNDARY_PATTERNS = [
   // Deep lib module imports
   ...BOUNDARY_MODULES.map(deepLibPattern),
 
+  // features/wallet internals — import from the barrel '@/features/wallet' instead of
+  // reaching into sub-paths such as '@/features/wallet/components/WalletModal'.
+  {
+    group: ['@/features/wallet/**'],
+    message:
+      "Import from '@/features/wallet' barrel instead of a deep path. See src/features/wallet/index.ts.",
+  },
+
   // Deep @shared/* imports bypass the barrel — use @stellar-spend/shared instead
   {
     group: ['@shared/**'],

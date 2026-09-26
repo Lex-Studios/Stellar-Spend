@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
 import { Icon } from '@/components/Icon';
@@ -21,9 +21,51 @@ export function NotificationCenter({
   onClearAll,
 }: NotificationCenterProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  // Tracks newly arrived notification titles to announce via the aria-live region
+  const [announcement, setAnnouncement] = useState<string>('');
+  const prevEventIdsRef = useRef<Set<string>>(new Set());
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Announce new notifications to screen readers via aria-live polite
+  useEffect(() => {
+    const newEvents = events.filter((e) => !prevEventIdsRef.current.has(e.id));
+    if (newEvents.length > 0) {
+      const titles = newEvents.map((e) => e.title).join(', ');
+      if (newEvents.length === 1) {
+        setAnnouncement(`New notification: ${titles}`);
+      } else {
+        setAnnouncement(`${newEvents.length} new notifications: ${titles}`);
+      }
+    }
+    prevEventIdsRef.current = new Set(events.map((e) => e.id));
+  }, [events]);
+
+  // Clear announcement after a short delay so it can fire again on subsequent updates
+  useEffect(() => {
+    if (!announcement) return;
+    const t = setTimeout(() => setAnnouncement(''), 2000);
+    return () => clearTimeout(t);
+  }, [announcement]);
+
+  // Reset focused index whenever the panel opens or the event list changes
+  useEffect(() => {
+    if (!isOpen) {
+      setFocusedIndex(-1);
+    }
+  }, [isOpen]);
+
+  // Focus the correct notification button when focusedIndex changes
+  useEffect(() => {
+    if (!isOpen || focusedIndex < 0) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const buttons = panel.querySelectorAll<HTMLButtonElement>('li button:first-of-type');
+    const target = buttons[focusedIndex];
+    target?.focus();
+  }, [focusedIndex, isOpen]);
 
   // Close panel when clicking outside
   useEffect(() => {
@@ -43,20 +85,54 @@ export function NotificationCenter({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // Handle keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
+  // Handle keyboard navigation: Escape closes, Arrow Up/Down moves focus through items
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
       if (!isOpen) return;
 
       if (event.key === 'Escape') {
         setIsOpen(false);
         buttonRef.current?.focus();
+        return;
       }
-    };
 
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        setFocusedIndex((prev) => Math.min(prev + 1, events.length - 1));
+        return;
+      }
+
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        setFocusedIndex((prev) => {
+          if (prev <= 0) {
+            // Wrap back up to the bell button
+            buttonRef.current?.focus();
+            return -1;
+          }
+          return prev - 1;
+        });
+        return;
+      }
+
+      if (event.key === 'Home') {
+        event.preventDefault();
+        setFocusedIndex(0);
+        return;
+      }
+
+      if (event.key === 'End') {
+        event.preventDefault();
+        setFocusedIndex(events.length - 1);
+      }
+    },
+    [isOpen, events.length],
+  );
+
+  useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [handleKeyDown]);
 
   const handleNotificationClick = (event: NotificationCenterEvent) => {
     if (!event.read) {
@@ -69,11 +145,23 @@ export function NotificationCenter({
   };
 
   const handleTogglePanel = () => {
-    setIsOpen(!isOpen);
+    setIsOpen((prev) => !prev);
   };
 
   return (
     <div className="relative">
+      {/*
+       * aria-live polite region — announces new notifications to screen readers
+       * without interrupting the current reading flow.
+       */}
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announcement}
+      </div>
+
       {/* Bell Button */}
       <button
         ref={buttonRef}

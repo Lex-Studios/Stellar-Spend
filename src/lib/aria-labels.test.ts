@@ -136,6 +136,62 @@ describe('aria-labels.ts', () => {
       });
     });
 
+    describe('Notification center (#1187)', () => {
+      it('should have notificationCenter label', () => {
+        expect(ariaLabels.notificationCenter).toBe('Notifications');
+      });
+
+      it('should have notificationPanel label', () => {
+        expect(ariaLabels.notificationPanel).toBe('Notifications panel');
+      });
+
+      it('should have notificationButton function that includes unread count', () => {
+        const label = ariaLabels.notificationButton(3);
+        expect(label).toBe('Notifications (3 unread)');
+      });
+
+      it('should have notificationButton function with zero unread', () => {
+        const label = ariaLabels.notificationButton(0);
+        expect(label).toBe('Notifications (0 unread)');
+      });
+
+      it('should have notificationUnreadBadge function', () => {
+        const label = ariaLabels.notificationUnreadBadge(5);
+        expect(label).toBe('5 unread notifications');
+      });
+
+      it('should have notificationNew function', () => {
+        const label = ariaLabels.notificationNew('Payment Received');
+        expect(label).toBe('New notification: Payment Received');
+      });
+
+      it('should have notificationsNew function for multiple', () => {
+        const label = ariaLabels.notificationsNew(2, 'Payment Received, Price Alert');
+        expect(label).toBe('2 new notifications: Payment Received, Price Alert');
+      });
+
+      it('should have notificationItem function combining title and description', () => {
+        const label = ariaLabels.notificationItem('Payment Sent', 'Funds transferred successfully');
+        expect(label).toBe('Payment Sent: Funds transferred successfully');
+      });
+
+      it('should have notificationRemove label', () => {
+        expect(ariaLabels.notificationRemove).toBe('Remove notification');
+      });
+
+      it('should have notificationMarkAllRead label', () => {
+        expect(ariaLabels.notificationMarkAllRead).toBe('Mark all notifications as read');
+      });
+
+      it('should have notificationClearAll label', () => {
+        expect(ariaLabels.notificationClearAll).toBe('Clear all notifications');
+      });
+
+      it('should have notificationLiveRegion label', () => {
+        expect(ariaLabels.notificationLiveRegion).toBe('Notification announcements');
+      });
+    });
+
     describe('Charts and graphs', () => {
       it('should have analyticsChart label', () => {
         expect(ariaLabels.analyticsChart).toBe('Analytics chart showing transaction data');

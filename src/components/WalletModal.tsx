@@ -8,5 +8,7 @@
  *   Before: import { WalletModal } from '@/components/WalletModal'
  *   After:  import { WalletModal } from '@/features/wallet'
  */
-export { WalletModal, WALLET_OPTIONS, default } from '@/features/wallet/components/WalletModal';
-export type { WalletModalProps, WalletOption } from '@/features/wallet/components/modal/types';
+export { WalletModal, WALLET_OPTIONS } from '@/features/wallet';
+export type { WalletModalProps, WalletOption } from '@/features/wallet';
+
+export { WalletModal as default } from '@/features/wallet';
