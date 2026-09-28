@@ -45,7 +45,7 @@ vi.mock('@/lib/env', () => ({
   },
 }));
 
-vi.mock('@/lib/rateLimiter', () => ({
+vi.mock('@/lib/rate-limit', () => ({
   buildTxLimiter: { check: () => ({ allowed: true, remaining: 10, reset: Date.now() + 60000 }) },
   quoteLimiter: { check: () => ({ allowed: true, remaining: 10, reset: Date.now() + 60000 }) },
   getClientIp: () => '127.0.0.1',

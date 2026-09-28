@@ -23,7 +23,7 @@ import {
   getRateLimitHeaders,
   applyRateLimit,
   type RateLimitConfig,
-} from '@/lib/rateLimiter';
+} from '@/lib/rate-limit';
 import { NextRequest } from 'next/server';
 
 // ── In-memory cache mock ──────────────────────────────────────────────────────

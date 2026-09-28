@@ -12,7 +12,7 @@ import {
   getRateLimitKey,
   getRateLimitHeaders,
   applyRateLimit,
-} from '@/lib/rateLimiter';
+} from '@/lib/rate-limit';
 
 // Mock cache store for deterministic testing
 const cacheStore = new Map<string, string>();
