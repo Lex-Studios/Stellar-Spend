@@ -480,3 +480,6 @@ bash scripts/verify-tsconfig.sh
 
 <!-- handsoff-issue-1167 -->
 - #1167: [Frontend] Modularize `form-card` into field-level components
+
+<!-- handsoff-issue-1168 -->
+- #1168: [Frontend] Refactor `notification-center` into list/item/badge components
