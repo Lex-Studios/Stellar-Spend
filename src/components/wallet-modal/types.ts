@@ -17,3 +17,20 @@ export interface WalletOption {
   icon: ReactNode;
   installUrl: string;
 }
+
+export interface WalletListProps {
+  wallets: WalletOption[];
+  isConnecting: boolean;
+  connectingWallet: WalletType | null;
+  onConnect: (walletType: WalletType) => void;
+}
+
+export interface WalletConnectStatusProps {
+  isConnecting: boolean;
+  connectingWallet: WalletType | null;
+  wallets: WalletOption[];
+}
+
+export interface WalletErrorProps {
+  error: string | null;
+}
