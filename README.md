@@ -475,3 +475,8 @@ bash scripts/verify-tsconfig.sh
 
 
 .
+
+## Handsoff notes
+
+<!-- handsoff-issue-1167 -->
+- #1167: [Frontend] Modularize `form-card` into field-level components
