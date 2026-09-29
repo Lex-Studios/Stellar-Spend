@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { env } from '@/lib/env';
-import { get, set, isFresh } from '@/lib/polling/status-cache';
-import { ErrorHandler } from '@/lib/error-handler';
+import { get, set, isFresh } from '@/lib/polling';
+import { ErrorHandler, ApiError } from '@/lib/error-handler';
 
 export const maxDuration = 10;
 
@@ -45,9 +45,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ orderId
         });
       }
 
-      return NextResponse.json(
-        { error: errorMessage },
-        { status: res.status }
+      return ErrorHandler.handle(
+        ApiError.externalService('Paycrest', errorMessage),
+        res.status,
       );
     }
 
