@@ -20,5 +20,6 @@
     "**/__tests__/**"
   ],
   "ignoreDependencies": ["@storybook/*"],
-  "vitest": false
+  "vitest": false,
+  "ignoreExportsUsedInFile": true
 }
