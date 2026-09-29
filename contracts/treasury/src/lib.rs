@@ -4,7 +4,7 @@
 //! records the treasury address that collected fees are routed to.
 //!
 //! All errors use the canonical [`ContractError`] from `stellar-spend-shared`; admin
-//! checks delegate to [`stellar_spend_shared::auth::assert_is_admin`].
+//! checks delegate to [`stellar_spend_shared::auth::require_admin`].
 //!
 //! # Dead code removed (issue #815)
 //!
@@ -33,6 +33,15 @@
 //! returns [`ContractError::NotInitialized`] instead of inventing an address to send
 //! fees to.
 //!
+//! # Fee invariants
+//!
+//! - `fee_for_amount(amount)` is always determined by the highest stored tier
+//!   whose threshold is less than or equal to `amount`.
+//! - A valid schedule is monotonic in threshold order: increasing `amount` must not
+//!   decrease the selected rate for a fixed schedule.
+//! - Fees are non-negative and never exceed the configured basis-point cap for a
+//!   tier.
+//!
 //! # Storage footprint reduction (issue #811)
 //!
 //! ## Before (schema v2)
@@ -59,11 +68,12 @@
 //! migration casts all existing keys via `i128 as u64` (always in range post-validation).
 
 #![no_std]
-mod balance;
+pub mod balance;
 
 use soroban_sdk::{
     contract, contractimpl, contractmeta, contracttype, symbol_short, Address, Env, Map, String, Vec,
 };
+use balance::BalanceManager;
 use stellar_spend_shared::{
     errors::ContractError,
     validation::{
@@ -71,7 +81,6 @@ use stellar_spend_shared::{
         require_positive_amount,
     },
 };
-use balance::BalanceManager;
 
 contractmeta!(key = "version", val = "1.0.0");
 contractmeta!(key = "contract", val = "stellar-spend-treasury");
@@ -88,14 +97,6 @@ pub const MAX_SINGLE_FEE_BP: u32 = 500;
 /// Upper bound on stored tiers, keeping [`TreasuryContract::fee_for_amount`]'s linear
 /// scan within a predictable instruction budget.
 pub const MAX_FEE_TIERS: u32 = 16;
-
-/// Treasury invariants:
-/// - `fee_for_amount(amount)` is always determined by the highest stored tier
-///   whose threshold is less than or equal to `amount`.
-/// - A valid schedule is monotonic in threshold order: increasing `amount` must not
-///   decrease the selected rate for a fixed schedule.
-/// - Fees are non-negative and never exceed the configured basis-point cap for a
-///   tier.
 
 /// Instance TTL extension (~30 days) applied on state-changing calls.
 pub const INSTANCE_TTL_EXTEND_TO: u32 = 518_400;
@@ -116,8 +117,11 @@ pub enum DataKey {
     /// Running total of fees collected. Added in schema v2.
     TotalCollected,
     Schema,
+    /// [`TreasuryState`] ledger maintained by `deposit`/`withdraw`/`reserve`.
+    State,
 }
 
+/// Balances held by the treasury ledger (issue #988).
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TreasuryState {
@@ -140,12 +144,7 @@ impl TreasuryContract {
         if state.is_some() {
             return Err(ContractError::AlreadyInitialized);
         }
-
-        let initial_state = TreasuryState {
-            total_balance: 0,
-            reserved: 0,
-            available: 0,
-        };
+        admin.require_auth();
 
         let mut schedule: Map<u64, u32> = Map::new(&env);
         schedule.set(0u64, 50);
@@ -160,6 +159,8 @@ impl TreasuryContract {
 
         Self::bump_instance_ttl(&env);
 
+        env.events()
+            .publish((symbol_short!("init"),), (admin, treasury));
         Ok(())
     }
 
@@ -339,8 +340,9 @@ impl TreasuryContract {
         Self::load_schedule(&env)
     }
 
-    /// Get treasury state
-    pub fn get_state(env: Env) -> Result<TreasuryState, ContractError> {
+    /// The address collected fees are routed to.
+    pub fn get_treasury(env: Env) -> Result<Address, ContractError> {
+        Self::require_current_schema(&env)?;
         env.storage()
             .instance()
             .get(&String::from_str(&env, "state"))

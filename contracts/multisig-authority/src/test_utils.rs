@@ -2,7 +2,7 @@
 
 use soroban_sdk::{
     testutils::{Address as _, Ledger as _},
-    Address, Env, Map, String, Symbol, Vec,
+    vec, Address, Env, Map, String, Symbol, Vec,
 };
 
 use crate::{

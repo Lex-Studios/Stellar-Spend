@@ -1,4 +1,4 @@
-//! Dispute / timeout-configuration logic for the escrow contract.
+//! Refund-timeout configuration for the escrow contract.
 //!
 //! Extracted from `lib.rs` as part of #812 (modularisation). Contains the
 //! `set_timeout` (admin) and `can_refund` (read-only) entrypoints that relate to

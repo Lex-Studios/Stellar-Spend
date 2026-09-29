@@ -96,6 +96,39 @@ pub enum DataKey {
     Disputes,
 }
 
+/// Deposit record (schema v2).
+///
+/// v1 records carried the same fields minus `fee_bps`; [`EscrowContract::migrate`]
+/// widens stored entries in place and defaults the fee to `0`.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct EscrowDeposit {
+    pub depositor: Address,
+    pub amount: i128,
+    pub bridge_address: Address,
+    pub timestamp: u64,
+    pub timeout_ledger: u32,
+    pub released: bool,
+    pub refunded: bool,
+    pub fee_bps: u32,
+}
+
+/// Deposit record as written by schema v1 (no `fee_bps`).
+///
+/// Retained purely so [`EscrowContract::migrate`] can decode entries written by an
+/// older build; current code never writes this shape.
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct EscrowDepositV1 {
+    pub depositor: Address,
+    pub amount: i128,
+    pub bridge_address: Address,
+    pub timestamp: u64,
+    pub timeout_ledger: u32,
+    pub released: bool,
+    pub refunded: bool,
+}
+
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum EscrowStatus {
@@ -222,6 +255,17 @@ impl EscrowContract {
     }
 
     // ── Upgrade surface (issue #817) ──────────────────────────────────────────
+
+    /// Report the stored schema version.
+    ///
+    /// Skips `require_current_schema` on purpose: a deployment that is still on an
+    /// older layout must be able to say so, otherwise `migrate` cannot be targeted.
+    pub fn schema_version(env: Env) -> Result<u32, ContractError> {
+        env.storage()
+            .instance()
+            .get(&DataKey::Schema)
+            .ok_or(ContractError::NotInitialized)
+    }
 
     /// Replace the contract WASM. Authority only.
     ///

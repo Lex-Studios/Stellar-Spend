@@ -8,51 +8,38 @@ use stellar_spend_shared::{
 
 use crate::{DataKey, SCHEMA_VERSION};
 
-/// Fee calculation handler
-pub struct Calculator;
-
-impl Calculator {
-    /// Fee for `amount` at an explicit rate.
-    pub fn calculate_fee(env: Env, amount: i128, fee_rate: u32) -> Result<i128, ContractError> {
-        Self::require_current_schema(&env)?;
-        if Self::paused_flag(&env) {
-            return Err(ContractError::Paused);
-        }
-        require_positive_amount(amount)?;
-        require_basis_points(fee_rate, MAX_BASIS_POINTS)?;
-
-        basis_points_of(amount, fee_rate)
+/// Fee for `amount` at an explicit rate.
+pub fn calculate_fee(env: Env, amount: i128, fee_rate: u32) -> Result<i128, ContractError> {
+    require_current_schema(&env)?;
+    if paused_flag(&env) {
+        return Err(ContractError::Paused);
     }
+    require_positive_amount(amount)?;
+    require_basis_points(fee_rate, MAX_BASIS_POINTS)?;
 
-    /// Fee for `amount` at the configured default rate.
-    pub fn calculate_default_fee(env: Env, amount: i128) -> Result<i128, ContractError> {
-        let rate = Self::get_default_rate(env.clone())?;
-        Self::calculate_fee(env, amount, rate)
-    }
+    basis_points_of(amount, fee_rate)
+}
 
-    // ── Internal helpers ──────────────────────────────────────────────────────
+/// Fee for `amount` at the configured default rate.
+pub fn calculate_default_fee(env: Env, amount: i128) -> Result<i128, ContractError> {
+    let rate = crate::admin::default_rate(env.clone())?;
+    calculate_fee(env, amount, rate)
+}
 
-    fn require_current_schema(env: &Env) -> Result<(), ContractError> {
-        use stellar_spend_shared::validation::check_schema_version;
+// ── Internal helpers ──────────────────────────────────────────────────────
 
-        check_schema_version(
-            env.storage().instance().get(&DataKey::Schema),
-            SCHEMA_VERSION,
-        )
-    }
+fn require_current_schema(env: &Env) -> Result<(), ContractError> {
+    use stellar_spend_shared::validation::check_schema_version;
 
-    fn paused_flag(env: &Env) -> bool {
-        env.storage()
-            .instance()
-            .get(&DataKey::Paused)
-            .unwrap_or(false)
-    }
+    check_schema_version(
+        env.storage().instance().get(&DataKey::Schema),
+        SCHEMA_VERSION,
+    )
+}
 
-    fn get_default_rate(env: Env) -> Result<u32, ContractError> {
-        Self::require_current_schema(&env)?;
-        env.storage()
-            .instance()
-            .get(&DataKey::DefaultRate)
-            .ok_or(ContractError::NotInitialized)
-    }
+fn paused_flag(env: &Env) -> bool {
+    env.storage()
+        .instance()
+        .get(&DataKey::Paused)
+        .unwrap_or(false)
 }

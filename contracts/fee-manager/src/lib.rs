@@ -75,6 +75,7 @@ pub struct FeeManagerContract;
 impl FeeManagerContract {
     /// Initialise with an admin and a starting fee rate.
     pub fn init(env: Env, admin: Address, default_fee_bp: u32) -> Result<(), ContractError> {
+        admin::init(env, admin, default_fee_bp)
         admin::Admin::init(env, admin, default_fee_bp)
     }
 
@@ -85,11 +86,13 @@ impl FeeManagerContract {
 
     /// Trip the circuit breaker. Admin only.
     pub fn pause(env: Env, reason: String) -> Result<(), ContractError> {
+        admin::pause(env, reason)
         admin::Admin::pause(env, reason)
     }
 
     /// Reset the circuit breaker. Admin only.
     pub fn unpause(env: Env) -> Result<(), ContractError> {
+        admin::unpause(env)
         admin::Admin::unpause(env)
     }
 

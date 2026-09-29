@@ -645,8 +645,6 @@ fn collect_fee_batch_reports_overflow_across_items() {
 
 #[test]
 fn collect_fee_batch_emits_a_single_event_with_summary() {
-    use soroban_sdk::symbol_short;
-
     let t = TreasuryTest::setup();
     let amounts = soroban_sdk::vec![&t.env, 1_000_000, 5_000_000];
     let recipient = Address::generate(&t.env);

@@ -1,7 +1,7 @@
 //! Multisig-authority unit tests.
 //!
 //! All setup comes from [`crate::test_utils`] (issue #818).
-use soroban_sdk::{testutils::Address as _, Address, Vec};
+use soroban_sdk::{testutils::Address as _, vec, Address, Vec};
 use stellar_spend_shared::errors::ContractError;
 
 use crate::test_utils::{

@@ -25,12 +25,12 @@ impl AdminAuth {
     }
 
     pub fn require_admin_or_role(
-        env: &Env,
-        admin: &Address,
+        _env: &Env,
+        _admin: &Address,
         caller: &Address,
         role_check: fn(&Address) -> bool,
     ) -> Result<(), AuthError> {
-        if caller == admin {
+        if caller == _admin {
             caller.require_auth();
             return Ok(());
         }
@@ -42,7 +42,7 @@ impl AdminAuth {
     }
 
     pub fn require_role(
-        env: &Env,
+        _env: &Env,
         caller: &Address,
         role_check: fn(&Address) -> bool,
     ) -> Result<(), AuthError> {
