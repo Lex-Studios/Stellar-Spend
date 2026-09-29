@@ -1,137 +1,88 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  DEFAULT_FILTERS,
-  FILTERS_STORAGE_KEY,
-  activeFilterCount,
-  filtersFromSearchParams,
-  filtersToSearchParams,
-  fromServiceFilters,
-  loadStoredFilters,
-  toServiceFilters,
-  type Filters,
-  type SortField,
-} from '@/app/history/filters';
-import { FILTER_PRESETS, SavedViewsStorage, type SavedView } from '@/lib/saved-views';
-import type { SearchFilters } from '@/lib/transaction-search';
+import { useMemo, useState } from 'react';
+import type { Transaction } from '@/lib/transaction-storage';
+
+export type HistorySortOrder = 'newest' | 'oldest';
+
+export interface HistoryFilters {
+  /** Free-text search across id, note, and type. */
+  search: string;
+  /** Restrict to a single transaction type, or `null` for all. */
+  type: Transaction['type'] | null;
+  /** Inclusive lower bound on `timestamp` (ms), or `null` for unbounded. */
+  from: number | null;
+  /** Inclusive upper bound on `timestamp` (ms), or `null` for unbounded. */
+  to: number | null;
+  /** Sort direction by `timestamp`. */
+  sort: HistorySortOrder;
+}
+
+export const DEFAULT_HISTORY_FILTERS: HistoryFilters = {
+  search: '',
+  type: null,
+  from: null,
+  to: null,
+  sort: 'newest',
+};
+
+/**
+ * Pure filter + sort step, extracted so it can be reused (and unit-tested)
+ * independently of any React state or data fetching.
+ */
+export function applyHistoryFilters(
+  transactions: Transaction[],
+  filters: HistoryFilters,
+): Transaction[] {
+  const query = filters.search.trim().toLowerCase();
+
+  const filtered = transactions.filter((tx) => {
+    if (filters.type && tx.type !== filters.type) return false;
+    if (filters.from !== null && tx.timestamp < filters.from) return false;
+    if (filters.to !== null && tx.timestamp > filters.to) return false;
+    if (query) {
+      const haystack = `${tx.id} ${tx.note ?? ''} ${tx.type}`.toLowerCase();
+      if (!haystack.includes(query)) return false;
+    }
+    return true;
+  });
+
+  return filtered.sort((a, b) =>
+    filters.sort === 'oldest' ? a.timestamp - b.timestamp : b.timestamp - a.timestamp,
+  );
+}
 
 export interface UseHistoryFiltersResult {
-  filters: Filters;
-  filtersLoaded: boolean;
-  filterCount: number;
-  savedViews: SavedView[];
-  setFilters: React.Dispatch<React.SetStateAction<Filters>>;
-  set: <K extends keyof Filters>(key: K, value: Filters[K]) => void;
-  clear: () => void;
-  toggleSort: (field: SortField) => void;
-  applyPreset: (presetId: string) => void;
-  applySavedView: (viewId: string) => void;
-  saveCurrentView: (name: string) => void;
-  deleteSavedView: (viewId: string) => void;
+  filters: HistoryFilters;
+  /** Replace the whole filter set. */
+  setFilters: (filters: HistoryFilters) => void;
+  /** Patch a subset of the filter set. */
+  updateFilters: (updates: Partial<HistoryFilters>) => void;
+  /** Reset back to {@link DEFAULT_HISTORY_FILTERS}. */
+  resetFilters: () => void;
+  /** The input list with filters + sort applied. */
+  filtered: Transaction[];
 }
 
 /**
- * Owns the history view's filter state: hydration from URL/localStorage,
- * persistence back to both, sorting, and saved-view/preset management.
+ * Reusable filter/sort concern for transaction history. Keeps filter state and
+ * derives the filtered list, leaving fetching and pagination to other pieces.
  */
-export function useHistoryFilters(): UseHistoryFiltersResult {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
-  const [filtersLoaded, setFiltersLoaded] = useState(false);
-  const [savedViews, setSavedViews] = useState<SavedView[]>([]);
+export function useHistoryFilters(
+  transactions: Transaction[],
+  initialFilters: Partial<HistoryFilters> = {},
+): UseHistoryFiltersResult {
+  const [filters, setFilters] = useState<HistoryFilters>({
+    ...DEFAULT_HISTORY_FILTERS,
+    ...initialFilters,
+  });
 
-  // Hydrate on mount: URL params take precedence over localStorage so a shared
-  // link reproduces the same view.
-  useEffect(() => {
-    const fromUrl = filtersFromSearchParams(searchParams);
-    setFilters({ ...loadStoredFilters(), ...fromUrl } as Filters);
-    setFiltersLoaded(true);
-    setSavedViews(SavedViewsStorage.list());
-    // Only run on mount; the URL is derived from filters afterwards.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const updateFilters = (updates: Partial<HistoryFilters>) =>
+    setFilters((prev) => ({ ...prev, ...updates }));
 
-  // Persist filters (after hydration) and mirror them into the URL.
-  useEffect(() => {
-    if (!filtersLoaded) return;
-    try {
-      localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters));
-    } catch {
-      // localStorage may be unavailable (quota, private mode); fail silently.
-    }
-    const qs = filtersToSearchParams(filters).toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [filters, filtersLoaded, pathname, router]);
+  const resetFilters = () => setFilters({ ...DEFAULT_HISTORY_FILTERS, ...initialFilters });
 
-  const set = useCallback(
-    <K extends keyof Filters>(key: K, value: Filters[K]) =>
-      setFilters((prev) => ({ ...prev, [key]: value })),
-    [],
-  );
+  const filtered = useMemo(() => applyHistoryFilters(transactions, filters), [transactions, filters]);
 
-  const clear = useCallback(() => setFilters(DEFAULT_FILTERS), []);
-
-  const toggleSort = useCallback(
-    (field: SortField) =>
-      setFilters((prev) => ({
-        ...prev,
-        sortField: field,
-        sortDir: prev.sortField === field && prev.sortDir === 'desc' ? 'asc' : 'desc',
-      })),
-    [],
-  );
-
-  const applyServiceFilters = useCallback((next: SearchFilters) => {
-    setFilters((prev) => fromServiceFilters(next, prev));
-  }, []);
-
-  const applyPreset = useCallback(
-    (presetId: string) => {
-      const preset = FILTER_PRESETS.find((p) => p.id === presetId);
-      if (preset) applyServiceFilters(preset.filters);
-    },
-    [applyServiceFilters],
-  );
-
-  const applySavedView = useCallback(
-    (viewId: string) => {
-      const view = savedViews.find((v) => v.id === viewId);
-      if (view) applyServiceFilters(view.filters);
-    },
-    [savedViews, applyServiceFilters],
-  );
-
-  const saveCurrentView = useCallback(
-    (name: string) => {
-      const trimmed = name.trim();
-      if (!trimmed) return;
-      SavedViewsStorage.save(trimmed, toServiceFilters(filters));
-      setSavedViews(SavedViewsStorage.list());
-    },
-    [filters],
-  );
-
-  const deleteSavedView = useCallback((viewId: string) => {
-    SavedViewsStorage.remove(viewId);
-    setSavedViews(SavedViewsStorage.list());
-  }, []);
-
-  return {
-    filters,
-    filtersLoaded,
-    filterCount: activeFilterCount(filters),
-    savedViews,
-    setFilters,
-    set,
-    clear,
-    toggleSort,
-    applyPreset,
-    applySavedView,
-    saveCurrentView,
-    deleteSavedView,
-  };
+  return { filters, setFilters, updateFilters, resetFilters, filtered };
 }
