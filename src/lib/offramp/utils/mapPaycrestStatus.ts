@@ -1,4 +1,4 @@
-import type { PayoutStatus } from '@/lib/transaction-status';
+import type { PayoutStatus } from '@/lib/transactions';
 
 export function mapPaycrestStatus(eventType: string): PayoutStatus | null {
   switch (eventType) {

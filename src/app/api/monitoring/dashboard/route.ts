@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDashboardMetrics, recordUptimeCheck } from '@/lib/monitoring';
 import { getTransactionQueue } from '@/lib/priority-queue';
-import { getTransactionAnalytics } from '@/lib/transaction-analytics';
+import { getTransactionAnalytics } from '@/lib/transactions';
 import { getApiMetrics, getDbMetrics, getVitalsMetrics, getPerfAlerts } from '@/lib/performance';
 import { withApiErrorHandling } from '@/lib/error-handler';
 import { fetchMetricTimed } from '@/lib/monitoring-metrics';

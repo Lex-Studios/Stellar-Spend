@@ -9,7 +9,7 @@ import { Header } from '@/components/Header';
 import { TransactionTableSkeleton } from '@/components/skeletons';
 import { AsyncBoundary, ListErrorState } from '@/components/AsyncBoundary';
 import { InsuranceClaimForm } from '@/components/InsuranceClaimForm';
-import { TransactionSearchService } from '@/lib/transaction-search';
+import { TransactionSearchService } from '@/lib/transactions';
 import { applyFilters } from './filters';
 import { HistoryPageHeader, ConnectWalletPrompt, HistoryResults } from './components';
 

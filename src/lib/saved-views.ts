@@ -1,4 +1,4 @@
-import type { SearchFilters } from '@/lib/transaction-search';
+import type { SearchFilters } from '@/lib/transactions';
 
 export interface SavedView {
   id: string;

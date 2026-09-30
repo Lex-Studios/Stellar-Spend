@@ -1,4 +1,4 @@
-import type { Transaction } from '@/lib/transaction-storage';
+import type { Transaction } from './types';
 
 export interface SearchFilters {
   query?: string;

@@ -3,7 +3,7 @@
  * Implements last-write-wins strategy with audit trail
  */
 
-import type { Transaction } from './transaction-storage';
+import type { Transaction } from './types';
 
 export interface MergeResult {
   merged: Transaction[];

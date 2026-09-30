@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mergeTransactionHistories, findDifferences } from '../transaction-merge';
+import { mergeTransactionHistories, findDifferences } from '../transactions/transaction-merge';
 import type { Transaction } from '../transaction-storage';
 
 const createMockTransaction = (overrides?: Partial<Transaction>): Transaction => ({
