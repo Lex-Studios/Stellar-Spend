@@ -15,6 +15,8 @@ export interface UseStepWizardReturn {
   isFirst: boolean;
   /** True when on the last step. */
   isLast: boolean;
+  /** True when the wizard has reached the last step. */
+  isComplete: boolean;
 }
 
 /**
@@ -56,5 +58,6 @@ export function useStepWizard(
     back,
     isFirst: step === 1,
     isLast: step === totalSteps,
+    isComplete: step === totalSteps,
   };
 }

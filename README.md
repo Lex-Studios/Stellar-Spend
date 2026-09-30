@@ -478,5 +478,5 @@ bash scripts/verify-tsconfig.sh
 
 ## Handsoff notes
 
-<!-- handsoff-issue-1172 -->
-- #1172: [Frontend] Audit `design-system` components for prop API consistency
+<!-- handsoff-issue-1176 -->
+- #1176: [Frontend] Consolidate duplicate styling in `components/ui` via design tokens
