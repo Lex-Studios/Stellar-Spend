@@ -1,6 +1,7 @@
 'use client';
 
 import { useReducer, useCallback, useContext, createContext, ReactNode } from 'react';
+import { useStepWizard } from './useStepWizard';
 
 export type KYCStatus = 'unverified' | 'pending' | 'approved' | 'rejected';
 export type LimitTier = 'tier1' | 'tier2' | 'tier3';

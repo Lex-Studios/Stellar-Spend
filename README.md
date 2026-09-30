@@ -478,11 +478,5 @@ bash scripts/verify-tsconfig.sh
 
 ## Handsoff notes
 
-<!-- handsoff-issue-1167 -->
-- #1167: [Frontend] Modularize `form-card` into field-level components
-
-<!-- handsoff-issue-1168 -->
-- #1168: [Frontend] Refactor `notification-center` into list/item/badge components
-
-<!-- handsoff-issue-1169 -->
-- #1169: [Frontend] Extract `right-panel` into container + presentational components
+<!-- handsoff-issue-1176 -->
+- #1176: [Frontend] Consolidate duplicate styling in `components/ui` via design tokens
