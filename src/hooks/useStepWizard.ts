@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-export type WizardStep = 1 | 2 | 3;
+export type WizardStep = number;
 
 export interface UseStepWizardReturn {
   /** Current active step (1-indexed). */
@@ -44,11 +44,11 @@ export function useStepWizard(
   );
 
   const next = useCallback(() => {
-    setStep((s) => (s < totalSteps ? ((s + 1) as WizardStep) : s));
+    setStep((s) => (s < totalSteps ? s + 1 : s));
   }, [totalSteps]);
 
   const back = useCallback(() => {
-    setStep((s) => (s > 1 ? ((s - 1) as WizardStep) : s));
+    setStep((s) => (s > 1 ? s - 1 : s));
   }, []);
 
   return {
