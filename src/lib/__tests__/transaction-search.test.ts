@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TransactionSearchService } from '../transaction-search';
+import { TransactionSearchService } from '../transactions/transaction-search';
 import type { Transaction } from '../transaction-storage';
 
 const createMockTransaction = (overrides?: Partial<Transaction>): Transaction => ({

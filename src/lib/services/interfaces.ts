@@ -3,7 +3,7 @@
  * Each interface mirrors the public API of its corresponding service class.
  */
 
-import type { PayoutStatus as CanonicalPayoutStatus } from '@/lib/transaction-status';
+import type { PayoutStatus as CanonicalPayoutStatus } from '@/lib/transactions';
 
 export interface IQuoteService {
   getQuote(request: {

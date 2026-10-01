@@ -10,7 +10,7 @@ import { pool } from '@/lib/db';
 import {
   buildTransactionAnalyticsReport,
   getTransactionAnalytics,
-} from '@/lib/transaction-analytics';
+} from '@/lib/transactions';
 
 describe('buildTransactionAnalyticsReport', () => {
   it('calculates transaction rates, timing, fee trends, and daily reports', () => {

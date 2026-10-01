@@ -1,5 +1,5 @@
 import type { Transaction } from '@/lib/transaction-storage';
-import type { TransactionStatus, BridgeStatus, PayoutStatus } from '@/lib/transaction-status';
+import type { TransactionStatus, BridgeStatus, PayoutStatus } from '@/lib/transactions';
 import { getDefaultRng, type Rng } from './rng';
 
 // ── Stellar / Base address helpers ───────────────────────────────────────────

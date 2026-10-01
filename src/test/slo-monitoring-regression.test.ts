@@ -77,7 +77,7 @@ vi.mock('@/lib/priority-queue', () => ({
   getTransactionQueue: mockGetTransactionQueue,
 }));
 
-vi.mock('@/lib/transaction-analytics', () => ({
+vi.mock('@/lib/transactions', () => ({
   getTransactionAnalytics: mockGetTransactionAnalytics,
 }));
 
