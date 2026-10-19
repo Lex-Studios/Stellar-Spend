@@ -8,12 +8,7 @@ export interface ResolvedFieldProps {
   placeholder?: string;
 }
 
-export function ResolvedField({
-  label,
-  value,
-  loading,
-  placeholder = '—',
-}: ResolvedFieldProps) {
+export function ResolvedField({ label, value, loading, placeholder = '—' }: ResolvedFieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">{label}</span>

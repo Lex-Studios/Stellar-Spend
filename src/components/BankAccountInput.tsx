@@ -45,7 +45,11 @@ export function BankField({ type, value, onChange, label, placeholder, disabled 
   const showError = touched && !result.valid;
   const showSuccess = touched && result.valid && value.trim().length > 0;
 
-  const borderColorClass = showError ? 'border-error' : showSuccess ? 'border-success' : 'border-line';
+  const borderColorClass = showError
+    ? 'border-error'
+    : showSuccess
+      ? 'border-success'
+      : 'border-line';
 
   return (
     <div className="flex flex-col gap-1.5">

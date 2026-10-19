@@ -1,4 +1,4 @@
-import type { Wallet } from "./types";
+import type { Wallet } from './types';
 
 export interface WalletListProps {
   wallets: Wallet[];
@@ -7,12 +7,7 @@ export interface WalletListProps {
   disabled?: boolean;
 }
 
-export function WalletList({
-  wallets,
-  onSelect,
-  selectedId,
-  disabled = false,
-}: WalletListProps) {
+export function WalletList({ wallets, onSelect, selectedId, disabled = false }: WalletListProps) {
   if (wallets.length === 0) {
     return <p className="wallet-list__empty">No wallets available.</p>;
   }
@@ -29,19 +24,11 @@ export function WalletList({
             aria-pressed={selectedId === wallet.id}
           >
             {wallet.icon ? (
-              <img
-                className="wallet-list__icon"
-                src={wallet.icon}
-                alt=""
-                width={24}
-                height={24}
-              />
+              <img className="wallet-list__icon" src={wallet.icon} alt="" width={24} height={24} />
             ) : null}
             <span className="wallet-list__name">{wallet.name}</span>
             {wallet.description ? (
-              <span className="wallet-list__description">
-                {wallet.description}
-              </span>
+              <span className="wallet-list__description">{wallet.description}</span>
             ) : null}
           </button>
         </li>

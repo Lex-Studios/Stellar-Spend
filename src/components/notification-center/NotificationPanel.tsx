@@ -18,14 +18,7 @@ export interface NotificationPanelProps {
 
 export const NotificationPanel = forwardRef<HTMLDivElement, NotificationPanelProps>(
   function NotificationPanel(
-    {
-      events,
-      loading,
-      onNotificationClick,
-      onMarkAllAsRead,
-      onRemoveEvent,
-      onClearAll,
-    },
+    { events, loading, onNotificationClick, onMarkAllAsRead, onRemoveEvent, onClearAll },
     ref,
   ) {
     return (
@@ -66,9 +59,7 @@ export const NotificationPanel = forwardRef<HTMLDivElement, NotificationPanelPro
               <ListEmptyState
                 title="No notifications yet"
                 description="Stay tuned for updates on your transactions"
-                icon={
-                  <Icon name="bell" size={32} strokeWidth={1.5} />
-                }
+                icon={<Icon name="bell" size={32} strokeWidth={1.5} />}
               />
             }
           >

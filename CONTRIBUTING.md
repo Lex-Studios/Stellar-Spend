@@ -56,6 +56,7 @@ npm run dev
 ### Run checks before committing
 
 ### Creating Scratch Files
+
 ```bash
 npm run lint             # ESLint
 npm run format:check     # Prettier
@@ -113,6 +114,7 @@ npx husky add .husky/pre-commit "npm run lint && npm run type:check && npm run f
 ```
 
 The pre-commit hooks run:
+
 1. `npm run lint` — ESLint checks
 2. `npm run type:check` — TypeScript type-checking (`tsc --noEmit`)
 3. `npm run format:check` — Prettier formatting check
@@ -514,10 +516,10 @@ Stellar-Spend uses a two-tier dependency versioning strategy to balance security
 
 The following packages **must** use exact version strings (no `^` or `~`) in `package.json`:
 
-| Package | Reason |
-|---|---|
-| `react` | Major/minor bumps require coordinated changes; silent upgrades cause hydration mismatches |
-| `react-dom` | Must always match `react` exactly |
+| Package      | Reason                                                                                                                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `react`      | Major/minor bumps require coordinated changes; silent upgrades cause hydration mismatches                                 |
+| `react-dom`  | Must always match `react` exactly                                                                                         |
 | `typescript` | Compiler version is a build contract — drift between developer and CI compiler versions causes false-positive type errors |
 
 If you need to update a hard-pinned dependency, open a dedicated PR with a changelog entry explaining the reason and test coverage for any API changes.

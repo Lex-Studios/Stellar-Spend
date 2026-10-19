@@ -29,10 +29,10 @@ async function initializeAllbridgeSDK(): Promise<AllbridgeSdk> {
     });
 
     return sdk;
-    } catch (error) {
-      logger.error('allbridge.sdk_init_failed', {}, error);
-      throw error;
-    }
+  } catch (error) {
+    logger.error('allbridge.sdk_init_failed', {}, error);
+    throw error;
+  }
 }
 
 /**

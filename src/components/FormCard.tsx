@@ -26,12 +26,7 @@ import { bpClasses } from '@/lib/breakpoints';
 export * from './form-card/types';
 
 export function FormCard(props: FormCardProps) {
-  const {
-    isConnecting,
-    isConnected,
-    onConnect,
-    isInitialLoading,
-  } = props;
+  const { isConnecting, isConnected, onConnect, isInitialLoading } = props;
 
   const { rate: liveRate, flash: rateFlash } = useFxRate();
 
@@ -177,7 +172,11 @@ export function FormCard(props: FormCardProps) {
         />
 
         {verifyError && (
-          <span role="alert" data-testid="error-message" className="text-[10px] text-red-400 tracking-wide">
+          <span
+            role="alert"
+            data-testid="error-message"
+            className="text-[10px] text-red-400 tracking-wide"
+          >
             {verifyError}
           </span>
         )}

@@ -36,10 +36,7 @@ export function CorridorList({ corridors }: CorridorListProps) {
                 Last tx: {formatTime(corridor.lastTransaction)}
               </span>
               <span
-                className={cn(
-                  'text-xs px-2 py-1 rounded border',
-                  getStatusColor(corridor.status),
-                )}
+                className={cn('text-xs px-2 py-1 rounded border', getStatusColor(corridor.status))}
               >
                 {getStatusText(corridor.status)}
               </span>

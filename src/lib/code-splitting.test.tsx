@@ -9,11 +9,10 @@ import { dynamicComponent, lazyLoadModule, preloadModule } from './code-splittin
 describe('Code Splitting Utilities (#1115)', () => {
   describe('dynamicComponent', () => {
     it('creates a dynamic component wrapper', () => {
-      const importFn = vi.fn(
-        () =>
-          Promise.resolve({
-            default: () => <div>Test Component</div>,
-          }),
+      const importFn = vi.fn(() =>
+        Promise.resolve({
+          default: () => <div>Test Component</div>,
+        }),
       );
 
       const component = dynamicComponent(importFn);
@@ -21,11 +20,10 @@ describe('Code Splitting Utilities (#1115)', () => {
     });
 
     it('uses default loading state when none provided', async () => {
-      const importFn = vi.fn(
-        () =>
-          Promise.resolve({
-            default: () => <div>Test Component</div>,
-          }),
+      const importFn = vi.fn(() =>
+        Promise.resolve({
+          default: () => <div>Test Component</div>,
+        }),
       );
 
       const component = dynamicComponent(importFn);
@@ -33,11 +31,10 @@ describe('Code Splitting Utilities (#1115)', () => {
     });
 
     it('uses custom loading component when provided', async () => {
-      const importFn = vi.fn(
-        () =>
-          Promise.resolve({
-            default: () => <div>Test Component</div>,
-          }),
+      const importFn = vi.fn(() =>
+        Promise.resolve({
+          default: () => <div>Test Component</div>,
+        }),
       );
 
       const LoadingComponent = () => <div>Custom Loading</div>;
@@ -46,11 +43,10 @@ describe('Code Splitting Utilities (#1115)', () => {
     });
 
     it('enables SSR by default', () => {
-      const importFn = vi.fn(
-        () =>
-          Promise.resolve({
-            default: () => <div>Test Component</div>,
-          }),
+      const importFn = vi.fn(() =>
+        Promise.resolve({
+          default: () => <div>Test Component</div>,
+        }),
       );
 
       const component = dynamicComponent(importFn);
@@ -58,11 +54,10 @@ describe('Code Splitting Utilities (#1115)', () => {
     });
 
     it('disables SSR when ssr option is false', () => {
-      const importFn = vi.fn(
-        () =>
-          Promise.resolve({
-            default: () => <div>Test Component</div>,
-          }),
+      const importFn = vi.fn(() =>
+        Promise.resolve({
+          default: () => <div>Test Component</div>,
+        }),
       );
 
       const component = dynamicComponent(importFn, { ssr: false });
@@ -218,11 +213,10 @@ describe('Code Splitting Utilities (#1115)', () => {
 
   describe('Bundle optimization scenarios', () => {
     it('reduces initial bundle by deferring heavy component loads', async () => {
-      const heavyComponentImport = vi.fn(
-        () =>
-          Promise.resolve({
-            default: () => <div>Heavy Component</div>,
-          }),
+      const heavyComponentImport = vi.fn(() =>
+        Promise.resolve({
+          default: () => <div>Heavy Component</div>,
+        }),
       );
 
       // Simulating code splitting strategy
@@ -265,20 +259,14 @@ describe('Code Splitting Utilities (#1115)', () => {
 
   describe('Error handling in code splitting', () => {
     it('handles failed chunk imports gracefully', async () => {
-      const failedImport = vi.fn(() =>
-        Promise.reject(new Error('Chunk loading failed')),
-      );
+      const failedImport = vi.fn(() => Promise.reject(new Error('Chunk loading failed')));
 
-      await expect(lazyLoadModule(failedImport)).rejects.toThrow(
-        'Chunk loading failed',
-      );
+      await expect(lazyLoadModule(failedImport)).rejects.toThrow('Chunk loading failed');
     });
 
     it('supports error boundary integration', async () => {
       let errorCaught = false;
-      const importFn = vi.fn(() =>
-        Promise.reject(new Error('Module load error')),
-      );
+      const importFn = vi.fn(() => Promise.reject(new Error('Module load error')));
 
       try {
         await lazyLoadModule(importFn);

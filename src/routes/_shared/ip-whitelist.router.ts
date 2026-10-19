@@ -28,21 +28,21 @@ export interface IpWhitelistRouterOptions {
 /**
  * Capability matrix — the ONE place that encodes the admin/security distinction.
  */
-const CAPABILITIES: Record<IpWhitelistRole, {
-  list: boolean;
-  read: boolean;
-  create: boolean;
-  update: boolean;
-  delete: boolean;
-}> = {
-  admin:    { list: true,  read: true,  create: true,  update: true,  delete: true  },
-  security: { list: true,  read: true,  create: false, update: false, delete: false },
+const CAPABILITIES: Record<
+  IpWhitelistRole,
+  {
+    list: boolean;
+    read: boolean;
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+  }
+> = {
+  admin: { list: true, read: true, create: true, update: true, delete: true },
+  security: { list: true, read: true, create: false, update: false, delete: false },
 };
 
-function requireCapability(
-  role: IpWhitelistRole,
-  action: keyof typeof CAPABILITIES['admin'],
-) {
+function requireCapability(role: IpWhitelistRole, action: keyof (typeof CAPABILITIES)['admin']) {
   return (_req: Request, res: Response, next: NextFunction) => {
     if (!CAPABILITIES[role][action]) {
       return res.status(403).json({
@@ -70,76 +70,56 @@ export function buildIpWhitelistRouter(options: IpWhitelistRouterOptions): Route
   router.use(auth);
 
   // ─── List ─────────────────────────────────────────────────────
-  router.get(
-    '/',
-    requireCapability(role, 'list'),
-    async (_req: Request, res: Response) => {
-      try {
-        const entries = await listEntries();
-        res.json({ entries });
-      } catch (err) {
-        handleError(err, res);
-      }
-    },
-  );
+  router.get('/', requireCapability(role, 'list'), async (_req: Request, res: Response) => {
+    try {
+      const entries = await listEntries();
+      res.json({ entries });
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
 
   // ─── Read one ─────────────────────────────────────────────────
-  router.get(
-    '/:id',
-    requireCapability(role, 'read'),
-    async (req: Request, res: Response) => {
-      try {
-        const entry = await getEntry(req.params.id);
-        if (!entry) return res.status(404).json({ error: 'not_found' });
-        res.json({ entry });
-      } catch (err) {
-        handleError(err, res);
-      }
-    },
-  );
+  router.get('/:id', requireCapability(role, 'read'), async (req: Request, res: Response) => {
+    try {
+      const entry = await getEntry(req.params.id);
+      if (!entry) return res.status(404).json({ error: 'not_found' });
+      res.json({ entry });
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
 
   // ─── Create ───────────────────────────────────────────────────
-  router.post(
-    '/',
-    requireCapability(role, 'create'),
-    async (req: Request, res: Response) => {
-      try {
-        const { cidr, label, expiresAt } = req.body ?? {};
-        const entry = await addEntry({ cidr, label, expiresAt });
-        res.status(201).json({ entry });
-      } catch (err) {
-        handleError(err, res);
-      }
-    },
-  );
+  router.post('/', requireCapability(role, 'create'), async (req: Request, res: Response) => {
+    try {
+      const { cidr, label, expiresAt } = req.body ?? {};
+      const entry = await addEntry({ cidr, label, expiresAt });
+      res.status(201).json({ entry });
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
 
   // ─── Update ───────────────────────────────────────────────────
-  router.patch(
-    '/:id',
-    requireCapability(role, 'update'),
-    async (req: Request, res: Response) => {
-      try {
-        const entry = await updateEntry(req.params.id, req.body ?? {});
-        res.json({ entry });
-      } catch (err) {
-        handleError(err, res);
-      }
-    },
-  );
+  router.patch('/:id', requireCapability(role, 'update'), async (req: Request, res: Response) => {
+    try {
+      const entry = await updateEntry(req.params.id, req.body ?? {});
+      res.json({ entry });
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
 
   // ─── Delete ───────────────────────────────────────────────────
-  router.delete(
-    '/:id',
-    requireCapability(role, 'delete'),
-    async (req: Request, res: Response) => {
-      try {
-        await removeEntry(req.params.id);
-        res.status(204).send();
-      } catch (err) {
-        handleError(err, res);
-      }
-    },
-  );
+  router.delete('/:id', requireCapability(role, 'delete'), async (req: Request, res: Response) => {
+    try {
+      await removeEntry(req.params.id);
+      res.status(204).send();
+    } catch (err) {
+      handleError(err, res);
+    }
+  });
 
   return router;
 }

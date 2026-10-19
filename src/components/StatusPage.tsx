@@ -121,9 +121,7 @@ export default function StatusPage() {
               <div key={incident.id} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="font-medium">{incident.title}</div>
-                  <div className="text-xs text-[#777]">
-                    {formatDateTime(incident.createdAt)}
-                  </div>
+                  <div className="text-xs text-[#777]">{formatDateTime(incident.createdAt)}</div>
                 </div>
                 {incident.updates.map((update, idx) => (
                   <div

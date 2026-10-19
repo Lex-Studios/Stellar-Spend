@@ -26,7 +26,10 @@ export function useFormCardState({
   onAmountChange,
   onCurrencyChange,
   onSubmit,
-}: Pick<FormCardProps, 'resetKey' | 'onQuoteChange' | 'onAmountChange' | 'onCurrencyChange' | 'onSubmit'>) {
+}: Pick<
+  FormCardProps,
+  'resetKey' | 'onQuoteChange' | 'onAmountChange' | 'onCurrencyChange' | 'onSubmit'
+>) {
   const [amount, setAmount] = useState('');
   const [feeMethod, setFeeMethod] = useState<FeeMethod>('USDC');
   const [currency, setCurrency] = useState('');

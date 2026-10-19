@@ -4,7 +4,9 @@ import { z } from 'zod';
 export interface UseFormOptions<T extends Record<string, unknown>> {
   initialValues: T;
   schema?: z.ZodType<unknown, z.ZodTypeDef, unknown>;
-  validate?: (values: T) => Partial<Record<keyof T, string>> | Promise<Partial<Record<keyof T, string>>>;
+  validate?: (
+    values: T,
+  ) => Partial<Record<keyof T, string>> | Promise<Partial<Record<keyof T, string>>>;
   validateOnChange?: boolean;
   validateOnBlur?: boolean;
   onSubmit?: (values: T) => Promise<void> | void;
@@ -158,8 +160,7 @@ export function useForm<T extends Record<string, unknown>>({
   const setValues = useCallback(
     (newValues: Partial<T> | ((prev: T) => T)) => {
       setFormValues((prev) => {
-        const next =
-          typeof newValues === 'function' ? newValues(prev) : { ...prev, ...newValues };
+        const next = typeof newValues === 'function' ? newValues(prev) : { ...prev, ...newValues };
         if (validateOnChange) {
           setErrors(runValidation(next));
         }
@@ -233,10 +234,13 @@ export function useForm<T extends Record<string, unknown>>({
       }
 
       // Mark all fields as touched
-      const allTouched = Object.keys(values).reduce((acc, key) => {
-        acc[key as keyof T] = true;
-        return acc;
-      }, {} as Partial<Record<keyof T, boolean>>);
+      const allTouched = Object.keys(values).reduce(
+        (acc, key) => {
+          acc[key as keyof T] = true;
+          return acc;
+        },
+        {} as Partial<Record<keyof T, boolean>>,
+      );
       setTouched(allTouched);
 
       const validationErrors = runValidation(values);

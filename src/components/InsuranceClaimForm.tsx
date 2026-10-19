@@ -3,10 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useForm } from '@/hooks/useForm';
 import { apiPatch } from '@/lib/api/client';
-import {
-  type InsuranceClaimFormProps,
-  insuranceClaimSchema,
-} from './insurance-claim/types';
+import { type InsuranceClaimFormProps, insuranceClaimSchema } from './insurance-claim/types';
 import { ClaimFormHeader } from './insurance-claim/ClaimFormHeader';
 import { EligibilityState } from './insurance-claim/EligibilityState';
 import { ClaimFormFields } from './insurance-claim/ClaimFormFields';

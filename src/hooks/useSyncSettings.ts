@@ -67,8 +67,7 @@ export function useSyncSettings(userAddress?: string): UseSyncSettingsReturn {
   );
 
   const queue = SyncStorage.getQueue();
-  const formattedLastSync =
-    settings.lastSyncAt > 0 ? formatDateTime(settings.lastSyncAt) : 'Never';
+  const formattedLastSync = settings.lastSyncAt > 0 ? formatDateTime(settings.lastSyncAt) : 'Never';
 
   return {
     settings,

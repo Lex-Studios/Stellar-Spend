@@ -84,5 +84,7 @@ for (const [pathKey, pathItem] of Object.entries(doc.paths || {})) {
   }
 }
 
-console.log(`✔ Validated ${Object.keys(doc.paths).length} paths with ${operationCount} operations`);
+console.log(
+  `✔ Validated ${Object.keys(doc.paths).length} paths with ${operationCount} operations`,
+);
 console.log('✔ OpenAPI specification is completely valid and clean!');

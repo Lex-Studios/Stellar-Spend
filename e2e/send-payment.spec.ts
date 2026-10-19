@@ -223,7 +223,10 @@ test.describe('Send Payment — Stage 2: Quote', () => {
     }
 
     // NGN or ₦ should appear somewhere on the page
-    const ngnVisible = await page.getByText(/NGN|₦/).isVisible({ timeout: 4_000 }).catch(() => false);
+    const ngnVisible = await page
+      .getByText(/NGN|₦/)
+      .isVisible({ timeout: 4_000 })
+      .catch(() => false);
     if (ngnVisible) {
       await expect(page.getByText(/NGN|₦/).first()).toBeVisible();
     }
@@ -543,7 +546,10 @@ test.describe('Send Payment — Full Happy Path (Integrated)', () => {
         !e.includes('Non-Error promise rejection') &&
         !e.includes('Script error'),
     );
-    expect(fatalErrors, `Unhandled JS errors during full flow: ${fatalErrors.join('; ')}`).toHaveLength(0);
+    expect(
+      fatalErrors,
+      `Unhandled JS errors during full flow: ${fatalErrors.join('; ')}`,
+    ).toHaveLength(0);
 
     // No 500 redirect
     expect(page.url()).not.toContain('/500');

@@ -155,9 +155,7 @@ export function Header({
               flash && 'bg-[#c9a962]/20',
             )}
           >
-            {rate != null
-              ? `LIVE RATE: ₦${formatNumber(Math.round(rate))} / USDC`
-              : 'LIVE RATE: —'}
+            {rate != null ? `LIVE RATE: ₦${formatNumber(Math.round(rate))} / USDC` : 'LIVE RATE: —'}
           </span>
         </div>
 
@@ -211,7 +209,9 @@ export function Header({
           </div>
 
           {isConnected && (
-            <div className={`flex flex-col items-end gap-0.5 ${bpClasses.headerCollapseItemsStart}`}>
+            <div
+              className={`flex flex-col items-end gap-0.5 ${bpClasses.headerCollapseItemsStart}`}
+            >
               {isBalanceLoading ? (
                 <span className="text-xs text-[#777777] tracking-widest">loading...</span>
               ) : (

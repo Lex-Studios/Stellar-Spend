@@ -25,3 +25,9 @@ coverage/
 
 # Storybook
 storybook-static/
+
+# Helm chart templates (Go template syntax is not valid YAML/Prettier)
+helm/
+
+# Files with known pre-existing syntax issues that prevent Prettier parsing
+src/lib/css-coverage.test.ts

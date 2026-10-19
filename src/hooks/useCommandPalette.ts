@@ -36,9 +36,7 @@ export interface UseCommandPaletteResult {
   commands: CommandAction[];
 }
 
-export function useCommandPalette(
-  options: UseCommandPaletteOptions = {},
-): UseCommandPaletteResult {
+export function useCommandPalette(options: UseCommandPaletteOptions = {}): UseCommandPaletteResult {
   const { registry } = options;
 
   const [isOpen, setIsOpen] = useState(false);

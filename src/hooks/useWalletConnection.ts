@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export type WalletConnectionStatus =
-  | 'idle'
-  | 'connecting'
-  | 'connected'
-  | 'disconnected'
-  | 'error';
+export type WalletConnectionStatus = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error';
 
 export interface WalletConnectionState {
   status: WalletConnectionStatus;
@@ -55,12 +50,8 @@ export function useWalletConnection(
   const [status, setStatus] = useState<WalletConnectionStatus>(
     options.initialAddress ? 'connected' : 'idle',
   );
-  const [address, setAddress] = useState<string | null>(
-    options.initialAddress ?? null,
-  );
-  const [chainId, setChainId] = useState<number | null>(
-    options.initialChainId ?? null,
-  );
+  const [address, setAddress] = useState<string | null>(options.initialAddress ?? null);
+  const [chainId, setChainId] = useState<number | null>(options.initialChainId ?? null);
 
   const mountedRef = useRef(true);
   useEffect(() => {
@@ -70,14 +61,11 @@ export function useWalletConnection(
     };
   }, []);
 
-  const setConnected = useCallback(
-    (nextAddress: string, nextChainId: number | null = null) => {
-      setAddress(nextAddress);
-      setChainId(nextChainId);
-      setStatus('connected');
-    },
-    [],
-  );
+  const setConnected = useCallback((nextAddress: string, nextChainId: number | null = null) => {
+    setAddress(nextAddress);
+    setChainId(nextChainId);
+    setStatus('connected');
+  }, []);
 
   const setDisconnected = useCallback(() => {
     setAddress(null);

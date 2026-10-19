@@ -17,14 +17,10 @@ export const dynamic = 'force-dynamic';
  * Kubernetes / load-balancers use this to decide whether to route traffic.
  */
 export async function GET() {
-  const [healthResult, dbResult] = await Promise.all([
-    performHealthCheck(),
-    checkDatabaseHealth(),
-  ]);
+  const [healthResult, dbResult] = await Promise.all([performHealthCheck(), checkDatabaseHealth()]);
 
   const isReady =
-    dbResult.status !== 'unhealthy' &&
-    healthResult.dependencies.stellar.status !== 'unhealthy';
+    dbResult.status !== 'unhealthy' && healthResult.dependencies.stellar.status !== 'unhealthy';
 
   const status = isReady ? 200 : 503;
 

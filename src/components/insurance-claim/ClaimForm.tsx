@@ -44,12 +44,7 @@ export function ClaimForm({ onSubmit, initialValues }: ClaimFormProps) {
       <h2>Submit a Claim</h2>
       <label>
         Policy Number
-        <input
-          name="policyNumber"
-          value={values.policyNumber}
-          onChange={handleChange}
-          required
-        />
+        <input name="policyNumber" value={values.policyNumber} onChange={handleChange} required />
       </label>
       <label>
         Claim Type

@@ -167,11 +167,13 @@ export function loadEnvConfig(source: EnvSource = process.env): ValidatedEnv {
   }
 
   return {
-    server: Object.fromEntries(
-      requiredServerEnvKeys.map((key) => [key, source[key]!]),
-    ) as Record<RequiredServerEnvKey, string>,
-    public: Object.fromEntries(
-      requiredPublicEnvKeys.map((key) => [key, source[key]!]),
-    ) as Record<RequiredPublicEnvKey, string>,
+    server: Object.fromEntries(requiredServerEnvKeys.map((key) => [key, source[key]!])) as Record<
+      RequiredServerEnvKey,
+      string
+    >,
+    public: Object.fromEntries(requiredPublicEnvKeys.map((key) => [key, source[key]!])) as Record<
+      RequiredPublicEnvKey,
+      string
+    >,
   };
 }

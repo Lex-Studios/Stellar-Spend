@@ -36,9 +36,7 @@ function toRoutePath(routeFile) {
     '/' +
     rel
       .split('/')
-      .map((segment) =>
-        segment.startsWith('[') && segment.endsWith(']') ? ':param' : segment,
-      )
+      .map((segment) => (segment.startsWith('[') && segment.endsWith(']') ? ':param' : segment))
       .join('/')
   );
 }
@@ -90,7 +88,9 @@ if (undocumented.length > 0) {
       '  webhooks, admin tooling) before treating any of these as dead code:\n',
   );
   for (const r of undocumented) {
-    console.log(`  ${r.routePath.padEnd(50)} [${r.methods.join(', ') || 'no exported method'}]  ${r.file}`);
+    console.log(
+      `  ${r.routePath.padEnd(50)} [${r.methods.join(', ') || 'no exported method'}]  ${r.file}`,
+    );
   }
   console.log('');
 } else {

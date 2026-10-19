@@ -13,29 +13,47 @@ console.log('--- Generating OpenAPI Documentation & Syncing Routes ---');
 let doc = yaml.load(fs.readFileSync(specPath, 'utf8'));
 
 // 2. Ensure all Tags are present
-const existingTagNames = new Set(doc.tags.map(t => t.name));
+const existingTagNames = new Set(doc.tags.map((t) => t.name));
 const requiredTags = [
   { name: 'health', description: 'Service health, readiness, liveness, and SLO status' },
-  { name: 'offramp', description: 'Off-ramp operations: quotes, rates, execution, fees, and orders' },
-  { name: 'onramp', description: 'On-ramp operations: fiat to crypto conversion and provider orders' },
-  { name: 'bridge', description: 'Soroban bridge operations: build, submit, gas fees, and tracking' },
+  {
+    name: 'offramp',
+    description: 'Off-ramp operations: quotes, rates, execution, fees, and orders',
+  },
+  {
+    name: 'onramp',
+    description: 'On-ramp operations: fiat to crypto conversion and provider orders',
+  },
+  {
+    name: 'bridge',
+    description: 'Soroban bridge operations: build, submit, gas fees, and tracking',
+  },
   { name: 'paycrest', description: 'Paycrest payout orders and settlement interactions' },
-  { name: 'transactions', description: 'Transaction history, analytics, disputes, sharing, and splits' },
+  {
+    name: 'transactions',
+    description: 'Transaction history, analytics, disputes, sharing, and splits',
+  },
   { name: 'merchant', description: 'Merchant accounts, statistics, and payout management' },
   { name: 'api-keys', description: 'API key provisioning, rotation, usage, and scopes' },
   { name: 'auth', description: 'Two-factor authentication, recovery, and session management' },
-  { name: 'security', description: 'Security audit logs, signatures, IP whitelist, and session controls' },
-  { name: 'admin', description: 'Admin operations, dispute resolution, database, and vulnerabilities' },
+  {
+    name: 'security',
+    description: 'Security audit logs, signatures, IP whitelist, and session controls',
+  },
+  {
+    name: 'admin',
+    description: 'Admin operations, dispute resolution, database, and vulnerabilities',
+  },
   { name: 'webhooks', description: 'Webhook subscriptions, event deliveries, DLQ, and replays' },
   { name: 'sync', description: 'Client transaction history and settings cloud synchronization' },
   { name: 'monitoring', description: 'System telemetry, cache metrics, and web vitals' },
   { name: 'cron', description: 'Scheduled jobs, stall scanning, and recurring execution' },
   { name: 'fx-rates', description: 'Foreign exchange rate feeds and pricing quotes' },
   { name: 'notifications', description: 'User notification preferences and delivery logs' },
-  { name: 'versions', description: 'API version discovery and compatibility metadata' }
+  { name: 'versions', description: 'API version discovery and compatibility metadata' },
 ];
 
-requiredTags.forEach(t => {
+requiredTags.forEach((t) => {
   if (!existingTagNames.has(t.name)) {
     doc.tags.push(t);
     existingTagNames.add(t.name);
@@ -57,15 +75,25 @@ const additionalSchemas = {
       currency: { type: 'string', example: 'NGN' },
       status: {
         type: 'string',
-        enum: ['pending', 'building', 'signed', 'submitted', 'bridging', 'payout_pending', 'completed', 'failed', 'refunded'],
-        example: 'completed'
+        enum: [
+          'pending',
+          'building',
+          'signed',
+          'submitted',
+          'bridging',
+          'payout_pending',
+          'completed',
+          'failed',
+          'refunded',
+        ],
+        example: 'completed',
       },
       stellarTxHash: { type: 'string', example: '5d1e...' },
       baseTxHash: { type: 'string', example: '0x12...' },
-      recipient: { '$ref': '#/components/schemas/Recipient' },
+      recipient: { $ref: '#/components/schemas/Recipient' },
       createdAt: { type: 'string', format: 'date-time' },
-      updatedAt: { type: 'string', format: 'date-time' }
-    }
+      updatedAt: { type: 'string', format: 'date-time' },
+    },
   },
   Dispute: {
     type: 'object',
@@ -73,12 +101,16 @@ const additionalSchemas = {
     properties: {
       id: { type: 'string', example: 'disp_12345' },
       transactionId: { type: 'string', example: 'tx_1234567890' },
-      status: { type: 'string', enum: ['open', 'under_review', 'resolved', 'rejected'], example: 'open' },
+      status: {
+        type: 'string',
+        enum: ['open', 'under_review', 'resolved', 'rejected'],
+        example: 'open',
+      },
       reason: { type: 'string', example: 'Bank account not credited after 24h' },
       evidenceUrl: { type: 'string', format: 'uri' },
       createdAt: { type: 'string', format: 'date-time' },
-      resolvedAt: { type: 'string', format: 'date-time' }
-    }
+      resolvedAt: { type: 'string', format: 'date-time' },
+    },
   },
   WebhookSubscription: {
     type: 'object',
@@ -86,10 +118,14 @@ const additionalSchemas = {
     properties: {
       id: { type: 'string', example: 'sub_12345' },
       targetUrl: { type: 'string', format: 'uri', example: 'https://example.com/webhooks' },
-      events: { type: 'array', items: { type: 'string' }, example: ['order.completed', 'order.failed'] },
+      events: {
+        type: 'array',
+        items: { type: 'string' },
+        example: ['order.completed', 'order.failed'],
+      },
       active: { type: 'boolean', example: true },
-      createdAt: { type: 'string', format: 'date-time' }
-    }
+      createdAt: { type: 'string', format: 'date-time' },
+    },
   },
   WebhookDelivery: {
     type: 'object',
@@ -102,8 +138,8 @@ const additionalSchemas = {
       success: { type: 'boolean', example: true },
       attemptCount: { type: 'integer', example: 1 },
       durationMs: { type: 'integer', example: 145 },
-      timestamp: { type: 'string', format: 'date-time' }
-    }
+      timestamp: { type: 'string', format: 'date-time' },
+    },
   },
   MerchantProfile: {
     type: 'object',
@@ -114,8 +150,8 @@ const additionalSchemas = {
       email: { type: 'string', format: 'email', example: 'finance@acme.com' },
       status: { type: 'string', enum: ['active', 'suspended', 'pending_kyc'], example: 'active' },
       webhookUrl: { type: 'string', format: 'uri' },
-      createdAt: { type: 'string', format: 'date-time' }
-    }
+      createdAt: { type: 'string', format: 'date-time' },
+    },
   },
   SloMetrics: {
     type: 'object',
@@ -123,22 +159,26 @@ const additionalSchemas = {
     properties: {
       uptime: { type: 'number', example: 99.98 },
       p99LatencyMs: { type: 'number', example: 120 },
-      errorRate: { type: 'number', example: 0.001 }
-    }
+      errorRate: { type: 'number', example: 0.001 },
+    },
   },
   OfframpStatusResponse: {
     type: 'object',
     required: ['orderId', 'status'],
     properties: {
       orderId: { type: 'string', example: 'ord_1234567890' },
-      status: { type: 'string', enum: ['pending', 'processing', 'completed', 'failed', 'refunded'], example: 'completed' },
+      status: {
+        type: 'string',
+        enum: ['pending', 'processing', 'completed', 'failed', 'refunded'],
+        example: 'completed',
+      },
       amount: { type: 'string', example: '100.00' },
       currency: { type: 'string', example: 'NGN' },
       stellarTxHash: { type: 'string', example: '5d1e...' },
       payoutTxHash: { type: 'string', example: '0x12...' },
-      updatedAt: { type: 'string', format: 'date-time' }
-    }
-  }
+      updatedAt: { type: 'string', format: 'date-time' },
+    },
+  },
 };
 
 for (const [schemaName, schemaObj] of Object.entries(additionalSchemas)) {
@@ -149,22 +189,30 @@ for (const [schemaName, schemaObj] of Object.entries(additionalSchemas)) {
 
 // Helper for standard response with $ref or object
 function jsonResponse(description, schemaRef, statusCode = '200') {
-  const schema = typeof schemaRef === 'string' ? { '$ref': schemaRef } : schemaRef;
+  const schema = typeof schemaRef === 'string' ? { $ref: schemaRef } : schemaRef;
   return {
     description,
     content: {
       'application/json': {
-        schema
-      }
-    }
+        schema,
+      },
+    },
   };
 }
 
 function errorResponses() {
   return {
-    '400': jsonResponse('Bad Request — validation failed or missing parameter', '#/components/schemas/Error', '400'),
-    '401': jsonResponse('Unauthorized — invalid or missing credentials', '#/components/schemas/Error', '401'),
-    '500': jsonResponse('Internal Server Error', '#/components/schemas/Error', '500')
+    400: jsonResponse(
+      'Bad Request — validation failed or missing parameter',
+      '#/components/schemas/Error',
+      '400',
+    ),
+    401: jsonResponse(
+      'Unauthorized — invalid or missing credentials',
+      '#/components/schemas/Error',
+      '401',
+    ),
+    500: jsonResponse('Internal Server Error', '#/components/schemas/Error', '500'),
   };
 }
 
@@ -178,16 +226,16 @@ const additionalPaths = {
       description: 'Kubernetes/load-balancer liveness check. Returns 200 if the process is alive.',
       operationId: 'getLiveness',
       responses: {
-        '200': jsonResponse('Service is alive', {
+        200: jsonResponse('Service is alive', {
           type: 'object',
           required: ['status'],
           properties: {
             status: { type: 'string', example: 'ok' },
-            timestamp: { type: 'string', format: 'date-time' }
-          }
-        })
-      }
-    }
+            timestamp: { type: 'string', format: 'date-time' },
+          },
+        }),
+      },
+    },
   },
   '/api/health/readiness': {
     get: {
@@ -196,18 +244,22 @@ const additionalPaths = {
       description: 'Checks database and upstream RPC connectivity before accepting traffic.',
       operationId: 'getReadiness',
       responses: {
-        '200': jsonResponse('Service is ready', {
+        200: jsonResponse('Service is ready', {
           type: 'object',
           required: ['status'],
           properties: {
             status: { type: 'string', example: 'ok' },
             database: { type: 'string', example: 'connected' },
-            stellarRpc: { type: 'string', example: 'reachable' }
-          }
+            stellarRpc: { type: 'string', example: 'reachable' },
+          },
         }),
-        '503': jsonResponse('Service unavailable / dependencies failing', '#/components/schemas/Error', '503')
-      }
-    }
+        503: jsonResponse(
+          'Service unavailable / dependencies failing',
+          '#/components/schemas/Error',
+          '503',
+        ),
+      },
+    },
   },
   '/api/slo/status': {
     get: {
@@ -216,10 +268,10 @@ const additionalPaths = {
       description: 'Reports current uptime, latency percentiles, and error budget consumption.',
       operationId: 'getSloStatus',
       responses: {
-        '200': jsonResponse('SLO metrics report', '#/components/schemas/SloMetrics'),
-        ...errorResponses()
-      }
-    }
+        200: jsonResponse('SLO metrics report', '#/components/schemas/SloMetrics'),
+        ...errorResponses(),
+      },
+    },
   },
 
   // Offramp additional
@@ -227,30 +279,31 @@ const additionalPaths = {
     post: {
       tags: ['offramp'],
       summary: 'Aggregate conversion quote',
-      description: 'Returns quotes across multiple bridge and payment providers for rate comparison.',
+      description:
+        'Returns quotes across multiple bridge and payment providers for rate comparison.',
       operationId: 'getAggregateQuote',
       requestBody: {
         required: true,
         content: {
           'application/json': {
-            schema: { '$ref': '#/components/schemas/QuoteRequest' }
-          }
-        }
+            schema: { $ref: '#/components/schemas/QuoteRequest' },
+          },
+        },
       },
       responses: {
-        '200': jsonResponse('Aggregate quotes', {
+        200: jsonResponse('Aggregate quotes', {
           type: 'object',
           required: ['quotes'],
           properties: {
             quotes: {
               type: 'array',
-              items: { '$ref': '#/components/schemas/QuoteResponse' }
-            }
-          }
+              items: { $ref: '#/components/schemas/QuoteResponse' },
+            },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/offramp/fees': {
     post: {
@@ -268,31 +321,36 @@ const additionalPaths = {
               properties: {
                 amount: { type: 'string', example: '100' },
                 currency: { type: 'string', example: 'NGN' },
-                feeMethod: { type: 'string', enum: ['USDC', 'XLM', 'stablecoin', 'native'], example: 'USDC' }
-              }
-            }
-          }
-        }
+                feeMethod: {
+                  type: 'string',
+                  enum: ['USDC', 'XLM', 'stablecoin', 'native'],
+                  example: 'USDC',
+                },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '200': jsonResponse('Fee breakdown', {
+        200: jsonResponse('Fee breakdown', {
           type: 'object',
           required: ['bridgeFee', 'payoutFee', 'totalFee'],
           properties: {
             bridgeFee: { type: 'string', example: '0.50' },
             payoutFee: { type: 'string', example: '0.00' },
-            totalFee: { type: 'string', example: '0.50' }
-          }
+            totalFee: { type: 'string', example: '0.50' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/offramp/execute-payout': {
     post: {
       tags: ['offramp'],
       summary: 'Trigger payout execution',
-      description: 'Executes the Base USDC transfer to Paycrest settlement address for an active order.',
+      description:
+        'Executes the Base USDC transfer to Paycrest settlement address for an active order.',
       operationId: 'executePayout',
       requestBody: {
         required: true,
@@ -302,24 +360,24 @@ const additionalPaths = {
               type: 'object',
               required: ['orderId'],
               properties: {
-                orderId: { type: 'string', example: 'ord_1234567890' }
-              }
-            }
-          }
-        }
+                orderId: { type: 'string', example: 'ord_1234567890' },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '200': jsonResponse('Payout execution result', {
+        200: jsonResponse('Payout execution result', {
           type: 'object',
           required: ['status', 'txHash'],
           properties: {
             status: { type: 'string', example: 'submitted' },
-            txHash: { type: 'string', example: '0x1234567890abcdef' }
-          }
+            txHash: { type: 'string', example: '0x1234567890abcdef' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/offramp/tokens': {
     get: {
@@ -328,7 +386,7 @@ const additionalPaths = {
       description: 'Lists all supported tokens and assets on Stellar and destination chains.',
       operationId: 'getSupportedTokens',
       responses: {
-        '200': jsonResponse('List of supported tokens', {
+        200: jsonResponse('List of supported tokens', {
           type: 'object',
           required: ['tokens'],
           properties: {
@@ -341,14 +399,14 @@ const additionalPaths = {
                   symbol: { type: 'string', example: 'USDC' },
                   name: { type: 'string', example: 'USD Coin' },
                   decimals: { type: 'integer', example: 7 },
-                  chain: { type: 'string', example: 'STELLAR' }
-                }
-              }
-            }
-          }
-        })
-      }
-    }
+                  chain: { type: 'string', example: 'STELLAR' },
+                },
+              },
+            },
+          },
+        }),
+      },
+    },
   },
 
   // Onramp
@@ -368,14 +426,14 @@ const additionalPaths = {
               properties: {
                 fiatAmount: { type: 'string', example: '50000' },
                 fiatCurrency: { type: 'string', example: 'NGN' },
-                cryptoAsset: { type: 'string', example: 'USDC' }
-              }
-            }
-          }
-        }
+                cryptoAsset: { type: 'string', example: 'USDC' },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '200': jsonResponse('Onramp quote', {
+        200: jsonResponse('Onramp quote', {
           type: 'object',
           required: ['cryptoAmount', 'rate', 'fiatAmount', 'fiatCurrency'],
           properties: {
@@ -383,12 +441,12 @@ const additionalPaths = {
             rate: { type: 'number', example: 1600 },
             fiatAmount: { type: 'string', example: '50000' },
             fiatCurrency: { type: 'string', example: 'NGN' },
-            fee: { type: 'string', example: '200' }
-          }
+            fee: { type: 'string', example: '200' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/onramp/order': {
     post: {
@@ -406,14 +464,14 @@ const additionalPaths = {
               properties: {
                 fiatAmount: { type: 'string', example: '50000' },
                 fiatCurrency: { type: 'string', example: 'NGN' },
-                destinationAddress: { type: 'string', example: 'GCFX...ABCD' }
-              }
-            }
-          }
-        }
+                destinationAddress: { type: 'string', example: 'GCFX...ABCD' },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '201': jsonResponse('Onramp order created', {
+        201: jsonResponse('Onramp order created', {
           type: 'object',
           required: ['orderId', 'depositInstructions', 'status'],
           properties: {
@@ -424,14 +482,14 @@ const additionalPaths = {
               properties: {
                 bankName: { type: 'string', example: 'Wema Bank' },
                 accountNumber: { type: 'string', example: '9988776655' },
-                accountName: { type: 'string', example: 'Paycrest Settlement' }
-              }
-            }
-          }
+                accountName: { type: 'string', example: 'Paycrest Settlement' },
+              },
+            },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/onramp/order/{orderId}': {
     get: {
@@ -444,22 +502,25 @@ const additionalPaths = {
           name: 'orderId',
           in: 'path',
           required: true,
-          schema: { type: 'string' }
-        }
+          schema: { type: 'string' },
+        },
       ],
       responses: {
-        '200': jsonResponse('Onramp order status', {
+        200: jsonResponse('Onramp order status', {
           type: 'object',
           required: ['orderId', 'status'],
           properties: {
             orderId: { type: 'string', example: 'onramp_12345' },
-            status: { type: 'string', enum: ['pending_payment', 'processing', 'completed', 'failed'] },
-            txHash: { type: 'string' }
-          }
+            status: {
+              type: 'string',
+              enum: ['pending_payment', 'processing', 'completed', 'failed'],
+            },
+            txHash: { type: 'string' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
 
   // Merchant
@@ -470,9 +531,9 @@ const additionalPaths = {
       description: 'Fetches merchant profile and business details.',
       operationId: 'getMerchantProfile',
       responses: {
-        '200': jsonResponse('Merchant profile', '#/components/schemas/MerchantProfile'),
-        ...errorResponses()
-      }
+        200: jsonResponse('Merchant profile', '#/components/schemas/MerchantProfile'),
+        ...errorResponses(),
+      },
     },
     post: {
       tags: ['merchant'],
@@ -488,24 +549,24 @@ const additionalPaths = {
               required: ['businessName', 'email'],
               properties: {
                 businessName: { type: 'string', example: 'Acme Corp' },
-                email: { type: 'string', format: 'email', example: 'finance@acme.com' }
-              }
-            }
-          }
-        }
+                email: { type: 'string', format: 'email', example: 'finance@acme.com' },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '200': jsonResponse('Merchant saved', {
+        200: jsonResponse('Merchant saved', {
           type: 'object',
           required: ['id', 'status'],
           properties: {
             id: { type: 'string', example: 'merch_123' },
-            status: { type: 'string', example: 'active' }
-          }
+            status: { type: 'string', example: 'active' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/merchant/payouts': {
     get: {
@@ -514,7 +575,7 @@ const additionalPaths = {
       description: 'Returns historical merchant payouts and bulk settlement batches.',
       operationId: 'listMerchantPayouts',
       responses: {
-        '200': jsonResponse('Payouts list', {
+        200: jsonResponse('Payouts list', {
           type: 'object',
           required: ['payouts'],
           properties: {
@@ -526,14 +587,14 @@ const additionalPaths = {
                   id: { type: 'string' },
                   amount: { type: 'string' },
                   currency: { type: 'string' },
-                  status: { type: 'string' }
-                }
-              }
-            }
-          }
+                  status: { type: 'string' },
+                },
+              },
+            },
+          },
         }),
-        ...errorResponses()
-      }
+        ...errorResponses(),
+      },
     },
     post: {
       tags: ['merchant'],
@@ -550,26 +611,26 @@ const additionalPaths = {
               properties: {
                 recipients: {
                   type: 'array',
-                  items: { '$ref': '#/components/schemas/Recipient' }
-                }
-              }
-            }
-          }
-        }
+                  items: { $ref: '#/components/schemas/Recipient' },
+                },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '200': jsonResponse('Batch created', {
+        200: jsonResponse('Batch created', {
           type: 'object',
           required: ['batchId', 'totalAmount', 'count'],
           properties: {
             batchId: { type: 'string' },
             totalAmount: { type: 'string' },
-            count: { type: 'integer' }
-          }
+            count: { type: 'integer' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/merchant/stats': {
     get: {
@@ -578,18 +639,18 @@ const additionalPaths = {
       description: 'Returns aggregated volume, completed orders, and fee metrics.',
       operationId: 'getMerchantStats',
       responses: {
-        '200': jsonResponse('Merchant statistics', {
+        200: jsonResponse('Merchant statistics', {
           type: 'object',
           required: ['totalVolumeUsd', 'totalOrders', 'settledCount'],
           properties: {
             totalVolumeUsd: { type: 'number', example: 125000 },
             totalOrders: { type: 'integer', example: 450 },
-            settledCount: { type: 'integer', example: 448 }
-          }
+            settledCount: { type: 'integer', example: 448 },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
 
   // API Keys Scope management
@@ -601,16 +662,16 @@ const additionalPaths = {
       operationId: 'getApiKeyScopes',
       parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
-        '200': jsonResponse('API key scopes', {
+        200: jsonResponse('API key scopes', {
           type: 'object',
           required: ['keyId', 'scopes'],
           properties: {
             keyId: { type: 'string' },
-            scopes: { type: 'array', items: { type: 'string' } }
-          }
+            scopes: { type: 'array', items: { type: 'string' } },
+          },
         }),
-        ...errorResponses()
-      }
+        ...errorResponses(),
+      },
     },
     put: {
       tags: ['api-keys'],
@@ -626,24 +687,24 @@ const additionalPaths = {
               type: 'object',
               required: ['scopes'],
               properties: {
-                scopes: { type: 'array', items: { type: 'string' } }
-              }
-            }
-          }
-        }
+                scopes: { type: 'array', items: { type: 'string' } },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '200': jsonResponse('Scopes updated', {
+        200: jsonResponse('Scopes updated', {
           type: 'object',
           required: ['keyId', 'scopes'],
           properties: {
             keyId: { type: 'string' },
-            scopes: { type: 'array', items: { type: 'string' } }
-          }
+            scopes: { type: 'array', items: { type: 'string' } },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
 
   // Transactions analytics and disputes
@@ -651,21 +712,22 @@ const additionalPaths = {
     get: {
       tags: ['transactions'],
       summary: 'Transaction analytics',
-      description: 'Returns historical transaction velocity, currency distribution, and success rates.',
+      description:
+        'Returns historical transaction velocity, currency distribution, and success rates.',
       operationId: 'getTransactionAnalytics',
       responses: {
-        '200': jsonResponse('Analytics data', {
+        200: jsonResponse('Analytics data', {
           type: 'object',
           required: ['totalVolume', 'successRate', 'averageSettlementSeconds'],
           properties: {
             totalVolume: { type: 'number' },
             successRate: { type: 'number' },
-            averageSettlementSeconds: { type: 'number' }
-          }
+            averageSettlementSeconds: { type: 'number' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/transactions/search': {
     get: {
@@ -676,20 +738,20 @@ const additionalPaths = {
       parameters: [
         { name: 'q', in: 'query', schema: { type: 'string' } },
         { name: 'currency', in: 'query', schema: { type: 'string' } },
-        { name: 'status', in: 'query', schema: { type: 'string' } }
+        { name: 'status', in: 'query', schema: { type: 'string' } },
       ],
       responses: {
-        '200': jsonResponse('Search results', {
+        200: jsonResponse('Search results', {
           type: 'object',
           required: ['results', 'count'],
           properties: {
-            results: { type: 'array', items: { '$ref': '#/components/schemas/Transaction' } },
-            count: { type: 'integer' }
-          }
+            results: { type: 'array', items: { $ref: '#/components/schemas/Transaction' } },
+            count: { type: 'integer' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/transactions/disputes': {
     get: {
@@ -698,18 +760,18 @@ const additionalPaths = {
       description: 'Returns all open and resolved transaction disputes.',
       operationId: 'listDisputes',
       responses: {
-        '200': jsonResponse('Dispute list', {
+        200: jsonResponse('Dispute list', {
           type: 'object',
           required: ['disputes'],
           properties: {
             disputes: {
               type: 'array',
-              items: { '$ref': '#/components/schemas/Dispute' }
-            }
-          }
+              items: { $ref: '#/components/schemas/Dispute' },
+            },
+          },
         }),
-        ...errorResponses()
-      }
+        ...errorResponses(),
+      },
     },
     post: {
       tags: ['transactions'],
@@ -726,24 +788,24 @@ const additionalPaths = {
               properties: {
                 transactionId: { type: 'string' },
                 reason: { type: 'string' },
-                evidenceUrl: { type: 'string' }
-              }
-            }
-          }
-        }
+                evidenceUrl: { type: 'string' },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '201': jsonResponse('Dispute opened', {
+        201: jsonResponse('Dispute opened', {
           type: 'object',
           required: ['disputeId', 'status'],
           properties: {
             disputeId: { type: 'string' },
-            status: { type: 'string', example: 'open' }
-          }
+            status: { type: 'string', example: 'open' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
 
   // Webhook management
@@ -754,18 +816,18 @@ const additionalPaths = {
       description: 'Returns active webhook event listener endpoints registered for the account.',
       operationId: 'listWebhookSubscriptions',
       responses: {
-        '200': jsonResponse('Subscription list', {
+        200: jsonResponse('Subscription list', {
           type: 'object',
           required: ['subscriptions'],
           properties: {
             subscriptions: {
               type: 'array',
-              items: { '$ref': '#/components/schemas/WebhookSubscription' }
-            }
-          }
+              items: { $ref: '#/components/schemas/WebhookSubscription' },
+            },
+          },
         }),
-        ...errorResponses()
-      }
+        ...errorResponses(),
+      },
     },
     post: {
       tags: ['webhooks'],
@@ -781,24 +843,27 @@ const additionalPaths = {
               required: ['targetUrl', 'events'],
               properties: {
                 targetUrl: { type: 'string', format: 'uri' },
-                events: { type: 'array', items: { type: 'string' } }
-              }
-            }
-          }
-        }
+                events: { type: 'array', items: { type: 'string' } },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '201': jsonResponse('Subscription registered', {
+        201: jsonResponse('Subscription registered', {
           type: 'object',
           required: ['id', 'secret'],
           properties: {
             id: { type: 'string' },
-            secret: { type: 'string', description: 'HMAC secret used to verify webhook signatures' }
-          }
+            secret: {
+              type: 'string',
+              description: 'HMAC secret used to verify webhook signatures',
+            },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/webhooks/delivery-log': {
     get: {
@@ -807,19 +872,19 @@ const additionalPaths = {
       description: 'Returns recent webhook delivery attempts, HTTP status codes, and latencies.',
       operationId: 'getWebhookDeliveryLogs',
       responses: {
-        '200': jsonResponse('Delivery log entries', {
+        200: jsonResponse('Delivery log entries', {
           type: 'object',
           required: ['deliveries'],
           properties: {
             deliveries: {
               type: 'array',
-              items: { '$ref': '#/components/schemas/WebhookDelivery' }
-            }
-          }
+              items: { $ref: '#/components/schemas/WebhookDelivery' },
+            },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
 
   // Sync routes
@@ -830,15 +895,15 @@ const additionalPaths = {
       description: 'Fetches encrypted client transaction records for backup/recovery.',
       operationId: 'getSyncHistory',
       responses: {
-        '200': jsonResponse('Synced transaction history', {
+        200: jsonResponse('Synced transaction history', {
           type: 'object',
           required: ['transactions'],
           properties: {
-            transactions: { type: 'array', items: { '$ref': '#/components/schemas/Transaction' } }
-          }
+            transactions: { type: 'array', items: { $ref: '#/components/schemas/Transaction' } },
+          },
         }),
-        ...errorResponses()
-      }
+        ...errorResponses(),
+      },
     },
     post: {
       tags: ['sync'],
@@ -853,23 +918,26 @@ const additionalPaths = {
               type: 'object',
               required: ['transactions'],
               properties: {
-                transactions: { type: 'array', items: { '$ref': '#/components/schemas/Transaction' } }
-              }
-            }
-          }
-        }
+                transactions: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Transaction' },
+                },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '200': jsonResponse('Sync confirmed', {
+        200: jsonResponse('Sync confirmed', {
           type: 'object',
           required: ['syncedCount'],
           properties: {
-            syncedCount: { type: 'integer' }
-          }
+            syncedCount: { type: 'integer' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/v1/sync/settings': {
     get: {
@@ -878,15 +946,15 @@ const additionalPaths = {
       description: 'Fetches cloud-synced user configuration, default currencies, and theme.',
       operationId: 'getSyncSettings',
       responses: {
-        '200': jsonResponse('Settings configuration', {
+        200: jsonResponse('Settings configuration', {
           type: 'object',
           required: ['settings'],
           properties: {
-            settings: { type: 'object' }
-          }
+            settings: { type: 'object' },
+          },
         }),
-        ...errorResponses()
-      }
+        ...errorResponses(),
+      },
     },
     post: {
       tags: ['sync'],
@@ -901,23 +969,23 @@ const additionalPaths = {
               type: 'object',
               required: ['settings'],
               properties: {
-                settings: { type: 'object' }
-              }
-            }
-          }
-        }
+                settings: { type: 'object' },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '200': jsonResponse('Settings saved', {
+        200: jsonResponse('Settings saved', {
           type: 'object',
           required: ['status'],
           properties: {
-            status: { type: 'string', example: 'saved' }
-          }
+            status: { type: 'string', example: 'saved' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
 
   // Versioned v1 parity
@@ -932,21 +1000,21 @@ const additionalPaths = {
         required: true,
         content: {
           'application/json': {
-            schema: { '$ref': '#/components/schemas/QuoteRequest' }
-          }
-        }
+            schema: { $ref: '#/components/schemas/QuoteRequest' },
+          },
+        },
       },
       responses: {
-        '200': jsonResponse('Aggregate quotes', {
+        200: jsonResponse('Aggregate quotes', {
           type: 'object',
           required: ['quotes'],
           properties: {
-            quotes: { type: 'array', items: { '$ref': '#/components/schemas/QuoteResponse' } }
-          }
+            quotes: { type: 'array', items: { $ref: '#/components/schemas/QuoteResponse' } },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/v1/offramp/fees': {
     post: {
@@ -964,25 +1032,25 @@ const additionalPaths = {
               required: ['amount', 'currency'],
               properties: {
                 amount: { type: 'string', example: '100' },
-                currency: { type: 'string', example: 'NGN' }
-              }
-            }
-          }
-        }
+                currency: { type: 'string', example: 'NGN' },
+              },
+            },
+          },
+        },
       },
       responses: {
-        '200': jsonResponse('Fee breakdown', {
+        200: jsonResponse('Fee breakdown', {
           type: 'object',
           required: ['bridgeFee', 'payoutFee', 'totalFee'],
           properties: {
             bridgeFee: { type: 'string' },
             payoutFee: { type: 'string' },
-            totalFee: { type: 'string' }
-          }
+            totalFee: { type: 'string' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/v1/offramp/rate': {
     get: {
@@ -992,17 +1060,17 @@ const additionalPaths = {
       operationId: 'getSpotRateV1',
       security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
       responses: {
-        '200': jsonResponse('Spot rate', {
+        200: jsonResponse('Spot rate', {
           type: 'object',
           required: ['rate', 'pair'],
           properties: {
             rate: { type: 'number', example: 1598 },
-            pair: { type: 'string', example: 'USDC/NGN' }
-          }
+            pair: { type: 'string', example: 'USDC/NGN' },
+          },
         }),
-        ...errorResponses()
-      }
-    }
+        ...errorResponses(),
+      },
+    },
   },
   '/api/v1/offramp/paycrest/order': {
     post: {
@@ -1015,15 +1083,19 @@ const additionalPaths = {
         required: true,
         content: {
           'application/json': {
-            schema: { '$ref': '#/components/schemas/CreateOrderRequest' }
-          }
-        }
+            schema: { $ref: '#/components/schemas/CreateOrderRequest' },
+          },
+        },
       },
       responses: {
-        '201': jsonResponse('Order created', { '$ref': '#/components/schemas/CreateOrderResponse' }, '201'),
-        ...errorResponses()
-      }
-    }
+        201: jsonResponse(
+          'Order created',
+          { $ref: '#/components/schemas/CreateOrderResponse' },
+          '201',
+        ),
+        ...errorResponses(),
+      },
+    },
   },
   '/api/v1/offramp/paycrest/order/{orderId}': {
     get: {
@@ -1034,10 +1106,10 @@ const additionalPaths = {
       security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
       parameters: [{ name: 'orderId', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
-        '200': jsonResponse('Order status', { '$ref': '#/components/schemas/OrderStatusResponse' }),
-        ...errorResponses()
-      }
-    }
+        200: jsonResponse('Order status', { $ref: '#/components/schemas/OrderStatusResponse' }),
+        ...errorResponses(),
+      },
+    },
   },
   '/api/v1/offramp/status/{orderId}': {
     get: {
@@ -1048,10 +1120,12 @@ const additionalPaths = {
       security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
       parameters: [{ name: 'orderId', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
-        '200': jsonResponse('Off-ramp status', { '$ref': '#/components/schemas/OfframpStatusResponse' }),
-        ...errorResponses()
-      }
-    }
+        200: jsonResponse('Off-ramp status', {
+          $ref: '#/components/schemas/OfframpStatusResponse',
+        }),
+        ...errorResponses(),
+      },
+    },
   },
   '/api/v1/offramp/bridge/status/{txHash}': {
     get: {
@@ -1062,10 +1136,10 @@ const additionalPaths = {
       security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
       parameters: [{ name: 'txHash', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
-        '200': jsonResponse('Bridge status', { '$ref': '#/components/schemas/BridgeStatusResponse' }),
-        ...errorResponses()
-      }
-    }
+        200: jsonResponse('Bridge status', { $ref: '#/components/schemas/BridgeStatusResponse' }),
+        ...errorResponses(),
+      },
+    },
   },
   '/api/v1/offramp/bridge/tx-status/{hash}': {
     get: {
@@ -1076,11 +1150,11 @@ const additionalPaths = {
       security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }],
       parameters: [{ name: 'hash', in: 'path', required: true, schema: { type: 'string' } }],
       responses: {
-        '200': jsonResponse('Stellar tx status', { '$ref': '#/components/schemas/TxStatusResponse' }),
-        ...errorResponses()
-      }
-    }
-  }
+        200: jsonResponse('Stellar tx status', { $ref: '#/components/schemas/TxStatusResponse' }),
+        ...errorResponses(),
+      },
+    },
+  },
 };
 
 // Merge additional paths
@@ -1127,7 +1201,7 @@ validateRefs(doc);
 const yamlOutput = yaml.dump(doc, {
   lineWidth: 120,
   noRefs: true,
-  sortKeys: false
+  sortKeys: false,
 });
 
 fs.writeFileSync(specPath, yamlOutput, 'utf8');

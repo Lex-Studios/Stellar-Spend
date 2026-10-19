@@ -60,7 +60,7 @@ export async function getAllTables(): Promise<string[]> {
      WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
      ORDER BY table_name`,
   );
-  return result.rows.map(row => row.table_name);
+  return result.rows.map((row) => row.table_name);
 }
 
 /**
@@ -91,9 +91,9 @@ export async function getTableColumns(tableName: string): Promise<SchemaColumn[]
     [tableName],
   );
 
-  const primaryKeyColumns = new Set(pkResult.rows.map(row => row.attname));
+  const primaryKeyColumns = new Set(pkResult.rows.map((row) => row.attname));
 
-  return result.rows.map(row => ({
+  return result.rows.map((row) => ({
     name: row.name,
     type: row.type,
     nullable: row.nullable,
@@ -159,7 +159,7 @@ export async function getColumnUsageStats(tableName: string): Promise<ColumnUsag
     // For each column, check if it appears in any query
     const usageStats: ColumnUsageStats[] = [];
     for (const column of columns) {
-      const isUsed = statsResult.rows.some(row =>
+      const isUsed = statsResult.rows.some((row) =>
         row.query.toLowerCase().includes(column.name.toLowerCase()),
       );
 
@@ -175,7 +175,7 @@ export async function getColumnUsageStats(tableName: string): Promise<ColumnUsag
   } catch {
     // If pg_stat_statements is not available, return conservative estimates
     // (mark all columns as active to be safe)
-    return columns.map(column => ({
+    return columns.map((column) => ({
       column,
       usageCount: 0,
       lastUsedAt: null,
@@ -193,30 +193,30 @@ export async function auditTable(tableName: string): Promise<TableAuditResult> {
   const usageStats = await getColumnUsageStats(tableName);
 
   const potentiallyUnusedColumns = usageStats
-    .filter(stat => !stat.isActive && !stat.column.isPrimaryKey)
-    .map(stat => stat.column);
+    .filter((stat) => !stat.isActive && !stat.column.isPrimaryKey)
+    .map((stat) => stat.column);
 
   // Identify potentially unused indexes
-  const potentiallyUnusedIndexes = indexes.filter(index => {
+  const potentiallyUnusedIndexes = indexes.filter((index) => {
     // Never mark primary or unique constraint indexes as unused
     if (index.isPrimary || index.isUnique) return false;
 
     // Check if any of the index columns are potentially unused
-    const unusedColumnNames = new Set(potentiallyUnusedColumns.map(c => c.name));
-    return index.columns.length > 0 && index.columns.every(col => unusedColumnNames.has(col));
+    const unusedColumnNames = new Set(potentiallyUnusedColumns.map((c) => c.name));
+    return index.columns.length > 0 && index.columns.every((col) => unusedColumnNames.has(col));
   });
 
   const recommendations: string[] = [];
 
   if (potentiallyUnusedColumns.length > 0) {
     recommendations.push(
-      `Consider removing unused columns: ${potentiallyUnusedColumns.map(c => c.name).join(', ')}`,
+      `Consider removing unused columns: ${potentiallyUnusedColumns.map((c) => c.name).join(', ')}`,
     );
   }
 
   if (potentiallyUnusedIndexes.length > 0) {
     recommendations.push(
-      `Consider dropping unused indexes: ${potentiallyUnusedIndexes.map(i => i.name).join(', ')}`,
+      `Consider dropping unused indexes: ${potentiallyUnusedIndexes.map((i) => i.name).join(', ')}`,
     );
   }
 
@@ -278,9 +278,7 @@ export function generateIndexDropScript(auditResults: TableAuditResult[]): strin
 
   for (const result of auditResults) {
     for (const index of result.potentiallyUnusedIndexes) {
-      statements.push(
-        `-- WARNING: Review before executing. Index ${index.name} appears unused.`,
-      );
+      statements.push(`-- WARNING: Review before executing. Index ${index.name} appears unused.`);
       statements.push(`DROP INDEX IF EXISTS ${index.name};`);
       statements.push('');
     }

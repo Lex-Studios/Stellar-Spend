@@ -34,10 +34,7 @@ export function ComponentList({ components }: ComponentListProps) {
               )}
               <span className="text-xs text-[#555]">{formatTime(component.lastCheck)}</span>
               <span
-                className={cn(
-                  'text-xs px-2 py-1 rounded border',
-                  getStatusColor(component.status),
-                )}
+                className={cn('text-xs px-2 py-1 rounded border', getStatusColor(component.status))}
               >
                 {getStatusText(component.status)}
               </span>

@@ -1,4 +1,8 @@
-import type { TransactionStatus, PayoutStatus, BridgeStatus } from '@/lib/transactions/transaction-status';
+import type {
+  TransactionStatus,
+  PayoutStatus,
+  BridgeStatus,
+} from '@/lib/transactions/transaction-status';
 
 export interface Transaction {
   id: string;

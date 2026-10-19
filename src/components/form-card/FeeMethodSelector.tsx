@@ -19,9 +19,7 @@ export function FeeMethodSelector({
 }: FeeMethodSelectorProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">
-        Gas Fee Method
-      </span>
+      <span className="text-[10px] tracking-[0.18em] text-[#777777] uppercase">Gas Fee Method</span>
       {isLoading ? (
         <div className="flex gap-2">
           <Skeleton width="50%" height={44} aria-label="Loading fee option…" />

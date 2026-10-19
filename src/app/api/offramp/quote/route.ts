@@ -54,16 +54,15 @@ export async function POST(request: NextRequest) {
         currency,
       });
       if (screeningResult.verdict === 'deny') {
-        return ErrorHandler.forbidden(
-          'Source address blocked by compliance screening',
-        );
+        return ErrorHandler.forbidden('Source address blocked by compliance screening');
       }
     }
 
     const normalizedFee = FEE_METHOD_MAP[feeMethod];
-    const bridgeAmount = normalizedFee === 'stablecoin'
-      ? calculateBridgeAmount(String(amount), 'stablecoin', STABLECOIN_FEE)
-      : String(amount);
+    const bridgeAmount =
+      normalizedFee === 'stablecoin'
+        ? calculateBridgeAmount(String(amount), 'stablecoin', STABLECOIN_FEE)
+        : String(amount);
 
     // Initialize Allbridge SDK
     let receiveAmount: string;
@@ -103,9 +102,7 @@ export async function POST(request: NextRequest) {
         'getAmountToBeReceived',
       );
     } catch (error) {
-      return ErrorHandler.handle(
-        ApiError.externalService('Allbridge', 'Bridge quote unavailable'),
-      );
+      return ErrorHandler.handle(ApiError.externalService('Allbridge', 'Bridge quote unavailable'));
     }
 
     // Fetch Paycrest FX rate
@@ -114,9 +111,7 @@ export async function POST(request: NextRequest) {
     try {
       ({ rate, destinationAmount } = await fetchPaycrestQuote(receiveAmount, currency));
     } catch (error) {
-      return ErrorHandler.handle(
-        ApiError.externalService('Paycrest', 'FX rate unavailable'),
-      );
+      return ErrorHandler.handle(ApiError.externalService('Paycrest', 'FX rate unavailable'));
     }
 
     const quote = buildQuote(destinationAmount, rate, currency, '0', '0', 300);

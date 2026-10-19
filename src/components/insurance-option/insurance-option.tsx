@@ -53,10 +53,7 @@ export function getSelectedOption(
   return options.find((option) => option.selected) ?? options[0];
 }
 
-export function calculateSummaryTotal(
-  options: InsuranceOption[],
-  selectedId?: string,
-): number {
+export function calculateSummaryTotal(options: InsuranceOption[], selectedId?: string): number {
   const selected = getSelectedOption(options, selectedId);
   return selected ? selected.price : 0;
 }
@@ -143,16 +140,8 @@ const InsuranceOption: React.FC<InsuranceOptionProps> = ({
 }) => {
   return (
     <div className={className}>
-      <OptionSelector
-        options={options}
-        selectedId={selectedId}
-        onSelect={onSelect}
-      />
-      <OptionSummary
-        options={options}
-        selectedId={selectedId}
-        currency={currency}
-      />
+      <OptionSelector options={options} selectedId={selectedId} onSelect={onSelect} />
+      <OptionSummary options={options} selectedId={selectedId} currency={currency} />
     </div>
   );
 };

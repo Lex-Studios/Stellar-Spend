@@ -38,7 +38,10 @@ export interface KYCFlowState {
 }
 
 export type KYCFlowAction =
-  | { type: 'INITIALIZE'; payload: { userId: string; limits: UserLimits | null; status: KYCStatus } }
+  | {
+      type: 'INITIALIZE';
+      payload: { userId: string; limits: UserLimits | null; status: KYCStatus };
+    }
   | { type: 'SET_KYC_STATUS'; payload: KYCStatus }
   | { type: 'TOGGLE_KYC_FORM'; payload?: boolean }
   | { type: 'TOGGLE_LIMIT_REQUEST'; payload?: boolean }

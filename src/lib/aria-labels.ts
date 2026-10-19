@@ -50,14 +50,11 @@ export const ariaLabels = {
   // Notification center (#1187)
   notificationCenter: 'Notifications',
   notificationPanel: 'Notifications panel',
-  notificationButton: (unreadCount: number) =>
-    `Notifications (${unreadCount} unread)`,
+  notificationButton: (unreadCount: number) => `Notifications (${unreadCount} unread)`,
   notificationUnreadBadge: (count: number) => `${count} unread notifications`,
   notificationNew: (title: string) => `New notification: ${title}`,
-  notificationsNew: (count: number, titles: string) =>
-    `${count} new notifications: ${titles}`,
-  notificationItem: (title: string, description: string) =>
-    `${title}: ${description}`,
+  notificationsNew: (count: number, titles: string) => `${count} new notifications: ${titles}`,
+  notificationItem: (title: string, description: string) => `${title}: ${description}`,
   notificationRemove: 'Remove notification',
   notificationMarkAllRead: 'Mark all notifications as read',
   notificationClearAll: 'Clear all notifications',

@@ -94,9 +94,7 @@ test.describe('Wallet Connect — Freighter happy path', () => {
     });
   });
 
-  test('clicking Connect Wallet opens the wallet picker or connects directly', async ({
-    page,
-  }) => {
+  test('clicking Connect Wallet opens the wallet picker or connects directly', async ({ page }) => {
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
 
@@ -282,7 +280,9 @@ test.describe('Wallet Disconnect & Session Cleanup', () => {
 
     // Look for a disconnect mechanism — could be a button, a dropdown, or a menu item
     const disconnectBtn = page.getByRole('button', { name: /disconnect/i });
-    const walletMenuBtn = page.locator('[data-testid="wallet-button"], [aria-label*="wallet" i]').first();
+    const walletMenuBtn = page
+      .locator('[data-testid="wallet-button"], [aria-label*="wallet" i]')
+      .first();
 
     if (await disconnectBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await disconnectBtn.click();
@@ -298,9 +298,9 @@ test.describe('Wallet Disconnect & Session Cleanup', () => {
 
     await page.waitForTimeout(500);
     // After disconnect, the "Connect Wallet" button should reappear
-    await expect(
-      page.getByRole('button', { name: /connect wallet/i }),
-    ).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByRole('button', { name: /connect wallet/i })).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   test('localStorage session data is cleared on disconnect', async ({ page }) => {
@@ -314,7 +314,9 @@ test.describe('Wallet Disconnect & Session Cleanup', () => {
     const connectedState = await page.evaluate(() =>
       JSON.stringify(
         Object.entries(localStorage)
-          .filter(([k]) => k.toLowerCase().includes('wallet') || k.toLowerCase().includes('session'))
+          .filter(
+            ([k]) => k.toLowerCase().includes('wallet') || k.toLowerCase().includes('session'),
+          )
           .map(([k, v]) => ({ key: k, hasValue: !!v })),
       ),
     );
@@ -348,7 +350,9 @@ test.describe('Wallet Disconnect & Session Cleanup', () => {
     const disconnectedState = await page.evaluate(() =>
       JSON.stringify(
         Object.entries(localStorage)
-          .filter(([k]) => k.toLowerCase().includes('wallet') || k.toLowerCase().includes('session'))
+          .filter(
+            ([k]) => k.toLowerCase().includes('wallet') || k.toLowerCase().includes('session'),
+          )
           .map(([k, v]) => ({ key: k, hasValue: !!v })),
       ),
     );

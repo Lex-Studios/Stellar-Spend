@@ -189,16 +189,16 @@ describe('Public API Rate Limiting Middleware', () => {
 
       // Simulate concurrent requests
       const requests = Array.from({ length: config.maxRequests + 5 }, () =>
-        createMockRequest('/api/offramp/rate', { ip })
+        createMockRequest('/api/offramp/rate', { ip }),
       );
 
       const results = await Promise.all(
-        requests.map(req => publicApiRateLimitMiddleware(req, false))
+        requests.map((req) => publicApiRateLimitMiddleware(req, false)),
       );
 
       // First N should be allowed, rest blocked
-      const allowed = results.filter(r => r === null).length;
-      const blocked = results.filter(r => r?.status === 429).length;
+      const allowed = results.filter((r) => r === null).length;
+      const blocked = results.filter((r) => r?.status === 429).length;
 
       expect(allowed).toBe(config.maxRequests);
       expect(blocked).toBeGreaterThan(0);

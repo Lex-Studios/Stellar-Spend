@@ -15,7 +15,10 @@ function StatusSkeleton() {
         <div className="h-24 bg-[#1a1a1a] animate-pulse rounded border border-[#333333]" />
         <div className="grid grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-[#1a1a1a] animate-pulse rounded border border-[#333333]" />
+            <div
+              key={i}
+              className="h-16 bg-[#1a1a1a] animate-pulse rounded border border-[#333333]"
+            />
           ))}
         </div>
         <div className="h-48 bg-[#1a1a1a] animate-pulse rounded border border-[#333333]" />

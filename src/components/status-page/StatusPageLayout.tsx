@@ -23,24 +23,15 @@ export interface StatusPageLayoutProps {
  * Shared outer layout used by both user and admin status pages.
  * Renders a consistent header (title/description/actions) and content area.
  */
-export function StatusPageLayout({
-  title,
-  description,
-  actions,
-  children,
-}: StatusPageLayoutProps) {
+export function StatusPageLayout({ title, description, actions, children }: StatusPageLayoutProps) {
   return (
     <div className="status-page">
       <header className="status-page__header">
         <div className="status-page__heading">
           <h1 className="status-page__title">{title}</h1>
-          {description ? (
-            <p className="status-page__description">{description}</p>
-          ) : null}
+          {description ? <p className="status-page__description">{description}</p> : null}
         </div>
-        {actions ? (
-          <div className="status-page__actions">{actions}</div>
-        ) : null}
+        {actions ? <div className="status-page__actions">{actions}</div> : null}
       </header>
       <div className="status-page__content">{children}</div>
     </div>
@@ -60,21 +51,13 @@ export interface StatusPageSectionProps {
  * Shared section primitive for grouping status content. Used by both the
  * user-facing and admin status views to keep spacing/structure consistent.
  */
-export function StatusPageSection({
-  title,
-  actions,
-  children,
-}: StatusPageSectionProps) {
+export function StatusPageSection({ title, actions, children }: StatusPageSectionProps) {
   return (
     <section className="status-page__section">
       {title || actions ? (
         <div className="status-page__section-header">
-          {title ? (
-            <h2 className="status-page__section-title">{title}</h2>
-          ) : null}
-          {actions ? (
-            <div className="status-page__section-actions">{actions}</div>
-          ) : null}
+          {title ? <h2 className="status-page__section-title">{title}</h2> : null}
+          {actions ? <div className="status-page__section-actions">{actions}</div> : null}
         </div>
       ) : null}
       <div className="status-page__section-content">{children}</div>

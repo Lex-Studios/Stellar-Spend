@@ -106,7 +106,9 @@ export function InputField({
               aria-label="Validating…"
             />
           )}
-          {!validating && showError && <Icon name="alert-circle" size={14} className="text-red-400" />}
+          {!validating && showError && (
+            <Icon name="alert-circle" size={14} className="text-red-400" />
+          )}
           {!validating && showSuccess && (
             <Icon name="check-circle" size={14} className="text-green-400" />
           )}

@@ -156,30 +156,30 @@ for (const [pkg, info] of Object.entries(packages)) {
 // Output
 // ---------------------------------------------------------------------------
 if (showReport) {
-   log('\n✅  Approved packages:');
-   for (const { pkg, license } of approved) {
-     log(`   ${pkg}  (${license})`);
-   }
+  log('\n✅  Approved packages:');
+  for (const { pkg, license } of approved) {
+    log(`   ${pkg}  (${license})`);
+  }
 }
 
 if (accepted.length > 0) {
-   log('\n⚠️   Explicitly accepted (review at next upgrade):');
-   for (const { pkg, license, reason } of accepted) {
-     log(`   ${pkg}  (${license})`);
-     log(`     → ${reason}`);
-   }
+  log('\n⚠️   Explicitly accepted (review at next upgrade):');
+  for (const { pkg, license, reason } of accepted) {
+    log(`   ${pkg}  (${license})`);
+    log(`     → ${reason}`);
+  }
 }
 
 if (violations.length > 0) {
-   error('\n❌  License violations found — these packages require review:\n');
-   for (const { pkg, license } of violations) {
-     error(`   ${pkg}  (${license})`);
-   }
-   error(
-     '\nTo resolve: either remove the package, find a compatible alternative, ' +
-       'or add an entry to ACCEPTED_EXCEPTIONS in scripts/check-licenses.js ' +
-       'with a written rationale, then re-run this check.',
-   );
+  error('\n❌  License violations found — these packages require review:\n');
+  for (const { pkg, license } of violations) {
+    error(`   ${pkg}  (${license})`);
+  }
+  error(
+    '\nTo resolve: either remove the package, find a compatible alternative, ' +
+      'or add an entry to ACCEPTED_EXCEPTIONS in scripts/check-licenses.js ' +
+      'with a written rationale, then re-run this check.',
+  );
   process.exit(1);
 }
 

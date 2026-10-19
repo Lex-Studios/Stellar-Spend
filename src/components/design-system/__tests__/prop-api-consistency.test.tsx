@@ -47,7 +47,12 @@ describe('Design System Prop API Consistency — Issue #1097', () => {
     });
 
     it('Alert supports variant prop with consistent naming', () => {
-      const variants: Array<'info' | 'success' | 'warning' | 'error'> = ['info', 'success', 'warning', 'error'];
+      const variants: Array<'info' | 'success' | 'warning' | 'error'> = [
+        'info',
+        'success',
+        'warning',
+        'error',
+      ];
 
       variants.forEach((variant) => {
         const { unmount } = render(<Alert variant={variant}>Alert</Alert>);
@@ -57,7 +62,11 @@ describe('Design System Prop API Consistency — Issue #1097', () => {
     });
 
     it('Card supports variant prop with consistent naming', () => {
-      const variants: Array<'default' | 'elevated' | 'outlined'> = ['default', 'elevated', 'outlined'];
+      const variants: Array<'default' | 'elevated' | 'outlined'> = [
+        'default',
+        'elevated',
+        'outlined',
+      ];
 
       variants.forEach((variant) => {
         const { unmount } = render(<Card variant={variant}>Card</Card>);
@@ -88,12 +97,20 @@ describe('Design System Prop API Consistency — Issue #1097', () => {
     });
 
     it('Button has consistent size values across all variants', () => {
-      const variant1 = render(<Button variant="primary" size="sm">Small</Button>);
+      const variant1 = render(
+        <Button variant="primary" size="sm">
+          Small
+        </Button>,
+      );
       const btn1 = screen.getByRole('button');
       expect(btn1).toBeInTheDocument();
       variant1.unmount();
 
-      const variant2 = render(<Button variant="secondary" size="lg">Large</Button>);
+      const variant2 = render(
+        <Button variant="secondary" size="lg">
+          Large
+        </Button>,
+      );
       const btn2 = screen.getByRole('button');
       expect(btn2).toBeInTheDocument();
       variant2.unmount();
@@ -308,7 +325,12 @@ describe('Design System Prop API Consistency — Issue #1097', () => {
     });
 
     it('Alert variant values match implementation', () => {
-      const validVariants: Array<'info' | 'success' | 'warning' | 'error'> = ['info', 'success', 'warning', 'error'];
+      const validVariants: Array<'info' | 'success' | 'warning' | 'error'> = [
+        'info',
+        'success',
+        'warning',
+        'error',
+      ];
 
       validVariants.forEach((variant) => {
         expect(variant).toBeTruthy();
@@ -316,7 +338,11 @@ describe('Design System Prop API Consistency — Issue #1097', () => {
     });
 
     it('Card variant values match implementation', () => {
-      const validVariants: Array<'default' | 'elevated' | 'outlined'> = ['default', 'elevated', 'outlined'];
+      const validVariants: Array<'default' | 'elevated' | 'outlined'> = [
+        'default',
+        'elevated',
+        'outlined',
+      ];
 
       validVariants.forEach((variant) => {
         expect(variant).toBeTruthy();

@@ -158,12 +158,7 @@ export function InsuranceOption({
 
         {/* Premium breakdown */}
         {quote && amount > 0 && (
-          <PremiumBreakdown
-            quote={quote}
-            amount={amount}
-            enabled={enabled}
-            timeLeft={timeLeft}
-          />
+          <PremiumBreakdown quote={quote} amount={amount} enabled={enabled} timeLeft={timeLeft} />
         )}
 
         {/* Disabled hint */}

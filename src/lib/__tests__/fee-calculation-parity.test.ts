@@ -7,10 +7,7 @@ import {
   calculateAllFees,
   calculateAmountAfterFees,
 } from '../fee-calculation';
-import {
-  FEE_CONSTANTS,
-  calculateBasisPointsFee,
-} from '@stellar-spend/shared';
+import { FEE_CONSTANTS, calculateBasisPointsFee } from '@stellar-spend/shared';
 
 describe('Fee Calculation Parity Test', () => {
   describe('Backend fee estimates match shared constants', () => {
@@ -84,7 +81,10 @@ describe('Fee Calculation Parity Test', () => {
       const percentageFee = (amount * FEE_CONSTANTS.STABLECOIN_FEE_PERCENTAGE) / 100;
 
       // Using basis points
-      const basisPointsFee = calculateBasisPointsFee(amount, FEE_CONSTANTS.STABLECOIN_FEE_BASIS_POINTS);
+      const basisPointsFee = calculateBasisPointsFee(
+        amount,
+        FEE_CONSTANTS.STABLECOIN_FEE_BASIS_POINTS,
+      );
 
       expect(basisPointsFee).toBeCloseTo(percentageFee, 2);
     });

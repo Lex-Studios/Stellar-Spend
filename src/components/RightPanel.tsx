@@ -4,11 +4,7 @@ import { cn } from '@/lib/cn';
 import { QuoteDisplaySkeleton } from './skeletons';
 import { useFxRate } from '@/hooks/useFxRate';
 import { CollapsibleSection } from './CollapsibleSection';
-import {
-  type RightPanelProps,
-  formatFiat,
-  formatNetworkFee,
-} from './right-panel/types';
+import { type RightPanelProps, formatFiat, formatNetworkFee } from './right-panel/types';
 import { HeroPanel } from './right-panel/HeroPanel';
 import { BreakdownRow } from './right-panel/BreakdownRow';
 

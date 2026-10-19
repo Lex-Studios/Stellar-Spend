@@ -86,9 +86,7 @@ export class StellarClient {
   /**
    * Submits a transaction to the Stellar network with retry logic.
    */
-  async submitTransaction(
-    transaction: Transaction,
-  ): Promise<TransactionResponse> {
+  async submitTransaction(transaction: Transaction): Promise<TransactionResponse> {
     return this.withRetry(async () => {
       try {
         const result = await this.horizon.submitTransaction(transaction);
@@ -342,7 +340,7 @@ export class StellarClient {
    * Sleeps for a given number of milliseconds.
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**

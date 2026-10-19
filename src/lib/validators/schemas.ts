@@ -117,8 +117,12 @@ export const quoteRouteSchema = z.object({
 
 // Paycrest order request schema
 export const paycrestOrderRouteSchema = z.object({
-  amount: z.number({ invalid_type_error: 'amount must be a number' }).positive('amount must be a positive number'),
-  rate: z.number({ invalid_type_error: 'rate must be a number' }).positive('rate must be a positive number'),
+  amount: z
+    .number({ invalid_type_error: 'amount must be a number' })
+    .positive('amount must be a positive number'),
+  rate: z
+    .number({ invalid_type_error: 'rate must be a number' })
+    .positive('rate must be a positive number'),
   token: z.string().min(1, 'token is required'),
   network: z.string().min(1, 'network is required'),
   reference: z.string().min(1, 'reference is required'),
@@ -143,7 +147,9 @@ export const bulkPayoutItemSchema = z.object({
   beneficiaryInstitution: z.string().min(1, 'beneficiaryInstitution is required'),
   beneficiaryAccount: z.string().min(1, 'beneficiaryAccount is required'),
   beneficiaryName: z.string().min(1, 'beneficiaryName is required'),
-  amount: z.number({ invalid_type_error: 'amount must be a number' }).positive('amount must be positive'),
+  amount: z
+    .number({ invalid_type_error: 'amount must be a number' })
+    .positive('amount must be positive'),
   currency: z.string().min(1, 'currency is required'),
 });
 
@@ -216,5 +222,8 @@ export function parseBody<T>(
   if (result.valid && result.data !== undefined) {
     return { ok: true, data: result.data };
   }
-  return { ok: false, errors: result.errors ?? [{ field: 'unknown', message: 'Validation failed' }] };
+  return {
+    ok: false,
+    errors: result.errors ?? [{ field: 'unknown', message: 'Validation failed' }],
+  };
 }

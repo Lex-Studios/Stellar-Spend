@@ -154,11 +154,7 @@ export function NotificationCenter({
        * aria-live polite region — announces new notifications to screen readers
        * without interrupting the current reading flow.
        */}
-      <div
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-      >
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
 

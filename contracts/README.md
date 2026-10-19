@@ -94,6 +94,45 @@ still readable and semantically unchanged — rather than a synthetic shortcut.
 Run per-contract: `cargo test -p escrow --test upgrade` (and similarly for
 `fee-manager`, `treasury`, `multisig-authority`).
 
+## Security audit (issue #1364)
+
+Contract dependencies are scanned for known advisories with
+[cargo-audit](https://github.com/rustsec/rustsec/tree/main/cargo-audit).
+
+### Local setup (one-time)
+
+```bash
+cargo install cargo-audit --locked
+```
+
+### Running the audit
+
+```bash
+# From the repo root (uses npm script wrapper):
+npm run audit:contracts
+
+# Or directly from the contracts directory:
+cd contracts
+cargo audit
+```
+
+The script (`scripts/audit-contracts.sh`) auto-installs `cargo-audit` if it is
+not already present, so CI requires no manual step.
+
+### Ignoring an advisory
+
+If an advisory is a false positive or affects only a dev/test dependency, add an
+ignore entry to `contracts/.cargo/audit.toml`:
+
+```toml
+[advisories]
+ignore = ["RUSTSEC-YYYY-NNNN"]
+```
+
+Always document the reason for the ignore in a comment above the entry.
+
+---
+
 ## Error codes (issue #816)
 
 All four contracts return the single [`stellar_spend_shared::errors::ContractError`]

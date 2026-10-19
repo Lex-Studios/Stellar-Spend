@@ -1,10 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type {
-  NotificationPreferences,
-  NotificationDeliveryRecord,
-} from '@/lib/notifications';
+import type { NotificationPreferences, NotificationDeliveryRecord } from '@/lib/notifications';
 import {
   getOrCreateNotificationPreferences,
   upsertNotificationPreferences,

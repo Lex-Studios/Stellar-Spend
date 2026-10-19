@@ -153,7 +153,8 @@ export function NotificationProvider({
     if (typeof window === 'undefined') return [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return (JSON.parse(raw) as NotificationEvent[]).sort((a, b) => b.createdAt - a.createdAt);
+      if (raw)
+        return (JSON.parse(raw) as NotificationEvent[]).sort((a, b) => b.createdAt - a.createdAt);
     } catch (err) {
       logger.error('notification_provider.load_failed', {}, err);
     }
@@ -165,9 +166,10 @@ export function NotificationProvider({
     (event: NotificationEvent) => {
       setEvents((prev) => {
         const idx = prev.findIndex((e) => e.id === event.id);
-        const next = idx >= 0
-          ? prev.map((e, i) => (i === idx ? event : e))
-          : [event, ...prev].slice(0, MAX_EVENTS);
+        const next =
+          idx >= 0
+            ? prev.map((e, i) => (i === idx ? event : e))
+            : [event, ...prev].slice(0, MAX_EVENTS);
         persistEvents(next);
         return next;
       });
