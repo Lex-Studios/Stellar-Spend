@@ -145,4 +145,3 @@ export function InsuranceClaimForm({
   );
 }
 
-export default InsuranceClaimForm;

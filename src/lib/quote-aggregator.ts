@@ -346,11 +346,11 @@ export async function aggregateQuotes(
   return result;
 }
 
-export function getProviderStatus(): Record<QuoteProvider, ProviderConfig> {
+function getProviderStatus(): Record<QuoteProvider, ProviderConfig> {
   return PROVIDER_CONFIGS;
 }
 
-export function resetReliabilityHistory(): void {
+function resetReliabilityHistory(): void {
   for (const config of Object.values(PROVIDER_CONFIGS)) {
     config.reliabilityHistory = [];
   }

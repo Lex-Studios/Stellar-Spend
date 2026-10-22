@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // TODO: Add authentication check to ensure user owns this wallet
+    // TODO(#1361): Add authentication check to ensure user owns this wallet
 
     const normalizedWallet = wallet.toLowerCase();
     const settings = syncSettingsStore.get(normalizedWallet) || {
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // TODO: Add authentication check to ensure user owns this wallet
+    // TODO(#1361): Add authentication check to ensure user owns this wallet
 
     const normalizedWallet = wallet.toLowerCase();
     const settings: SyncSettingsRecord = {

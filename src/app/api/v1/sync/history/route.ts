@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Verify the user is authenticated and can access this wallet
-    // TODO: Add authentication check to ensure user owns this wallet
+    // TODO(#1361): Add authentication check to ensure user owns this wallet
 
     const transactions = await dal.getByUser(wallet);
 
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         return ErrorHandler.validation('timestamp is required');
       }
 
-      // TODO: Add authentication check to ensure user owns this wallet
+      // TODO(#1361): Add authentication check to ensure user owns this wallet
 
       try {
         const synced: Transaction[] = [];

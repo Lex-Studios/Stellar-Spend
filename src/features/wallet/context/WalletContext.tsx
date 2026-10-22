@@ -34,7 +34,7 @@ export interface WalletConnectionContextValue {
 const WalletConnectionContext =
   createContext<WalletConnectionContextValue | null>(null);
 
-export function useWalletConnection(): WalletConnectionContextValue {
+function useWalletConnection(): WalletConnectionContextValue {
   const ctx = useContext(WalletConnectionContext);
   if (!ctx) {
     throw new Error('useWalletConnection must be used within a <WalletProvider>');
@@ -58,7 +58,7 @@ export interface WalletAccountContextValue {
 const WalletAccountContext =
   createContext<WalletAccountContextValue | null>(null);
 
-export function useWalletAccount(): WalletAccountContextValue {
+function useWalletAccount(): WalletAccountContextValue {
   const ctx = useContext(WalletAccountContext);
   if (!ctx) {
     throw new Error('useWalletAccount must be used within a <WalletProvider>');
@@ -79,7 +79,7 @@ export interface WalletTransactionsContextValue {
 const WalletTransactionsContext =
   createContext<WalletTransactionsContextValue | null>(null);
 
-export function useWalletTransactionsContext(): WalletTransactionsContextValue {
+function useWalletTransactionsContext(): WalletTransactionsContextValue {
   const ctx = useContext(WalletTransactionsContext);
   if (!ctx) {
     throw new Error(
@@ -110,7 +110,7 @@ const WalletContext = createContext<WalletContextValue | null>(null);
  *
  * Must be used within a <WalletProvider>.
  */
-export function useWalletContext(): WalletContextValue {
+function useWalletContext(): WalletContextValue {
   const ctx = useContext(WalletContext);
   if (!ctx) {
     throw new Error('useWalletContext must be used within a <WalletProvider>');
@@ -127,7 +127,7 @@ export function useWalletContext(): WalletContextValue {
 //   • the transactions slice is completely independent
 // ---------------------------------------------------------------------------
 
-export function WalletProvider({
+function WalletProvider({
   children,
   value,
 }: {

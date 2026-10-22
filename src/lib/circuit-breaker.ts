@@ -221,7 +221,7 @@ export class CircuitTimeoutError extends Error {
  * Circuit breaker for outbound Stellar Horizon API calls.
  * Opens after 5 consecutive failures; resets after 30 s.
  */
-export const horizonBreaker = new CircuitBreaker({
+const horizonBreaker = new CircuitBreaker({
   name: 'stellar-horizon',
   failureThreshold: 5,
   resetTimeoutMs: 30_000,

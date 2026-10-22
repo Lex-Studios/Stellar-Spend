@@ -156,14 +156,14 @@ export class DateFormatter {
   }
 }
 
-export const defaultFormatter = new DateFormatter();
+const defaultFormatter = new DateFormatter();
 
-export function formatTransaction(iso: string, timeZone?: string): string {
+function formatTransaction(iso: string, timeZone?: string): string {
   const formatter = new DateFormatter({ timeZone });
   return formatter.formatTimestamp(iso);
 }
 
-export function formatTransactionDate(iso: string, timeZone?: string): string {
+function formatTransactionDate(iso: string, timeZone?: string): string {
   const formatter = new DateFormatter({ timeZone });
   return formatter.formatDateOnly(iso);
 }

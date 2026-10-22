@@ -7,7 +7,7 @@ export async function getFeatureFlags(userId?: string): Promise<FeatureFlags> {
   return featureFlagStore.get(userId);
 }
 
-export function isFlagEnabled(flags: FeatureFlags, path: string, userId?: string): boolean {
+function isFlagEnabled(flags: FeatureFlags, path: string, userId?: string): boolean {
   const parts = path.split('.');
   let current: unknown = flags;
 
@@ -35,6 +35,6 @@ export async function clearFlagOverrides(): Promise<void> {
   featureFlagStore.clearOverrides();
 }
 
-export async function invalidateFlagCache(): Promise<void> {
+async function invalidateFlagCache(): Promise<void> {
   await featureFlagStore.invalidate();
 }

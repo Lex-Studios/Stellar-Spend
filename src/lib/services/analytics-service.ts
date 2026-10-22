@@ -33,7 +33,7 @@ export class AnalyticsService {
     startDate: number,
     endDate: number,
   ): Promise<AnalyticsPeriod> {
-    // TODO: Fetch transactions from database
+    // TODO(#1363): Fetch transactions from database
     const transactions: RawTransaction[] = [];
 
     const analytics = this.calculateAnalytics(transactions);

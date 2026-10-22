@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, { params }: { params: { token: strin
     // Increment view count
     await svc.incrementViewCount(token);
 
-    // TODO: Fetch transaction details from database
+    // TODO(#1360): Fetch transaction details from database
     const preview = {
       transactionId: share.transactionId,
       amount: '100.00',

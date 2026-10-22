@@ -20,7 +20,7 @@ import {
   createNonceTable,
 } from '../webhookVerify';
 
-export class WebhookSecurity {
+class WebhookSecurity {
   static verifyProviderSignature = verifyProviderSignature;
   static verifyWebhookSignature = verifyWebhookSignature;
   static generateOutgoingSignature = generateOutgoingSignature;

@@ -131,7 +131,7 @@ function logViolation(namespace: string, key: string, count: number, limit: numb
 
 // ─── Header Helpers ───────────────────────────────────────────────────────────
 
-export function getRateLimitHeaders(result: RateLimitResult): RateLimitHeaders {
+function getRateLimitHeaders(result: RateLimitResult): RateLimitHeaders {
   const headers: RateLimitHeaders = {
     'X-RateLimit-Limit': String(result.limit),
     'X-RateLimit-Remaining': String(result.remaining),
@@ -162,31 +162,31 @@ export function getUserId(request: Request): string | null {
 }
 
 /** Returns the best available rate limit key: userId if present, else IP */
-export function getRateLimitKey(request: Request): string {
+function getRateLimitKey(request: Request): string {
   return getUserId(request) ?? getClientIp(request);
 }
 
 // ─── Pre-configured Limiters ──────────────────────────────────────────────────
 
-export const buildTxLimiter = new SlidingWindowRateLimiter('build-tx', {
+const buildTxLimiter = new SlidingWindowRateLimiter('build-tx', {
   maxRequests: 10,
   windowMs: 60_000,
   premiumBypass: false,
 });
 
-export const paycrestOrderLimiter = new SlidingWindowRateLimiter('paycrest-order', {
+const paycrestOrderLimiter = new SlidingWindowRateLimiter('paycrest-order', {
   maxRequests: 5,
   windowMs: 60_000,
   premiumBypass: true,
 });
 
-export const quoteLimiter = new SlidingWindowRateLimiter('quote', {
+const quoteLimiter = new SlidingWindowRateLimiter('quote', {
   maxRequests: 30,
   windowMs: 60_000,
   premiumBypass: true,
 });
 
-export const globalApiLimiter = new SlidingWindowRateLimiter('global', {
+const globalApiLimiter = new SlidingWindowRateLimiter('global', {
   maxRequests: 100,
   windowMs: 60_000,
   premiumBypass: true,

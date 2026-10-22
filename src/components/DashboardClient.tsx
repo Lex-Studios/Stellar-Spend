@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useDashboardWallet } from '@/hooks/useDashboardWallet';
 import { useWebVitals } from '@/hooks/useWebVitals';
 import Header from './Header';
-import FormCard, { type OfframpPayload, type QuoteResult } from './FormCard';
+import { FormCard, type OfframpPayload, type QuoteResult } from './FormCard';
 import RightPanel from './RightPanel';
 
 /**

@@ -204,14 +204,14 @@ export class TransactionPriorityQueue {
   }
 }
 
-export function calculatePriorityFee(baseFee: string, priority: TransactionPriority): string {
+function calculatePriorityFee(baseFee: string, priority: TransactionPriority): string {
   const base = parseFloat(baseFee);
   if (isNaN(base)) return baseFee;
   const adjusted = base * FEE_MULTIPLIERS[priority];
   return adjusted.toFixed(6);
 }
 
-export function inferPriorityFromAmount(amountUsdc: string): TransactionPriority {
+function inferPriorityFromAmount(amountUsdc: string): TransactionPriority {
   const amount = parseFloat(amountUsdc);
   if (isNaN(amount)) return TransactionPriority.NORMAL;
   if (amount >= 10000) return TransactionPriority.URGENT;

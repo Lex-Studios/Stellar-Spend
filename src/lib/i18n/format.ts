@@ -15,7 +15,7 @@ export function localeFor(language: Language): string {
   return LOCALE_MAP[language] ?? 'en-US';
 }
 
-export function formatDate(
+function formatDate(
   date: Date | number,
   language: Language,
   options?: Intl.DateTimeFormatOptions,
@@ -38,7 +38,7 @@ export function formatNumber(
   return new Intl.NumberFormat(localeFor(language), options).format(amount);
 }
 
-export function formatCurrencyAmount(amount: number, currency: string, language: Language): string {
+function formatCurrencyAmount(amount: number, currency: string, language: Language): string {
   try {
     return new Intl.NumberFormat(localeFor(language), {
       style: 'currency',

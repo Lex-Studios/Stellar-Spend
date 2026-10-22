@@ -91,7 +91,7 @@ export function getTimeoutMetrics(): Readonly<TimeoutMetrics> {
   return { ..._metrics };
 }
 
-export function resetTimeoutMetrics(): void {
+function resetTimeoutMetrics(): void {
   Object.assign(_metrics, {
     totalChecked: 0,
     timedOut: 0,
@@ -307,7 +307,7 @@ export async function checkAndCancelTimedOutTransactions(
   return results.filter((r) => r.timedOut);
 }
 
-export async function scanAndCancelTimedOutTransactions(
+async function scanAndCancelTimedOutTransactions(
   transactions: Transaction[],
 ): Promise<TimeoutCheckResult[]> {
   const pending = transactions.filter((tx) => tx.status === 'pending');

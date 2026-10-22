@@ -76,7 +76,7 @@ export async function notify(entry: DLQEntry): Promise<void> {
  * Flush any pending aggregated alerts immediately, regardless of window state.
  * Clears the in-memory map after sending.
  */
-export async function flush(): Promise<void> {
+async function flush(): Promise<void> {
   const entries = Array.from(alertWindows.values());
   alertWindows.clear();
 

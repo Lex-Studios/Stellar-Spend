@@ -8,7 +8,7 @@ export interface ProviderHealth {
   error?: string;
 }
 
-export interface ProviderCapabilities {
+interface ProviderCapabilities {
   supportedSourceChains: string[];
   supportedDestinationChains: string[];
   supportedTokens: string[];
@@ -171,4 +171,4 @@ export class BridgeProviderRegistry {
   }
 }
 
-export const providerRegistry = new BridgeProviderRegistry();
+const providerRegistry = new BridgeProviderRegistry();

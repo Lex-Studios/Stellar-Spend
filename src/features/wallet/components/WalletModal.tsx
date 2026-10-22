@@ -147,4 +147,3 @@ export function WalletModal({
   );
 }
 
-export default WalletModal;

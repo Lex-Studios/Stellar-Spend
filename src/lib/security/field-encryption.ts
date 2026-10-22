@@ -153,7 +153,7 @@ export interface RotationResult {
  * @param records   - Array of DB row objects (will be mutated)
  * @param fields    - Dot-notation field paths to rotate (e.g. ['beneficiary.accountIdentifier'])
  */
-export function rotateFieldEncryption<T extends Record<string, unknown>>(
+function rotateFieldEncryption<T extends Record<string, unknown>>(
   records: T[],
   fields: string[],
 ): RotationResult {

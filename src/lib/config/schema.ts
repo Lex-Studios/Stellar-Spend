@@ -74,7 +74,7 @@ export const ConfigSchema = z.object({
 
 export type Config = z.infer<typeof ConfigSchema>;
 
-export function validateConfig(config: unknown): Config {
+function validateConfig(config: unknown): Config {
   return ConfigSchema.parse(config);
 }
 
@@ -195,6 +195,6 @@ export function loadEnvConfig(source: EnvSource = process.env): ValidatedEnv {
  * Startup entry helper: validates `process.env` and returns the typed env,
  * throwing a single aggregated error listing every missing/forbidden key.
  */
-export function validateEnv(source: EnvSource = process.env): ValidatedEnv {
+function validateEnv(source: EnvSource = process.env): ValidatedEnv {
   return loadEnvConfig(source);
 }

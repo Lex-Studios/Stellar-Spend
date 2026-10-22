@@ -2,7 +2,7 @@ export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expens
 export type EntryType = 'debit' | 'credit';
 export type ReconciliationStatus = 'unreconciled' | 'reconciled' | 'discrepancy';
 
-export interface LedgerAccount {
+interface LedgerAccount {
   id: string;
   code: string;
   name: string;

@@ -23,25 +23,25 @@ export class SharingService {
       viewCount: 0,
     };
 
-    // TODO: Persist to database
+    // TODO(#1364): Persist to database
     return share;
   }
 
   async getShareLink(_shareToken: string): Promise<ShareableTransaction | null> {
-    // TODO: Fetch from database
+    // TODO(#1364): Fetch from database
     return null;
   }
 
   async incrementViewCount(_shareToken: string): Promise<void> {
-    // TODO: Update view count in database
+    // TODO(#1364): Update view count in database
   }
 
   async revokeShareLink(_shareToken: string): Promise<void> {
-    // TODO: Delete from database
+    // TODO(#1364): Delete from database
   }
 
   async getUserShareLinks(_userAddress: string): Promise<ShareableTransaction[]> {
-    // TODO: Fetch from database
+    // TODO(#1364): Fetch from database
     return [];
   }
 

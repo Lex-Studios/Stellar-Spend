@@ -35,7 +35,7 @@ export function getCountryValidator(countryCode: string): CountryValidatorFn | u
 /**
  * Remove a previously registered validator (useful in tests).
  */
-export function unregisterCountryValidator(countryCode: string): void {
+function unregisterCountryValidator(countryCode: string): void {
   countryValidators.delete(countryCode.toUpperCase());
 }
 
@@ -95,7 +95,7 @@ export function validateIBAN(value: string): ValidationResult {
  * Validate a bank field for a given country using the corridor-config validators.
  * Falls back to generic validators when no country-specific rules exist.
  */
-export function validateBankFieldForCountry(
+function validateBankFieldForCountry(
   country: string,
   field: BankFieldType,
   value: string,

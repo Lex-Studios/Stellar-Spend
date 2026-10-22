@@ -24,7 +24,7 @@ const PAYCREST_STATUS_MAP: Record<string, PayoutStatus> = {
   'payment_order.expired': 'expired',
 };
 
-export function mapPaycrestStatus(webhookStatus: string): PayoutStatus {
+function mapPaycrestStatus(webhookStatus: string): PayoutStatus {
   return PAYCREST_STATUS_MAP[webhookStatus] ?? 'pending';
 }
 

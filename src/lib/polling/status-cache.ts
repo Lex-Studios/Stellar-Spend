@@ -36,6 +36,6 @@ export function isFresh(entry: CacheEntry): boolean {
   return age < TTL_MS;
 }
 
-export function clear(): void {
+function clear(): void {
   cache.clear();
 }

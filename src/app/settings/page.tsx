@@ -65,7 +65,7 @@ function SettingsContent() {
     }
   }, []);
 
-  // TODO: Get user address from wallet context
+  // TODO(#1362): Get user address from wallet context
   useEffect(() => {
     // Placeholder - should get from wallet context
     const stored = localStorage.getItem('userAddress');

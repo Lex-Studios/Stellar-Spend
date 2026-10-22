@@ -94,7 +94,7 @@ export function decodeTxResultXdr(errorResultXdr?: string): string | null {
  * @param payload - Error payload from Soroban contract
  * @returns Formatted error message
  */
-export function formatSorobanError(payload: unknown): string {
+function formatSorobanError(payload: unknown): string {
   if (!payload) return 'Unknown error';
 
   // Try to parse the payload if it's a string

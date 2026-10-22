@@ -12,7 +12,7 @@ export function validateAddress(address: string, chain: 'stellar' | 'base'): boo
   return false;
 }
 
-export function validateEvmAddress(address: string): boolean {
+function validateEvmAddress(address: string): boolean {
   return /^0x[a-fA-F0-9]{40}$/.test(address);
 }
 
@@ -20,11 +20,11 @@ export function validateAccountNumber(accountNumber: string): boolean {
   return /^\d{10}$/.test(accountNumber);
 }
 
-export function sanitizeInput(input: string): string {
+function sanitizeInput(input: string): string {
   return input.trim().replace(/[^\w\s.-]/g, '');
 }
 
-export function validateToken(token: string): boolean {
+function validateToken(token: string): boolean {
   return ['USDC', 'USDT'].includes(token.toUpperCase());
 }
 

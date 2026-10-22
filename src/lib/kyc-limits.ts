@@ -189,7 +189,7 @@ function applyCorridorOverrides(tier: LimitTier, currency?: string): Transaction
  * Set corridor-specific KYC overrides at runtime.
  * Called by the server on startup to sync corridor-config into KYC limits.
  */
-export function setCorridorOverrides(
+function setCorridorOverrides(
   overrides: Record<
     string,
     Record<string, { dailyLimit: number; monthlyLimit: number; transactionLimit: number }>

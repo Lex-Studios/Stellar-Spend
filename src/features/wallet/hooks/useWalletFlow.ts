@@ -10,7 +10,7 @@ import type { WalletFlowState } from '@stellar-spend/shared';
  * Manages the UI-related state machine for the wallet connection flow.
  * Returns the current state, progress steps, and UI variant data.
  */
-export function useWalletFlow(initialState: WalletFlowState = 'pre_connect') {
+function useWalletFlow(initialState: WalletFlowState = 'pre_connect') {
   const [state, setState] = useState<WalletFlowState>(initialState);
 
   // Derive the UI variant based on the current state.

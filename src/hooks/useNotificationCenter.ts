@@ -49,7 +49,7 @@ const MAX_EVENTS = 100;
  * Manages read/unread state with localStorage persistence.
  * Provides deep links to relevant contexts.
  */
-export function useNotificationCenter(userAddress: string | null) {
+function useNotificationCenter(userAddress: string | null) {
   const [state, setState] = useState<NotificationCenterState>({
     events: [],
     unreadCount: 0,

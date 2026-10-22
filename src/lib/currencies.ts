@@ -398,7 +398,7 @@ export async function getCurrencies(): Promise<CurrencyInfo[]> {
 }
 
 /** Fetches institutions for a currency, checking corridor config first */
-export async function getInstitutions(
+async function getInstitutions(
   currency: string,
 ): Promise<Array<{ id: string; name: string; code: string }>> {
   try {

@@ -78,7 +78,7 @@ interface BuildSwapAndBridgeTxParams {
 /**
  * Build Soroban swap_and_bridge transaction
  */
-export async function buildSwapAndBridgeTx(params: BuildSwapAndBridgeTxParams): Promise<string> {
+async function buildSwapAndBridgeTx(params: BuildSwapAndBridgeTxParams): Promise<string> {
   const {
     rpcUrl,
     sourceAccountPublicKey,

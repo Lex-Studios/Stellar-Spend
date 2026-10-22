@@ -1,7 +1,7 @@
 import { isValidQuote } from './validation';
 import { fxRateService } from '@/lib/services';
 
-export interface QuoteParams {
+interface QuoteParams {
   amount: string;
   currency: string;
   feeMethod: 'native' | 'stablecoin';

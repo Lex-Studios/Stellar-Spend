@@ -181,4 +181,3 @@ export function InsuranceOption({
   );
 }
 
-export default InsuranceOption;

@@ -189,7 +189,7 @@ export async function apiDelete<T = unknown>(url: string, config?: ApiRequestCon
  * const flags = await apiClient.get<FeatureFlags>('/api/admin/feature-flags');
  * await apiClient.post('/api/v1/sync/settings', { wallet, syncEnabled: true });
  */
-export const apiClient = {
+const apiClient = {
   get: apiGet,
   post: apiPost,
   patch: apiPatch,

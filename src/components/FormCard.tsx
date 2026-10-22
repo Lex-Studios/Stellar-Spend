@@ -224,4 +224,3 @@ export function FormCard(props: FormCardProps) {
   );
 }
 
-export default FormCard;

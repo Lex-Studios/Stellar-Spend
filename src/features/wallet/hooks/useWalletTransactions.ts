@@ -8,7 +8,7 @@ export interface WalletTransactions {
   reload: () => void;
 }
 
-export function useWalletTransactions(publicKey: string | undefined): WalletTransactions {
+function useWalletTransactions(publicKey: string | undefined): WalletTransactions {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [, startTransition] = useTransition();
 

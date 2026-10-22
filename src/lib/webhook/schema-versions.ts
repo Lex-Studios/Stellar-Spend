@@ -15,11 +15,11 @@ export const SUPPORTED_SCHEMA_VERSIONS: SchemaVersion[] = ['1', '2'];
 /** Versions still served but scheduled for removal; subscribers should migrate off these. */
 export const DEPRECATED_SCHEMA_VERSIONS: SchemaVersion[] = ['1'];
 
-export function isSupportedSchemaVersion(version: string): version is SchemaVersion {
+function isSupportedSchemaVersion(version: string): version is SchemaVersion {
   return (SUPPORTED_SCHEMA_VERSIONS as string[]).includes(version);
 }
 
-export function isDeprecatedSchemaVersion(version: SchemaVersion): boolean {
+function isDeprecatedSchemaVersion(version: SchemaVersion): boolean {
   return (DEPRECATED_SCHEMA_VERSIONS as string[]).includes(version);
 }
 
@@ -59,7 +59,7 @@ function buildV2(input: BuildPayloadInput): SchemaV2Payload {
 }
 
 /** Builds the canonical (latest) payload, then transforms it down to the requested version. */
-export function buildPayloadForVersion(
+function buildPayloadForVersion(
   input: BuildPayloadInput,
   version: SchemaVersion = DEFAULT_SCHEMA_VERSION,
 ): VersionedPayload {

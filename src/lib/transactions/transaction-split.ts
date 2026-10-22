@@ -21,7 +21,7 @@ export interface SplitReconciliation {
   recipientBreakdown: Record<string, { expected: number; executed: number; variance: number }>;
 }
 
-export interface SplitAnalytics {
+interface SplitAnalytics {
   totalSplits: number;
   completedSplits: number;
   partialSplits: number;
@@ -179,7 +179,7 @@ export function calculateSplitFees(totalAmount: string, recipientCount: number):
 // Execution
 // ---------------------------------------------------------------------------
 
-export async function executeSplit(
+async function executeSplit(
   splitId: string,
   executeRecipient: (recipientId: string, amount: string) => Promise<void>,
 ): Promise<SplitTransaction> {
