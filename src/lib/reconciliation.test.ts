@@ -359,3 +359,269 @@ describe('daily-reconciliation cron route (#1203)', () => {
     expect(result.windowEnd).toBe(end);
   });
 });
+
+/* =========================================================================
+ * Edge case tests — issue #1350
+ * "reconciliation.ts has a test file but misses mismatched-amount and
+ *  missing-ledger cases. Add them."
+ * ========================================================================= */
+
+describe('#1350 — mismatched-amount edge cases', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('detects amount mismatch when Paycrest returns a string amount different from record', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ successful: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: { hash: '0xabc' } }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { status: 'completed', amount: '99.99' } }),
+      });
+
+    const record = makeRecord({ amount: '100.00' });
+    const results = await reconcileTransaction(record);
+    const mismatch = results.find((r) => r.type === 'amount_mismatch');
+    expect(mismatch).toBeDefined();
+    expect(mismatch?.severity).toBe('high');
+    expect(mismatch?.description).toContain('100.00');
+    expect(mismatch?.description).toContain('99.99');
+  });
+
+  it('detects amount mismatch when Paycrest uses senderAmount field instead of amount', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ successful: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: { hash: '0xabc' } }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { status: 'completed', senderAmount: '50.00' } }),
+      });
+
+    // record.amount is '100.00', senderAmount is '50.00' — mismatch
+    const record = makeRecord({ amount: '100.00' });
+    const results = await reconcileTransaction(record);
+    const mismatch = results.find((r) => r.type === 'amount_mismatch');
+    expect(mismatch).toBeDefined();
+    expect(mismatch?.description).toContain('50.00');
+  });
+
+  it('does NOT flag amount mismatch when amounts match exactly', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ successful: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: { hash: '0xabc' } }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { status: 'completed', amount: '100.00' } }),
+      });
+
+    const record = makeRecord({ amount: '100.00' });
+    const results = await reconcileTransaction(record);
+    expect(results.find((r) => r.type === 'amount_mismatch')).toBeUndefined();
+  });
+
+  it('does NOT flag amount mismatch when record has no amount field', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ successful: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: { hash: '0xabc' } }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { status: 'completed', amount: '999.00' } }),
+      });
+
+    // amount is intentionally absent — reconciliation cannot compare
+    const record = makeRecord({ amount: undefined });
+    const results = await reconcileTransaction(record);
+    expect(results.find((r) => r.type === 'amount_mismatch')).toBeUndefined();
+  });
+
+  it('amount mismatch discrepancy contains both stellarData and paycrestData', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ successful: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: { hash: '0xabc' } }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { status: 'completed', amount: '1.00' } }),
+      });
+
+    const record = makeRecord({ amount: '200.00' });
+    const results = await reconcileTransaction(record);
+    const mismatch = results.find((r) => r.type === 'amount_mismatch');
+    expect(mismatch).toBeDefined();
+    expect(mismatch?.stellarData).toBeDefined();
+    expect(mismatch?.paycrestData).toBeDefined();
+  });
+
+  it('report summary increments amountMismatches for each affected transaction', async () => {
+    global.fetch = vi
+      .fn()
+      // tx-1: stellar OK, base OK, paycrest amount differs
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ successful: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: { hash: '0x1' } }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { status: 'completed', amount: '50.00' } }),
+      })
+      // tx-2: stellar OK, base OK, paycrest amount differs
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ successful: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: { hash: '0x2' } }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { status: 'completed', amount: '75.00' } }),
+      });
+
+    const records = [
+      makeRecord({ transactionId: 'tx-m1', amount: '100.00' }),
+      makeRecord({ transactionId: 'tx-m2', amount: '100.00' }),
+    ];
+    const report = await generateReconciliationReport(records);
+    expect(report.summary.amountMismatches).toBe(2);
+  });
+});
+
+describe('#1350 — missing-ledger entry edge cases', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('detects missing Stellar transaction when stellarTxHash is provided but fetch fails', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false }) // stellar fetch fails
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: { hash: '0xbase' } }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { status: 'completed', amount: '100.00' } }),
+      });
+
+    const record = makeRecord({ amount: '100.00' });
+    const results = await reconcileTransaction(record);
+    const missing = results.find((r) => r.type === 'missing_stellar');
+    expect(missing).toBeDefined();
+    expect(missing?.severity).toBe('high');
+    expect(missing?.description).toContain(record.stellarTxHash);
+  });
+
+  it('detects missing Base transaction when baseTxHash is provided but RPC returns null result', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ successful: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: null }) }) // null result
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { status: 'completed', amount: '100.00' } }),
+      });
+
+    const record = makeRecord({ amount: '100.00' });
+    const results = await reconcileTransaction(record);
+    const missing = results.find((r) => r.type === 'missing_base');
+    expect(missing).toBeDefined();
+    expect(missing?.severity).toBe('high');
+  });
+
+  it('detects missing Paycrest order when orderId is provided but fetch returns 404', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ successful: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: { hash: '0xbase' } }) })
+      .mockResolvedValueOnce({ ok: false }); // paycrest 404
+
+    const record = makeRecord({ amount: '100.00' });
+    const results = await reconcileTransaction(record);
+    const missing = results.find((r) => r.type === 'missing_paycrest');
+    expect(missing).toBeDefined();
+    expect(missing?.severity).toBe('medium');
+    expect(missing?.description).toContain(record.paycrestOrderId);
+  });
+
+  it('skips missing_stellar check when record has no stellarTxHash', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: { hash: '0xbase' } }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { status: 'completed', amount: '100.00' } }),
+      });
+
+    // No stellar hash — should not report missing_stellar
+    const record = makeRecord({ stellarTxHash: undefined, amount: '100.00' });
+    const results = await reconcileTransaction(record);
+    expect(results.find((r) => r.type === 'missing_stellar')).toBeUndefined();
+  });
+
+  it('skips missing_base check when record has no baseTxHash', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ successful: true }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { status: 'completed', amount: '100.00' } }),
+      });
+
+    const record = makeRecord({ baseTxHash: undefined, amount: '100.00' });
+    const results = await reconcileTransaction(record);
+    expect(results.find((r) => r.type === 'missing_base')).toBeUndefined();
+  });
+
+  it('skips missing_paycrest check when record has no paycrestOrderId', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ successful: true }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ result: { hash: '0xbase' } }) });
+
+    const record = makeRecord({ paycrestOrderId: undefined, amount: '100.00' });
+    const results = await reconcileTransaction(record);
+    expect(results.find((r) => r.type === 'missing_paycrest')).toBeUndefined();
+  });
+
+  it('handles a record with ALL three hashes missing — no external fetches, no discrepancies', async () => {
+    // When all three are absent the reconciler has nothing to check against
+    const fetchSpy = vi.fn();
+    global.fetch = fetchSpy;
+
+    const record = makeRecord({
+      stellarTxHash: undefined,
+      baseTxHash: undefined,
+      paycrestOrderId: undefined,
+    });
+
+    const results = await reconcileTransaction(record);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(results).toHaveLength(0);
+  });
+
+  it('report summary counts missingStellar, missingBase, missingPaycrest separately', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false });
+
+    const records = [
+      makeRecord({ transactionId: 'tx-s1', stellarTxHash: 'shash-1' }),
+      makeRecord({ transactionId: 'tx-b1', baseTxHash: '0xbase1' }),
+      makeRecord({
+        transactionId: 'tx-p1',
+        paycrestOrderId: 'order-p1',
+        stellarTxHash: undefined,
+        baseTxHash: undefined,
+      }),
+    ];
+
+    const report = await generateReconciliationReport(records);
+    // Each record has one missing leg — counts should all be ≥ 1
+    expect(report.summary.missingStellar).toBeGreaterThanOrEqual(1);
+    expect(report.summary.missingBase).toBeGreaterThanOrEqual(1);
+    expect(report.summary.missingPaycrest).toBeGreaterThanOrEqual(1);
+  });
+
+  it('fetch network error is treated as a missing entry (no throw, discrepancy added)', async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error('Network timeout'));
+
+    const record = makeRecord({ amount: '100.00' });
+    // Should not throw; all three legs will be treated as missing
+    const results = await reconcileTransaction(record);
+    expect(results.some((r) => r.type === 'missing_stellar')).toBe(true);
+  });
+});

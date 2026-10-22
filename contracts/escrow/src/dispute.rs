@@ -7,7 +7,7 @@
 use soroban_sdk::{contracttype, symbol_short, Address, Env, Map, String};
 use stellar_spend_shared::errors::ContractError;
 
-use crate::release::{load_deposits, require_admin};
+use crate::storage::{load_deposits, require_admin};
 use crate::{
     DataKey, EscrowDeposit, EscrowStatus, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD,
     MAX_TIMEOUT_LEDGERS, MIN_TIMEOUT_LEDGERS,

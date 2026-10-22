@@ -31,15 +31,16 @@
 //! deliberate trade so that [`EscrowContract::migrate`] can enumerate every deposit
 //! during a schema upgrade (Soroban cannot iterate persistent-storage keys).
 //!
-//! # Module layout (#812)
+//! # Module layout (#812, #1318)
 //!
 //! Business logic is split into focused modules; this file is a thin
 //! contract-trait dispatcher:
 //!
 //! | Module        | Responsibility                                       |
 //! |---------------|------------------------------------------------------|
+//! | `storage`     | All raw instance-storage I/O helpers (#1318)         |
 //! | `create`      | [`EscrowContract::deposit`]                          |
-//! | `release`     | [`EscrowContract::release`] + shared guards          |
+//! | `release`     | [`EscrowContract::release`]                          |
 //! | `refund`      | [`EscrowContract::refund`]                           |
 //! | `dispute`     | [`EscrowContract::set_timeout`], `can_refund`        |
 
@@ -48,9 +49,10 @@ mod dispute;
 mod create;
 mod refund;
 mod release;
+pub(crate) mod storage;
 
 use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, BytesN, Env, Map};
-use stellar_spend_shared::{errors::ContractError, validation::check_schema_version};
+use stellar_spend_shared::errors::ContractError;
 
 // ── Sub-modules (issue #812) ──────────────────────────────────────────────────
 
@@ -199,7 +201,7 @@ impl EscrowContract {
     /// Fetch a deposit record.
     pub fn get_deposit(env: Env, deposit_id: u64) -> Result<EscrowDeposit, ContractError> {
         Self::require_current_schema(&env)?;
-        release::load_deposits(&env)?
+        storage::load_deposits(&env)?
             .get(deposit_id)
             .ok_or(ContractError::NotFound)
     }
@@ -239,7 +241,7 @@ impl EscrowContract {
     /// existing layout — run `migrate` immediately afterwards, in the same
     /// transaction where possible.
     pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), ContractError> {
-        release::require_admin(&env)?;
+        storage::require_admin(&env)?;
         env.deployer().update_current_contract_wasm(new_wasm_hash);
         env.events().publish((symbol_short!("upgrade"),), ());
         Ok(())
@@ -251,7 +253,7 @@ impl EscrowContract {
     /// applies — it is the one call that is *supposed* to run against stale state.
     /// Returns the version migrated from.
     pub fn migrate(env: Env) -> Result<u32, ContractError> {
-        release::require_admin(&env)?;
+        storage::require_admin(&env)?;
 
         let stored: u32 = env
             .storage()
@@ -310,16 +312,11 @@ impl EscrowContract {
     // ── Internal helpers ──────────────────────────────────────────────────────
 
     fn require_current_schema(env: &Env) -> Result<(), ContractError> {
-        check_schema_version(
-            env.storage().instance().get(&DataKey::Schema),
-            SCHEMA_VERSION,
-        )
+        storage::require_current_schema(env)
     }
 
     fn bump_instance_ttl(env: &Env) {
-        env.storage()
-            .instance()
-            .extend_ttl(INSTANCE_TTL_THRESHOLD, INSTANCE_TTL_EXTEND_TO);
+        storage::bump_instance_ttl(env)
     }
 }
 
