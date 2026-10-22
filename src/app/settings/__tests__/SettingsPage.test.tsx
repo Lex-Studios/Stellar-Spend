@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import SettingsPage from '../page';
 import { I18nProvider } from '@/lib/i18n/provider';
 
@@ -26,12 +26,19 @@ describe('SettingsPage Persistence', () => {
     fireEvent.click(prefTab);
 
     const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'es' } });
 
-    expect(localStorage.getItem('stellar_language')).toBe('es');
+    // setLanguage is async (locale chunk loads before localStorage is written);
+    // wrap in act so React flushes all effects and microtasks.
+    await act(async () => {
+      fireEvent.change(select, { target: { value: 'es' } });
+    });
+
+    await waitFor(() => {
+      expect(localStorage.getItem('stellar_language')).toBe('es');
+    });
   });
 
-  it('should reset to defaults', () => {
+  it('should reset to defaults', async () => {
     localStorage.setItem('stellar_language', 'es');
     localStorage.setItem('theme', 'dark');
 
@@ -47,9 +54,15 @@ describe('SettingsPage Persistence', () => {
       (b) => b.textContent?.includes('Restablecer') || b.textContent?.includes('Reset'),
     );
 
-    if (resetButton) fireEvent.click(resetButton);
+    if (resetButton) {
+      await act(async () => {
+        fireEvent.click(resetButton);
+      });
+    }
 
-    expect(localStorage.getItem('stellar_language')).toBe('en');
+    await waitFor(() => {
+      expect(localStorage.getItem('stellar_language')).toBe('en');
+    });
     expect(localStorage.getItem('theme')).toBe('system');
   });
 });
