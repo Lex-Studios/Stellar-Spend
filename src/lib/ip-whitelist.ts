@@ -29,7 +29,7 @@ export class IPWhitelistService {
     userAddress: string,
     ipAddress: string,
     label?: string,
-    const id = `ip_${Date.now()}_${randomHex(6)}`;
+  ): Promise<IPWhitelistEntry> {
     const id = `ip_${Date.now()}_${randomHex(6)}`;
     const now = Date.now();
 
@@ -60,7 +60,7 @@ export class IPWhitelistService {
     ipRangeStart: string,
     ipRangeEnd: string,
     label?: string,
-    const id = `ip_range_${Date.now()}_${randomHex(6)}`;
+  ): Promise<IPWhitelistEntry> {
     const id = `ip_range_${Date.now()}_${randomHex(6)}`;
     const now = Date.now();
 
@@ -181,7 +181,7 @@ export class IPWhitelistService {
     violationType: IPViolation['violationType'],
     severity: IPViolation['severity'],
     details?: string,
-    const id = `violation_${Date.now()}_${randomHex(6)}`;
+  ): Promise<IPViolation> {
     const id = `violation_${Date.now()}_${randomHex(6)}`;
     const now = Date.now();
 

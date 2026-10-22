@@ -195,6 +195,25 @@ Coverage is not enforced by a hard threshold today, but the following targets ar
 | React components     | Key render states and user interactions covered         |
 | E2E                  | Critical user journey (load → connect → submit) covered |
 
+### Type Coverage (issue #1359)
+
+TypeScript type coverage is measured with [`type-coverage`](https://github.com/plantain-00/type-coverage) and enforced locally via `.type-coverage`.
+
+| Metric              | Value                                |
+| ------------------- | ------------------------------------ |
+| **Baseline**        | **98.38%** (93 452 / 94 984 nodes)   |
+| **Enforced floor**  | **98%** (configured in `.type-coverage`) |
+| Measured at         | 2026-10-22, commit on `fix/code-quality-1319-1320-1359-1360` |
+
+To run locally:
+
+```bash
+npm run type:coverage           # check and fail below threshold
+npm run type:coverage:detail    # show each un-typed node
+```
+
+The threshold is set in `.type-coverage` (`"atLeast": 98`). The CI `type:coverage` script enforces it on every push.
+
 To generate a coverage report locally:
 
 ```bash
