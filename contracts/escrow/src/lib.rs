@@ -325,4 +325,3 @@ pub mod test_utils;
 
 #[cfg(test)]
 mod test;
-mod tests;
