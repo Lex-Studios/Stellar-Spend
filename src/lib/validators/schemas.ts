@@ -154,6 +154,50 @@ export const createBulkPayoutSchema = z.object({
   items: z.array(bulkPayoutItemSchema).min(1, 'items must be a non-empty array'),
 });
 
+// Insurance claim schema
+export const CLAIM_REASONS = [
+  'Transaction failed - funds not delivered',
+  'Incorrect amount received',
+  'Transaction reversed without refund',
+  'Fraudulent or unauthorized transaction',
+  'Technical error during processing',
+  'Other',
+] as const;
+
+export const insuranceClaimSchema = z.object({
+  reason: z
+    .string()
+    .min(1, 'Please select a reason')
+    .refine(
+      (val) => (CLAIM_REASONS as readonly string[]).includes(val),
+      `Reason must be one of: ${CLAIM_REASONS.join(', ')}`,
+    ),
+  evidence: z
+    .string()
+    .max(2000, 'Evidence must be 2000 characters or less')
+    .optional(),
+});
+
+export type InsuranceClaimInput = z.infer<typeof insuranceClaimSchema>;
+
+// Insurance claim server-side patch schema (also requires insuranceId)
+export const insuranceClaimPatchSchema = z.object({
+  insuranceId: z.string().min(1, 'insuranceId is required'),
+  reason: z
+    .string()
+    .min(1, 'reason is required')
+    .refine(
+      (val) => (CLAIM_REASONS as readonly string[]).includes(val),
+      `Reason must be one of: ${CLAIM_REASONS.join(', ')}`,
+    ),
+  evidence: z
+    .string()
+    .max(2000, 'Evidence must be 2000 characters or less')
+    .optional(),
+});
+
+export type InsuranceClaimPatchInput = z.infer<typeof insuranceClaimPatchSchema>;
+
 // Queue manage action schema
 export const queueManageSchema = z.discriminatedUnion('action', [
   z.object({
