@@ -7,6 +7,7 @@
     "packages/mobile"
   ],
   "scripts": {
+    "prepare": "husky",
     "dev": "next dev --hostname localhost --port 3001",
     "build": "next build",
     "build:analyze": "ANALYZE=true next build",
@@ -38,6 +39,13 @@
     "license:report": "node scripts/check-licenses.js --report",
     "type:coverage": "type-coverage",
     "type:coverage:detail": "type-coverage --detail"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+      "eslint --fix --max-warnings 50",
+      "prettier --write"
+    ],
+    "*.{json,md,css,scss,yml,yaml,html}": ["prettier --write"]
   },
   "dependencies": {
     "@allbridge/bridge-core-sdk": "^3.29.1",
@@ -80,9 +88,11 @@
     "eslint": "^9.39.3",
     "eslint-config-next": "15.2.0",
     "eslint-plugin-storybook": "^10.4.6",
+    "husky": "^9.1.7",
     "jsdom": "^29.0.1",
     "knip": "^5.88.1",
     "license-checker": "^25.0.1",
+    "lint-staged": "^15.5.2",
     "msw": "^2.15.0",
     "node-mocks-http": "^1.14.1",
     "playwright": "^1.61.1",

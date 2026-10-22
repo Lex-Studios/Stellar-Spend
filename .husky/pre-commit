@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Secret scanning via gitleaks — blocks commit if secrets are detected
 # Uses the project's .gitleaks.toml config with Stellar-specific rules and allowlists
 # --no-git scans only the working directory (not git history) for faster pre-commit checks
@@ -13,10 +10,6 @@ else
   exit 1
 fi
 
-npm run lint
-npm run type:check
-npm run format:check
-
-# Snapshot hygiene validation — ensures no orphaned snapshots
-# See TESTING.md for snapshot best practices
-npm run test:snapshots:validate
+# Lint and format only the files staged for this commit.
+# Rules for each file type live under "lint-staged" in package.json.
+npx lint-staged

@@ -95,7 +95,7 @@ cargo audit --deny warnings
 
 **Set up local pre-commit hooks (optional but recommended):**
 
-The project supports two pre-commit hook systems. Either one will enforce lint, TypeScript type-check, and formatting checks before each commit.
+The project supports two pre-commit hook systems. Either one will lint and format the files you stage before each commit, so violations are caught locally instead of in review.
 
 **Option A — pre-commit framework (Python):**
 
@@ -108,14 +108,25 @@ pre-commit install
 
 ```bash
 npm install
-npx husky install
-npx husky add .husky/pre-commit "npm run lint && npm run type:check && npm run format:check"
 ```
 
-The pre-commit hooks run:
-1. `npm run lint` — ESLint checks
-2. `npm run type:check` — TypeScript type-checking (`tsc --noEmit`)
-3. `npm run format:check` — Prettier formatting check
+`npm install` runs the `prepare` script, which installs Husky and registers the hooks automatically. You do not need to run `npx husky install` or add the hook by hand.
+
+The Husky `pre-commit` hook runs:
+
+1. **gitleaks** — blocks the commit if secrets are detected in the working tree.
+2. **lint-staged** — runs ESLint (`--fix`) and Prettier (`--write`) on **staged files only**, then re-stages the fixes.
+
+Staged-file rules are declared under `"lint-staged"` in `package.json`:
+
+- `*.{js,jsx,ts,tsx,mjs,cjs}` — `eslint --fix`, then `prettier --write`
+- `*.{json,md,css,scss,yml,yaml,html}` — `prettier --write`
+
+Because lint-staged only touches staged files, commits stay fast even in large working trees. Unstaged changes are never modified.
+
+**What the hook does not run:**
+
+Type-checking (`npm run type:check`) and the full snapshot validation are not part of the pre-commit hook, since they operate on the whole project rather than on staged files; CI enforces them on every push.
 
 **Bypassing pre-commit hooks:**
 

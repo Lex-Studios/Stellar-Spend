@@ -88,3 +88,6 @@ scratch/
 *.scratch.md
 *.tmp.md
 task*.md
+
+# Husky generated hook wrappers
+.husky/_
