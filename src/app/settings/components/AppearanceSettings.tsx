@@ -2,7 +2,7 @@
 
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/cn';
-import { SectionHeader } from './SectionHeader';
+import { SettingsSection } from './SettingsSection';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -16,12 +16,10 @@ export function AppearanceSettings({ theme, onThemeChange }: AppearanceSettingsP
   const { t } = useI18n();
 
   return (
-    <div className="space-y-8">
-      <SectionHeader
-        title={t('settings.appearance')}
-        description="Customize how the application looks"
-      />
-
+    <SettingsSection
+      title={t('settings.appearance')}
+      description="Customize how the application looks"
+    >
       <div className="space-y-6">
         <div className="space-y-3">
           <label className="text-[10px] font-bold text-[#777] uppercase tracking-widest">
@@ -45,6 +43,6 @@ export function AppearanceSettings({ theme, onThemeChange }: AppearanceSettingsP
           </div>
         </div>
       </div>
-    </div>
+    </SettingsSection>
   );
 }

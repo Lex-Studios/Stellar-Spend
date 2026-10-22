@@ -3,7 +3,7 @@
 import { useI18n } from '@/lib/i18n';
 import { validateDisplayName, DISPLAY_NAME_MAX } from '@/lib/validation';
 import { useForm } from '@/hooks/useForm';
-import { SectionHeader } from './SectionHeader';
+import { SettingsSection } from './SettingsSection';
 
 interface ProfileSettingsProps {
   /** Public wallet address to display (read-only). */
@@ -29,12 +29,10 @@ export function ProfileSettings({ address = 'GDUY...7J2L' }: ProfileSettingsProp
   };
 
   return (
-    <div className="space-y-8">
-      <SectionHeader
-        title={t('settings.profile')}
-        description="Manage your public presence and account details"
-      />
-
+    <SettingsSection
+      title={t('settings.profile')}
+      description="Manage your public presence and account details"
+    >
       <div className="grid grid-cols-1 gap-6">
         <div className="space-y-2">
           <label className="text-[10px] font-bold text-[#777] uppercase tracking-widest">
@@ -70,6 +68,6 @@ export function ProfileSettings({ address = 'GDUY...7J2L' }: ProfileSettingsProp
           )}
         </div>
       </div>
-    </div>
+    </SettingsSection>
   );
 }

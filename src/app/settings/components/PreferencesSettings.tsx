@@ -3,7 +3,7 @@
 import { useI18n } from '@/lib/i18n';
 import type { Language } from '@/lib/i18n';
 import { NotificationSettings } from './NotificationSettings';
-import { SectionHeader } from './SectionHeader';
+import { SettingsSection } from './SettingsSection';
 import type { NotificationPrefs } from './types';
 
 interface PreferencesSettingsProps {
@@ -33,12 +33,10 @@ export function PreferencesSettings({
   const { t } = useI18n();
 
   return (
-    <div className="space-y-8">
-      <SectionHeader
-        title={t('settings.preferences')}
-        description="System-wide behavior and localization"
-      />
-
+    <SettingsSection
+      title={t('settings.preferences')}
+      description="System-wide behavior and localization"
+    >
       <div className="space-y-8">
         <div className="space-y-3">
           <label
@@ -63,6 +61,6 @@ export function PreferencesSettings({
 
         <NotificationSettings notifications={notifications} onChange={onNotificationsChange} />
       </div>
-    </div>
+    </SettingsSection>
   );
 }

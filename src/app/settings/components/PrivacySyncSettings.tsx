@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/cn';
 import type { UseSyncSettingsReturn } from '@/hooks/useSyncSettings';
-import { SectionHeader } from './SectionHeader';
+import { SettingsSection } from './SettingsSection';
 
 interface PrivacySyncSettingsProps {
   sync: UseSyncSettingsReturn;
@@ -11,12 +11,10 @@ interface PrivacySyncSettingsProps {
 /** Privacy & Sync section — cross-device transaction history sync controls. */
 export function PrivacySyncSettings({ sync }: PrivacySyncSettingsProps) {
   return (
-    <div className="space-y-8">
-      <SectionHeader
-        title="Privacy & Sync"
-        description="Control how your transaction history is stored and synchronized"
-      />
-
+    <SettingsSection
+      title="Privacy & Sync"
+      description="Control how your transaction history is stored and synchronized"
+    >
       <div className="space-y-6">
         <div className="bg-[#0f0f0f] border border-[#222] p-6 rounded">
           <div className="flex items-start justify-between mb-4">
@@ -85,6 +83,6 @@ export function PrivacySyncSettings({ sync }: PrivacySyncSettingsProps) {
           </p>
         </div>
       </div>
-    </div>
+    </SettingsSection>
   );
 }

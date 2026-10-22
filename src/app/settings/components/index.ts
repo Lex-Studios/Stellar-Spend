@@ -1,5 +1,7 @@
 export { SettingsNav } from './SettingsNav';
 export { SectionHeader } from './SectionHeader';
+export { SettingsSection } from './SettingsSection';
+export { SettingsToggle } from './SettingsToggle';
 export { ProfileSettings } from './ProfileSettings';
 export { SecuritySettings } from './SecuritySettings';
 export { AppearanceSettings } from './AppearanceSettings';

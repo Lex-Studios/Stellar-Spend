@@ -2,7 +2,7 @@
 
 import { useI18n } from '@/lib/i18n';
 import { KYCLimitManager } from '@/components/KYCLimitManager';
-import { SectionHeader } from './SectionHeader';
+import { SettingsSection } from './SettingsSection';
 
 interface SecuritySettingsProps {
   userId?: string;
@@ -13,12 +13,11 @@ export function SecuritySettings({ userId = 'current-user' }: SecuritySettingsPr
   const { t } = useI18n();
 
   return (
-    <div className="space-y-8">
-      <SectionHeader
-        title={t('settings.security')}
-        description="Identity verification and transaction limits"
-      />
+    <SettingsSection
+      title={t('settings.security')}
+      description="Identity verification and transaction limits"
+    >
       <KYCLimitManager userId={userId} />
-    </div>
+    </SettingsSection>
   );
 }
