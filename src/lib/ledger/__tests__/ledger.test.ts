@@ -1,9 +1,16 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-const poolQueryMock = vi.fn();
+const poolQueryMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/db/client', () => ({
   pool: { query: poolQueryMock },
+}));
+
+// Run the transaction callback against the same mocked query, so the row
+// sequences below still apply without BEGIN/COMMIT being consumed.
+vi.mock('@/lib/db/transaction', () => ({
+  withTransaction: (cb: (client: { query: typeof poolQueryMock }) => Promise<unknown>) =>
+    cb({ query: poolQueryMock }),
 }));
 
 import { recordDoubleEntry, recordFeeCapture, verifyAllAccountsBalanced } from '../entries';

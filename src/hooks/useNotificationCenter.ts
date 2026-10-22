@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { PriceAlertStorage } from '@/lib/price-alerts';
 import type { NotificationDeliveryRecord } from '@/lib/notifications';
 import { logger } from '@/lib/logger';
+import { startNotificationPolling } from '@/lib/notifications/polling';
 import { formatNumber } from '@/lib/format';
 
 export type NotificationCenterEventType =
@@ -56,7 +57,6 @@ export function useNotificationCenter(userAddress: string | null) {
     error: null,
   });
 
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load persisted events from localStorage
   const loadPersistedEvents = useCallback(() => {
@@ -367,23 +367,10 @@ export function useNotificationCenter(userAddress: string | null) {
     }
   }, [userAddress, loadPersistedEvents, aggregatePriceAlerts]);
 
-  // Poll for new events periodically
+  // Poll for new events periodically (timer lives in lib/notifications)
   useEffect(() => {
     if (!userAddress) return;
-
-    const pollForUpdates = () => {
-      aggregatePriceAlerts();
-      // Additional polling for transaction updates would go here
-    };
-
-    // Poll every 30 seconds for new events
-    pollIntervalRef.current = setInterval(pollForUpdates, 30000);
-
-    return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-      }
-    };
+    return startNotificationPolling(() => aggregatePriceAlerts());
   }, [userAddress, aggregatePriceAlerts]);
 
   // Format unread badge text (show "99+" for counts > 99)

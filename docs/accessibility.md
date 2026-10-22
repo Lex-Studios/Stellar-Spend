@@ -2,7 +2,7 @@
 
 Stellar-Spend targets **WCAG 2.1 Level AA** compliance. This guide is the engineering-facing playbook: what to do when building a component, how to test it, and where the existing patterns live.
 
-For a higher-level audit of features already implemented, see [`ACCESSIBILITY.md`](../ACCESSIBILITY.md) at the repo root.
+For a higher-level audit of features already implemented, see [`ACCESSIBILITY.md`](archive/ACCESSIBILITY.md) at the repo root.
 
 ## Table of Contents
 

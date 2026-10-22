@@ -287,5 +287,5 @@ Potential improvements for future iterations:
 ## Related Documentation
 
 - [Keyboard Shortcuts](./keyboard-shortcuts.md)
-- [Accessibility Guidelines](../ACCESSIBILITY.md)
+- [Accessibility Guidelines](archive/ACCESSIBILITY.md)
 - [Component Testing](../TESTING.md)

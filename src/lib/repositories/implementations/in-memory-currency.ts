@@ -20,7 +20,7 @@ export class InMemoryCurrencyRepository implements CurrencyRepository {
     });
   }
 
-  async save(entity: Currency): Promise<void> {
+  async create(entity: Currency): Promise<void> {
     this.currencies.set(entity.code, entity);
   }
 
@@ -31,7 +31,7 @@ export class InMemoryCurrencyRepository implements CurrencyRepository {
     this.currencies.set(id, { ...currency, ...updates });
   }
 
-  async getById(id: string): Promise<Currency | null> {
+  async get(id: string): Promise<Currency | null> {
     return this.currencies.get(id) ?? null;
   }
 
@@ -39,7 +39,7 @@ export class InMemoryCurrencyRepository implements CurrencyRepository {
     this.currencies.delete(id);
   }
 
-  async getAll(): Promise<Currency[]> {
+  async list(): Promise<Currency[]> {
     return Array.from(this.currencies.values());
   }
 

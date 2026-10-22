@@ -145,7 +145,22 @@ export default [
           ignoreRestSiblings: true,
         },
       ],
-      'no-console': 'warn',
+      // Escalated to error in src/** below; warn here covers everything else
+      // (e2e/, scripts/ .ts files, root config files, etc.) so accidental
+      // console leaks are still surfaced outside the strict application layer.
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  },
+
+  // ---------------------------------------------------------------------------
+  // scripts/** exemption — CLI tools write to stdout/stderr intentionally.
+  // console.* is the correct output mechanism for Node.js scripts; there is
+  // no structured logger available in that context.
+  // ---------------------------------------------------------------------------
+  {
+    files: ['scripts/**/*.{ts,js,cjs,mjs}'],
+    rules: {
+      'no-console': 'off',
     },
   },
 

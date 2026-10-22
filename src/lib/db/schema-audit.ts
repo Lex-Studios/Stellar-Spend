@@ -4,6 +4,7 @@
  */
 
 import { pool } from './client';
+import { logger } from '../logger';
 
 /**
  * Schema column definition
@@ -242,7 +243,7 @@ export async function auditSchema(): Promise<TableAuditResult[]> {
       const result = await auditTable(table);
       results.push(result);
     } catch (error) {
-      console.error(`Failed to audit table ${table}:`, error);
+      logger.error('schema_audit.table_failed', { table }, error);
     }
   }
 

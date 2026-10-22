@@ -29,13 +29,9 @@ interface PgError extends Error {
 
 const poolQueryMock = vi.fn();
 
-vi.mock('@/lib/db/client', () => ({
-  pool: { query: (...args: unknown[]) => poolQueryMock(...args) },
-}));
-
 // ── Import SUT after mock registration ───────────────────────────────────────
 
-import { MerchantService } from '@/lib/services';
+import { MerchantService } from '@/lib/services/merchant.service';
 
 // ── Test data factories ────────────────────────────────────────────────────────
 
@@ -97,7 +93,7 @@ describe('#852 — MerchantService unit tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    service = new MerchantService();
+    service = new MerchantService({ query: (...args: unknown[]) => poolQueryMock(...args) });
   });
 
   // ─── createMerchant — happy path ──────────────────────────────────────────

@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/cn';
 
-export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
+export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100, 250] as const;
 
 interface HistoryPaginationProps {
   page: number; // 1-based

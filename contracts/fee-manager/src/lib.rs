@@ -100,12 +100,12 @@ impl FeeManagerContract {
 
     /// Fee for `amount` at an explicit rate.
     pub fn calculate_fee(env: Env, amount: i128, fee_rate: u32) -> Result<i128, ContractError> {
-        calc::Calculator::calculate_fee(env, amount, fee_rate)
+        calc::calculate_fee(env, amount, fee_rate)
     }
 
     /// Fee for `amount` at the configured default rate.
     pub fn calculate_default_fee(env: Env, amount: i128) -> Result<i128, ContractError> {
-        calc::Calculator::calculate_default_fee(env, amount)
+        calc::calculate_default_fee(env, amount)
     }
 
     /// The configured default fee rate, in basis points.
@@ -115,23 +115,23 @@ impl FeeManagerContract {
 
     /// Update the default fee rate. Admin only.
     pub fn set_default_rate(env: Env, fee_bp: u32) -> Result<(), ContractError> {
-        admin::Admin::set_default_rate(env, fee_bp)
+        admin::set_default_rate(env, fee_bp)
     }
 
     // ── Upgrade surface ────────────────────────────────────────────────────────
 
     pub fn schema_version(env: Env) -> Result<u32, ContractError> {
-        admin::Admin::schema_version(env)
+        admin::schema_version(env)
     }
 
     /// Replace the contract WASM. Admin only. Run `migrate` immediately after.
     pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), ContractError> {
-        admin::Admin::upgrade(env, new_wasm_hash)
+        admin::upgrade(env, new_wasm_hash)
     }
 
     /// Convert persisted state to [`SCHEMA_VERSION`]. Returns the version migrated from.
     pub fn migrate(env: Env) -> Result<u32, ContractError> {
-        admin::Admin::migrate(env)
+        admin::migrate(env)
     }
 }
 

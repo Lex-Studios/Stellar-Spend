@@ -7,9 +7,9 @@
  * `@/lib/transactions` instead of five separate module paths, and so all
  * five modules share one `Transaction` type (see ./types.ts).
  */
-export * from '../transaction-merge';
-export * from '../transaction-split';
-export * from '../transaction-search';
-export * from '../transaction-analytics';
-export * from '../transaction-status';
+export * from './transaction-merge';
+export * from './transaction-split';
+export * from './transaction-search';
+export * from './transaction-analytics';
+export * from './transaction-status';
 export type { Transaction } from './types';

@@ -1,4 +1,4 @@
-import type { Repository } from './base';
+import type { BaseRepository } from './base';
 
 export interface User {
   id: string;
@@ -9,7 +9,7 @@ export interface User {
   metadata?: Record<string, unknown>;
 }
 
-export interface UserRepository extends Repository<User> {
+export interface UserRepository extends BaseRepository<User> {
   getByAddress(address: string): Promise<User | null>;
   getByEmail(email: string): Promise<User | null>;
 }

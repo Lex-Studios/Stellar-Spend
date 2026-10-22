@@ -3,7 +3,7 @@ import type { ApiKeyRepository, ApiKey } from '../api-key';
 export class InMemoryApiKeyRepository implements ApiKeyRepository {
   private apiKeys: Map<string, ApiKey> = new Map();
 
-  async save(apiKey: ApiKey): Promise<void> {
+  async create(apiKey: ApiKey): Promise<void> {
     this.apiKeys.set(apiKey.id, apiKey);
   }
 
@@ -13,7 +13,7 @@ export class InMemoryApiKeyRepository implements ApiKeyRepository {
     this.apiKeys.set(id, { ...apiKey, ...updates });
   }
 
-  async getById(id: string): Promise<ApiKey | null> {
+  async get(id: string): Promise<ApiKey | null> {
     return this.apiKeys.get(id) ?? null;
   }
 
@@ -21,7 +21,7 @@ export class InMemoryApiKeyRepository implements ApiKeyRepository {
     this.apiKeys.delete(id);
   }
 
-  async getAll(): Promise<ApiKey[]> {
+  async list(): Promise<ApiKey[]> {
     return Array.from(this.apiKeys.values());
   }
 

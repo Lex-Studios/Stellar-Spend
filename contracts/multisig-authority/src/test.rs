@@ -1,7 +1,7 @@
 //! Multisig-authority unit tests.
 //!
 //! All setup comes from [`crate::test_utils`] (issue #818).
-use soroban_sdk::{testutils::Address as _, Address, Vec};
+use soroban_sdk::{testutils::Address as _, vec, Address, Vec};
 use stellar_spend_shared::errors::ContractError;
 
 use crate::test_utils::{
@@ -1069,7 +1069,9 @@ fn signers_config_is_single_storage_entry() {
     // DataKey::HighValueLimit should NOT exist as separate entries.
     // Since we only have DataKey::Signers, DataKey::Proposals, DataKey::Schema,
     // the old Symbol-based keys should be absent.
-    let admin_val: Option<Address> = t.read_storage(&crate::DataKey::Signers).map(|c| c.admin);
+    let admin_val: Option<Address> = t
+        .read_storage::<crate::SignersConfig>(&crate::DataKey::Signers)
+        .map(|c| c.admin);
     assert!(admin_val.is_some(), "admin should be accessible via SignersConfig");
 }
 
@@ -1097,10 +1099,10 @@ fn storage_reduction_parity_with_admin_ops() {
     t.client().remove_signer(&t.admin, &t.signer(2));
     assert_eq!(t.client().get_signers().len(), 3);
 
-    t.client().set_threshold(&t.admin, 3);
+    t.client().set_threshold(&t.admin, &3);
     assert_eq!(t.client().get_threshold(), 3);
 
-    t.client().set_high_value_limit(&t.admin, 5_000);
+    t.client().set_high_value_limit(&t.admin, &5_000);
     assert_eq!(t.client().get_high_value_limit(), 5_000);
 
     // Verify SignersConfig reflects all changes.
@@ -1129,7 +1131,7 @@ fn storage_reduction_parity_with_migration() {
     // consolidated storage layout.
     let (mut t, _id, target) = MultisigTest::registered_with_legacy_v1_state();
 
-    let stored = t.client().migrate(&t.admin).unwrap();
+    let stored = t.client().migrate(&t.admin);
     assert_eq!(stored, 1);
     assert_eq!(t.client().schema_version(), SCHEMA_VERSION);
 

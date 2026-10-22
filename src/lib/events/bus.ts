@@ -1,5 +1,6 @@
 import { Event, EventHandler, EventType, EventBusConfig } from './types';
 import { logger } from '../logger';
+import { randomHex } from '@/lib/crypto/ids';
 
 class EventBus {
   private handlers: Map<EventType, EventHandler[]> = new Map();
@@ -40,8 +41,8 @@ class EventBus {
     const event: Event<T> = {
       type,
       data,
-      timestamp: Date.now(),
-      id: `${type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `${type}-${Date.now()}-${randomHex(6)}`,
+      id: `${type}-${Date.now()}-${randomHex(6)}`,
     };
 
     if (this.config.logEvents) {

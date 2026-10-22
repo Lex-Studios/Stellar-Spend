@@ -516,7 +516,7 @@ try {
 ## Resources
 
 - **Schema**: [docs/api/ERROR_RESPONSES.md](./ERROR_RESPONSES.md)
-- **Audit Report**: [ERROR_HANDLER_AUDIT.md](../ERROR_HANDLER_AUDIT.md)
+- **Audit Report**: [ERROR_HANDLER_AUDIT.md](../archive/ERROR_HANDLER_AUDIT.md)
 - **Error Handler API**: `src/lib/error-handler.ts`
 - **Error Types**: `src/lib/error-types.ts`
 

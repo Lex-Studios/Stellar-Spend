@@ -2,6 +2,7 @@
 
 import { useCallback, useRef } from 'react';
 import type { FunnelStep } from '@/lib/funnel';
+import { randomHex } from '@/lib/crypto/ids';
 import { logger } from '@/lib/logger';
 
 const STORAGE_KEY = 'funnel_session';
@@ -13,7 +14,7 @@ interface FunnelSession {
 }
 
 function getSessionId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  return `${Date.now()}-${randomHex(6)}`;
 }
 
 /**

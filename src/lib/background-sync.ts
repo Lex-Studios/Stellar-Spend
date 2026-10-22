@@ -35,6 +35,32 @@ export interface SyncStatus {
   syncing: boolean;
 }
 
+/**
+ * Single source of connectivity state for the app. Components that need to
+ * react to online/offline transitions should use this hook instead of adding
+ * their own window listeners.
+ */
+export function useOnlineStatus(): boolean {
+  const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return isOnline;
+}
+
 export function useBackgroundSync() {
   const [isSupported, setIsSupported] = useState(false);
   const [failedTransactions, setFailedTransactions] = useState<FailedTransaction[]>([]);

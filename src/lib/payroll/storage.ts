@@ -1,3 +1,4 @@
+import { randomHex } from "@/lib/crypto/ids";
 import type { PayrollTemplate, PayrollRun } from './types';
 
 const TEMPLATE_KEY = 'stellar_spend_payroll_templates';
@@ -41,7 +42,7 @@ export class PayrollTemplateStorage {
   }
 
   static generateId(): string {
-    return `payroll_template_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    return `payroll_template_${Date.now()}_${randomHex(4)}`;
   }
 }
 
@@ -84,6 +85,6 @@ export class PayrollRunStorage {
   }
 
   static generateId(): string {
-    return `payroll_run_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    return `payroll_run_${Date.now()}_${randomHex(4)}`;
   }
 }

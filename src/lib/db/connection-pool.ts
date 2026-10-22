@@ -1,5 +1,4 @@
-import { Pool, PoolConfig } from 'pg';
-import { logger } from '../logger';
+import { getSharedPoolStats } from './client';
 
 export interface PoolStats {
   totalCount: number;
@@ -7,99 +6,22 @@ export interface PoolStats {
   waitingCount: number;
 }
 
+/**
+ * Read-only view over the single shared pool owned by `./client`.
+ *
+ * This used to create its own `pg.Pool` per connection string, duplicating the
+ * pool in `client.ts`. Every query now goes through that one pool, so this
+ * manager only reports its statistics.
+ */
 export class ConnectionPoolManager {
-  private pools: Map<string, Pool> = new Map();
-  private readonly defaultConfig: PoolConfig = {
-    max: 20,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
-  };
-
-  /**
-   * Create or get a connection pool
-   */
-  getPool(connectionString: string, config?: Partial<PoolConfig>): Pool {
-    const key = connectionString;
-
-    if (this.pools.has(key)) {
-      return this.pools.get(key)!;
-    }
-
-    const poolConfig: PoolConfig = {
-      ...this.defaultConfig,
-      ...config,
-      connectionString,
-    };
-
-    const pool = new Pool(poolConfig);
-
-    pool.on('error', (err) => {
-      logger.error('Unexpected error on idle client', { error: err });
-    });
-
-    this.pools.set(key, pool);
-    logger.info('Connection pool created', {
-      connectionString: key.substring(0, 50),
-      maxConnections: poolConfig.max,
-    });
-
-    return pool;
+  /** Statistics for the shared pool. */
+  getPoolStats(): PoolStats {
+    return getSharedPoolStats();
   }
 
-  /**
-   * Get pool statistics
-   */
-  getPoolStats(connectionString: string): PoolStats | null {
-    const pool = this.pools.get(connectionString);
-    if (!pool) {
-      return null;
-    }
-
-    return {
-      totalCount: pool.totalCount,
-      idleCount: pool.idleCount,
-      waitingCount: pool.waitingCount,
-    };
-  }
-
-  /**
-   * Get all pool statistics
-   */
+  /** Statistics keyed by pool name. There is one pool, named `default`. */
   getAllPoolStats(): Record<string, PoolStats> {
-    const stats: Record<string, PoolStats> = {};
-
-    for (const [key, pool] of this.pools.entries()) {
-      stats[key] = {
-        totalCount: pool.totalCount,
-        idleCount: pool.idleCount,
-        waitingCount: pool.waitingCount,
-      };
-    }
-
-    return stats;
-  }
-
-  /**
-   * Close a pool
-   */
-  async closePool(connectionString: string): Promise<void> {
-    const pool = this.pools.get(connectionString);
-    if (pool) {
-      await pool.end();
-      this.pools.delete(connectionString);
-      logger.info('Connection pool closed', { connectionString });
-    }
-  }
-
-  /**
-   * Close all pools
-   */
-  async closeAllPools(): Promise<void> {
-    for (const [key, pool] of this.pools.entries()) {
-      await pool.end();
-      this.pools.delete(key);
-    }
-    logger.info('All connection pools closed');
+    return { default: getSharedPoolStats() };
   }
 }
 

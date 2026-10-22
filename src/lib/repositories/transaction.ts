@@ -1,4 +1,4 @@
-import type { Repository } from './base';
+import type { BaseRepository } from './base';
 
 export interface Transaction {
   id: string;
@@ -26,7 +26,7 @@ export interface Transaction {
   error?: string;
 }
 
-export interface TransactionRepository extends Repository<Transaction> {
+export interface TransactionRepository extends BaseRepository<Transaction> {
   getByUser(userAddress: string): Promise<Transaction[]>;
   getByPayoutOrderId(orderId: string): Promise<Transaction | null>;
 }

@@ -257,25 +257,25 @@ describe('EncryptedTransactionRepository', () => {
 
   it('saves with encrypted PII and reads back plaintext', async () => {
     const tx = makeTransaction();
-    await repo.save(tx);
+    await repo.create(tx);
 
     // Confirm the inner store holds ciphertext
-    const rawStored = await inner.getById(tx.id);
+    const rawStored = await inner.get(tx.id);
     expect(rawStored).not.toBeNull();
     expect(isEncrypted(rawStored!.beneficiary.accountIdentifier)).toBe(true);
     expect(isEncrypted(rawStored!.beneficiary.accountName)).toBe(true);
 
     // Reading through the encrypted repo gives plaintext back
-    const loaded = await repo.getById(tx.id);
+    const loaded = await repo.get(tx.id);
     expect(loaded!.beneficiary.accountIdentifier).toBe('1234567890');
     expect(loaded!.beneficiary.accountName).toBe('Alice Tester');
   });
 
   it('getAll decrypts all rows', async () => {
-    await repo.save(makeTransaction({ id: 'tx_001' }));
-    await repo.save(makeTransaction({ id: 'tx_002' }));
+    await repo.create(makeTransaction({ id: 'tx_001' }));
+    await repo.create(makeTransaction({ id: 'tx_002' }));
 
-    const all = await repo.getAll();
+    const all = await repo.list();
     expect(all).toHaveLength(2);
     for (const tx of all) {
       expect(tx.beneficiary.accountIdentifier).toBe('1234567890');
@@ -285,7 +285,7 @@ describe('EncryptedTransactionRepository', () => {
 
   it('getByUser decrypts results', async () => {
     const tx = makeTransaction();
-    await repo.save(tx);
+    await repo.create(tx);
 
     const byUser = await repo.getByUser(tx.userAddress);
     expect(byUser[0].beneficiary.accountIdentifier).toBe('1234567890');
@@ -293,7 +293,7 @@ describe('EncryptedTransactionRepository', () => {
 
   it('update with new beneficiary re-encrypts', async () => {
     const tx = makeTransaction();
-    await repo.save(tx);
+    await repo.create(tx);
 
     await repo.update(tx.id, {
       beneficiary: {
@@ -304,18 +304,18 @@ describe('EncryptedTransactionRepository', () => {
     });
 
     // Raw inner store should still be encrypted
-    const raw = await inner.getById(tx.id);
+    const raw = await inner.get(tx.id);
     expect(isEncrypted(raw!.beneficiary.accountIdentifier)).toBe(true);
 
     // Reading through encrypted repo gives new plaintext
-    const loaded = await repo.getById(tx.id);
+    const loaded = await repo.get(tx.id);
     expect(loaded!.beneficiary.accountIdentifier).toBe('9999999999');
     expect(loaded!.beneficiary.accountName).toBe('Bob Updated');
   });
 
   it('getByPayoutOrderId decrypts result', async () => {
     const tx = makeTransaction({ payoutOrderId: 'order_abc123', status: 'completed' });
-    await repo.save(tx);
+    await repo.create(tx);
 
     const found = await repo.getByPayoutOrderId('order_abc123');
     expect(found).not.toBeNull();
@@ -324,18 +324,18 @@ describe('EncryptedTransactionRepository', () => {
 
   it('delete removes the row', async () => {
     const tx = makeTransaction();
-    await repo.save(tx);
+    await repo.create(tx);
     await repo.delete(tx.id);
-    expect(await repo.getById(tx.id)).toBeNull();
+    expect(await repo.get(tx.id)).toBeNull();
   });
 
   it('non-encrypted legacy rows are returned as-is (migration safety)', async () => {
     // Simulate a row that was saved before encryption was introduced
     const plainTx = makeTransaction();
     // Save directly to inner (bypassing encryption)
-    await inner.save(plainTx);
+    await inner.create(plainTx);
 
-    const loaded = await repo.getById(plainTx.id);
+    const loaded = await repo.get(plainTx.id);
     // Since the stored value is not encrypted, isEncrypted returns false
     // and decryptBeneficiary returns it unchanged
     expect(loaded!.beneficiary.accountIdentifier).toBe('1234567890');

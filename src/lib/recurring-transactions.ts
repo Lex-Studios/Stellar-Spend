@@ -1,3 +1,4 @@
+import { randomHex } from "@/lib/crypto/ids";
 /**
  * Recurring transactions — schedule automatic periodic offramp payments.
  * Schedules are stored in localStorage; execution is triggered client-side.
@@ -235,7 +236,7 @@ export class RecurringStorage {
   }
 
   static generateId(): string {
-    return `rec_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+    return `rec_${Date.now()}_${randomHex(4)}`;
   }
 
   private static _update(id: string, patch: Partial<RecurringSchedule>): void {

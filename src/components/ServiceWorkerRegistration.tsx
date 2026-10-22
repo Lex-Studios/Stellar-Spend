@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger';
 
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
+import { CHROME_TOKENS } from '@/lib/theme-tokens';
 
 export default function ServiceWorkerRegistration() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -75,12 +76,15 @@ export default function ServiceWorkerRegistration() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50">
-      <div className="bg-[#111111] border border-[#c9a962] rounded-lg p-4 shadow-lg backdrop-filter backdrop-blur-sm">
+      <div className="rounded-lg p-4 shadow-lg backdrop-filter backdrop-blur-sm border"
+        style={{ backgroundColor: CHROME_TOKENS.surface, borderColor: CHROME_TOKENS.gold }}>
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 text-xl">🔄</div>
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-[#c9a962] mb-1">Update Available</h3>
-            <p className="text-xs text-[#999999] mb-3">
+            <h3 className="text-sm font-semibold mb-1"
+              style={{ color: CHROME_TOKENS.gold }}>Update Available</h3>
+            <p className="text-xs mb-3"
+              style={{ color: CHROME_TOKENS.textDim }}>
               A new version of Stellar-Spend is ready. Refresh to get the latest features and fixes.
             </p>
             <div className="flex gap-2">
@@ -88,9 +92,9 @@ export default function ServiceWorkerRegistration() {
                 onClick={handleUpdate}
                 className={cn(
                   'flex-1 px-3 py-2 text-xs font-semibold tracking-widest uppercase',
-                  'bg-[#c9a962] text-[#0a0a0a] rounded transition-colors duration-150',
-                  'hover:bg-[#d4b982] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#c9a962]',
+                  'rounded transition-colors duration-150 focus:outline-none',
                 )}
+                style={{ backgroundColor: CHROME_TOKENS.gold, color: CHROME_TOKENS.surface }}
               >
                 Refresh
               </button>
@@ -98,9 +102,9 @@ export default function ServiceWorkerRegistration() {
                 onClick={() => setUpdateAvailable(false)}
                 className={cn(
                   'flex-1 px-3 py-2 text-xs font-semibold tracking-widest uppercase',
-                  'border border-[#555555] text-[#555555] rounded transition-colors duration-150',
-                  'hover:border-[#c9a962] hover:text-[#c9a962] focus:outline-none focus-visible:ring-1 focus-visible:ring-[#555555]',
+                  'border rounded transition-colors duration-150 focus:outline-none',
                 )}
+                style={{ borderColor: CHROME_TOKENS.borderMuted, color: CHROME_TOKENS.borderMuted }}
               >
                 Later
               </button>

@@ -1,6 +1,6 @@
 /**
  * Discriminated unions for type-safe state management
- * See @/lib/transaction-status for canonical status values (TransactionStatus, PayoutStatus, BridgeStatus).
+ * See @/lib/transactions for canonical status values (TransactionStatus, PayoutStatus, BridgeStatus).
  */
 
 // Transaction states

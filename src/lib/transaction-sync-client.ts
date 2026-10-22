@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 
 import type { Transaction } from './transaction-storage';
 import { SyncStorage } from './sync-storage';
-import { mergeTransactionHistories } from './transaction-merge';
+import { mergeTransactionHistories } from './transactions/transaction-merge';
 
 export interface SyncResponse {
   success: boolean;

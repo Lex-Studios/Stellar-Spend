@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'crypto';
 import { pool } from '@/lib/db';
+import { withTransaction } from '@/lib/db/transaction';
 import type { LedgerEntry, EntryType } from './types';
 
 export class LedgerError extends Error {
@@ -33,7 +34,10 @@ function computeEntryHash(entry: {
   return createHash('sha256').update(payload).digest('hex');
 }
 
-export async function recordEntry(
+type Queryable = Pick<typeof pool, 'query'>;
+
+async function insertEntry(
+  db: Queryable,
   input: Omit<LedgerEntry, 'id' | 'entryHash' | 'createdAt'>,
 ): Promise<LedgerEntry> {
   const id = randomUUID();
@@ -48,7 +52,7 @@ export async function recordEntry(
   `;
 
   try {
-    const result = await pool.query(sql, [
+    const result = await db.query(sql, [
       id,
       input.transactionId ?? null,
       input.accountId,
@@ -71,13 +75,25 @@ export async function recordEntry(
   }
 }
 
+export async function recordEntry(
+  input: Omit<LedgerEntry, 'id' | 'entryHash' | 'createdAt'>,
+): Promise<LedgerEntry> {
+  return insertEntry(pool, input);
+}
+
+/**
+ * Records a debit and credit atomically. Both rows commit together or neither
+ * is written, so a failure on the second insert rolls back the first.
+ */
 export async function recordDoubleEntry(
   debit: Omit<LedgerEntry, 'id' | 'entryHash' | 'createdAt' | 'entryType'>,
   credit: Omit<LedgerEntry, 'id' | 'entryHash' | 'createdAt' | 'entryType'>,
 ): Promise<[LedgerEntry, LedgerEntry]> {
-  const debitEntry = await recordEntry({ ...debit, entryType: 'debit' });
-  const creditEntry = await recordEntry({ ...credit, entryType: 'credit' });
-  return [debitEntry, creditEntry];
+  return withTransaction(async (client) => {
+    const debitEntry = await insertEntry(client, { ...debit, entryType: 'debit' });
+    const creditEntry = await insertEntry(client, { ...credit, entryType: 'credit' });
+    return [debitEntry, creditEntry];
+  });
 }
 
 export async function recordFeeCapture(

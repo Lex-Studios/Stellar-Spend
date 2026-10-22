@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { useForm } from '@/hooks/useForm';
+import { randomHexUpper } from '@/lib/crypto/ids';
 import { apiPatch } from '@/lib/api/client';
 import {
   type InsuranceClaimFormProps,
@@ -45,7 +46,7 @@ export function InsuranceClaimForm({
 
       if (insuranceId.startsWith('ins_')) {
         await new Promise((r) => setTimeout(r, 1000));
-        onSuccess(`CLAIM-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`);
+        onSuccess(`CLAIM-${Date.now()}-${randomHexUpper(4)}`);
         return;
       }
 

@@ -11,8 +11,8 @@ describe('TransactionService', () => {
 
   beforeEach(() => {
     mockDal = vi.mocked(dalModule.dal);
-    service = new TransactionService();
     vi.clearAllMocks();
+    service = new TransactionService(mockDal);
   });
 
   describe('getTransaction', () => {

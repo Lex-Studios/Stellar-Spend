@@ -14,7 +14,7 @@ This index helps you navigate the comprehensive error handler standardization pr
 ### For Architects/Reviewers
 - **Project overview?** → [IMPLEMENTATION_SUMMARY.md](../IMPLEMENTATION_SUMMARY.md)
 - **Acceptance criteria verification?** → [ACCEPTANCE_VERIFICATION.md](../ACCEPTANCE_VERIFICATION.md)
-- **Audit findings?** → [ERROR_HANDLER_AUDIT.md](../ERROR_HANDLER_AUDIT.md)
+- **Audit findings?** → [ERROR_HANDLER_AUDIT.md](../archive/ERROR_HANDLER_AUDIT.md)
 
 ### For API Consumers
 - **API error format?** → [ERROR_RESPONSES.md](./ERROR_RESPONSES.md) - Error Types & Examples sections
@@ -37,7 +37,7 @@ This index helps you navigate the comprehensive error handler standardization pr
 |------|-------|---------|----------|
 | [IMPLEMENTATION_SUMMARY.md](../IMPLEMENTATION_SUMMARY.md) | 333 | High-level overview of what was completed | Leads, Reviewers |
 | [ACCEPTANCE_VERIFICATION.md](../ACCEPTANCE_VERIFICATION.md) | 298 | Verification that all criteria were met | QA, Reviewers |
-| [ERROR_HANDLER_AUDIT.md](../ERROR_HANDLER_AUDIT.md) | 149 | Initial audit findings and inconsistencies | Architects |
+| [ERROR_HANDLER_AUDIT.md](../archive/ERROR_HANDLER_AUDIT.md) | 149 | Initial audit findings and inconsistencies | Architects |
 
 ---
 

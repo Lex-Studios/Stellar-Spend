@@ -1,5 +1,5 @@
-import type { TradeState, BridgeStatus, PayoutStatus } from '@/lib/transaction-status';
-export type { TradeState, BridgeStatus, PayoutStatus } from '@/lib/transaction-status';
+import type { TradeState, BridgeStatus, PayoutStatus } from '@/lib/transactions';
+export type { TradeState, BridgeStatus, PayoutStatus } from '@/lib/transactions';
 
 // ── Types consolidated from shared package (#1028) ──────────────────────────
 // Re-export canonical types from @stellar-spend/shared to avoid duplication.

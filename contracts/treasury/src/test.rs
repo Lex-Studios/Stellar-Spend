@@ -2,7 +2,7 @@
 //!
 //! All setup comes from [`crate::test_utils`] (issue #818).
 use stellar_spend_shared::errors::ContractError;
-use soroban_sdk::{Address, Vec};
+use soroban_sdk::{symbol_short, Address, Vec};
 
 use crate::test_utils::{assert_fresh_init_is_current, TreasuryTest};
 use crate::{MAX_FEE_TIERS, MAX_SINGLE_FEE_BP, SCHEMA_VERSION};
@@ -645,8 +645,6 @@ fn collect_fee_batch_reports_overflow_across_items() {
 
 #[test]
 fn collect_fee_batch_emits_a_single_event_with_summary() {
-    use soroban_sdk::symbol_short;
-
     let t = TreasuryTest::setup();
     let amounts = soroban_sdk::vec![&t.env, 1_000_000, 5_000_000];
     let recipient = Address::generate(&t.env);

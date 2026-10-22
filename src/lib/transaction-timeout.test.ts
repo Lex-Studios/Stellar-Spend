@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   isStageStalled,
   STAGE_TIMEOUTS,
@@ -9,6 +9,17 @@ import {
   resetTimeoutMetrics,
 } from './transaction-timeout';
 import type { Transaction } from './transaction-storage';
+
+const FIXED_NOW = 1_700_000_000_000;
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(FIXED_NOW);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 vi.mock('@/lib/db/dal', () => ({
   dal: {
@@ -39,7 +50,7 @@ vi.mock('@/lib/logger', () => ({
 function makeTx(overrides: Partial<Transaction> = {}): Transaction {
   return {
     id: 'tx-test-1',
-    timestamp: Date.now() - 10000,
+    timestamp: FIXED_NOW - 10000,
     userAddress: 'GABCDEF123',
     amount: '100',
     currency: 'USDC',

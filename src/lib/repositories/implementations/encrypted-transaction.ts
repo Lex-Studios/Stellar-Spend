@@ -50,13 +50,13 @@ function decryptBeneficiary(beneficiary: Transaction['beneficiary']): Transactio
 export class EncryptedTransactionRepository implements TransactionRepository {
   constructor(private readonly inner: TransactionRepository) {}
 
-  async save(transaction: Transaction): Promise<void> {
+  async create(transaction: Transaction): Promise<void> {
     const encrypted: Transaction = {
       ...transaction,
       beneficiary: encryptBeneficiary(transaction.beneficiary),
     };
     logger.debug('encrypted_repo.save', maskPiiForLog({ id: transaction.id }));
-    return this.inner.save(encrypted);
+    return this.inner.create(encrypted);
   }
 
   async update(id: string, updates: Partial<Transaction>): Promise<void> {
@@ -67,8 +67,8 @@ export class EncryptedTransactionRepository implements TransactionRepository {
     return this.inner.update(id, safeUpdates);
   }
 
-  async getById(id: string): Promise<Transaction | null> {
-    const row = await this.inner.getById(id);
+  async get(id: string): Promise<Transaction | null> {
+    const row = await this.inner.get(id);
     if (!row) return null;
     return { ...row, beneficiary: decryptBeneficiary(row.beneficiary) };
   }
@@ -77,8 +77,8 @@ export class EncryptedTransactionRepository implements TransactionRepository {
     return this.inner.delete(id);
   }
 
-  async getAll(): Promise<Transaction[]> {
-    const rows = await this.inner.getAll();
+  async list(): Promise<Transaction[]> {
+    const rows = await this.inner.list();
     return rows.map((row) => ({ ...row, beneficiary: decryptBeneficiary(row.beneficiary) }));
   }
 

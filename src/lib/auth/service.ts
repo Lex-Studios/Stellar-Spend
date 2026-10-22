@@ -6,6 +6,7 @@ import {
   checkApiKeyRateLimit,
 } from '@/lib/api-keys';
 import type { AuthContext, AuthToken, AuthError } from './types';
+import { extractRequestBearerToken } from './authorize';
 
 /**
  * Unified Authentication Service
@@ -70,15 +71,12 @@ export class AuthService {
     }
 
     // Check for Authorization: Bearer <token> header
-    const authorization = request.headers.get('authorization');
-    if (!authorization) return null;
-
-    const bearerMatch = authorization.match(/^Bearer\s+(.+)$/i);
-    if (!bearerMatch) return null;
+    const bearer = extractRequestBearerToken(request);
+    if (!bearer) return null;
 
     return {
       type: 'bearer',
-      value: bearerMatch[1],
+      value: bearer,
       extractedAt: Date.now(),
     };
   }

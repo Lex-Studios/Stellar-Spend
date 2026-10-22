@@ -1,3 +1,4 @@
+import { randomHex } from "@/lib/crypto/ids";
 import { ShareableTransaction, ShareSettings } from '@stellar-spend/shared';
 
 export class SharingService {
@@ -7,7 +8,7 @@ export class SharingService {
     settings: ShareSettings,
   ): Promise<ShareableTransaction> {
     const shareToken = this.generateShareToken();
-    const id = `share_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const id = `share_${Date.now()}_${randomHex(6)}`;
 
     const share: ShareableTransaction = {
       id,
@@ -46,7 +47,7 @@ export class SharingService {
 
   private generateShareToken(): string {
     return (
-      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+      randomHex(24)
     );
   }
 

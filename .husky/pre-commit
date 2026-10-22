@@ -16,3 +16,7 @@ fi
 npm run lint
 npm run type:check
 npm run format:check
+
+# Snapshot hygiene validation — ensures no orphaned snapshots
+# See TESTING.md for snapshot best practices
+npm run test:snapshots:validate

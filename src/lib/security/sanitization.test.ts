@@ -29,6 +29,31 @@ describe('Input Sanitization', () => {
       expect(sanitizeHtml(null as unknown as string)).toBe('');
       expect(sanitizeHtml(undefined as unknown as string)).toBe('');
     });
+
+    describe('XSS payloads', () => {
+      it.each([
+        ['javascript: URI in anchor', '<a href="javascript:alert(1)">x</a>'],
+        ['svg onload', '<svg onload="alert(1)"></svg>'],
+        ['iframe srcdoc', '<iframe srcdoc="<script>alert(1)</script>"></iframe>'],
+        ['body onload', '<body onload="alert(1)">'],
+        ['mixed-case script tag', '<ScRiPt>alert(1)</ScRiPt>'],
+        ['img onerror with entity-encoded payload', '<img src=x onerror="&#97;lert(1)">'],
+      ])('strips executable content: %s', (_label, payload) => {
+        const output = sanitizeHtml(payload);
+        expect(output.toLowerCase()).not.toContain('javascript:');
+        expect(output.toLowerCase()).not.toMatch(/<script/);
+        expect(output.toLowerCase()).not.toMatch(/\son\w+=/);
+        expect(output.toLowerCase()).not.toContain('<iframe');
+      });
+
+      it('returns no markup when ALLOWED_TAGS is empty', () => {
+        expect(sanitizeHtml('<b>bold</b> and <i>italic</i>')).toBe('bold and italic');
+      });
+
+      it('keeps plain text content intact', () => {
+        expect(sanitizeHtml('Send 10 USDC to Alice')).toBe('Send 10 USDC to Alice');
+      });
+    });
   });
 
   describe('escapeSql', () => {

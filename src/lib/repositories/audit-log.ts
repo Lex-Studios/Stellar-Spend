@@ -1,4 +1,4 @@
-import type { Repository } from './base';
+import type { BaseRepository } from './base';
 
 export interface AuditLog {
   id: string;
@@ -14,7 +14,7 @@ export interface AuditLog {
   createdAt: number;
 }
 
-export interface AuditLogRepository extends Repository<AuditLog> {
+export interface AuditLogRepository extends BaseRepository<AuditLog> {
   getByUserId(userId: string, limit?: number): Promise<AuditLog[]>;
   getByResource(resource: string, resourceId: string): Promise<AuditLog[]>;
   getByAction(action: string, limit?: number): Promise<AuditLog[]>;

@@ -3,7 +3,7 @@ import type { TransactionRepository, Transaction } from '../transaction';
 export class InMemoryTransactionRepository implements TransactionRepository {
   private transactions: Map<string, Transaction> = new Map();
 
-  async save(transaction: Transaction): Promise<void> {
+  async create(transaction: Transaction): Promise<void> {
     this.transactions.set(transaction.id, transaction);
   }
 
@@ -14,7 +14,7 @@ export class InMemoryTransactionRepository implements TransactionRepository {
     this.transactions.set(id, { ...transaction, ...updates });
   }
 
-  async getById(id: string): Promise<Transaction | null> {
+  async get(id: string): Promise<Transaction | null> {
     return this.transactions.get(id) ?? null;
   }
 
@@ -22,7 +22,7 @@ export class InMemoryTransactionRepository implements TransactionRepository {
     this.transactions.delete(id);
   }
 
-  async getAll(): Promise<Transaction[]> {
+  async list(): Promise<Transaction[]> {
     return Array.from(this.transactions.values());
   }
 

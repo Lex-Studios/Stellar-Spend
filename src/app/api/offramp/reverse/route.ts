@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomHexUpper } from '@/lib/crypto/ids';
 import { z } from 'zod';
 import { TransactionStorage } from '@/lib/transaction-storage';
 import { withIdempotency } from '@/lib/idempotency';
@@ -134,7 +135,7 @@ export async function POST(req: NextRequest) {
         }
 
         const fee = calculateReversalFee(reversalAmount);
-        const requestId = `REV-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+        const requestId = `REV-${Date.now()}-${randomHexUpper(4)}`;
 
         const request: ReversalRequest = {
           transactionId,

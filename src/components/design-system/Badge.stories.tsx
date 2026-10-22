@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { within, expect } from '@storybook/test';
 import { Badge } from './Badge';
 
 const meta: Meta<typeof Badge> = {
@@ -48,5 +49,37 @@ export const Info: Story = {
   args: {
     variant: 'info',
     children: 'Info Badge',
+  },
+};
+
+export const Interactive: Story = {
+  args: {
+    variant: 'success',
+    children: 'Badge rendered',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText(/badge rendered/i);
+    
+    // Test badge is rendered
+    await expect(badge).toBeInTheDocument();
+    
+    // Test badge has correct content
+    await expect(badge).toHaveTextContent('Badge rendered');
+  },
+};
+
+export const VariantStates: Story = {
+  args: {
+    variant: 'warning',
+    children: 'Status: Pending',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const badge = canvas.getByText(/status: pending/i);
+    
+    // Test badge displays variant state
+    await expect(badge).toBeInTheDocument();
+    await expect(badge).toHaveTextContent('Status: Pending');
   },
 };

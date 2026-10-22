@@ -25,6 +25,9 @@ interface PollBridgeStatusOptions {
  * - 10 consecutive HTTP errors → soft exit (resolves without throwing)
  * - Timeout      → resolves silently (bridge polling is best-effort)
  * Updates TransactionStorage on every successful poll.
+ *
+ * Built on the shared `usePollingManager` abstraction (see `@/lib/polling`),
+ * which owns the interval/backoff/cancellation logic reused by the payout hook.
  */
 export function usePollBridgeStatus() {
   const { start } = usePollingManager(BRIDGE_CONFIG);

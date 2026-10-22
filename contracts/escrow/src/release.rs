@@ -4,8 +4,8 @@
 //! authority (admin) may release a deposit; the function follows strict
 //! Check-Effects-Interactions order and holds the reentrancy lock for its duration.
 
-use soroban_sdk::{symbol_short, Address, Env};
-use stellar_spend_shared::errors::ContractError;
+use soroban_sdk::{Address, Env};
+use stellar_spend_shared::{errors::ContractError, events::emit_escrow_released};
 
 use crate::{DataKey, EscrowStatus, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD};
 
@@ -43,21 +43,14 @@ pub fn release(env: &Env, deposit_id: u64, recipient: Address) -> Result<i128, C
     release_lock(env);
 
     // ── INTERACT ───────────────────────────────────────────────────────
-    env.events()
-        .publish((symbol_short!("release"),), (deposit_id, recipient, amount));
+    emit_escrow_released(env, deposit_id, recipient, amount);
     Ok(amount)
 }
 
 // ── Helpers (shared with refund.rs) ──────────────────────────────────────────
 
 pub(crate) fn require_admin(env: &Env) -> Result<Address, ContractError> {
-    let admin: Address = env
-        .storage()
-        .instance()
-        .get(&DataKey::Admin)
-        .ok_or(ContractError::NotInitialized)?;
-    admin.require_auth();
-    Ok(admin)
+    stellar_spend_shared::auth::require_admin(env, &DataKey::Admin)
 }
 
 pub(crate) fn load_deposits(

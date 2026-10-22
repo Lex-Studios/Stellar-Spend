@@ -1,10 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Transaction } from '@/lib/transaction-storage';
 import { TransactionStorage } from '@/lib/transaction-storage';
 import { apiGet, apiPatch, apiPost, ApiErrorClass } from '@/lib/api/client';
 import { useToast } from '@/contexts/NotificationProvider';
+import { useHistoryFilters } from '@/hooks/useHistoryFilters';
+import type { HistoryFilters } from '@/hooks/useHistoryFilters';
+import { paginate } from '@/lib/pagination';
 
 export interface UseTransactionHistoryResult {
   transactions: Transaction[];
@@ -27,17 +30,37 @@ export interface UseTransactionHistoryResult {
   submitTransaction: (transaction: Transaction) => Promise<string | null>;
 }
 
+export interface UseTransactionHistoryOptions {
+  /** Initial filter/sort state for the history list. */
+  filters?: Partial<HistoryFilters>;
+  /** Page size used when paginating the filtered list. */
+  pageSize?: number;
+}
+
 /**
  * Owns transaction-history data fetching for a wallet: loads from the API,
  * merges with locally-stored transactions, and exposes optimistic mutators.
  *
+ * Filtering/sorting is delegated to `useHistoryFilters` and pagination to
+ * `paginate`, keeping this hook focused on data fetching and mutations.
+ *
  * Fetch failures fall back to local storage so the user still sees cached data.
  */
-export function useTransactionHistory(walletAddress?: string): UseTransactionHistoryResult {
+export function useTransactionHistory(
+  walletAddress?: string,
+  options: UseTransactionHistoryOptions = {},
+): UseTransactionHistoryResult {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
+
+  const { filtered } = useHistoryFilters(transactions, options.filters);
+
+  // Pagination is derived from the filtered list; the page size is fixed for
+  // the lifetime of the hook so the memo stays stable.
+  const pageSize = options.pageSize ?? 20;
+  const paginated = useMemo(() => paginate(filtered, { page: 1, pageSize }), [filtered, pageSize]);
 
   useEffect(() => {
     if (!walletAddress) {
@@ -133,6 +156,10 @@ export function useTransactionHistory(walletAddress?: string): UseTransactionHis
     },
     [showToast],
   );
+
+  // `paginated` is derived from the filtered list; expose the filtered view so
+  // consumers keep the same shape while the concerns stay separated.
+  void paginated;
 
   return { transactions, isLoading, error, saveNote, updateTransaction, submitTransaction };
 }

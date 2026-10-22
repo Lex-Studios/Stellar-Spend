@@ -2,12 +2,18 @@
 
 import type { Transaction } from '@/lib/transaction-storage';
 import type { UseHistoryFiltersResult } from '@/hooks/useHistoryFilters';
-import ExportControls from '@/components/ExportControls';
+import { dynamicComponent } from '@/lib/code-splitting';
 import { ListEmptyState } from '@/components/AsyncBoundary';
 import { HistoryStats } from './HistoryStats';
 import { HistoryFilters } from './HistoryFilters';
 import { HistoryTable } from './HistoryTable';
 import { HistoryPagination } from './HistoryPagination';
+
+// Export tooling is only needed when the user opens the export menu, so keep it
+// out of the history page's initial chunk.
+const ExportControls = dynamicComponent(() => import('@/components/ExportControls'), {
+  loading: () => null,
+});
 
 interface HistoryResultsProps {
   walletAddress?: string;

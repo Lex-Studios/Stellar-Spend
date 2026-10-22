@@ -24,15 +24,20 @@
 #![no_std]
 
 use soroban_sdk::{
-    contract, contractimpl, contractmeta, contracttype, symbol_short, vec, Address, BytesN, Env,
-    Map, String, Vec,
+    contract, contractimpl, contractmeta, contracttype, vec, Address, BytesN, Env, Map, String,
+    Vec,
 };
 use stellar_spend_shared::{
     auth::verify_threshold,
     errors::ContractError,
+    events::{
+        emit_multisig_initialized, emit_multisig_proposal_created, emit_multisig_signed,
+        emit_multisig_executed, emit_contract_migrated,
+    },
     validation::{
-        check_schema_version, require_non_negative_amount, require_string_len,
-        require_unique_addresses, MAX_SIGNERS,
+        check_schema_version, checked_add_ledgers, require_non_empty_addresses,
+        require_non_negative_amount, require_string_len, require_unique_addresses,
+        require_valid_threshold, MAX_SIGNERS,
     },
 };
 
@@ -147,18 +152,14 @@ impl MultisigAuthority {
         }
         admin.require_auth();
 
-        if signers.is_empty() {
-            return Err(ContractError::InvalidInput);
-        }
-        if signers.len() > MAX_SIGNERS {
+        require_non_empty_addresses(&signers)?;
+        if signers.len() as u32 > MAX_SIGNERS {
             return Err(ContractError::InvalidInput);
         }
         // A duplicated signer would otherwise count twice toward quorum, letting one
         // key satisfy a 2-of-N threshold on its own.
         require_unique_addresses(&signers)?;
-        if threshold == 0 || threshold > signers.len() {
-            return Err(ContractError::InvalidInput);
-        }
+        require_valid_threshold(threshold, signers.len() as u32)?;
         require_non_negative_amount(high_value_limit)?;
 
         let config = SignersConfig {
@@ -175,10 +176,7 @@ impl MultisigAuthority {
         env.storage().instance().set(&DataKey::Schema, &SCHEMA_VERSION);
         Self::bump_instance_ttl(&env);
 
-        env.events().publish(
-            (symbol_short!("init"),),
-            (config.admin, config.threshold, config.high_value_limit),
-        );
+        emit_multisig_initialized(&env, config.admin, config.threshold, config.high_value_limit);
         Ok(())
     }
 
@@ -205,15 +203,13 @@ impl MultisigAuthority {
         }
 
         let created_at = env.ledger().sequence();
-        let expires_at = created_at
-            .checked_add(DEFAULT_PROPOSAL_TTL_LEDGERS)
-            .ok_or(ContractError::Overflow)?;
+        let expires_at = checked_add_ledgers(created_at, DEFAULT_PROPOSAL_TTL_LEDGERS)?;
 
         proposals.set(
             id.clone(),
             Proposal {
                 id: id.clone(),
-                description,
+                description: description.clone(),
                 target: target.clone(),
                 value,
                 signatures: vec![&env, proposer.clone()],
@@ -227,8 +223,7 @@ impl MultisigAuthority {
             .set(&DataKey::Proposals, &proposals);
         Self::bump_instance_ttl(&env);
 
-        env.events()
-            .publish((symbol_short!("proposed"),), (id, proposer, target, value));
+        emit_multisig_proposal_created(&env, id, proposer, description, target, value);
         Ok(())
     }
 
@@ -263,8 +258,7 @@ impl MultisigAuthority {
             .set(&DataKey::Proposals, &proposals);
         Self::bump_instance_ttl(&env);
 
-        env.events()
-            .publish((symbol_short!("signed"),), (proposal_id, signer, sig_count));
+        emit_multisig_signed(&env, proposal_id, signer);
         Ok(sig_count)
     }
 
@@ -299,17 +293,13 @@ impl MultisigAuthority {
 
         let value = proposal.value;
         proposal.executed = true;
-        let sig_count = proposal.signatures.len();
         proposals.set(proposal_id.clone(), proposal);
         env.storage()
             .instance()
             .set(&DataKey::Proposals, &proposals);
         Self::bump_instance_ttl(&env);
 
-        env.events().publish(
-            (symbol_short!("executed"),),
-            (proposal_id, executor, value, sig_count),
-        );
+        emit_multisig_executed(&env, proposal_id, executor);
         Ok(value)
     }
 
@@ -333,7 +323,7 @@ impl MultisigAuthority {
         Self::bump_instance_ttl(&env);
 
         env.events()
-            .publish((symbol_short!("add_sgn"),), new_signer);
+            .publish((soroban_sdk::symbol_short!("add_sgn"),), new_signer);
         Ok(())
     }
 
@@ -365,7 +355,8 @@ impl MultisigAuthority {
         env.storage().instance().set(&DataKey::Signers, &config);
         Self::bump_instance_ttl(&env);
 
-        env.events().publish((symbol_short!("rm_sgn"),), signer);
+        // For remove_signer, emit using a generic approach since no shared helper exists yet
+        env.events().publish((soroban_sdk::symbol_short!("rm_sgn"),), signer);
         Ok(())
     }
 
@@ -388,7 +379,7 @@ impl MultisigAuthority {
         Self::bump_instance_ttl(&env);
 
         env.events()
-            .publish((symbol_short!("set_thr"),), new_threshold);
+            .publish((soroban_sdk::symbol_short!("set_thr"),), new_threshold);
         Ok(())
     }
 
@@ -407,7 +398,7 @@ impl MultisigAuthority {
         env.storage().instance().set(&DataKey::Signers, &config);
         Self::bump_instance_ttl(&env);
 
-        env.events().publish((symbol_short!("set_hvl"),), limit);
+        env.events().publish((soroban_sdk::symbol_short!("set_hvl"),), limit);
         Ok(())
     }
 
@@ -494,7 +485,8 @@ impl MultisigAuthority {
     ) -> Result<(), ContractError> {
         assert_is_admin(&env, &admin)?;
         env.deployer().update_current_contract_wasm(new_wasm_hash);
-        env.events().publish((symbol_short!("upgrade"),), ());
+        // Upgrade event emitted (no need to include hash in event)
+        env.events().publish((soroban_sdk::symbol_short!("upgrade"),), ());
         Ok(())
     }
 
@@ -551,8 +543,7 @@ impl MultisigAuthority {
             .instance()
             .set(&DataKey::Schema, &SCHEMA_VERSION);
         Self::bump_instance_ttl(&env);
-        env.events()
-            .publish((symbol_short!("migrate"),), (stored, SCHEMA_VERSION));
+        emit_contract_migrated(&env, stored, SCHEMA_VERSION);
         Ok(stored)
     }
 

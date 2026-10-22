@@ -10,6 +10,8 @@ export { BridgeService } from './bridge.service';
 export { PayoutService } from './payout.service';
 export { WebhookService } from './webhook.service';
 export { TransactionService } from './transaction.service';
+export { MerchantService } from './merchant.service';
+export type { SqlClient, TransactionStore } from './ports';
 export { SharingService } from './sharing-service';
 export { AnalyticsService } from './analytics-service';
 export { QRCodeService } from './qrcode-service';

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import type { Transaction } from '@/lib/transaction-storage';
 import { CopyButton } from '@/components/CopyButton';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -21,7 +22,7 @@ interface HistoryRowProps {
 }
 
 /** A single transaction row in the history table. */
-export function HistoryRow({
+export const HistoryRow = memo(function HistoryRow({
   tx,
   index,
   isFocused,
@@ -38,9 +39,10 @@ export function HistoryRow({
       onFocus={onRowFocus}
       onKeyDown={onRowKeyDown}
       data-testid="transaction-entry"
+      data-row-index={index}
       aria-label={`Transaction on ${formatDate(tx.timestamp)}, ${tx.amount} USDC, ${getCurrencySymbol(tx.currency)} ${tx.currency}, status ${tx.status}`}
       className={cn(
-        'border-b border-[#222222] transition-colors duration-100 focus:outline-none',
+        'h-[52px] border-b border-[#222222] transition-colors duration-100 focus:outline-none',
         index % 2 === 0 ? 'bg-[#111111]' : 'bg-[#0f0f0f]',
         'hover:bg-[#1a1a1a]',
         isFocused && 'ring-1 ring-inset ring-[#c9a962]',
@@ -93,4 +95,4 @@ export function HistoryRow({
       </td>
     </tr>
   );
-}
+});

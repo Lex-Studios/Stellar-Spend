@@ -168,6 +168,22 @@ When creating or updating a UI component, add a `.stories.tsx` file covering:
 - Edge cases for input data
 - Accessibility checks via the integrated `axe` addon
 
+#### Orphaned story check
+
+After deleting or renaming a component, run the orphan checker to confirm no story files are left pointing to a missing component:
+
+```bash
+npm run storybook:check-orphans
+```
+
+If orphaned stories are found, remove them automatically with:
+
+```bash
+npm run storybook:fix-orphans
+```
+
+Run `npm run storybook:check-orphans` before opening a PR whenever you remove or rename a component. The check exits 0 when no orphans are found and exits 1 otherwise, making it suitable for CI.
+
 ---
 
 ## Branch Naming Conventions

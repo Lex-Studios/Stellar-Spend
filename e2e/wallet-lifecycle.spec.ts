@@ -1,5 +1,6 @@
 /**
  * Issue #1002 — Wallet Connect / Disconnect E2E Coverage
+ * Issue #1340 — Stabilize Playwright E2E suite
  *
  * Covers the full wallet connect/disconnect lifecycle:
  *
@@ -13,18 +14,14 @@
  *  ├── After disconnect the "Connect Wallet" button is visible again
  *  └── Reconnect after disconnect works
  *
- * All wallet API calls are intercepted via `addInitScript` stubs.
- * All Stellar/Horizon network calls are intercepted via `page.route`.
- * No production secrets or live network calls are made.
- *
- * Stability notes:
- * - `waitForNavigation` is avoided entirely — it was the main source of
- *   flakiness in the legacy wallet-connection-flow.spec.ts.
- * - Assertions use `waitFor` with a generous but bounded timeout.
- * - Each test gets a fresh page context (no shared state leaks).
+ * Stability design (#1340):
+ * - No `waitForTimeout` — all waits use web-first locator assertions.
+ * - Storage is isolated per test via `isolatedTest` fixture; each test starts
+ *   with empty localStorage/sessionStorage, preventing wallet-session leakage
+ *   between tests.
  */
 
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import {
   injectFreighterStub,
   injectFreighterRejectedStub,
@@ -33,6 +30,7 @@ import {
   connectFreighterViaUI,
   WALLET_ADDRESSES,
 } from './fixtures/wallet-fixtures';
+import { isolatedTest as test } from './fixtures/test-isolation';
 
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3001';
 
@@ -41,38 +39,29 @@ const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3001';
 // ---------------------------------------------------------------------------
 
 /**
- * Verifies that the page is in a "wallet connected" state.
- * Accepts multiple possible indicators — the specific text depends on
- * whether the UI shows a truncated address, a "Connected" badge, or hides
- * the connect button entirely.
+ * Verifies that the page is in a "wallet connected" state using web-first
+ * assertions only — no fixed sleeps.
  */
 async function assertWalletConnected(page: import('@playwright/test').Page): Promise<void> {
-  // Wait a moment for the React state update
-  await page.waitForTimeout(500);
-
-  // Strategy 1: "Connect Wallet" button disappears
-  const connectBtnStillVisible = await page
-    .getByRole('button', { name: /connect wallet/i })
-    .isVisible({ timeout: 3_000 })
-    .catch(() => false);
-
-  // Strategy 2: A truncated address appears (e.g. GBBD…FLA5)
-  const addressTextVisible = await page
-    .getByText(/GB[A-Z0-9]{2,}[\.\…][A-Z0-9]{2,}/i)
-    .isVisible({ timeout: 2_000 })
-    .catch(() => false);
-
-  // Strategy 3: A "connected" indicator (text or aria label)
-  const connectedIndicatorVisible = await page
-    .getByText(/connected/i)
-    .isVisible({ timeout: 1_000 })
-    .catch(() => false);
-
-  // At least one indicator must be present
-  expect(
-    !connectBtnStillVisible || addressTextVisible || connectedIndicatorVisible,
-    'Expected wallet to be in a connected state (connect button hidden, or address/connected label visible)',
-  ).toBe(true);
+  // Use toPass to poll until one of the connected-state indicators resolves.
+  await expect(async () => {
+    const connectBtnVisible = await page
+      .getByRole('button', { name: /connect wallet/i })
+      .isVisible()
+      .catch(() => false);
+    const addressVisible = await page
+      .getByText(/GB[A-Z0-9]{2,}[\.\u2026][A-Z0-9]{2,}/i)
+      .isVisible()
+      .catch(() => false);
+    const connectedVisible = await page
+      .getByText(/connected/i)
+      .isVisible()
+      .catch(() => false);
+    // If the connect button is still showing AND no positive indicator is visible, retry.
+    if (connectBtnVisible && !addressVisible && !connectedVisible) {
+      throw new Error('Wallet not yet in connected state');
+    }
+  }).toPass({ timeout: 8_000 });
 }
 
 // ---------------------------------------------------------------------------
@@ -101,26 +90,22 @@ test.describe('Wallet Connect — Freighter happy path', () => {
     await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: /connect wallet/i }).click();
-    await page.waitForTimeout(400);
 
-    // Either a modal/dialog appeared, or the button state changed
-    const modalVisible = await page
-      .getByRole('dialog')
-      .isVisible({ timeout: 2_000 })
-      .catch(() => false);
-    const freighterOptionVisible = await page
-      .getByRole('button', { name: /freighter/i })
-      .isVisible({ timeout: 2_000 })
-      .catch(() => false);
-    const connectBtnGone = !(await page
-      .getByRole('button', { name: /connect wallet/i })
-      .isVisible({ timeout: 1_000 })
-      .catch(() => true));
-
-    expect(
-      modalVisible || freighterOptionVisible || connectBtnGone,
-      'After clicking Connect Wallet, a modal, a wallet option, or a connected state should appear',
-    ).toBe(true);
+    // Wait for any observable state change: modal, wallet option, or connected state.
+    await expect(async () => {
+      const modalVisible = await page.getByRole('dialog').isVisible().catch(() => false);
+      const freighterVisible = await page
+        .getByRole('button', { name: /freighter/i })
+        .isVisible()
+        .catch(() => false);
+      const connectBtnGone = !(await page
+        .getByRole('button', { name: /connect wallet/i })
+        .isVisible()
+        .catch(() => true));
+      if (!modalVisible && !freighterVisible && !connectBtnGone) {
+        throw new Error('No state change detected after clicking Connect Wallet');
+      }
+    }).toPass({ timeout: 5_000 });
   });
 
   test('Freighter wallet connects successfully and address is shown', async ({ page }) => {
@@ -138,9 +123,8 @@ test.describe('Wallet Connect — Freighter happy path', () => {
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
     await connectFreighterViaUI(page);
-    await page.waitForTimeout(600);
+    await assertWalletConnected(page);
 
-    // Ignore benign browser noise (e.g. ResizeObserver loop)
     const fatalErrors = jsErrors.filter(
       (e) =>
         !e.includes('ResizeObserver') &&
@@ -162,35 +146,29 @@ test.describe('Wallet Connect — LOBSTR happy path', () => {
     await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: /connect wallet/i }).click();
-    await page.waitForTimeout(400);
 
-    // The wallet picker should list LOBSTR as an option
     const lobstrOption = page.getByRole('button', { name: /lobstr/i });
+    // Only assert if the option appears — some UIs auto-connect without a picker.
     const isVisible = await lobstrOption.isVisible({ timeout: 3_000 }).catch(() => false);
-
-    // If no modal appears (some implementations auto-connect), that is also acceptable
     if (isVisible) {
       await expect(lobstrOption).toBeVisible();
     }
   });
 
   test('wallet picker modal renders both Freighter and LOBSTR options', async ({ page }) => {
-    // Inject Freighter too so both options can be detected
     await injectFreighterStub(page);
 
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: /connect wallet/i }).click();
-    await page.waitForTimeout(400);
 
     const freighterOption = page.getByRole('button', { name: /freighter/i });
     const lobstrOption = page.getByRole('button', { name: /lobstr/i });
 
-    const freighterVisible = await freighterOption.isVisible({ timeout: 2_000 }).catch(() => false);
-    const lobstrVisible = await lobstrOption.isVisible({ timeout: 2_000 }).catch(() => false);
+    const freighterVisible = await freighterOption.isVisible({ timeout: 3_000 }).catch(() => false);
+    const lobstrVisible = await lobstrOption.isVisible({ timeout: 3_000 }).catch(() => false);
 
-    // If a modal appeared, both options should be listed
     if (freighterVisible || lobstrVisible) {
       expect(freighterVisible, 'Freighter option should be in wallet picker').toBe(true);
       expect(lobstrVisible, 'LOBSTR option should be in wallet picker').toBe(true);
@@ -210,23 +188,29 @@ test.describe('Wallet Connect — rejected connection', () => {
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
 
-    // Attempt connection — the stub will throw "User declined access"
     await page.getByRole('button', { name: /connect wallet/i }).click();
-    await page.waitForTimeout(400);
 
     const freighterBtn = page.getByRole('button', { name: /freighter/i });
-    if (await freighterBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    if (await freighterBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
       await freighterBtn.click();
-      await page.waitForTimeout(600);
+      // Wait for the UI to settle after the rejected connection attempt.
+      await expect(async () => {
+        const connectVisible = await page
+          .getByRole('button', { name: /connect wallet/i })
+          .isVisible()
+          .catch(() => false);
+        const errorVisible = await page
+          .getByText(/error|failed|declined|not installed|rejected/i)
+          .isVisible()
+          .catch(() => false);
+        if (!connectVisible && !errorVisible) throw new Error('UI still loading');
+      }).toPass({ timeout: 5_000 });
     }
 
-    // The page must NOT crash
     const fatalErrors = jsErrors.filter(
       (e) => !e.includes('ResizeObserver') && !e.includes('Non-Error promise rejection'),
     );
     expect(fatalErrors, `Page crashed with: ${fatalErrors.join('; ')}`).toHaveLength(0);
-
-    // The app should still be on a usable page (no hard redirect to /500)
     expect(page.url()).not.toContain('/500');
   });
 
@@ -235,21 +219,27 @@ test.describe('Wallet Connect — rejected connection', () => {
     await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: /connect wallet/i }).click();
-    await page.waitForTimeout(400);
 
     const freighterBtn = page.getByRole('button', { name: /freighter/i });
-    if (await freighterBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    if (await freighterBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
       await freighterBtn.click();
-      await page.waitForTimeout(800);
+      await expect(async () => {
+        const connectStillVisible = await page
+          .getByRole('button', { name: /connect wallet/i })
+          .isVisible()
+          .catch(() => false);
+        const errorVisible = await page
+          .getByText(/error|failed|declined|not installed|rejected/i)
+          .isVisible()
+          .catch(() => false);
+        if (!connectStillVisible && !errorVisible) throw new Error('Waiting for settled state');
+      }).toPass({ timeout: 6_000 });
     }
 
-    // After a failed connection the "Connect Wallet" button should still be visible
-    // (user can retry), OR an error / status message appears.
     const connectStillVisible = await page
       .getByRole('button', { name: /connect wallet/i })
       .isVisible({ timeout: 3_000 })
       .catch(() => false);
-
     const errorMessageVisible = await page
       .getByText(/error|failed|declined|not installed|rejected/i)
       .isVisible({ timeout: 2_000 })
@@ -276,31 +266,27 @@ test.describe('Wallet Disconnect & Session Cleanup', () => {
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
 
-    // Connect first
     await connectFreighterViaUI(page);
     await assertWalletConnected(page);
 
-    // Look for a disconnect mechanism — could be a button, a dropdown, or a menu item
     const disconnectBtn = page.getByRole('button', { name: /disconnect/i });
-    const walletMenuBtn = page.locator('[data-testid="wallet-button"], [aria-label*="wallet" i]').first();
+    const walletMenuBtn = page
+      .locator('[data-testid="wallet-button"], [aria-label*="wallet" i]')
+      .first();
 
     if (await disconnectBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await disconnectBtn.click();
     } else if (await walletMenuBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await walletMenuBtn.click();
-      await page.waitForTimeout(300);
-
       const disconnectOption = page.getByRole('button', { name: /disconnect/i });
-      if (await disconnectOption.isVisible({ timeout: 2_000 }).catch(() => false)) {
-        await disconnectOption.click();
-      }
+      await expect(disconnectOption).toBeVisible({ timeout: 3_000 });
+      await disconnectOption.click();
     }
 
-    await page.waitForTimeout(500);
-    // After disconnect, the "Connect Wallet" button should reappear
-    await expect(
-      page.getByRole('button', { name: /connect wallet/i }),
-    ).toBeVisible({ timeout: 5_000 });
+    // Web-first: wait for the connect button to reappear.
+    await expect(page.getByRole('button', { name: /connect wallet/i })).toBeVisible({
+      timeout: 5_000,
+    });
   });
 
   test('localStorage session data is cleared on disconnect', async ({ page }) => {
@@ -310,7 +296,6 @@ test.describe('Wallet Disconnect & Session Cleanup', () => {
     await connectFreighterViaUI(page);
     await assertWalletConnected(page);
 
-    // Capture localStorage state while connected
     const connectedState = await page.evaluate(() =>
       JSON.stringify(
         Object.entries(localStorage)
@@ -319,7 +304,6 @@ test.describe('Wallet Disconnect & Session Cleanup', () => {
       ),
     );
 
-    // Attempt disconnect via any available mechanism
     const disconnectBtn = page.getByRole('button', { name: /disconnect/i });
     const walletMenuBtn = page
       .locator('[data-testid="wallet-button"], [aria-label*="wallet" i]')
@@ -329,22 +313,19 @@ test.describe('Wallet Disconnect & Session Cleanup', () => {
       await disconnectBtn.click();
     } else if (await walletMenuBtn.isVisible({ timeout: 1_500 }).catch(() => false)) {
       await walletMenuBtn.click();
-      await page.waitForTimeout(300);
       const opt = page.getByRole('button', { name: /disconnect/i });
-      if (await opt.isVisible({ timeout: 1_500 }).catch(() => false)) await opt.click();
+      if (await opt.isVisible({ timeout: 2_000 }).catch(() => false)) await opt.click();
     }
 
-    await page.waitForTimeout(500);
+    // Wait for disconnect to settle — connect button reappears.
+    await expect(async () => {
+      const backToConnect = await page
+        .getByRole('button', { name: /connect wallet/i })
+        .isVisible()
+        .catch(() => false);
+      if (!backToConnect) throw new Error('Disconnect not yet complete');
+    }).toPass({ timeout: 5_000 });
 
-    // Verify the page is in a disconnected state (connect button visible)
-    const backToConnectBtn = await page
-      .getByRole('button', { name: /connect wallet/i })
-      .isVisible({ timeout: 3_000 })
-      .catch(() => false);
-
-    // Session state should have changed (cleared or absent) — we check at least one of:
-    // a) the connect button is visible again (session was cleared)
-    // b) wallet-related localStorage keys are now empty
     const disconnectedState = await page.evaluate(() =>
       JSON.stringify(
         Object.entries(localStorage)
@@ -354,6 +335,10 @@ test.describe('Wallet Disconnect & Session Cleanup', () => {
     );
 
     const sessionCleared = connectedState !== disconnectedState;
+    const backToConnectBtn = await page
+      .getByRole('button', { name: /connect wallet/i })
+      .isVisible()
+      .catch(() => false);
 
     expect(
       backToConnectBtn || sessionCleared,
@@ -365,11 +350,9 @@ test.describe('Wallet Disconnect & Session Cleanup', () => {
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
 
-    // --- First connect ---
     await connectFreighterViaUI(page);
     await assertWalletConnected(page);
 
-    // --- Disconnect ---
     const disconnectBtn = page.getByRole('button', { name: /disconnect/i });
     const walletMenuBtn = page
       .locator('[data-testid="wallet-button"], [aria-label*="wallet" i]')
@@ -379,20 +362,15 @@ test.describe('Wallet Disconnect & Session Cleanup', () => {
       await disconnectBtn.click();
     } else if (await walletMenuBtn.isVisible({ timeout: 1_500 }).catch(() => false)) {
       await walletMenuBtn.click();
-      await page.waitForTimeout(300);
       const opt = page.getByRole('button', { name: /disconnect/i });
-      if (await opt.isVisible({ timeout: 1_500 }).catch(() => false)) await opt.click();
+      if (await opt.isVisible({ timeout: 2_000 }).catch(() => false)) await opt.click();
     }
 
-    await page.waitForTimeout(500);
-
-    // --- Reconnect ---
     const reconnectBtn = page.getByRole('button', { name: /connect wallet/i });
-    if (await reconnectBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+    if (await reconnectBtn.isVisible({ timeout: 5_000 }).catch(() => false)) {
       await connectFreighterViaUI(page);
       await assertWalletConnected(page);
     }
-    // If the connect button never re-appeared, the initial connect is still valid
   });
 });
 
@@ -408,19 +386,11 @@ test.describe('Wallet Modal — Accessibility', () => {
     await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: /connect wallet/i }).click();
-    await page.waitForTimeout(400);
 
-    // If a dialog appeared, Escape should close it
-    const dialogVisible = await page
-      .getByRole('dialog')
-      .isVisible({ timeout: 2_000 })
-      .catch(() => false);
-
-    if (dialogVisible) {
+    const dialog = page.getByRole('dialog');
+    if (await dialog.isVisible({ timeout: 3_000 }).catch(() => false)) {
       await page.keyboard.press('Escape');
-      await page.waitForTimeout(300);
-      // Modal should be gone
-      await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 2_000 });
+      await expect(dialog).toBeHidden({ timeout: 3_000 });
     }
   });
 
@@ -431,10 +401,9 @@ test.describe('Wallet Modal — Accessibility', () => {
     await page.waitForLoadState('networkidle');
 
     await page.getByRole('button', { name: /connect wallet/i }).click();
-    await page.waitForTimeout(400);
 
     const dialog = page.getByRole('dialog');
-    if (await dialog.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    if (await dialog.isVisible({ timeout: 3_000 }).catch(() => false)) {
       await expect(dialog).toHaveAttribute('aria-modal', 'true');
     }
   });

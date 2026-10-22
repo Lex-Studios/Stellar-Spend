@@ -52,9 +52,12 @@ export async function POST(req: NextRequest) {
           );
         } catch (err) {
           if (err instanceof CircuitOpenError) {
-            return NextResponse.json(
-              { error: 'Soroban RPC unavailable — please retry shortly.' },
-              { status: 503 },
+            return ErrorHandler.handle(
+              new ApiError(
+                ErrorType.EXTERNAL_SERVICE,
+                'Soroban RPC unavailable — please retry shortly.',
+                503,
+              ),
             );
           }
           throw err;

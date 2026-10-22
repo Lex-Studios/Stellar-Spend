@@ -2,6 +2,18 @@ import express from 'express';
 import { tracingMiddleware } from './lib/middleware/tracing';
 import { initializeTracing } from './lib/monitoring';
 import { logger } from './lib/logger';
+import { validateEnv } from './lib/env';
+
+// Validate required environment variables at startup.
+// Reports every missing key together and exits non-zero on failure.
+const envValidation = validateEnv();
+if (!envValidation.valid) {
+  logger.error('startup.env.missing', {
+    missingKeys: envValidation.missingKeys,
+    message: `Missing required environment variables: ${envValidation.missingKeys.join(', ')}`,
+  });
+  process.exit(1);
+}
 
 // Initialize OpenTelemetry tracing
 const tracingSDK = initializeTracing();

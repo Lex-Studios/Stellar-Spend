@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { userEvent, within, expect } from '@storybook/test';
 import { Button } from './Button';
 
 const meta: Meta<typeof Button> = {
@@ -74,5 +75,44 @@ export const Loading: Story = {
 export const Disabled: Story = {
   args: {
     disabled: true,
+  },
+};
+
+export const Interactive: Story = {
+  args: {
+    variant: 'primary',
+    children: 'Click me',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: /click me/i });
+    
+    // Test that button is initially enabled
+    await expect(button).not.toBeDisabled();
+    
+    // Test click interaction
+    await userEvent.click(button);
+    
+    // Button should remain in document after click
+    await expect(button).toBeInTheDocument();
+  },
+};
+
+export const InteractiveWithCallback: Story = {
+  args: {
+    variant: 'secondary',
+    children: 'Submit',
+    onClick: async () => {
+      // Simulate async action
+      await new Promise(resolve => setTimeout(resolve, 100));
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button', { name: /submit/i });
+    
+    // Test button is clickable
+    await userEvent.click(button);
+    await expect(button).toBeInTheDocument();
   },
 };

@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env, Symbol, Vec};
+use soroban_sdk::{Address, Env, IntoVal, Val};
 
 use crate::errors::ContractError;
 
@@ -11,71 +11,6 @@ pub enum AuthError {
     NotAdmin = 2,
     InvalidSigner = 3,
     InsufficientPermissions = 4,
-}
-
-pub struct AdminAuth;
-
-impl AdminAuth {
-    pub fn require_admin(env: &Env, admin: &Address, caller: &Address) -> Result<(), AuthError> {
-        if caller != admin {
-            return Err(AuthError::NotAdmin);
-        }
-        caller.require_auth();
-        Ok(())
-    }
-
-    pub fn require_admin_or_role(
-        env: &Env,
-        admin: &Address,
-        caller: &Address,
-        role_check: fn(&Address) -> bool,
-    ) -> Result<(), AuthError> {
-        if caller == admin {
-            caller.require_auth();
-            return Ok(());
-        }
-        if role_check(caller) {
-            caller.require_auth();
-            return Ok(());
-        }
-        Err(AuthError::Unauthorized)
-    }
-
-    pub fn require_role(
-        env: &Env,
-        caller: &Address,
-        role_check: fn(&Address) -> bool,
-    ) -> Result<(), AuthError> {
-        if !role_check(caller) {
-            return Err(AuthError::InsufficientPermissions);
-        }
-        caller.require_auth();
-        Ok(())
-    }
-
-    pub fn is_admin(env: &Env, admin: &Address, caller: &Address) -> bool {
-        caller == admin
-    }
-}
-
-pub fn assert_is_admin(env: &Env, admin: &Address, admin_key: &str) -> Result<(), ContractError> {
-    let stored_admin: Address = env.storage().instance().get(&Symbol::new(env, admin_key))
-        .ok_or(ContractError::NotFound)?;
-    if admin != &stored_admin {
-        return Err(ContractError::Unauthorized);
-    }
-    admin.require_auth();
-    Ok(())
-}
-
-pub fn assert_is_signer(env: &Env, signer: &Address, signers_key: &str) -> Result<(), ContractError> {
-    let signers: Vec<Address> = env.storage().instance().get(&Symbol::new(env, signers_key))
-        .ok_or(ContractError::NotInitialized)?;
-    if !signers.contains(signer) {
-        return Err(ContractError::Unauthorized);
-    }
-    signer.require_auth();
-    Ok(())
 }
 
 #[cfg(test)]
@@ -125,4 +60,21 @@ mod tests {
             }
         }
     }
+}
+
+/// Return the administrator recorded under `key` in instance storage, requiring
+/// that administrator to have authorised the current invocation.
+///
+/// Reports [`ContractError::NotInitialized`] when no administrator is recorded.
+pub fn require_admin<K>(env: &Env, key: &K) -> Result<Address, ContractError>
+where
+    K: IntoVal<Env, Val>,
+{
+    let admin: Address = env
+        .storage()
+        .instance()
+        .get(key)
+        .ok_or(ContractError::NotInitialized)?;
+    admin.require_auth();
+    Ok(admin)
 }

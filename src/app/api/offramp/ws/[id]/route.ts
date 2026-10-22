@@ -17,18 +17,21 @@
  *   });
  */
 
+import { ErrorHandler } from '@/lib/error-handler';
+import { ApiError, ErrorType } from '@/lib/error-types';
+
 export { onConnect, broadcast, closeForId } from '@/lib/polling';
 export type { StatusPush } from '@/lib/polling';
 
 export async function GET(): Promise<Response> {
-  return new Response(
-    JSON.stringify({
-      error: 'WebSocket upgrade not supported in Next.js App Router route handlers.',
-      hint: 'Use a custom Node.js server and import { onConnect, broadcast, closeForId } from @/lib/polling/ws-server.',
-    }),
-    {
-      status: 501,
-      headers: { 'Content-Type': 'application/json' },
-    },
+  return ErrorHandler.handle(
+    new ApiError(
+      ErrorType.SERVER_ERROR,
+      'WebSocket upgrade not supported in Next.js App Router route handlers.',
+      501,
+      {
+        hint: 'Use a custom Node.js server and import { onConnect, broadcast, closeForId } from @/lib/polling/ws-server.',
+      },
+    ),
   );
 }

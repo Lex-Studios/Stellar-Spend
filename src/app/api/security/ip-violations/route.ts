@@ -3,7 +3,7 @@ import { ipWhitelistService } from '@/lib/ip-whitelist';
 import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
-import { decodeCursor, createPaginatedResponse } from '@/lib/pagination';
+import { createPaginatedResponse, parsePaginationQuery, trimLookahead } from '@/lib/pagination';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,14 +13,11 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const cursor = searchParams.get('cursor');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 1000);
+    const { offset, limit } = parsePaginationQuery(searchParams, { defaultLimit: 50, maxLimit: 1000 });
 
-    const offset = decodeCursor(cursor);
     const violations = await ipWhitelistService.getViolations(userAddress, limit + 1, offset);
 
-    const hasMore = violations.length > limit;
-    const data = hasMore ? violations.slice(0, limit) : violations;
+    const { data } = trimLookahead(violations, limit);
 
     return NextResponse.json(
       createPaginatedResponse(data, offset, limit, offset + violations.length),

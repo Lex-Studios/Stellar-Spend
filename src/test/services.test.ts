@@ -167,7 +167,11 @@ describe('TransactionService', () => {
   let service: TransactionService;
 
   beforeEach(() => {
-    service = new TransactionService();
+    service = new TransactionService({
+      getById: vi.fn(),
+      getByPayoutOrderId: vi.fn(),
+      update: vi.fn(),
+    });
   });
 
   it('should require transaction ID for retrieval', async () => {

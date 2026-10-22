@@ -1,3 +1,5 @@
+import { STATUS_VARIANT_CLASSES, STATUS_VARIANTS } from '@/lib/theme-tokens';
+
 export interface ComponentStatus {
   name: string;
   status: 'operational' | 'degraded' | 'down';
@@ -24,14 +26,7 @@ export interface Incident {
 }
 
 export function getStatusColor(status: ComponentStatus['status']): string {
-  switch (status) {
-    case 'operational':
-      return 'text-green-400 bg-green-400/10 border-green-400/30';
-    case 'degraded':
-      return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30';
-    case 'down':
-      return 'text-red-400 bg-red-400/10 border-red-400/30';
-  }
+  return STATUS_VARIANT_CLASSES[STATUS_VARIANTS[status] ?? 'neutral'];
 }
 
 export function getStatusText(status: ComponentStatus['status']): string {

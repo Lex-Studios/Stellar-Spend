@@ -104,6 +104,47 @@ const ACCEPTED_EXCEPTIONS = {
 const ACCEPTED_LICENSE_PREFIXES = ['LGPL-'];
 
 // ---------------------------------------------------------------------------
+// License evaluation helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Normalise a raw license value from license-checker into a string.
+ * license-checker may return a string, an array of strings, or undefined.
+ */
+function normaliseLicense(raw) {
+  if (raw == null) return 'UNKNOWN';
+  if (Array.isArray(raw)) {
+    if (raw.length === 0) return 'UNKNOWN';
+    if (raw.length === 1) return String(raw[0]).trim();
+    // Multiple licenses listed as an array — treat as an OR expression.
+    return `(${raw.map((l) => String(l).trim()).join(' OR ')})`;
+  }
+  const str = String(raw).trim();
+  return str.length === 0 ? 'UNKNOWN' : str;
+}
+
+/**
+ * Returns true if the given license expression is approved.
+ * Handles simple identifiers, compound SPDX expressions, and the
+ * approved-list membership check.
+ */
+function isApproved(license) {
+  if (APPROVED_LICENSES.has(license)) return true;
+
+  // Handle compound SPDX expressions like "(MIT OR Apache-2.0)" or
+  // "MIT OR Apache-2.0" by checking each disjunct against the approved set.
+  const stripped = license.replace(/^\(/, '').replace(/\)$/, '').trim();
+  if (stripped.includes(' OR ')) {
+    const parts = stripped.split(/\s+OR\s+/i).map((p) => p.replace(/[()]/g, '').trim());
+    if (parts.length > 0 && parts.every((p) => APPROVED_LICENSES.has(p))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 const showReport = process.argv.includes('--report');
@@ -127,7 +168,7 @@ const accepted = [];
 const approved = [];
 
 for (const [pkg, info] of Object.entries(packages)) {
-  const license = info.licenses ?? 'UNKNOWN';
+  const license = normaliseLicense(info.licenses);
 
   // Check if it is in explicit exceptions
   if (pkg in ACCEPTED_EXCEPTIONS) {
@@ -136,7 +177,7 @@ for (const [pkg, info] of Object.entries(packages)) {
   }
 
   // Check LGPL prefix acceptance
-  if (ACCEPTED_LICENSE_PREFIXES.some((prefix) => String(license).startsWith(prefix))) {
+  if (ACCEPTED_LICENSE_PREFIXES.some((prefix) => license.startsWith(prefix))) {
     accepted.push({
       pkg,
       license,
@@ -145,7 +186,7 @@ for (const [pkg, info] of Object.entries(packages)) {
     continue;
   }
 
-  if (APPROVED_LICENSES.has(license)) {
+  if (isApproved(license)) {
     approved.push({ pkg, license });
   } else {
     violations.push({ pkg, license });
@@ -156,30 +197,30 @@ for (const [pkg, info] of Object.entries(packages)) {
 // Output
 // ---------------------------------------------------------------------------
 if (showReport) {
-   log('\n✅  Approved packages:');
-   for (const { pkg, license } of approved) {
-     log(`   ${pkg}  (${license})`);
-   }
+  log('\n✅  Approved packages:');
+  for (const { pkg, license } of approved) {
+    log(`   ${pkg}  (${license})`);
+  }
 }
 
 if (accepted.length > 0) {
-   log('\n⚠️   Explicitly accepted (review at next upgrade):');
-   for (const { pkg, license, reason } of accepted) {
-     log(`   ${pkg}  (${license})`);
-     log(`     → ${reason}`);
-   }
+  log('\n⚠️   Explicitly accepted (review at next upgrade):');
+  for (const { pkg, license, reason } of accepted) {
+    log(`   ${pkg}  (${license})`);
+    log(`     → ${reason}`);
+  }
 }
 
 if (violations.length > 0) {
-   error('\n❌  License violations found — these packages require review:\n');
-   for (const { pkg, license } of violations) {
-     error(`   ${pkg}  (${license})`);
-   }
-   error(
-     '\nTo resolve: either remove the package, find a compatible alternative, ' +
-       'or add an entry to ACCEPTED_EXCEPTIONS in scripts/check-licenses.js ' +
-       'with a written rationale, then re-run this check.',
-   );
+  error('\n❌  License violations found — these packages require review:\n');
+  for (const { pkg, license } of violations) {
+    error(`   ${pkg}  (${license})`);
+  }
+  error(
+    '\nTo resolve: either remove the package, find a compatible alternative, ' +
+      'or add an entry to ACCEPTED_EXCEPTIONS in scripts/check-licenses.js ' +
+      'with a written rationale, then re-run this check.',
+  );
   process.exit(1);
 }
 

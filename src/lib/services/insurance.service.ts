@@ -1,3 +1,4 @@
+import { randomHexUpper } from "@/lib/crypto/ids";
 import { db } from '@/lib/db';
 
 export interface InsuranceQuote {
@@ -86,7 +87,7 @@ export async function getInsuranceById(insuranceId: string) {
 }
 
 export async function fileClaim(insuranceId: string, reason: string, evidence?: string) {
-  const claimId = `CLAIM-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+  const claimId = `CLAIM-${Date.now()}-${randomHexUpper(4)}`;
   return db.query(
     `UPDATE transaction_insurance
      SET status = 'claimed', claim_id = $1, claim_reason = $2, claim_evidence = $3, claimed_at = NOW()
@@ -147,7 +148,7 @@ export async function processInsurancePayout(insuranceId: string) {
   if (!row) throw new Error('Insurance record not found');
   if (row.status !== 'claim_approved') throw new Error('Claim must be approved before payout');
 
-  const payoutRef = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+  const payoutRef = `PAY-${Date.now()}-${randomHexUpper(4)}`;
 
   return db.query(
     `UPDATE transaction_insurance

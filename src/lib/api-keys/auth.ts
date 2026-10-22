@@ -8,22 +8,13 @@ import {
 import type { ApiKeyRecord } from '@/lib/api-keys/types';
 import { getClientIp } from '@/lib/offramp';
 import { enforceScope } from '@/lib/middleware';
-
-function extractApiKey(request: NextRequest): string | null {
-  const xApiKey = request.headers.get('x-api-key');
-  if (xApiKey) return xApiKey;
-
-  const authorization = request.headers.get('authorization');
-  if (!authorization) return null;
-  const match = authorization.match(/^Bearer\s+(.+)$/i);
-  return match?.[1] ?? null;
-}
+import { extractApiKeyFromRequest } from '@/lib/auth/authorize';
 
 export async function withApiKeyAuth(
   request: NextRequest,
   handler: (apiKey: ApiKeyRecord) => Promise<NextResponse>,
 ): Promise<NextResponse> {
-  const rawKey = extractApiKey(request);
+  const rawKey = extractApiKeyFromRequest(request);
   if (!rawKey) {
     return ErrorHandler.unauthorized('API key is required');
   }

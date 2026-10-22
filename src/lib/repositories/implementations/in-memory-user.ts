@@ -3,7 +3,7 @@ import type { UserRepository, User } from '../user';
 export class InMemoryUserRepository implements UserRepository {
   private users: Map<string, User> = new Map();
 
-  async save(user: User): Promise<void> {
+  async create(user: User): Promise<void> {
     this.users.set(user.id, user);
   }
 
@@ -13,7 +13,7 @@ export class InMemoryUserRepository implements UserRepository {
     this.users.set(id, { ...user, ...updates, updatedAt: Date.now() });
   }
 
-  async getById(id: string): Promise<User | null> {
+  async get(id: string): Promise<User | null> {
     return this.users.get(id) ?? null;
   }
 
@@ -21,7 +21,7 @@ export class InMemoryUserRepository implements UserRepository {
     this.users.delete(id);
   }
 
-  async getAll(): Promise<User[]> {
+  async list(): Promise<User[]> {
     return Array.from(this.users.values());
   }
 

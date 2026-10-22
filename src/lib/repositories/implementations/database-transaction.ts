@@ -10,7 +10,7 @@ async function timedQuery(sql: string, values: unknown[]) {
 }
 
 export class DatabaseTransactionRepository implements TransactionRepository {
-  async save(transaction: Transaction): Promise<void> {
+  async create(transaction: Transaction): Promise<void> {
     const finalizedAt =
       transaction.finalizedAt ??
       (transaction.status === 'completed' || transaction.status === 'failed' ? Date.now() : null);
@@ -93,7 +93,7 @@ export class DatabaseTransactionRepository implements TransactionRepository {
     await timedQuery(sql, values);
   }
 
-  async getById(id: string): Promise<Transaction | null> {
+  async get(id: string): Promise<Transaction | null> {
     const result = await timedQuery('SELECT * FROM transactions WHERE id = $1', [id]);
     return result.rows.length > 0 ? this.rowToTransaction(result.rows[0]) : null;
   }
@@ -102,7 +102,7 @@ export class DatabaseTransactionRepository implements TransactionRepository {
     await timedQuery('DELETE FROM transactions WHERE id = $1', [id]);
   }
 
-  async getAll(): Promise<Transaction[]> {
+  async list(): Promise<Transaction[]> {
     const result = await timedQuery('SELECT * FROM transactions', []);
     return result.rows.map((row) => this.rowToTransaction(row));
   }

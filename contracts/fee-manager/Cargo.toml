@@ -10,6 +10,7 @@ stellar-spend-shared = { workspace = true }
 [dev-dependencies]
 fee-manager = { path = ".", features = ["testutils"] }
 soroban-sdk = { workspace = true, features = ["testutils"] }
+proptest = "1.11"
 
 [features]
 testutils = ["soroban-sdk/testutils"]

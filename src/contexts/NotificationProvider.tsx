@@ -30,6 +30,7 @@ import {
   type ReactNode,
 } from 'react';
 import { logger } from '@/lib/logger';
+import { randomHex } from '@/lib/crypto/ids';
 import { PriceAlertStorage } from '@/lib/price-alerts';
 import { formatNumber } from '@/lib/format';
 
@@ -122,7 +123,7 @@ export function NotificationProvider({
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
-    const id = Math.random().toString(36).substring(2, 9);
+    const id = randomHex(6);
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));

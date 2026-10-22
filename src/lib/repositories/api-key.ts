@@ -1,4 +1,4 @@
-import type { Repository } from './base';
+import type { BaseRepository } from './base';
 
 export interface ApiKey {
   id: string;
@@ -12,7 +12,7 @@ export interface ApiKey {
   isActive: boolean;
 }
 
-export interface ApiKeyRepository extends Repository<ApiKey> {
+export interface ApiKeyRepository extends BaseRepository<ApiKey> {
   getByKey(key: string): Promise<ApiKey | null>;
   getByUserId(userId: string): Promise<ApiKey[]>;
   getActiveByUserId(userId: string): Promise<ApiKey[]>;

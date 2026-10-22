@@ -1,7 +1,9 @@
 import { logger } from '@/lib/logger';
+import { readStoredJson, writeStoredJson, removeStoredItem } from '@/lib/transaction-storage';
 /**
  * Sync Storage
- * Manages client-side sync state and metadata for transaction history synchronization
+ * Manages client-side sync state and metadata for transaction history synchronization.
+ * Persistence goes through the shared helpers in transaction-storage.ts.
  */
 
 export interface SyncSettings {
@@ -20,6 +22,12 @@ export interface SyncMetadata {
   conflict?: boolean;
 }
 
+type SyncQueueItem = {
+  transactionId: string;
+  action: 'create' | 'update' | 'delete';
+  queuedAt: number;
+};
+
 const SYNC_SETTINGS_KEY = 'stellar_spend_sync_settings';
 const SYNC_METADATA_KEY = 'stellar_spend_sync_metadata';
 const SYNC_QUEUE_KEY = 'stellar_spend_sync_queue';
@@ -29,16 +37,7 @@ export class SyncStorage {
    * Get or initialize sync settings
    */
   static getSettings(): SyncSettings {
-    if (typeof window === 'undefined') {
-      return this.getDefaultSettings();
-    }
-
-    try {
-      const stored = localStorage.getItem(SYNC_SETTINGS_KEY);
-      return stored ? JSON.parse(stored) : this.getDefaultSettings();
-    } catch {
-      return this.getDefaultSettings();
-    }
+    return readStoredJson(SYNC_SETTINGS_KEY, this.getDefaultSettings());
   }
 
   /**
@@ -47,9 +46,8 @@ export class SyncStorage {
   static updateSettings(updates: Partial<SyncSettings>): SyncSettings {
     if (typeof window === 'undefined') return this.getDefaultSettings();
 
-    const current = this.getSettings();
-    const updated: SyncSettings = { ...current, ...updates };
-    localStorage.setItem(SYNC_SETTINGS_KEY, JSON.stringify(updated));
+    const updated: SyncSettings = { ...this.getSettings(), ...updates };
+    writeStoredJson(SYNC_SETTINGS_KEY, updated);
     return updated;
   }
 
@@ -76,15 +74,7 @@ export class SyncStorage {
    * Get sync metadata for a transaction
    */
   static getMetadata(transactionId: string): SyncMetadata | undefined {
-    if (typeof window === 'undefined') return undefined;
-
-    try {
-      const stored = localStorage.getItem(SYNC_METADATA_KEY);
-      const metadata = stored ? JSON.parse(stored) : {};
-      return metadata[transactionId];
-    } catch {
-      return undefined;
-    }
+    return this.getAllMetadata()[transactionId];
   }
 
   /**
@@ -93,12 +83,9 @@ export class SyncStorage {
   static setMetadata(transactionId: string, metadata: SyncMetadata): void {
     if (typeof window === 'undefined') return;
 
-    try {
-      const stored = localStorage.getItem(SYNC_METADATA_KEY);
-      const allMetadata = stored ? JSON.parse(stored) : {};
-      allMetadata[transactionId] = metadata;
-      localStorage.setItem(SYNC_METADATA_KEY, JSON.stringify(allMetadata));
-    } catch {
+    const allMetadata = this.getAllMetadata();
+    allMetadata[transactionId] = metadata;
+    if (!writeStoredJson(SYNC_METADATA_KEY, allMetadata)) {
       logger.error('Failed to set sync metadata:', {}, transactionId);
     }
   }
@@ -107,14 +94,7 @@ export class SyncStorage {
    * Get all sync metadata
    */
   static getAllMetadata(): Record<string, SyncMetadata> {
-    if (typeof window === 'undefined') return {};
-
-    try {
-      const stored = localStorage.getItem(SYNC_METADATA_KEY);
-      return stored ? JSON.parse(stored) : {};
-    } catch {
-      return {};
-    }
+    return readStoredJson<Record<string, SyncMetadata>>(SYNC_METADATA_KEY, {});
   }
 
   /**
@@ -123,52 +103,27 @@ export class SyncStorage {
   static addToQueue(transactionId: string, action: 'create' | 'update' | 'delete'): void {
     if (typeof window === 'undefined') return;
 
-    try {
-      const stored = localStorage.getItem(SYNC_QUEUE_KEY);
-      const queue = stored ? JSON.parse(stored) : [];
+    // Remove duplicate entry if exists
+    const filtered = this.getQueue().filter((item) => item.transactionId !== transactionId);
+    filtered.push({ transactionId, action, queuedAt: Date.now() });
 
-      // Remove duplicate entry if exists
-      const filtered = queue.filter(
-        (item: { transactionId: string; action: 'create' | 'update' | 'delete'; queuedAt: number }) =>
-          item.transactionId !== transactionId,
-      );
-
-      filtered.push({
-        transactionId,
-        action,
-        queuedAt: Date.now(),
-      });
-
-      localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(filtered));
-    } catch (err) {
-      logger.error('Failed to add to sync queue:', {}, err);
+    if (!writeStoredJson(SYNC_QUEUE_KEY, filtered)) {
+      logger.error('Failed to add to sync queue:', {});
     }
   }
 
   /**
    * Get sync queue
    */
-  static getQueue(): Array<{
-    transactionId: string;
-    action: 'create' | 'update' | 'delete';
-    queuedAt: number;
-  }> {
-    if (typeof window === 'undefined') return [];
-
-    try {
-      const stored = localStorage.getItem(SYNC_QUEUE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
+  static getQueue(): SyncQueueItem[] {
+    return readStoredJson<SyncQueueItem[]>(SYNC_QUEUE_KEY, []);
   }
 
   /**
    * Clear sync queue
    */
   static clearQueue(): void {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(SYNC_QUEUE_KEY);
+    removeStoredItem(SYNC_QUEUE_KEY);
   }
 
   /**
@@ -177,12 +132,9 @@ export class SyncStorage {
   static removeFromQueue(transactionId: string): void {
     if (typeof window === 'undefined') return;
 
-    try {
-      const queue = this.getQueue();
-      const filtered = queue.filter((item) => item.transactionId !== transactionId);
-      localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(filtered));
-    } catch (err) {
-      logger.error('Failed to remove from sync queue:', {}, err);
+    const filtered = this.getQueue().filter((item) => item.transactionId !== transactionId);
+    if (!writeStoredJson(SYNC_QUEUE_KEY, filtered)) {
+      logger.error('Failed to remove from sync queue:', {});
     }
   }
 
@@ -200,9 +152,8 @@ export class SyncStorage {
    * Clear all sync data (for logout or reset)
    */
   static clear(): void {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(SYNC_SETTINGS_KEY);
-    localStorage.removeItem(SYNC_METADATA_KEY);
-    localStorage.removeItem(SYNC_QUEUE_KEY);
+    removeStoredItem(SYNC_SETTINGS_KEY);
+    removeStoredItem(SYNC_METADATA_KEY);
+    removeStoredItem(SYNC_QUEUE_KEY);
   }
 }

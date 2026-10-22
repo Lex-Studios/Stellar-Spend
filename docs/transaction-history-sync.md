@@ -23,7 +23,7 @@ This feature adds **authenticated server-side synchronization** of transaction h
   - Uploads local changes
   - Updates sync metadata
 
-- **`src/lib/transaction-merge.ts`** - Conflict resolution
+- **`src/lib/transactions/transaction-merge.ts`** - Conflict resolution
   - Last-write-wins strategy based on timestamps
   - Metadata merging (notes, tags, favorites)
   - Audit trail for conflicts

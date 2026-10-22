@@ -1,4 +1,4 @@
-import type { Repository } from './base';
+import type { BaseRepository } from './base';
 
 export interface Currency {
   code: string;
@@ -8,7 +8,7 @@ export interface Currency {
   supported: boolean;
 }
 
-export interface CurrencyRepository extends Repository<Currency> {
+export interface CurrencyRepository extends BaseRepository<Currency> {
   getByCode(code: string): Promise<Currency | null>;
   getSupportedCurrencies(): Promise<Currency[]>;
 }

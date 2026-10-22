@@ -3,19 +3,16 @@ import { auditLoggingService } from '@/lib/audit-logging';
 import { logger } from '@/lib/logger';
 import { ErrorHandler } from '@/lib/error-handler';
 import { ApiError, ErrorType } from '@/lib/error-types';
-import { decodeCursor, createPaginatedResponse } from '@/lib/pagination';
+import { createPaginatedResponse, parsePaginationQuery, trimLookahead } from '@/lib/pagination';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const adminAddress = searchParams.get('adminAddress') || undefined;
-    const cursor = searchParams.get('cursor');
-    const limit = Math.min(parseInt(searchParams.get('limit') || '100', 10), 1000);
+    const { offset, limit } = parsePaginationQuery(searchParams, { defaultLimit: 100, maxLimit: 1000 });
 
-    const offset = decodeCursor(cursor);
     const actions = await auditLoggingService.getAdminActions(adminAddress, limit + 1, offset);
-    const hasMore = actions.length > limit;
-    const data = hasMore ? actions.slice(0, limit) : actions;
+    const { data } = trimLookahead(actions, limit);
 
     return NextResponse.json(
       createPaginatedResponse(data, offset, limit, offset + actions.length),

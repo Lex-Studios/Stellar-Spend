@@ -57,3 +57,33 @@ export function createPaginatedResponse<T>(
     },
   };
 }
+
+export interface ParsedPaginationQuery {
+  cursor: string | null;
+  offset: number;
+  limit: number;
+}
+
+/**
+ * Parse `cursor` and `limit` from a query string.
+ * Invalid or missing limits fall back to `defaultLimit` and are clamped to `[1, maxLimit]`.
+ */
+export function parsePaginationQuery(
+  searchParams: URLSearchParams,
+  options: { defaultLimit: number; maxLimit: number },
+): ParsedPaginationQuery {
+  const cursor = searchParams.get('cursor');
+  const parsed = parseInt(searchParams.get('limit') ?? '', 10);
+  const requested = Number.isFinite(parsed) ? parsed : options.defaultLimit;
+  const limit = Math.min(Math.max(requested, 1), options.maxLimit);
+  return { cursor, offset: decodeCursor(cursor), limit };
+}
+
+/**
+ * Trim a result fetched with a `limit + 1` lookahead back to `limit` items
+ * and report whether more items exist beyond the page.
+ */
+export function trimLookahead<T>(items: T[], limit: number): { data: T[]; hasMore: boolean } {
+  const hasMore = items.length > limit;
+  return { data: hasMore ? items.slice(0, limit) : items, hasMore };
+}

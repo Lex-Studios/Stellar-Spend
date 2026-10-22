@@ -1,5 +1,5 @@
 import type { Transaction } from '@/lib/transaction-storage';
-import type { SearchFilters } from '@/lib/transaction-search';
+import type { SearchFilters } from '@/lib/transactions';
 
 // ---------------------------------------------------------------------------
 // Filter model + pure transformations for the history view.

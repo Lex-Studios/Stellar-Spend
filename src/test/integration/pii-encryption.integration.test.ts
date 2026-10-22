@@ -76,9 +76,9 @@ describe('PII round-trip: write → read', () => {
 
   it('save then getById returns original plaintext PII fields', async () => {
     const tx = makeTx();
-    await repo.save(tx);
+    await repo.create(tx);
 
-    const loaded = await repo.getById(tx.id);
+    const loaded = await repo.get(tx.id);
     expect(loaded).not.toBeNull();
     expect(loaded!.beneficiary.accountIdentifier).toBe('0123456789');
     expect(loaded!.beneficiary.accountName).toBe('Test Beneficiary');
@@ -86,9 +86,9 @@ describe('PII round-trip: write → read', () => {
 
   it('non-PII fields are preserved unchanged', async () => {
     const tx = makeTx();
-    await repo.save(tx);
+    await repo.create(tx);
 
-    const loaded = await repo.getById(tx.id);
+    const loaded = await repo.get(tx.id);
     expect(loaded!.id).toBe('tx_pii_001');
     expect(loaded!.amount).toBe('200.00');
     expect(loaded!.currency).toBe('USDC');
@@ -99,7 +99,7 @@ describe('PII round-trip: write → read', () => {
 
   it('update with new PII re-encrypts and round-trips correctly', async () => {
     const tx = makeTx();
-    await repo.save(tx);
+    await repo.create(tx);
 
     await repo.update(tx.id, {
       beneficiary: {
@@ -109,17 +109,17 @@ describe('PII round-trip: write → read', () => {
       },
     });
 
-    const loaded = await repo.getById(tx.id);
+    const loaded = await repo.get(tx.id);
     expect(loaded!.beneficiary.accountIdentifier).toBe('9999999999');
     expect(loaded!.beneficiary.accountName).toBe('Updated Name');
   });
 
   it('getAll decrypts every row', async () => {
-    await repo.save(makeTx({ id: 'tx_001' }));
-    await repo.save(makeTx({ id: 'tx_002' }));
-    await repo.save(makeTx({ id: 'tx_003' }));
+    await repo.create(makeTx({ id: 'tx_001' }));
+    await repo.create(makeTx({ id: 'tx_002' }));
+    await repo.create(makeTx({ id: 'tx_003' }));
 
-    const all = await repo.getAll();
+    const all = await repo.list();
     expect(all).toHaveLength(3);
     for (const t of all) {
       expect(t.beneficiary.accountIdentifier).toBe('0123456789');
@@ -129,7 +129,7 @@ describe('PII round-trip: write → read', () => {
 
   it('getByUser decrypts results', async () => {
     const tx = makeTx({ userAddress: 'GCFXUSER001' });
-    await repo.save(tx);
+    await repo.create(tx);
 
     const results = await repo.getByUser('GCFXUSER001');
     expect(results).toHaveLength(1);
@@ -138,7 +138,7 @@ describe('PII round-trip: write → read', () => {
 
   it('getByPayoutOrderId decrypts result', async () => {
     const tx = makeTx({ payoutOrderId: 'order_xyz', status: 'completed' });
-    await repo.save(tx);
+    await repo.create(tx);
 
     const found = await repo.getByPayoutOrderId('order_xyz');
     expect(found).not.toBeNull();
@@ -155,9 +155,9 @@ describe('Ciphertext verified at rest', () => {
 
   it('raw inner store holds ciphertext — not plaintext — for accountIdentifier', async () => {
     const tx = makeTx();
-    await repo.save(tx);
+    await repo.create(tx);
 
-    const rawStored = await inner.getById(tx.id);
+    const rawStored = await inner.get(tx.id);
     expect(rawStored).not.toBeNull();
 
     const storedIdentifier = rawStored!.beneficiary.accountIdentifier;
@@ -169,9 +169,9 @@ describe('Ciphertext verified at rest', () => {
 
   it('raw inner store holds ciphertext — not plaintext — for accountName', async () => {
     const tx = makeTx();
-    await repo.save(tx);
+    await repo.create(tx);
 
-    const rawStored = await inner.getById(tx.id);
+    const rawStored = await inner.get(tx.id);
     const storedName = rawStored!.beneficiary.accountName;
 
     expect(storedName).not.toBe('Test Beneficiary');
@@ -181,11 +181,11 @@ describe('Ciphertext verified at rest', () => {
   it('each save produces a different ciphertext (IV randomness)', async () => {
     const tx1 = makeTx({ id: 'tx_a' });
     const tx2 = makeTx({ id: 'tx_b' });
-    await repo.save(tx1);
-    await repo.save(tx2);
+    await repo.create(tx1);
+    await repo.create(tx2);
 
-    const raw1 = await inner.getById('tx_a');
-    const raw2 = await inner.getById('tx_b');
+    const raw1 = await inner.get('tx_a');
+    const raw2 = await inner.get('tx_b');
 
     // Same plaintext but different ciphertext because each encryption uses a random IV
     expect(raw1!.beneficiary.accountIdentifier).not.toBe(raw2!.beneficiary.accountIdentifier);
@@ -193,22 +193,22 @@ describe('Ciphertext verified at rest', () => {
 
   it('ciphertext survives an update — raw store still holds ciphertext after update', async () => {
     const tx = makeTx();
-    await repo.save(tx);
+    await repo.create(tx);
 
     await repo.update(tx.id, {
       beneficiary: { ...tx.beneficiary, accountIdentifier: '5555555555' },
     });
 
-    const rawAfterUpdate = await inner.getById(tx.id);
+    const rawAfterUpdate = await inner.get(tx.id);
     expect(rawAfterUpdate!.beneficiary.accountIdentifier).not.toBe('5555555555');
     expect(isEncrypted(rawAfterUpdate!.beneficiary.accountIdentifier)).toBe(true);
   });
 
   it('non-PII fields are stored as plaintext (no over-encryption)', async () => {
     const tx = makeTx();
-    await repo.save(tx);
+    await repo.create(tx);
 
-    const raw = await inner.getById(tx.id);
+    const raw = await inner.get(tx.id);
     // Fields that should remain plaintext
     expect(raw!.amount).toBe('200.00');
     expect(raw!.beneficiary.institution).toBe('ACCESS_BANK');
@@ -227,9 +227,9 @@ describe('Legacy (pre-encryption) rows', () => {
   it('plaintext rows saved directly to inner store are returned as-is', async () => {
     // Simulate a row that was written before encryption was introduced
     const plainTx = makeTx();
-    await inner.save(plainTx); // bypass EncryptedTransactionRepository
+    await inner.create(plainTx); // bypass EncryptedTransactionRepository
 
-    const loaded = await repo.getById(plainTx.id);
+    const loaded = await repo.get(plainTx.id);
     expect(loaded!.beneficiary.accountIdentifier).toBe('0123456789');
     expect(loaded!.beneficiary.accountName).toBe('Test Beneficiary');
   });

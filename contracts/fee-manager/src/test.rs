@@ -301,6 +301,28 @@ fn migrate_emits_event_with_from_and_to_schema_versions() {
     );
 }
 
+#[test]
+fn upgrade_emits_event() {
+    // `upgrade` emits `(symbol_short!("upgrade"),)` with an empty `()` payload.
+    // The WASM hash itself is not echoed into the event so that the test does not
+    // need a real compiled WASM blob; only the topic and the unit data matter.
+    use soroban_sdk::{symbol_short, testutils::BytesN as _};
+
+    let t = FeeManagerTest::setup();
+
+    // Provide a dummy 32-byte hash. The Soroban testutils environment accepts any
+    // well-formed BytesN<32> for deployer().update_current_contract_wasm().
+    let dummy_hash = soroban_sdk::BytesN::<32>::random(&t.env);
+
+    t.client().upgrade(&dummy_hash);
+
+    let all_events = t.env.events().all();
+    // upgrade() is the only state-changing call, so the first event must be ours.
+    let event = all_events.get(0).unwrap();
+
+    assert_event(event, &t.contract_id, &t.env, symbol_short!("upgrade"), ());
+}
+
 // ── Per-invocation storage cache (resource-fee reduction) ──────────────────
 
 #[test]

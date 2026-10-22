@@ -49,7 +49,7 @@ export function getPoolMetrics() {
 }
 
 // Wrap pool.query to record timing for every DB call
-export const pool: Pick<Pool, 'query'> = {
+export const pool: Pick<Pool, 'query' | 'connect'> = {
   query: async (...args: Parameters<Pool['query']>) => {
     const start = Date.now();
     poolMetrics.totalQueries++;
@@ -71,7 +71,17 @@ export const pool: Pick<Pool, 'query'> = {
       });
     }
   },
-} as Pick<Pool, 'query'>;
+  connect: () => _pool.connect(),
+} as Pick<Pool, 'query' | 'connect'>;
+
+/** Stats for the single shared pool owned by this module. */
+export function getSharedPoolStats(): { totalCount: number; idleCount: number; waitingCount: number } {
+  return {
+    totalCount: _pool.totalCount,
+    idleCount: _pool.idleCount,
+    waitingCount: _pool.waitingCount,
+  };
+}
 
 // Graceful shutdown
 export async function closePool(): Promise<void> {

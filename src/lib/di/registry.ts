@@ -34,6 +34,8 @@ import { SharingService } from '@/lib/services';
 import { AnalyticsService } from '@/lib/services/analytics-service';
 import { QRCodeService } from '@/lib/services/qrcode-service';
 import { OnrampService } from '@/lib/services/onramp.service';
+import { MerchantService } from '@/lib/services/merchant.service';
+import { dal, pool } from '@/lib/db';
 
 export const SERVICE_KEYS = {
   QUOTE_SERVICE: 'QuoteService',
@@ -49,6 +51,7 @@ export const SERVICE_KEYS = {
   SCHEDULING_SERVICE: 'SchedulingService',
   INSURANCE_SERVICE: 'InsuranceService',
   BATCH_SERVICE: 'BatchService',
+  MERCHANT_SERVICE: 'MerchantService',
 } as const;
 
 /**
@@ -70,7 +73,11 @@ export function configureServices(container: DIContainer): void {
   );
   container.registerSingleton<ITransactionService>(
     SERVICE_KEYS.TRANSACTION_SERVICE,
-    () => new TransactionService(),
+    () => new TransactionService(dal),
+  );
+  container.registerSingleton<MerchantService>(
+    SERVICE_KEYS.MERCHANT_SERVICE,
+    () => new MerchantService(pool),
   );
   container.registerSingleton<ISharingService>(
     SERVICE_KEYS.SHARING_SERVICE,

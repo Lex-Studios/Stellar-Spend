@@ -1,3 +1,9 @@
+//! Contract-level tests for the treasury balance ledger (issue #988).
+//!
+//! These exercise `deposit`/`withdraw`/`reserve` through the generated client so the
+//! calls run inside a contract frame — calling the entrypoints as plain Rust
+//! functions would touch instance storage with no current contract and panic.
+
 #![cfg(test)]
 use super::*;
 use soroban_sdk::{testutils::Address as _, Address, Env};

@@ -1,3 +1,4 @@
+import { randomHex } from "@/lib/crypto/ids";
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '../logger';
 import { ERROR_CODES, ERROR_MESSAGES, getStatusCode } from './error-codes';
@@ -52,7 +53,7 @@ export function createErrorResponse(
 
 export function errorMiddleware(handler: (req: NextRequest) => Promise<NextResponse>) {
   return async (req: NextRequest) => {
-    const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const requestId = `${Date.now()}-${randomHex(6)}`;
 
     try {
       return await handler(req);

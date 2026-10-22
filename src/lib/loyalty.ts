@@ -1,3 +1,4 @@
+import { randomHex } from "@/lib/crypto/ids";
 /**
  * Loyalty program — reward frequent users with tier-based benefits.
  * Tiers are determined by cumulative USDC volume transacted.
@@ -277,7 +278,7 @@ export class LoyaltyStorage {
     this._save(updated);
 
     const redemption: RedemptionRecord = {
-      id: `redemption_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      id: `redemption_${Date.now()}_${randomHex(4)}`,
       userAddress: userAddress.toLowerCase(),
       pointsRedeemed: pointsToRedeem,
       usdcValue,

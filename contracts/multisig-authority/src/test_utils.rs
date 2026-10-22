@@ -2,7 +2,7 @@
 
 use soroban_sdk::{
     testutils::{Address as _, Ledger as _},
-    Address, Env, Map, String, Symbol, Vec,
+    vec, Address, Env, Map, String, Symbol, Vec,
 };
 
 use crate::{
@@ -217,34 +217,25 @@ impl MultisigTest {
     /// replacing the previous state. Used for boundary tests that need a different
     /// configuration than the default fixture.
     pub fn reinit(&mut self) {
-        // Clear the existing storage so init passes.
-        self.env.as_contract(&self.contract_id, || {
-            let keys = [
-                DataKey::Signers,
-                DataKey::Proposals,
-                DataKey::Schema,
-            ];
-            for key in keys {
-                self.env.storage().instance().remove(&key);
-            }
-            // Also clear test override keys.
-            self.env.storage().instance().remove(&Symbol::new(&self.env, TEST_THRESHOLD_KEY));
-            self.env.storage().instance().remove(&Symbol::new(&self.env, TEST_HIGH_VALUE_LIMIT_KEY));
+        // Read the overrides before clearing anything: removing them first would
+        // silently fall back to the defaults.
+        let (threshold, high_value_limit) = self.env.as_contract(&self.contract_id, || {
+            let storage = self.env.storage().instance();
+            let threshold = storage
+                .get(&Symbol::new(&self.env, TEST_THRESHOLD_KEY))
+                .unwrap_or(DEFAULT_THRESHOLD);
+            let high_value_limit = storage
+                .get(&Symbol::new(&self.env, TEST_HIGH_VALUE_LIMIT_KEY))
+                .unwrap_or(DEFAULT_HIGH_VALUE_LIMIT);
+            (threshold, high_value_limit)
         });
 
-        let threshold = self.env.as_contract(&self.contract_id, || {
-            self.env
-                .storage()
-                .instance()
-                .get(&Symbol::new(&self.env, TEST_THRESHOLD_KEY))
-                .unwrap_or(DEFAULT_THRESHOLD)
-        });
-        let high_value_limit = self.env.as_contract(&self.contract_id, || {
-            self.env
-                .storage()
-                .instance()
-                .get(&Symbol::new(&self.env, TEST_HIGH_VALUE_LIMIT_KEY))
-                .unwrap_or(DEFAULT_HIGH_VALUE_LIMIT)
+        // Clear the existing storage so init passes.
+        self.env.as_contract(&self.contract_id, || {
+            let storage = self.env.storage().instance();
+            storage.remove(&DataKey::Signers);
+            storage.remove(&DataKey::Proposals);
+            storage.remove(&DataKey::Schema);
         });
 
         self.client().init(

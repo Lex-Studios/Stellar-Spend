@@ -1,3 +1,4 @@
+import { randomHex } from "@/lib/crypto/ids";
 import { QRCodeData, QRCodeOptions, GeneratedQRCode } from '@stellar-spend/shared';
 
 export class QRCodeService {
@@ -63,7 +64,7 @@ export class QRCodeService {
     data: QRCodeData,
     options: QRCodeOptions = {},
   ): Promise<GeneratedQRCode> {
-    const id = `qr_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    const id = `qr_${Date.now()}_${randomHex(6)}`;
     const qrData = this.generateQRData(data, options);
 
     const qrCode: GeneratedQRCode = {

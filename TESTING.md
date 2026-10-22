@@ -483,3 +483,408 @@ await page.route('**/api/kyc**', (route) =>
   }),
 );
 ```
+
+
+---
+
+## Code Coverage Thresholds (Issue #1348)
+
+### Overview
+
+Stellar-Spend enforces code coverage thresholds to prevent coverage regressions and maintain test suite quality. Coverage is measured across all test runs and reported in the HTML coverage report at `./coverage/index.html`.
+
+### Global thresholds
+
+All files must meet these minimum thresholds:
+
+| Metric       | Threshold |
+| ------------ | --------- |
+| Lines        | 85%       |
+| Statements   | 85%       |
+| Functions    | 85%       |
+| Branches     | 80%       |
+
+### Per-file thresholds for critical paths
+
+Some modules have stricter per-file thresholds due to their security/payment-critical nature:
+
+| Module               | Lines | Statements | Functions | Branches | Reason                     |
+| -------------------- | ----- | ---------- | --------- | -------- | -------------------------- |
+| `src/lib/auth/**`    | 90%   | 90%        | 90%       | 85%      | Security-critical         |
+| `src/lib/offramp/**` | 85%   | 85%        | 85%       | 80%      | Payment flows              |
+| `src/lib/onramp/**`  | 85%   | 85%        | 85%       | 80%      | Onboarding flows           |
+| `src/app/api/**`     | 80%   | 80%        | 80%       | 75%      | Route handlers (lower req.) |
+
+### Running coverage locally
+
+```bash
+# Generate a new coverage report
+npm run test:coverage
+
+# Or use vitest directly
+npx vitest run --coverage
+
+# View the HTML report
+open coverage/index.html
+```
+
+### CI enforcement
+
+A GitHub Actions workflow (`.github/workflows/test-coverage.yml`) runs on every PR and enforces coverage thresholds. The workflow:
+
+1. Runs all tests with coverage collection
+2. Fails if any global or per-file threshold is not met
+3. Posts a comment on the PR with the coverage summary
+4. Uploads the coverage report as an artifact for review
+
+### Coverage failures
+
+If a PR fails the coverage check:
+
+1. **View the report:** download the artifact from the Actions tab or run locally with `npm run test:coverage`
+2. **Identify gaps:** open `coverage/index.html`, find the uncovered lines/branches
+3. **Write tests:** add or update tests to cover the gaps
+4. **Verify:** re-run locally until `npm run test:coverage` passes, then push
+5. **Re-check:** the CI workflow will re-run automatically and pass
+
+### Best practices for maintaining coverage
+
+- **Test behavior, not implementation:** aim for high branch coverage by testing both happy-path and error branches (not just lines).
+- **Focus on critical paths:** don't just increase coverage for coverage's sake; prioritize security/payment flows.
+- **Use snapshots sparingly:** snapshot tests can inflate coverage without catching real bugs. Prefer explicit assertions.
+- **Mock external boundaries:** mock SDKs and APIs so tests are fast and deterministic; real network calls slow down the suite.
+- **Exclude test utilities:** generated code, fixtures, and test helpers are excluded from coverage (see `exclude` in `vitest.config.ts`).
+
+### Debugging coverage gaps
+
+If `npm run test:coverage` shows unexpected gaps:
+
+1. **Run a focused test file:**
+   ```bash
+   npx vitest run --coverage src/lib/your-module.test.ts
+   ```
+
+2. **Check which test covered which line:**
+   ```bash
+   npx vitest run --coverage -- --reporter=verbose src/lib/your-module.test.ts
+   ```
+
+3. **Check for dead code:** if a line is never covered despite a test, it may be unreachable or a logic error. Simplify or remove it.
+
+4. **Review branch coverage:** branch coverage is often lower than line coverage. Open the HTML report and hover over red branches to see which condition branches are missed.
+
+
+
+---
+
+## Snapshot Testing & Hygiene (Issue #1346)
+
+### Overview
+
+Snapshots capture the exact output of a test and compare future test runs against that baseline. Snapshots are useful for complex object serialization or large text diffs, but they can become stale or orphaned if not properly maintained.
+
+### When to use snapshots
+
+Use snapshots for:
+
+- **Complex serialized objects:** database records, API responses, or multi-line JSON with many nested fields
+- **HTML/component output:** when testing the structure of a rendered component with many children
+- **Generated text:** compiled SQL, transformed code, or formatted output strings
+- **Approval workflows:** when a human needs to review and approve a change to the output format
+
+**Do NOT use snapshots for:**
+
+- **Constantly-changing data:** timestamps, random IDs, or dynamic content that fails on every run
+- **Brittle HTML structure:** component renders that change often; prefer explicit `getByRole()` assertions instead
+- **Simple values:** if the expected value is short (< 50 chars), write it explicitly: `expect(result).toBe('exact value')`
+- **Snapshot-only testing:** always include at least one explicit assertion alongside snapshots to catch logic errors
+
+### Snapshot file locations
+
+Snapshots live in `__snapshots__/` directories collocated with their test files:
+
+```
+src/lib/
+  formatters.test.ts
+  __snapshots__/
+    formatters.test.ts.snap
+```
+
+### Creating snapshots
+
+Run tests in update mode to create or update snapshots:
+
+```bash
+# Update all snapshots
+npm run test:snapshots:update
+
+# Update snapshots for a specific file
+npm run test:snapshots:update -- src/lib/formatters.test.ts
+```
+
+When you update snapshots, **always review the diff** in version control before committing. Look for:
+
+- Changes you expected (e.g., new fields added to an object)
+- Changes you did NOT expect (e.g., data format drift, accidental code changes)
+- Increased output size or redundancy
+
+### Snapshot validation
+
+Before committing, validate that all snapshots are hygenic:
+
+```bash
+npm run test:snapshots:validate
+```
+
+This checks for:
+
+- **Orphaned snapshots:** snapshot files with no corresponding test file
+- **Missing snapshots:** test files that call `.toMatchSnapshot()` but have no `.snap` file
+- **Formatting issues:** trailing whitespace or invalid format in snapshot files
+
+Validation also runs as a pre-commit hook (when Husky is set up) to prevent orphaned snapshots from entering the repo.
+
+### Reviewing snapshot changes in GitHub
+
+When a PR includes snapshot updates:
+
+1. **GitHub PR view:** click "Display the rich diff" or "Show spaces and tabs" to see the exact changes
+2. **Local review:** check out the PR branch and run `npm test` to see the diff in the terminal
+3. **Approve with context:** look for explanations in the PR description or commit messages about why snapshots changed
+
+### Debugging snapshot failures
+
+If a test fails with a snapshot mismatch:
+
+```bash
+# View the difference
+npm run test:snapshots -- src/lib/formatters.test.ts
+```
+
+You'll see:
+
+```
+Snapshot name: `should format date correctly`
+- Snapshot
++ Received
+
+- {foo: "bar"}
++ {foo: "baz"}
+```
+
+**Option 1: The test is wrong** — Fix the test logic and re-run
+
+**Option 2: The snapshot is outdated** — Review the change, then:
+```bash
+npm run test:snapshots:update -- src/lib/formatters.test.ts
+```
+
+**Option 3: Partial updates** — Some snapshots changed, some didn't. Use interactive mode:
+```bash
+npm run test:snapshots -- --reporter=verbose
+```
+
+Then select which snapshots to update.
+
+### Snapshot best practices
+
+1. **Keep snapshots small:** if a snapshot grows beyond 20 lines, consider breaking the test into smaller assertions
+2. **Write assertion comments:** explain why a particular field is expected
+   ```ts
+   expect(apiResponse).toMatchSnapshot(); // API returns paginated results with metadata
+   ```
+3. **Use inline snapshots for small values:**
+   ```ts
+   expect(formatDate('2024-01-15')).toMatchInlineSnapshot(`"Jan 15, 2024"`)
+   ```
+4. **Test one scenario per snapshot:** don't combine multiple test cases into one snapshot
+5. **Update CI snapshots carefully:** never auto-update snapshots in CI; always require a developer to review and commit the change locally
+
+### Snapshot exclusions from coverage
+
+Snapshot test files are excluded from code coverage calculations by default (see `vitest.config.ts` exclude patterns). This prevents snapshot-heavy tests from inflating coverage metrics.
+
+
+
+---
+
+## Storybook Interaction Tests (Issue #1347)
+
+### Overview
+
+Storybook interaction tests use the `play()` function to simulate user interactions and verify component behavior within stories. These tests run in a real browser via Vitest with the Playwright provider, providing more realistic interaction testing than unit tests alone.
+
+### When to use interaction tests vs. unit tests
+
+| Scenario | Interaction Test | Unit Test |
+| --- | --- | --- |
+| Testing click handlers | ✅ Use play() | Unit test callback |
+| Testing form input | ✅ Use play() | Unit test value/onChange |
+| Testing focus/blur | ✅ Use play() | Unit test for aria attributes |
+| Testing accessibility | ✅ Use play() | Unit test tree structure |
+| Testing business logic | ❌ | ✅ Use unit test |
+| Testing error states | Interaction for UI, unit for logic | Unit test |
+
+### Core UI primitives with interaction tests
+
+Interaction tests have been added to the following core components:
+
+| Component | Tests Added | Coverage |
+| --- | --- | --- |
+| `Button` | Interactive, InteractiveWithCallback | Click, enabled/disabled state |
+| `Input` | Interactive, InteractiveWithClear, DisabledInteraction | Type, focus/blur, disabled state |
+| `Label` | Interactive, AccessibilityTest | htmlFor association, tag structure |
+| `Badge` | Interactive, VariantStates | Rendering, variant display |
+| `Alert` | Interactive, VariantDisplay | Title/body rendering, variant states |
+| `Card` | Interactive, InteractiveWithButtons | Composition (header/content/footer), button interaction |
+
+### Writing Storybook interaction tests
+
+#### Basic pattern
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+import { userEvent, within, expect } from '@storybook/test';
+import { MyComponent } from './MyComponent';
+
+const meta: Meta<typeof MyComponent> = {
+  title: 'Components/MyComponent',
+  component: MyComponent,
+};
+
+export default meta;
+type Story = StoryObj<typeof MyComponent>;
+
+export const Interactive: Story = {
+  args: { /* story args */ },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    
+    // 1. Query the element
+    const element = canvas.getByRole('button', { name: /click me/i });
+    
+    // 2. Simulate user interaction
+    await userEvent.click(element);
+    
+    // 3. Assert the result
+    await expect(element).toBeInTheDocument();
+  },
+};
+```
+
+#### Key imports
+
+```tsx
+import { userEvent, within, expect } from '@storybook/test';
+```
+
+- **`userEvent`:** simulates realistic user interactions (click, type, hover, etc.)
+- **`within`:** scopes DOM queries to the component canvas
+- **`expect`:** assertions from Vitest (same as unit tests)
+
+#### Common interactions
+
+```tsx
+// Click
+await userEvent.click(button);
+
+// Type text
+await userEvent.type(input, 'Hello');
+
+// Clear input
+await userEvent.clear(input);
+
+// Focus
+await userEvent.click(input); // Focus on click
+
+// Tab (navigate focus)
+await userEvent.tab();
+
+// Hover
+await userEvent.hover(element);
+
+// Keyboard shortcuts
+await userEvent.hotKeys(element, 'ctrl+a'); // Select all
+await userEvent.hotKeys(element, 'Escape');  // Escape key
+```
+
+#### Common assertions
+
+```tsx
+// DOM presence
+await expect(element).toBeInTheDocument();
+
+// Value (for inputs)
+await expect(input).toHaveValue('expected value');
+
+// Attributes
+await expect(element).toHaveAttribute('disabled');
+await expect(label).toHaveAttribute('for', 'input-id');
+
+// Classes (for styled variants)
+await expect(button).toHaveClass('primary');
+
+// Text content
+await expect(element).toHaveTextContent('Text');
+await expect(element).toHaveText Exact('Exact Text');
+
+// Disabled state
+await expect(button).toBeDisabled();
+await expect(input).not.toBeDisabled();
+
+// Focus
+await expect(input).toHaveFocus();
+```
+
+### Running interaction tests
+
+#### Run all Storybook tests
+
+```bash
+npm run test-storybook
+```
+
+#### Run tests for a specific story file
+
+```bash
+npm run test-storybook -- src/components/ui/Button.stories.tsx
+```
+
+#### Run tests in headed mode (see browser)
+
+```bash
+npm run test-storybook -- --headed
+```
+
+#### Debug a failing story
+
+```bash
+npm run test-storybook -- src/components/ui/Button.stories.tsx --headed
+```
+
+Then open the browser DevTools to inspect the component and interaction.
+
+### Best practices
+
+1. **Keep interactions realistic:** use `userEvent` (not `fireEvent`) for natural interaction patterns
+2. **Test one scenario per story:** don't combine multiple interactions into one play() function
+3. **Scope with `within(canvasElement)`:** prevents queries from leaking outside the component
+4. **Assert state changes, not implementation:** check what the user sees/experiences, not internal state
+5. **Use accessible queries:** prefer `getByRole()`, `getByLabelText()` over `getByTestId()`
+6. **Comment complex interactions:** explain why a test exists if not obvious
+
+### Troubleshooting
+
+**"Element not found" error:**
+- Use `getByRole('button', { name: /label/i })` for better debugging
+- Add `screen.debug()` in the play() function to see the rendered HTML
+
+**Flaky tests (sometimes pass, sometimes fail):**
+- Add `await page.waitForLoadState('networkidle')` if component fetches data
+- Avoid hard timeouts; use assertions that wait (Storybook waits up to 10s by default)
+
+**Tests run locally but fail in CI:**
+- Ensure all args are provided (no undefined values)
+- Mock external dependencies consistently
+- Check browser version compatibility (Playwright uses Chromium in CI)
+

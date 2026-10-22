@@ -5,8 +5,8 @@
 //! strict Check-Effects-Interactions order and holds the reentrancy lock for its
 //! duration.
 
-use soroban_sdk::{symbol_short, Env};
-use stellar_spend_shared::errors::ContractError;
+use soroban_sdk::Env;
+use stellar_spend_shared::{errors::ContractError, events::emit_escrow_refunded};
 
 use crate::release::{acquire_lock, load_deposits, release_lock};
 use crate::{DataKey, EscrowStatus, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD};
@@ -51,7 +51,6 @@ pub fn refund(env: &Env, deposit_id: u64) -> Result<i128, ContractError> {
     release_lock(env);
 
     // ── INTERACT ───────────────────────────────────────────────────────
-    env.events()
-        .publish((symbol_short!("refund"),), (deposit_id, depositor, amount));
+    emit_escrow_refunded(env, deposit_id, depositor, amount);
     Ok(amount)
 }

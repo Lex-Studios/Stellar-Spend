@@ -25,6 +25,8 @@ export interface DAL {
   getByUser(userAddress: string): Promise<Transaction[]>;
   getById(id: string): Promise<Transaction | null>;
   getByPayoutOrderId(orderId: string): Promise<Transaction | null>;
+  /** Fetch many transactions in one query. Use instead of calling getById in a loop. */
+  getByIds(ids: string[]): Promise<Transaction[]>;
 }
 
 // Maps a flat DB row to the nested Transaction object
@@ -208,6 +210,17 @@ export const dal: DAL = {
       return rowToTransaction(result.rows[0]);
     } catch (err) {
       throw new DatabaseError(`Failed to get transaction ${id}: ${(err as Error).message}`, err);
+    }
+  },
+
+  async getByIds(ids: string[]): Promise<Transaction[]> {
+    if (ids.length === 0) return [];
+    const sql = `SELECT * FROM transactions WHERE id = ANY($1::text[])`;
+    try {
+      const result = await timedQuery(sql, [ids]);
+      return result.rows.map(rowToTransaction);
+    } catch (err) {
+      throw new DatabaseError(`Failed to get ${ids.length} transactions: ${(err as Error).message}`, err);
     }
   },
 

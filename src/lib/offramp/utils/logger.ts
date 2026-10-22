@@ -4,6 +4,7 @@
  */
 
 import { logger, redactSensitive } from '@/lib/logger';
+import { randomUuid } from '@/lib/crypto/ids';
 
 export interface RequestLog {
   requestId: string;
@@ -17,14 +18,12 @@ export interface RequestLog {
 }
 
 /**
- * Generate a unique request ID for tracing
+ * Generate a unique request ID for tracing.
+ * Uses crypto.randomUUID — the previous hand-rolled v4 generator depended on
+ * Math.random, which is not cryptographically secure (#1371).
  */
 export function generateRequestId(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  return randomUuid();
 }
 
 /**

@@ -106,6 +106,10 @@ pub enum EscrowStatus {
     Cancelled,
 }
 
+/// Deposit record (schema v2).
+///
+/// v1 records carried `released`/`refunded` flags and no `fee_bps`;
+/// [`EscrowContract::migrate`] maps those flags onto `status` and defaults the fee to `0`.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EscrowDeposit {
@@ -118,6 +122,9 @@ pub struct EscrowDeposit {
     pub fee_bps: u32,
 }
 
+/// Deposit record as written by schema v1 (no `fee_bps`, `released`/`refunded` flags).
+///
+/// Retained so [`EscrowContract::migrate`] can decode entries from an older build.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct EscrowDepositV1 {
@@ -197,14 +204,6 @@ impl EscrowContract {
             .ok_or(ContractError::NotFound)
     }
 
-    /// The stored schema version.
-    pub fn schema_version(env: Env) -> Result<u32, ContractError> {
-        env.storage()
-            .instance()
-            .get(&DataKey::Schema)
-            .ok_or(ContractError::NotInitialized)
-    }
-
     /// Update the refund timeout applied to *future* deposits. Authority only.
     ///
     /// Delegates to [`dispute::set_timeout`].
@@ -222,6 +221,17 @@ impl EscrowContract {
     }
 
     // ── Upgrade surface (issue #817) ──────────────────────────────────────────
+
+    /// Report the stored schema version.
+    ///
+    /// Skips `require_current_schema` on purpose: a deployment that is still on an
+    /// older layout must be able to say so, otherwise `migrate` cannot be targeted.
+    pub fn schema_version(env: Env) -> Result<u32, ContractError> {
+        env.storage()
+            .instance()
+            .get(&DataKey::Schema)
+            .ok_or(ContractError::NotInitialized)
+    }
 
     /// Replace the contract WASM. Authority only.
     ///

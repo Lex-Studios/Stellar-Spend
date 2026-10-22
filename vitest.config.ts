@@ -33,12 +33,51 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'json-summary', 'html'],
+      all: true,
       thresholds: {
         lines: 85,
         functions: 85,
         branches: 85,
         statements: 85,
-        perFile: false,
+        perFile: true,
+        autoUpdate: false,
+      },
+      perFile: {
+        lines: 85,
+        functions: 85,
+        branches: 80,
+        statements: 85,
+      },
+      thresholdsForFile: {
+        lines: 85,
+        functions: 85,
+        branches: 80,
+        statements: 85,
+        // Higher thresholds for security-critical modules
+        'src/lib/offramp/**': {
+          lines: 85,
+          functions: 85,
+          branches: 80,
+          statements: 85,
+        },
+        'src/lib/onramp/**': {
+          lines: 85,
+          functions: 85,
+          branches: 80,
+          statements: 85,
+        },
+        'src/lib/auth/**': {
+          lines: 90,
+          functions: 90,
+          branches: 85,
+          statements: 90,
+        },
+        'src/app/api/**': {
+          lines: 80,
+          functions: 80,
+          branches: 75,
+          statements: 80,
+        },
       },
       exclude: [
         '**/node_modules/**',
@@ -51,7 +90,6 @@ export default defineConfig({
         '**/src/test/fixtures/**',
         '**/src/test/factories/**',
         '**/src/test/test-helpers.ts',
-        '**/__tests__/**',
         '**/tests/**',
         '**/src/test/__snapshots__/**',
         '**/src/test/snapshots/**',

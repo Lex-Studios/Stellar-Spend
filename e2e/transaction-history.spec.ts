@@ -5,9 +5,11 @@
  * or element text have been replaced with explicit data-testid attributes.
  */
 import { test, expect } from '@playwright/test';
+import { injectFreighterStub } from './fixtures/wallet-fixtures';
 
 test.describe('Transaction History', () => {
   test.beforeEach(async ({ page }) => {
+    await injectFreighterStub(page);
     await page.goto('http://localhost:3001');
 
     // Connect wallet
@@ -25,6 +27,45 @@ test.describe('Transaction History', () => {
     // Verify history is visible
     const history = await page.locator('[data-testid="transaction-history"]');
     expect(history).toBeVisible();
+  });
+
+  test('supports keyboard navigation through virtualized rows', async ({ page }) => {
+    const walletAddress = 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5';
+    const transactions = Array.from({ length: 150 }, (_, index) => ({
+      id: `virtualized-tx-${index}`,
+      timestamp: Date.now() - index * 60_000,
+      userAddress: walletAddress,
+      amount: String(index + 1),
+      currency: 'NGN',
+      beneficiary: {
+        institution: 'Test Bank',
+        accountIdentifier: String(index).padStart(10, '0'),
+        accountName: `Recipient ${index}`,
+        currency: 'NGN',
+      },
+      status: 'completed',
+    }));
+
+    await page.evaluate((rows) => {
+      localStorage.setItem('stellar_spend_transactions', JSON.stringify(rows));
+    }, transactions);
+    await page.goto('http://localhost:3001/history');
+    await page.waitForSelector('[data-testid="transaction-history"]');
+    await page.selectOption('select[aria-label="Rows per page"]', '250');
+
+    const rows = page.locator('[data-testid="transaction-entry"]');
+    await expect(rows.first()).toBeVisible();
+    await expect.poll(() => rows.count()).toBeLessThan(100);
+
+    await rows.first().focus();
+    for (let index = 0; index < 110; index++) {
+      await page.keyboard.press('ArrowDown');
+    }
+    await expect(page.locator('[data-row-index="110"]')).toBeFocused();
+
+    await page.keyboard.press('ArrowUp');
+    await expect(page.locator('[data-row-index="109"]')).toBeFocused();
+    await expect.poll(() => rows.count()).toBeLessThan(100);
   });
 
   test('should display transaction details', async ({ page }) => {

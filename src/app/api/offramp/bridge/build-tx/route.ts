@@ -6,9 +6,10 @@ import type {
 import { env } from '@/lib/env';
 import { validateAmount, validateAddress } from '@/lib/offramp';
 import { extractErrorMessage } from '@/lib/offramp';
-import { buildTxLimiter, getClientIp } from '@/lib/offramp';
+import { applyRateLimit } from '@/lib/rateLimiter';
 import { generateRequestId, createRequestLogger } from '@/lib/offramp';
 import { ErrorHandler } from '@/lib/error-handler';
+import { ApiError, ErrorType } from '@/lib/error-types';
 import { allbridgeBreaker, CircuitOpenError } from '@/lib/circuit-breaker';
 
 export const maxDuration = 30;
@@ -40,20 +41,14 @@ function withRequestId<T>(response: NextResponse<T>, requestId: string): NextRes
  */
 export async function POST(request: NextRequest) {
   const requestId = generateRequestId();
-  const clientIp = getClientIp(request);
   const logger = createRequestLogger(requestId, 'POST', '/api/offramp/bridge/build-tx');
 
   try {
-    // Check rate limit
-    const rateLimitCheck = await buildTxLimiter.check(clientIp);
-    if (!rateLimitCheck.allowed) {
+    // Rate limiting is enforced by the shared middleware helper (registry: 'build-tx')
+    const limited = await applyRateLimit(request, 'build-tx');
+    if (limited) {
       logger.logError(429, 'Rate limit exceeded');
-      const res = withRequestId(
-        ErrorHandler.rateLimit('Too many requests', rateLimitCheck.retryAfter),
-        requestId,
-      );
-      res.headers.set('Retry-After', String(rateLimitCheck.retryAfter));
-      return res;
+      return withRequestId(limited, requestId);
     }
 
     const body = await request.json();
@@ -113,9 +108,12 @@ export async function POST(request: NextRequest) {
       ) {
         logger.logError(503, 'Bridge service temporarily unavailable');
         return withRequestId(
-          NextResponse.json(
-            { error: 'Bridge service is temporarily unavailable. Please try again shortly.' },
-            { status: 503 },
+          ErrorHandler.handle(
+            new ApiError(
+              ErrorType.EXTERNAL_SERVICE,
+              'Bridge service is temporarily unavailable. Please try again shortly.',
+              503,
+            ),
           ),
           requestId,
         );

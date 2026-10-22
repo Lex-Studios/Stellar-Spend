@@ -1,4 +1,4 @@
-import { pool as db } from '@/lib/db';
+import type { SqlClient } from './ports';
 
 export interface MerchantAccount {
   id: string;
@@ -94,6 +94,8 @@ function rowToItem(row: Record<string, unknown>): MerchantPayoutItem {
 }
 
 export class MerchantService {
+  constructor(private readonly db: SqlClient) {}
+
   async createMerchant(
     userId: string,
     businessName: string,
@@ -102,7 +104,7 @@ export class MerchantService {
     if (!userId || !businessName || !businessEmail) {
       throw new Error('userId, businessName, and businessEmail are required');
     }
-    const result = await db.query(
+    const result = await this.db.query(
       `INSERT INTO merchant_accounts (user_id, business_name, business_email)
        VALUES ($1, $2, $3)
        RETURNING *`,
@@ -112,12 +114,12 @@ export class MerchantService {
   }
 
   async getMerchant(merchantId: string): Promise<MerchantAccount | null> {
-    const result = await db.query(`SELECT * FROM merchant_accounts WHERE id = $1`, [merchantId]);
+    const result = await this.db.query(`SELECT * FROM merchant_accounts WHERE id = $1`, [merchantId]);
     return result.rows[0] ? rowToMerchant(result.rows[0]) : null;
   }
 
   async getMerchantByUserId(userId: string): Promise<MerchantAccount | null> {
-    const result = await db.query(`SELECT * FROM merchant_accounts WHERE user_id = $1`, [userId]);
+    const result = await this.db.query(`SELECT * FROM merchant_accounts WHERE user_id = $1`, [userId]);
     return result.rows[0] ? rowToMerchant(result.rows[0]) : null;
   }
 
@@ -134,12 +136,12 @@ export class MerchantService {
     const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
 
     // Check idempotency — return existing if key already used
-    const existing = await db.query(`SELECT * FROM merchant_payouts WHERE idempotency_key = $1`, [
+    const existing = await this.db.query(`SELECT * FROM merchant_payouts WHERE idempotency_key = $1`, [
       idempotencyKey,
     ]);
     if (existing.rows[0]) return rowToPayout(existing.rows[0]);
 
-    const payoutResult = await db.query(
+    const payoutResult = await this.db.query(
       `INSERT INTO merchant_payouts (merchant_id, idempotency_key, total_amount, currency)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
@@ -166,7 +168,7 @@ export class MerchantService {
       );
     });
 
-    await db.query(
+    await this.db.query(
       `INSERT INTO merchant_payout_items
          (payout_id, beneficiary_institution, beneficiary_account, beneficiary_name, amount, currency)
        VALUES ${placeholders.join(', ')}`,
@@ -177,11 +179,11 @@ export class MerchantService {
   }
 
   async getBulkPayoutStatus(payoutId: string): Promise<MerchantPayout | null> {
-    const payoutResult = await db.query(`SELECT * FROM merchant_payouts WHERE id = $1`, [payoutId]);
+    const payoutResult = await this.db.query(`SELECT * FROM merchant_payouts WHERE id = $1`, [payoutId]);
     if (!payoutResult.rows[0]) return null;
 
     const payout = rowToPayout(payoutResult.rows[0]);
-    const itemsResult = await db.query(`SELECT * FROM merchant_payout_items WHERE payout_id = $1`, [
+    const itemsResult = await this.db.query(`SELECT * FROM merchant_payout_items WHERE payout_id = $1`, [
       payoutId,
     ]);
     payout.items = itemsResult.rows.map(rowToItem);
@@ -195,11 +197,11 @@ export class MerchantService {
   ): Promise<{ payouts: MerchantPayout[]; total: number }> {
     const offset = (page - 1) * limit;
     const [payoutsResult, countResult] = await Promise.all([
-      db.query(
+      this.db.query(
         `SELECT * FROM merchant_payouts WHERE merchant_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
         [merchantId, limit, offset],
       ),
-      db.query(`SELECT COUNT(*) FROM merchant_payouts WHERE merchant_id = $1`, [merchantId]),
+      this.db.query(`SELECT COUNT(*) FROM merchant_payouts WHERE merchant_id = $1`, [merchantId]),
     ]);
     return {
       payouts: payoutsResult.rows.map(rowToPayout),
@@ -208,7 +210,7 @@ export class MerchantService {
   }
 
   async getMerchantStats(merchantId: string): Promise<MerchantStats> {
-    const result = await db.query(
+    const result = await this.db.query(
       `SELECT
          COUNT(*) AS total_payouts,
          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_payouts,
@@ -231,12 +233,10 @@ export class MerchantService {
   }
 
   async updateWebhook(merchantId: string, webhookUrl: string): Promise<MerchantAccount | null> {
-    const result = await db.query(
+    const result = await this.db.query(
       `UPDATE merchant_accounts SET webhook_url = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
       [webhookUrl, merchantId],
     );
     return result.rows[0] ? rowToMerchant(result.rows[0]) : null;
   }
 }
-
-export const merchantService = new MerchantService();

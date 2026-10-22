@@ -3,58 +3,97 @@ title = "Gitleaks Configuration"
 [extend]
 useDefault = true
 
+# ---------------------------------------------------------------------------
+# Allowlist policy (Issue #1365)
+#
+# Every path entry below is scoped to an exact file or an exact directory
+# subtree. Broad globs (e.g. `e2e/.*`, `docs/.*\.md$`, `target/.*`) have been
+# removed so that real secrets committed anywhere in the repo are still
+# detected. If you add an entry, add a comment explaining why it is safe.
+# ---------------------------------------------------------------------------
 [allowlist]
-description = "Allowlist for false positives and test fixtures"
+description = "Allowlist for false positives and test fixtures (each entry justified below)"
 paths = [
-  '''\.env\.example$''',
-  '''\.env\.sample$''',
-  '''\.env\.template$''',
-  '''tests/fixtures/.*''',
-  '''e2e/.*''',
+  # Template env files contain only placeholder values, never real secrets.
+  '''^\.env\.example$''',
+  '''^\.env\.sample$''',
+  '''^\.env\.template$''',
+  # Generic `*.example` files are documentation templates with placeholders.
+  '''\.example$''',
+  # Test fixtures directory: synthetic credentials only, used by unit tests.
+  '''^tests/fixtures/''',
   # Issue #1014 regression fixtures/test (synthetic secrets, must stay scanned
   # by the dedicated .gitleaks-regression.toml, not the repo-wide scan).
-  '''src/test/fixtures/.*''',
-  '''src/test/gitleaks-regression\.test\.ts$''',
-  '''src/test/.*\.test\.ts$''',
-  '''__snapshots__/.*''',
-  '''\.example$''',
-  '''docs/.*\.md$''',
-  '''README\.md$''',
-  '''CONTRIBUTING\.md$''',
-  '''SECURITY\.md$''',
-  '''package-lock\.json$''',
-  '''src/test/fixtures/secret-scan/.*''',
-  '''contracts/target/.*''',
-  '''target/.*''',
+  '''^src/test/fixtures/''',
+  '''^src/test/gitleaks-regression\.test\.ts$''',
+  # Unit test files may embed fake tokens/keys to exercise validators.
+  '''^src/test/.*\.test\.ts$''',
+  # Jest snapshots capture test output that may include fake credentials.
+  '''^src/test/__snapshots__/''',
+  # Secret-scanning test fixtures: intentionally fake secrets for scanner tests.
+  '''^src/test/fixtures/secret-scan/''',
+  # Documentation files: examples use placeholders, not live credentials.
+  '''^README\.md$''',
+  '''^CONTRIBUTING\.md$''',
+  '''^SECURITY\.md$''',
+  # Lockfile contains integrity hashes, not secrets.
+  '''^package-lock\.json$''',
+  # Rust build output under contracts/ is generated, never committed secrets.
+  '''^contracts/target/''',
 ]
 regexes = [
+  # Placeholder markers (your_, REPLACE_, CHANGE_, INSERT_, ENTER_, FILL_).
   '''(your_|YOUR_|REPLACE_|replace_|CHANGE_|change_|INSERT_|insert_|ENTER_|enter_)[a-zA-Z0-9_]*''',
+  # Prefixed dummy values (test_, example_, sample_, dummy_, fake_, mock_).
   '''(test_|TEST_|example_|EXAMPLE_|sample_|SAMPLE_|dummy_|DUMMY_|fake_|FAKE_|mock_|MOCK_)[a-zA-Z0-9_]*(key|token|secret|password|api_key)''',
+  # Stellar public keys (G...) and contract addresses (C...) are not secrets.
   '''G[A-Z0-9]{55}''',
   '''(CA|CD|C)[A-Z0-9]{55}''',
+  # EVM public addresses (0x + 40 hex) are not secrets.
   '''0x[a-fA-F0-9]{40}''',
+  # Sentry DSN public keys are safe to expose client-side.
   '''https://[a-f0-9]{32}@[a-z0-9]+\.ingest\.sentry\.io/\d+''',
+  # Public RPC/Horizon endpoints for known networks.
   '''https?://(rpc|soroban|horizon|api)\.[a-zA-Z0-9-]+\.(stellar|gateway|fm|org|com)''',
+  # Public CDN URLs.
   '''https?://(cdn|d\d+)\.(jsdelivr|cloudfront|unpkg)\.(net|com)''',
+  # Obvious placeholder passwords in config examples.
   '''(password|passwd|pwd)["\s:=]+["\s]*(test|password|secret|changeme|example)["\s]*$''',
+  # Comments describing test/example credentials.
   '''\/\/.*(test|example|sample|dummy|fake|mock).*(key|token|secret|password|credential)''',
+  # Block explorer links (public URLs, no credentials).
   '''https?://(etherscan|basescan|stellar\.org|stellarchain)\.(io|org)/.*''',
+  # Stellar testnet tools (friendbot/laboratory) are public.
   '''https?://(friendbot|laboratory)\.stellar\.org.*''',
+  # Base developer documentation links.
   '''https?://(docs|developers)\.base\.org.*''',
+  # Placeholder markers including FILL_ variant.
   '''(your_|YOUR_|REPLACE_|replace_|CHANGE_|change_|INSERT_|insert_|ENTER_|enter_|FILL_|fill_)[a-zA-Z0-9_]*''',
+  # Env assignments whose value is an obvious placeholder.
   '''^[A-Z_]+=(your_|YOUR_|REPLACE_|replace_|CHANGE_|change_|INSERT_|insert_|ENTER_|enter_|FILL_|fill_|test_|TEST_|testing_|TESTING_)''',
+  # Stellar ecosystem site links (public).
   '''https?://(lobstr|keybase|stellarport|stomt|stellarexpert)\..*''',
+  # Base/Coinbase/Warpcast public site links.
   '''https?://(base\.org|base\.com|coinbase\.com|warpcast\.com|onchain\.base\.org)''',
+  # Env var names prefixed TEST_/TESTING_ hold test-only values.
   '''^(TEST_|TESTING_|TEST)[A-Z0-9_]+=''',
+  # Public node provider URLs (no embedded API keys).
   '''https?://(alchemy|infura|quicknode)\.(com|in|io)/.*''',
+  # Asset ticker symbols.
   '''\b(USDC|XLM|AQUA|yUSDC|USDT)\b''',
+  # Short hex fragments (not full private keys).
   '''^0x[a-fA-F0-9]{0,8}$''',
+  # UUIDs are identifiers, not secrets.
   '''[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}''',
+  # Public GitHub repository URLs.
   '''https?://github\.com/[A-Za-z0-9_-]+/[A-Za-z0-9_.-]+''',
+  # Quoted npm package names / scoped identifiers.
   '''"(?:@[a-z0-9-]+\/)?[a-z0-9-]+"''',
+  # Semantic version strings.
   '''\b\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?\b''',
+  # Stellar network passphrase constants (public by design).
   '''(Test SDF Network ; September 2015|Public Global Stellar Network ; September 2015)''',
-  # False positives: performance threshold constants
+  # False positives: performance threshold constants.
   '''PERF_THRESHOLDS\.(apiP95|apiP99|dbP95|dbP99)(Critical|Warn)Ms''',
 ]
 

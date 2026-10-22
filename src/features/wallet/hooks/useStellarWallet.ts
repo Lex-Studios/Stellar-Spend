@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { WalletManager } from '@/lib/wallets';
 import { WalletType, WalletError } from '@/lib/wallets';
 import { logger } from '@/lib/logger';
+import { useTransactionSigning } from './useTransactionSigning';
 
 interface FreighterWindow extends Window {
   freighter?: {
@@ -389,15 +390,7 @@ export function useStellarWallet(networkPassphrase: string = 'Test SDF Network ;
   }, []);
 
   // Sign a transaction with the currently connected wallet's adapter.
-  const signTransaction = useCallback(
-    async (xdr: string): Promise<string> => {
-      if (!managerRef.current) {
-        throw new Error('Wallet manager is not ready. Please try again.');
-      }
-      return managerRef.current.signTransaction(xdr, { networkPassphrase });
-    },
-    [networkPassphrase],
-  );
+  const signTransaction = useTransactionSigning(managerRef, networkPassphrase);
 
   // Convenience object mirroring the shape consumers expect: a single
   // `wallet` value that is non-null exactly when a wallet is connected.

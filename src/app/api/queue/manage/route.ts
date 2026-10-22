@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTransactionQueue, TransactionPriority } from '@/lib/priority-queue';
+import { getTransactionQueue, QueueBackpressureError, TransactionPriority } from '@/lib/priority-queue';
 import { ErrorHandler } from '@/lib/error-handler';
 import { queueManageSchema, formatZodErrors } from '@/lib/validators';
 import { ApiError, ErrorType } from '@/lib/error-types';
-import { QueueBackpressureError } from '@/lib/queue-backpressure';
 
 /**
  * GET /api/queue/manage

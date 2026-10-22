@@ -1,5 +1,5 @@
-import { dal } from '@/lib/db';
 import type { Transaction } from '@/lib/transaction-storage';
+import type { TransactionStore } from './ports';
 
 export interface TransactionFilter {
   status?: string;
@@ -11,18 +11,20 @@ export interface TransactionFilter {
 }
 
 export class TransactionService {
+  constructor(private readonly store: TransactionStore) {}
+
   async getTransaction(id: string): Promise<Transaction | null> {
     if (!id) {
       throw new Error('Transaction ID is required');
     }
-    return dal.getById(id);
+    return this.store.getById(id);
   }
 
   async getTransactionByPayoutOrderId(orderId: string): Promise<Transaction | null> {
     if (!orderId) {
       throw new Error('Order ID is required');
     }
-    return dal.getByPayoutOrderId(orderId);
+    return this.store.getByPayoutOrderId(orderId);
   }
 
   async listTransactions(filter: TransactionFilter): Promise<Transaction[]> {
@@ -42,8 +44,8 @@ export class TransactionService {
       throw new Error('No updates provided');
     }
 
-    await dal.update(id, updates);
-    return dal.getById(id);
+    await this.store.update(id, updates);
+    return this.store.getById(id);
   }
 
   async deleteTransaction(id: string): Promise<boolean> {

@@ -1,4 +1,5 @@
-import type { TransactionStatus, PayoutStatus, BridgeStatus } from '@/lib/transaction-status';
+import { randomHex } from "@/lib/crypto/ids";
+import type { TransactionStatus, PayoutStatus, BridgeStatus } from '@/lib/transactions/transaction-status';
 
 export interface Transaction {
   id: string;
@@ -50,6 +51,37 @@ export interface Transaction {
     claimReason?: string;
     purchasedAt: number;
   };
+}
+
+/**
+ * Shared localStorage persistence helpers. Every browser-side store in the
+ * app (transactions, sync settings, sync metadata, sync queue) goes through
+ * these so SSR guards and JSON error handling live in one place.
+ */
+export function readStoredJson<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? (JSON.parse(stored) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/** Returns false when the write fails (e.g. quota exceeded or no window). */
+export function writeStoredJson(key: string, value: unknown): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function removeStoredItem(key: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(key);
 }
 
 const STORAGE_KEY = 'stellar_spend_transactions';
@@ -106,8 +138,8 @@ export class TransactionStorage {
     this.update(id, { note: note.slice(0, 500) });
   }
 
-  static generateId(): string {
-    return `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `tx_${Date.now()}_${randomHex(6)}`;
+    return `tx_${Date.now()}_${randomHex(6)}`;
   }
 
   static isReversalEligible(tx: Transaction): boolean {
@@ -173,8 +205,8 @@ export class TransactionStorage {
   static addTag(id: string, tagName: string, color: string = '#3b82f6'): void {
     const tx = this.getById(id);
     if (!tx) return;
-    const tags = tx.tags || [];
-    const tagId = `tag_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const tagId = `tag_${Date.now()}_${randomHex(6)}`;
+    const tagId = `tag_${Date.now()}_${randomHex(6)}`;
     tags.push({ id: tagId, name: tagName, color });
     this.update(id, { tags });
   }

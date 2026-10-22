@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { formatUsdcAmount } from '@/lib/format';
+import { useStellarWallet } from './useStellarWallet';
 
 const HORIZON_URL = 'https://horizon.stellar.org';
 const USDC_ISSUER =
@@ -44,7 +45,12 @@ export interface StellarBalances {
   refresh: () => Promise<void>;
 }
 
-export function useStellarBalances(publicKey: string | undefined): StellarBalances {
+export function useStellarBalances(publicKey?: string): StellarBalances {
+  const wallet = useStellarWallet();
+  // Single source of truth for connection state: prefer the wallet hook's
+  // connected public key, falling back to an explicitly passed key.
+  const connectedKey = wallet.publicKey ?? publicKey;
+
   const [usdc, setUsdc] = useState<string | null>(null);
   const [xlm, setXlm] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,16 +70,16 @@ export function useStellarBalances(publicKey: string | undefined): StellarBalanc
   };
 
   useEffect(() => {
-    if (!publicKey) {
+    if (!connectedKey) {
       setUsdc(null);
       setXlm(null);
       return;
     }
-    void load(publicKey);
-  }, [publicKey]);
+    void load(connectedKey);
+  }, [connectedKey]);
 
   const refresh = async () => {
-    if (publicKey) await load(publicKey);
+    if (connectedKey) await load(connectedKey);
   };
 
   return { usdc, xlm, isLoading, refresh };

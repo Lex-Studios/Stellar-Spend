@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
+import { generateFixtures } from "./fixtures/secrets/generate-fixtures";
 
 const SECRETS_DIR = join(__dirname, "fixtures", "secrets");
 const GITLEAKS_TOML = join(__dirname, "..", "..", ".gitleaks.toml");
@@ -85,6 +86,10 @@ function gitleaksAvailable(): boolean {
 }
 
 describe("Gitleaks regression: synthetic secret fixtures", () => {
+  beforeAll(() => {
+    generateFixtures();
+  });
+
   it("fixtures directory exists with all expected files", () => {
     expect(existsSync(SECRETS_DIR)).toBe(true);
     const present = new Set(readdirSync(SECRETS_DIR));

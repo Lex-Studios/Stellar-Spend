@@ -3,7 +3,7 @@ import type { AuditLogRepository, AuditLog } from '../audit-log';
 export class InMemoryAuditLogRepository implements AuditLogRepository {
   private logs: Map<string, AuditLog> = new Map();
 
-  async save(log: AuditLog): Promise<void> {
+  async create(log: AuditLog): Promise<void> {
     this.logs.set(log.id, log);
   }
 
@@ -13,7 +13,7 @@ export class InMemoryAuditLogRepository implements AuditLogRepository {
     this.logs.set(id, { ...log, ...updates });
   }
 
-  async getById(id: string): Promise<AuditLog | null> {
+  async get(id: string): Promise<AuditLog | null> {
     return this.logs.get(id) ?? null;
   }
 
@@ -21,7 +21,7 @@ export class InMemoryAuditLogRepository implements AuditLogRepository {
     this.logs.delete(id);
   }
 
-  async getAll(): Promise<AuditLog[]> {
+  async list(): Promise<AuditLog[]> {
     return Array.from(this.logs.values());
   }
 

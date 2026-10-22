@@ -4,13 +4,20 @@
 //! straight here; all storage keys, types and constants are re-exported from the
 //! parent crate root so callers still have a single import path.
 
-use soroban_sdk::{symbol_short, Address, Env, Map};
+use soroban_sdk::{Address, Env, Map};
 use stellar_spend_shared::{
     errors::ContractError,
-    validation::{require_basis_points, require_positive_amount, MAX_BASIS_POINTS},
+    events::emit_escrow_deposit,
+    validation::{
+        check_schema_version, checked_add_ledgers, require_basis_points, require_positive_amount,
+        MAX_BASIS_POINTS,
+    },
 };
 
-use crate::{DataKey, EscrowDeposit, EscrowStatus, DEFAULT_TIMEOUT_LEDGERS, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD};
+use crate::{
+    DataKey, EscrowDeposit, EscrowStatus, DEFAULT_TIMEOUT_LEDGERS, INSTANCE_TTL_EXTEND_TO,
+    INSTANCE_TTL_THRESHOLD,
+};
 
 /// Record a deposit and return its id.
 ///
@@ -37,9 +44,7 @@ pub fn deposit(
 
     // Both operands are bounded (`timeout` by MAX_TIMEOUT_LEDGERS at write
     // time), but a near-u32::MAX ledger sequence would still wrap.
-    let timeout_ledger = current_ledger
-        .checked_add(timeout)
-        .ok_or(ContractError::Overflow)?;
+    let timeout_ledger = checked_add_ledgers(current_ledger, timeout)?;
 
     let id: u64 = storage.get(&DataKey::NextId).unwrap_or(0);
     let next_id = id.checked_add(1).ok_or(ContractError::Overflow)?;
@@ -69,9 +74,6 @@ pub fn deposit(
         .extend_ttl(INSTANCE_TTL_THRESHOLD, INSTANCE_TTL_EXTEND_TO);
 
     // ── INTERACT ───────────────────────────────────────────────────────
-    env.events().publish(
-        (symbol_short!("deposit"),),
-        (id, depositor, amount, bridge_address),
-    );
+    emit_escrow_deposit(env, id, depositor, amount, bridge_address);
     Ok(id)
 }

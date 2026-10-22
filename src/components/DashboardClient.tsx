@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useDashboardWallet } from '@/hooks/useDashboardWallet';
 import { useWebVitals } from '@/hooks/useWebVitals';
 import Header from './Header';
 import FormCard, { type OfframpPayload, type QuoteResult } from './FormCard';
@@ -16,32 +17,13 @@ export default function DashboardClient() {
   // Track Web Vitals
   useWebVitals();
 
-  // Wallet state (mock for now - integrate with Freighter/Lobstr)
-  const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [walletAddress, setWalletAddress] = useState<string>();
-  const [resetKey, setResetKey] = useState(0);
+  const { isConnected, isConnecting, walletAddress, resetKey, handleConnect, handleDisconnect } =
+    useDashboardWallet();
 
   // Shared state for FormCard <-> RightPanel sync
   const [currentQuote, setCurrentQuote] = useState<QuoteResult | null>(null);
   const [currentAmount, setCurrentAmount] = useState('');
   const [currentCurrency, setCurrentCurrency] = useState('');
-
-  const handleConnect = useCallback(() => {
-    setIsConnecting(true);
-    // Mock wallet connection
-    setTimeout(() => {
-      setIsConnected(true);
-      setWalletAddress('GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5');
-      setIsConnecting(false);
-    }, 1000);
-  }, []);
-
-  const handleDisconnect = useCallback(() => {
-    setIsConnected(false);
-    setWalletAddress(undefined);
-    setResetKey((prev) => prev + 1);
-  }, []);
 
   const handleSubmit = useCallback(async (_payload: OfframpPayload) => {
     // Implement actual submission logic
