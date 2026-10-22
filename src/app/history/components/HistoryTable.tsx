@@ -4,6 +4,10 @@ import { memo, useCallback, useRef, useState } from 'react';
 import type { Transaction } from '@/lib/transaction-storage';
 import type { SortDir, SortField } from '../filters';
 import { HistoryRow } from './HistoryRow';
+import { VirtualizedList } from './VirtualizedList';
+
+const ROW_HEIGHT = 52;
+const VIRTUALIZED_VIEWPORT_HEIGHT = 560;
 
 interface HistoryTableProps {
   rows: Transaction[];
@@ -79,11 +83,20 @@ export function HistoryTable({
   onFileClaim,
 }: HistoryTableProps) {
   const [rovingIndex, setRovingIndex] = useState(0);
+  const pendingFocusIndex = useRef<number | null>(null);
   const rowRefs = useRef<Map<number, HTMLTableRowElement>>(new Map());
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const registerRowRef = useCallback((el: HTMLTableRowElement | null, index: number) => {
-    if (el) rowRefs.current.set(index, el);
-    else rowRefs.current.delete(index);
+    if (el) {
+      rowRefs.current.set(index, el);
+      if (pendingFocusIndex.current === index) {
+        pendingFocusIndex.current = null;
+        el.focus();
+      }
+    } else {
+      rowRefs.current.delete(index);
+    }
   }, []);
 
   const handleRowKeyDown = useCallback(
@@ -92,12 +105,28 @@ export function HistoryTable({
         e.preventDefault();
         const next = Math.min(index + 1, rows.length - 1);
         setRovingIndex(next);
-        rowRefs.current.get(next)?.focus();
+        const nextRow = rowRefs.current.get(next);
+        if (nextRow) {
+          nextRow.focus();
+        } else {
+          pendingFocusIndex.current = next;
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = next * ROW_HEIGHT;
+          }
+        }
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         const prev = Math.max(index - 1, 0);
         setRovingIndex(prev);
-        rowRefs.current.get(prev)?.focus();
+        const previousRow = rowRefs.current.get(prev);
+        if (previousRow) {
+          previousRow.focus();
+        } else {
+          pendingFocusIndex.current = prev;
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = prev * ROW_HEIGHT;
+          }
+        }
       }
     },
     [rows.length],
@@ -121,7 +150,12 @@ export function HistoryTable({
   );
 
   return (
-    <div className="border border-[#333333] bg-[#111111] overflow-x-auto mt-4">
+    <div
+      ref={scrollContainerRef}
+      className={`border border-[#333333] bg-[#111111] overflow-x-auto mt-4 ${
+        rows.length > 100 ? 'max-h-[560px] overflow-y-auto' : ''
+      }`}
+    >
       <table className="w-full min-w-[800px] border-collapse" aria-label="Transaction history">
         <thead>
           <tr className="bg-[#c9a962]">
