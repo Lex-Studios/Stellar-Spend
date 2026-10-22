@@ -1,5 +1,5 @@
 [workspace]
-members = ["shared", "escrow", "fee-manager", "multisig-authority", "treasury"]
+members = ["shared", "escrow", "fee-manager", "multisig-authority", "treasury", "integration"]
 resolver = "2"
 
 [workspace.package]

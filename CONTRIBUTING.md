@@ -409,6 +409,30 @@ SLAs are for the first substantive review. Trivial approvals (docs typo) may be 
 - 100-character line limit
 - Trailing commas in multi-line structures
 
+#### Checking formatting without making changes
+
+Run the check-only variant before committing or opening a PR:
+
+```bash
+npm run format:check
+```
+
+This runs `prettier --check .` and exits non-zero if any file differs from what
+`prettier --write` would produce. It is the same check CI runs, so a green local
+result means the CI format job will pass.
+
+| Command | Effect |
+|---|---|
+| `npm run format` | Auto-fix all formatting issues |
+| `npm run format:check` | Report formatting issues without changing files (CI-safe) |
+
+The check is also wired into the pre-commit hook (Option B — Husky) and the
+**Definition of Done** checklist. Run it as part of your normal pre-push routine:
+
+```bash
+npm run lint && npm run format:check && npx tsc --noEmit && npm test
+```
+
 ### Naming
 
 - Components: `PascalCase`

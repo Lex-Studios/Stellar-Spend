@@ -1,0 +1,17 @@
+[package]
+name = "integration"
+version.workspace = true
+edition.workspace = true
+
+# This crate has no library target — it exists solely as a host for cross-crate
+# integration tests that need to exercise more than one contract at a time.
+# `cargo test -p integration` runs the test binaries below.
+
+[dev-dependencies]
+escrow = { path = "../escrow", features = ["testutils"] }
+soroban-sdk = { workspace = true, features = ["testutils"] }
+stellar-spend-shared = { workspace = true }
+
+[[test]]
+name = "insurance_flow"
+path = "tests/insurance_flow.rs"
