@@ -28,6 +28,8 @@ interface I18nContextType {
   setLanguage: (language: Language) => void;
   t: (key: string) => string;
   isRTL: boolean;
+  /** True while a non-English locale bundle is being fetched. */
+  localeLoading: boolean;
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
@@ -41,26 +43,34 @@ export function I18nProvider({
 }) {
   const [i18nInstance] = useState(() => new I18n(defaultLanguage));
   const [language, setLanguageState] = useState<Language>(defaultLanguage);
+  const [localeLoading, setLocaleLoading] = useState(false);
 
-  // Apply browser detection + stored preference after mount
+  // After mount: apply browser-detected or stored language preference.
+  // Uses setLanguageAsync so the locale chunk is fetched before the UI updates.
   useEffect(() => {
     const initial = getInitialLanguage(defaultLanguage);
     if (initial !== defaultLanguage) {
-      i18nInstance.setLanguage(initial);
-      setLanguageState(initial);
+      setLocaleLoading(true);
+      void i18nInstance.setLanguageAsync(initial).then(() => {
+        setLanguageState(initial);
+        setLocaleLoading(false);
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setLanguage = useCallback(
     (lang: Language) => {
-      i18nInstance.setLanguage(lang);
-      setLanguageState(lang);
-      try {
-        localStorage.setItem(STORAGE_KEY, lang);
-      } catch {
-        /* ignore */
-      }
+      setLocaleLoading(true);
+      void i18nInstance.setLanguageAsync(lang).then(() => {
+        setLanguageState(lang);
+        setLocaleLoading(false);
+        try {
+          localStorage.setItem(STORAGE_KEY, lang);
+        } catch {
+          /* ignore */
+        }
+      });
     },
     [i18nInstance],
   );
@@ -70,6 +80,7 @@ export function I18nProvider({
     setLanguage,
     t: (key: string) => i18nInstance.t(key),
     isRTL: i18nInstance.isRTL(),
+    localeLoading,
   };
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
