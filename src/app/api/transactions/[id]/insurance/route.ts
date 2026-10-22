@@ -7,6 +7,7 @@ import {
   fileClaim,
 } from '@/lib/services';
 import { withIdempotency } from '@/lib/idempotency';
+import { insuranceClaimPatchSchema, parseBody } from '@/lib/validators';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -78,23 +79,19 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     async () => {
       await params;
 
-      let body: { insuranceId?: unknown; reason?: unknown; evidence?: unknown };
+      let rawBody: unknown;
       try {
-        body = await request.json();
+        rawBody = await request.json();
       } catch {
         return ErrorHandler.validation('Invalid JSON body');
       }
 
-      const insuranceId = typeof body.insuranceId === 'string' ? body.insuranceId : '';
-      const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
-      const evidence = typeof body.evidence === 'string' ? body.evidence.trim() : undefined;
+      const parsed = parseBody(insuranceClaimPatchSchema, rawBody);
+      if (!parsed.ok) {
+        return ErrorHandler.validation(parsed.errors[0]?.message ?? 'Validation failed');
+      }
 
-      if (!insuranceId) {
-        return ErrorHandler.validation('insuranceId is required');
-      }
-      if (!reason) {
-        return ErrorHandler.validation('reason is required');
-      }
+      const { insuranceId, reason, evidence } = parsed.data;
 
       try {
         const result = await fileClaim(insuranceId, reason, evidence);
