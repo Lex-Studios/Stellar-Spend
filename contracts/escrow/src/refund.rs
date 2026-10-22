@@ -8,7 +8,7 @@
 use soroban_sdk::Env;
 use stellar_spend_shared::{errors::ContractError, events::emit_escrow_refunded};
 
-use crate::release::{acquire_lock, load_deposits, release_lock};
+use crate::storage::{acquire_lock, load_deposits, release_lock};
 use crate::{DataKey, EscrowStatus, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD};
 
 /// Refund a deposit to its depositor once the timeout ledger has passed.

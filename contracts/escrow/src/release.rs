@@ -8,6 +8,7 @@ use soroban_sdk::{Address, Env};
 use stellar_spend_shared::{errors::ContractError, events::emit_escrow_released};
 
 use crate::{DataKey, EscrowStatus, INSTANCE_TTL_EXTEND_TO, INSTANCE_TTL_THRESHOLD};
+use crate::storage::{acquire_lock, load_deposits, release_lock, require_admin};
 
 /// Release a deposit to `recipient`. Settlement authority only.
 ///
@@ -45,36 +46,4 @@ pub fn release(env: &Env, deposit_id: u64, recipient: Address) -> Result<i128, C
     // ── INTERACT ───────────────────────────────────────────────────────
     emit_escrow_released(env, deposit_id, recipient, amount);
     Ok(amount)
-}
-
-// ── Helpers (shared with refund.rs) ──────────────────────────────────────────
-
-pub(crate) fn require_admin(env: &Env) -> Result<Address, ContractError> {
-    stellar_spend_shared::auth::require_admin(env, &DataKey::Admin)
-}
-
-pub(crate) fn load_deposits(
-    env: &Env,
-) -> Result<soroban_sdk::Map<u64, crate::EscrowDeposit>, ContractError> {
-    env.storage()
-        .instance()
-        .get(&DataKey::Deposits)
-        .ok_or(ContractError::NotInitialized)
-}
-
-pub(crate) fn acquire_lock(env: &Env) -> Result<(), ContractError> {
-    let locked: bool = env
-        .storage()
-        .instance()
-        .get(&DataKey::Lock)
-        .unwrap_or(false);
-    if locked {
-        return Err(ContractError::Reentrant);
-    }
-    env.storage().instance().set(&DataKey::Lock, &true);
-    Ok(())
-}
-
-pub(crate) fn release_lock(env: &Env) {
-    env.storage().instance().set(&DataKey::Lock, &false);
 }

@@ -1,10 +1,34 @@
-//! Uniform unauthorised-call rejection tests (issue #1156).
+//! Uniform unauthorised-call rejection tests (issues #1156, #1317).
 //!
 //! The multisig is the one contract that takes the caller as an explicit
 //! argument rather than authorising a stored address, so a caller who is not
 //! recorded is rejected with a contract-level [`ContractError::Unauthorized`]
 //! rather than by a host auth failure. This suite pins that every gated
 //! entrypoint — admin-only and signer-gated alike — behaves the same way.
+//!
+//! ## Auth audit (#1317)
+//!
+//! Every public function has been reviewed for auth coverage:
+//!
+//! | Function               | Guard              | Test                              |
+//! |------------------------|--------------------|-----------------------------------|
+//! | `init`                 | AlreadyInitialized | (first caller only, no re-entry)  |
+//! | `propose`              | `assert_is_signer` | propose_rejects_an_address_*      |
+//! | `sign`                 | `assert_is_signer` | sign_rejects_an_address_*         |
+//! | `execute`              | `assert_is_signer` | execute_rejects_an_address_*      |
+//! | `add_signer`           | `assert_is_admin`  | add_signer_rejects_a_non_admin    |
+//! | `remove_signer`        | `assert_is_admin`  | remove_signer_rejects_a_non_admin |
+//! | `set_threshold`        | `assert_is_admin`  | set_threshold_rejects_a_non_admin |
+//! | `set_high_value_limit` | `assert_is_admin`  | set_high_value_limit_*            |
+//! | `upgrade`              | `assert_is_admin`  | upgrade_rejects_a_non_admin       |
+//! | `migrate`              | `assert_is_admin`  | migrate_rejects_a_non_admin       |
+//! | `required_threshold`   | none (read-only)   | —                                 |
+//! | `proposal_status`      | none (read-only)   | —                                 |
+//! | `get_proposal`         | none (read-only)   | —                                 |
+//! | `get_signers`          | none (read-only)   | —                                 |
+//! | `get_threshold`        | none (read-only)   | —                                 |
+//! | `get_high_value_limit` | none (read-only)   | —                                 |
+//! | `schema_version`       | none (read-only)   | —                                 |
 
 use multisig_authority::test_utils::MultisigTest;
 use soroban_sdk::{
