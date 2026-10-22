@@ -107,6 +107,6 @@ export const sloConfig: SLO[] = [
   },
 ];
 
-export const getSLOByName = (name: string): SLO | undefined => {
+const getSLOByName = (name: string): SLO | undefined => {
   return sloConfig.find((slo) => slo.name === name);
 };

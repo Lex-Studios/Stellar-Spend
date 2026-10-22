@@ -59,12 +59,12 @@ export function isValidTransition(from: TradeState, to: TradeState): boolean {
   return (TRADE_TRANSITIONS[from] as readonly string[]).includes(to);
 }
 
-export function assertValidTransition(from: TradeState, to: TradeState): void {
+function assertValidTransition(from: TradeState, to: TradeState): void {
   if (!isValidTransition(from, to)) {
     throw new InvalidTransitionError(from, to);
   }
 }
 
-export function isValidPayoutTransition(from: PayoutStatus, to: PayoutStatus): boolean {
+function isValidPayoutTransition(from: PayoutStatus, to: PayoutStatus): boolean {
   return (PAYOUT_TRANSITIONS[from] as readonly string[]).includes(to);
 }

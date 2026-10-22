@@ -7,7 +7,7 @@
 
 export type ThemeTokens = Record<string, string>;
 
-export const DARK_TOKENS: ThemeTokens = {
+const DARK_TOKENS: ThemeTokens = {
   bg: '#0a0a0a',
   panel: '#131313',
   'panel-elevated': '#1a1a1a',
@@ -25,7 +25,7 @@ export const DARK_TOKENS: ThemeTokens = {
   info: '#60a5fa',
 };
 
-export const LIGHT_TOKENS: ThemeTokens = {
+const LIGHT_TOKENS: ThemeTokens = {
   bg: '#f5f5f5',
   panel: '#ffffff',
   'panel-elevated': '#fafafa',
@@ -59,7 +59,7 @@ export const CHROME_TOKENS = {
   textFaint: '#666666',
 } as const;
 
-export const HIGH_CONTRAST_TOKENS: ThemeTokens = {
+const HIGH_CONTRAST_TOKENS: ThemeTokens = {
   bg: '#000000',
   panel: '#000000',
   'panel-elevated': '#0a0a0a',

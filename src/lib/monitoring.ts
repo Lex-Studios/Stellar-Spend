@@ -103,7 +103,7 @@ export function createTracingSDK(): NodeSDK {
 /**
  * Initialize tracing with sampling configuration
  */
-export function initializeTracing(): NodeSDK | undefined {
+function initializeTracing(): NodeSDK | undefined {
   // Skip tracing if disabled
   if (process.env.OTEL_DISABLED === 'true') {
     logger.info('tracing.disabled');
@@ -124,7 +124,7 @@ export function initializeTracing(): NodeSDK | undefined {
 /**
  * Gracefully shutdown the tracing SDK
  */
-export async function shutdownTracing(sdk: NodeSDK): Promise<void> {
+async function shutdownTracing(sdk: NodeSDK): Promise<void> {
   try {
     await sdk.shutdown();
     logger.info('tracing.shutdown');

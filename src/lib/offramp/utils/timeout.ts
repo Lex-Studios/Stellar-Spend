@@ -30,7 +30,7 @@ export interface TimeoutConfig {
 /**
  * Result of a timeout-wrapped operation
  */
-export interface TimeoutResult<T> {
+interface TimeoutResult<T> {
   success: boolean;
   data?: T;
   error?: TimeoutError;
@@ -58,7 +58,7 @@ export const TIMEOUT_CONFIG = {
 /**
  * Timeout error response format
  */
-export interface TimeoutErrorResponse {
+interface TimeoutErrorResponse {
   error: string;
   message: string;
   service: string;
@@ -188,7 +188,7 @@ function logTimeoutEvent(entry: TimeoutLogEntry): void {
  * Generic timeout wrapper for any promise.
  * Accepts either a TimeoutConfig object or (durationMs, operationName) shorthand.
  */
-export async function withTimeout<T>(
+async function withTimeout<T>(
   promise: Promise<T>,
   configOrDuration: TimeoutConfig | number,
   operation?: string,
@@ -243,7 +243,7 @@ export async function withPaycrestTimeout<T>(promise: Promise<T>, operation?: st
 /**
  * Wraps Soroban RPC calls with 15-second timeout
  */
-export async function withSorobanTimeout<T>(promise: Promise<T>, operation?: string): Promise<T> {
+async function withSorobanTimeout<T>(promise: Promise<T>, operation?: string): Promise<T> {
   return createAbortablePromise(
     async (_signal) => {
       return promise;
@@ -257,7 +257,7 @@ export async function withSorobanTimeout<T>(promise: Promise<T>, operation?: str
 /**
  * Enhanced fetch wrapper with AbortSignal support for HTTP requests
  */
-export async function fetchWithTimeout(
+async function fetchWithTimeout(
   url: string,
   options: RequestInit & { timeout?: number; serviceName?: string; operation?: string } = {},
 ): Promise<Response> {

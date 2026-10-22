@@ -16,7 +16,7 @@ export function invalid(error: string): ValidationResult {
 }
 
 /** Fails when the trimmed value is empty. */
-export function required(value: string, label = 'This field'): ValidationResult {
+function required(value: string, label = 'This field'): ValidationResult {
   return value.trim().length > 0 ? VALID : invalid(`${label} is required.`);
 }
 

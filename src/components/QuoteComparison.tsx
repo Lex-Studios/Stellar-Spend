@@ -43,7 +43,7 @@ function formatTime(seconds: number): string {
   return `~${mins}m`;
 }
 
-export function QuoteComparison({ quotes, selectedId, onSelect, isLoading }: QuoteComparisonProps) {
+function QuoteComparison({ quotes, selectedId, onSelect, isLoading }: QuoteComparisonProps) {
   const [sortBy, setSortBy] = useState<'rate' | 'fee' | 'time'>('rate');
 
   const sorted = [...quotes].sort((a, b) => {

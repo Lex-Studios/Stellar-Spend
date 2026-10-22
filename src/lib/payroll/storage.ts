@@ -46,7 +46,7 @@ export class PayrollTemplateStorage {
   }
 }
 
-export class PayrollRunStorage {
+class PayrollRunStorage {
   static save(run: PayrollRun): void {
     const all = this.getAll();
     all.push(run);

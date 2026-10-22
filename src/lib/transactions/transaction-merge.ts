@@ -151,7 +151,7 @@ function mergeArraysUnique<T extends { id: string }>(
  * Find differences between two transaction sets
  * Useful for identifying what changed during sync
  */
-export function findDifferences(
+function findDifferences(
   local: Transaction[],
   server: Transaction[],
 ): {

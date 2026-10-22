@@ -59,7 +59,7 @@ export async function validateBody<S extends z.ZodTypeAny>(
  * Every query param arrives as a string, so schemas should expect strings
  * (use `z.coerce.number()` etc. for typed fields).
  */
-export function validateQuery<S extends z.ZodTypeAny>(
+function validateQuery<S extends z.ZodTypeAny>(
   request: NextRequest,
   schema: S,
 ): ValidationResult<z.infer<S>> {

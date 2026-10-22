@@ -298,7 +298,7 @@ export function addRateLimitHeaders(response: NextResponse, request: NextRequest
 /**
  * Reset rate limit for a specific route and identifier (for testing/admin).
  */
-export async function resetPublicApiRateLimit(
+async function resetPublicApiRateLimit(
   pathname: string,
   identifier: string,
   isAuthenticated: boolean = false,
@@ -310,7 +310,7 @@ export async function resetPublicApiRateLimit(
 /**
  * Get current rate limit status for debugging.
  */
-export async function getPublicApiRateLimitStatus(
+async function getPublicApiRateLimitStatus(
   pathname: string,
   identifier: string,
   isAuthenticated: boolean = false,

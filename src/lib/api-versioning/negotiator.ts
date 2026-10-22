@@ -58,7 +58,7 @@ function resolveFromAcceptHeader(headerValue: string | null): NegotiationResult 
   return { version, source: 'accept-header' };
 }
 
-export const negotiator: VersionNegotiator = {
+const negotiator: VersionNegotiator = {
   resolve(request: Request): NegotiationResult {
     const url = new URL(request.url);
     const pathname = url.pathname;

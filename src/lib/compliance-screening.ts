@@ -93,7 +93,7 @@ function saveOverrides(overrides: ScreeningOverride[]): void {
   }
 }
 
-export function addScreeningOverride(
+function addScreeningOverride(
   address: string,
   verdict: ScreeningVerdict,
   reason: string,
@@ -114,7 +114,7 @@ export function addScreeningOverride(
   return override;
 }
 
-export function removeScreeningOverride(address: string): void {
+function removeScreeningOverride(address: string): void {
   const overrides = getOverrides().filter((o) => o.address !== address.toLowerCase());
   saveOverrides(overrides);
 }
@@ -173,11 +173,11 @@ export function isHighValue(amount?: number): boolean {
 const DEFAULT_PROVIDER: ScreeningProvider = new SandboxScreeningProvider();
 let activeProvider: ScreeningProvider = DEFAULT_PROVIDER;
 
-export function setScreeningProvider(provider: ScreeningProvider): void {
+function setScreeningProvider(provider: ScreeningProvider): void {
   activeProvider = provider;
 }
 
-export function getScreeningProvider(): ScreeningProvider {
+function getScreeningProvider(): ScreeningProvider {
   return activeProvider;
 }
 
@@ -236,7 +236,7 @@ export async function screenAddress(
   }
 }
 
-export function clearScreeningCache(): void {
+function clearScreeningCache(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(CACHE_KEY);
   }

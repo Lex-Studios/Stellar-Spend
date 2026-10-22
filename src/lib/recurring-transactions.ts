@@ -70,7 +70,7 @@ export const systemClock: Clock = {
 };
 
 /** Builds a fixed clock for tests — now() always returns the same instant. */
-export function fixedClock(atMs: number): Clock {
+function fixedClock(atMs: number): Clock {
   return { now: () => atMs };
 }
 
@@ -100,7 +100,7 @@ export function computeNextRunAt(from: number, frequency: RecurringFrequency): n
   return d.getTime();
 }
 
-export function isDue(schedule: RecurringSchedule, clock: Clock = systemClock): boolean {
+function isDue(schedule: RecurringSchedule, clock: Clock = systemClock): boolean {
   if (schedule.paused) return false;
   if (schedule.maxExecutions !== undefined && schedule.executionCount >= schedule.maxExecutions)
     return false;

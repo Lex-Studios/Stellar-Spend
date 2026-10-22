@@ -57,7 +57,7 @@ function writeAll(views: SavedView[]): void {
   }
 }
 
-export class SavedViewsStorage {
+class SavedViewsStorage {
   // Persisted locally for now; cross-device sync is tracked separately (#1).
   // save() always appends, so reversing gives most-recently-created first
   // without relying on Date.now() ties (saves in the same millisecond).

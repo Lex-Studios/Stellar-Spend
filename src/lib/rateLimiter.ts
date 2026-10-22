@@ -68,7 +68,7 @@ export interface RateLimitStore {
  * In-memory rate limit store (suitable for single-instance deployments)
  * This provides compatibility with the old rate-limiting.ts module
  */
-export class InMemoryRateLimitStore implements RateLimitStore {
+class InMemoryRateLimitStore implements RateLimitStore {
   private store: Map<string, { count: number; resetTime: number }> = new Map();
 
   async get(key: string): Promise<number> {
@@ -222,28 +222,28 @@ function makeLimiter(namespace: string): SlidingWindowRateLimiter {
 }
 
 /** Bridge build-transaction endpoint. */
-export const buildTxLimiter = makeLimiter('build-tx');
+const buildTxLimiter = makeLimiter('build-tx');
 
 /** Paycrest payout-order endpoint. */
-export const paycrestOrderLimiter = makeLimiter('paycrest-order');
+const paycrestOrderLimiter = makeLimiter('paycrest-order');
 
 /** Quote / FX quote endpoint. */
-export const quoteLimiter = makeLimiter('quote');
+const quoteLimiter = makeLimiter('quote');
 
 /** Global API limiter (fallback). */
-export const globalApiLimiter = makeLimiter('global');
+const globalApiLimiter = makeLimiter('global');
 
 /** Offramp status polling. */
-export const offrampStatusLimiter = makeLimiter('offramp-status');
+const offrampStatusLimiter = makeLimiter('offramp-status');
 
 /** Transaction read endpoints. */
-export const transactionsReadLimiter = makeLimiter('transactions-read');
+const transactionsReadLimiter = makeLimiter('transactions-read');
 
 /** Transaction write endpoints. */
-export const transactionsWriteLimiter = makeLimiter('transactions-write');
+const transactionsWriteLimiter = makeLimiter('transactions-write');
 
 /** Auth / 2FA endpoints. */
-export const authLimiter = makeLimiter('auth-2fa');
+const authLimiter = makeLimiter('auth-2fa');
 
 // ── Key extraction helpers ────────────────────────────────────────────────────
 
@@ -430,7 +430,7 @@ export function generateRateLimitKey(
  * Check if request should be rate limited
  * This provides compatibility with the old rate-limiting.ts module
  */
-export async function checkRateLimit(
+async function checkRateLimit(
   store: RateLimitStore,
   endpoint: string,
   identifier: string,

@@ -20,7 +20,7 @@ const disputeUpdateSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
-    // TODO: Add admin authentication check
+    // TODO(#1359): Add admin authentication check
     const status = req.nextUrl.searchParams.get('status');
     const cursor = req.nextUrl.searchParams.get('cursor');
     const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') || '50'), 1000);
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    // TODO: Add admin authentication check
+    // TODO(#1359): Add admin authentication check
     const validation = await validateBody(req, disputeUpdateSchema);
     if (!validation.success) return validation.response;
     const { disputeId, update } = validation.data;

@@ -371,4 +371,4 @@ export function useNotificationEvents() {
 // ---------------------------------------------------------------------------
 
 /** @deprecated Import useToast from NotificationProvider instead */
-export { useToast as useToastCompat };
+// useToastCompat alias removed — use useToast directly

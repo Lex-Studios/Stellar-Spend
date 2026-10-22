@@ -87,6 +87,6 @@ export function createRequestLogger(requestId: string, method: string, path: str
 /**
  * Mask sensitive data in request/response bodies
  */
-export function maskRequestBody(body: unknown): unknown {
+function maskRequestBody(body: unknown): unknown {
   return redactSensitive(body);
 }

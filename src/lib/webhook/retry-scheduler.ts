@@ -53,7 +53,7 @@ export async function scheduleNext(record: DeliveryRecord): Promise<DeliveryReco
   };
 }
 
-export const retryScheduler: RetryScheduler = {
+const retryScheduler: RetryScheduler = {
   calculateBackoff,
   scheduleNext,
   hasRemainingAttempts,

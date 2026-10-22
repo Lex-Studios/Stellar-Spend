@@ -46,7 +46,7 @@ const STEP_LABELS: Record<FunnelStep, string> = {
   completed: 'Completed',
 };
 
-export function getStepLabel(step: FunnelStep): string {
+function getStepLabel(step: FunnelStep): string {
   return STEP_LABELS[step];
 }
 

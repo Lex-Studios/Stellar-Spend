@@ -16,7 +16,7 @@ export interface DeliveryAttemptResult {
 /**
  * Enqueue a new delivery record for the given payload and destination.
  */
-export async function enqueue(
+async function enqueue(
   payload: WebhookPayload,
   destination: string,
 ): Promise<DeliveryRecord> {

@@ -24,7 +24,7 @@ export async function pollWithTimeout<T>(
   throw new Error('Polling timeout exceeded');
 }
 
-export async function pollBridgeStatus(
+async function pollBridgeStatus(
   getStatus: () => Promise<{ status: string }>,
   terminalStates: string[],
   options: PollOptions = {},
@@ -36,7 +36,7 @@ export async function pollBridgeStatus(
   });
 }
 
-export async function pollPayoutStatus(
+async function pollPayoutStatus(
   getStatus: () => Promise<{ status: string }>,
   terminalStates: string[],
   options: PollOptions = {},

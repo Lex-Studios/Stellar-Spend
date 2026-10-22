@@ -2,7 +2,7 @@ import { pool } from './db/client';
 import { logger } from './logger';
 import { randomHex } from '@/lib/crypto/ids';
 
-export interface IPWhitelistEntry {
+interface IPWhitelistEntry {
   id: string;
   userAddress: string;
   ipAddress?: string;
@@ -14,7 +14,7 @@ export interface IPWhitelistEntry {
   lastUsedAt?: number;
 }
 
-export interface IPViolation {
+interface IPViolation {
   id: string;
   userAddress: string;
   ipAddress: string;

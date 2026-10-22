@@ -76,7 +76,7 @@ export class QRCodeService {
       expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
     };
 
-    // TODO: Persist to database
+    // TODO(#1364): Persist to database
     return qrCode;
   }
 
@@ -84,7 +84,7 @@ export class QRCodeService {
    * Get QR code by transaction ID
    */
   async getQRCode(_transactionId: string): Promise<GeneratedQRCode | null> {
-    // TODO: Fetch from database
+    // TODO(#1364): Fetch from database
     return null;
   }
 

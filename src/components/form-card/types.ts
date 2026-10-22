@@ -58,7 +58,7 @@ export function formatPayout(amount: string, currency: string): string {
   return formatFiatAmount(amount, currency);
 }
 
-export function buildProviderQuotes(quote: QuoteResult, currency: string): ProviderQuote[] {
+function buildProviderQuotes(quote: QuoteResult, currency: string): ProviderQuote[] {
   const base = parseFloat(quote.destinationAmount);
   const baseRate = quote.rate;
   const baseFee = parseFloat(quote.bridgeFee ?? '0.5');

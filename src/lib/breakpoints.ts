@@ -15,7 +15,7 @@ export const bpClasses = {
 } as const;
 
 /** Raw media-query strings for use in JS / matchMedia calls. */
-export const breakpoints = {
+const breakpoints = {
   sm: '(min-width: 640px)',
   md: '(min-width: 768px)',
   headerCollapse: '(max-width: 720px)',

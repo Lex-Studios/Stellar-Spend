@@ -115,7 +115,7 @@ interface AllbridgeTokenInfo {
  * Fetch Stellar and Base USDC token information from Allbridge SDK.
  * Caches the result for 5 minutes; invalidates cache on error.
  */
-export async function getAllbridgeTokens(sdk: AllbridgeCoreSdk): Promise<{
+async function getAllbridgeTokens(sdk: AllbridgeCoreSdk): Promise<{
   stellar: AllbridgeTokenInfo;
   base: AllbridgeTokenInfo;
 }> {
@@ -167,7 +167,7 @@ export async function getAllbridgeTokens(sdk: AllbridgeCoreSdk): Promise<{
  * Find a specific token (e.g. USDC or USDT) on a given chain.
  * Returns the token or throws if not found.
  */
-export async function getAllbridgeToken(
+async function getAllbridgeToken(
   sdk: AllbridgeCoreSdk,
   chainKey: string,
   tokenSymbol: string,
@@ -190,7 +190,7 @@ export async function getAllbridgeToken(
 /**
  * List all tokens available on a given chain (e.g. 'SRB' for Stellar).
  */
-export async function getAllbridgeChainTokens(
+async function getAllbridgeChainTokens(
   sdk: AllbridgeCoreSdk,
   chainKey: string,
 ): Promise<TokenWithChainDetails[]> {

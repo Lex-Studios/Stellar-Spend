@@ -81,6 +81,6 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
 /**
  * Middleware to apply security headers to all responses
  */
-export function securityHeadersMiddleware(response: NextResponse): NextResponse {
+function securityHeadersMiddleware(response: NextResponse): NextResponse {
   return addSecurityHeaders(response);
 }

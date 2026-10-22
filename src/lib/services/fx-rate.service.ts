@@ -25,7 +25,7 @@ const STALE_TTL_MS = 60_000; // 60 s — stale-while-revalidate window
 const FETCH_TIMEOUT_MS = 8_000; // 8 s per individual rate fetch
 const DEFAULT_CURRENCIES = ['NGN', 'KES', 'GHS', 'ZAR', 'USD'] as const;
 
-export type SupportedCurrency = (typeof DEFAULT_CURRENCIES)[number] | string;
+type SupportedCurrency = (typeof DEFAULT_CURRENCIES)[number] | string;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

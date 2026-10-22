@@ -70,7 +70,7 @@ export interface SwapPair {
  * Returns the Stellar DEX swap path for two supported stablecoins.
  * USDC <-> USDT trade directly on the Stellar AMM.
  */
-export function getSwapPair(fromSymbol: string, toSymbol: string): SwapPair | undefined {
+function getSwapPair(fromSymbol: string, toSymbol: string): SwapPair | undefined {
   const from = fromSymbol.toUpperCase();
   const to = toSymbol.toUpperCase();
   if (from === to) return undefined;
@@ -84,7 +84,7 @@ export function getSwapPair(fromSymbol: string, toSymbol: string): SwapPair | un
  * Calculate the minimum amount out after applying slippage tolerance.
  * slippageTolerance is a fraction, e.g. 0.005 = 0.5%.
  */
-export function calculateMinAmountOut(amount: string, slippageTolerance: number): string {
+function calculateMinAmountOut(amount: string, slippageTolerance: number): string {
   const amt = parseFloat(amount);
   if (isNaN(amt) || amt <= 0) return '0';
   const tol = Math.min(Math.max(slippageTolerance, 0), 0.05);

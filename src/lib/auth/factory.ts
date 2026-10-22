@@ -7,6 +7,6 @@ import { AuthService } from './service';
  * Usage:
  *   const auth = createAuthService();
  */
-export function createAuthService() {
+function createAuthService() {
   return AuthService;
 }

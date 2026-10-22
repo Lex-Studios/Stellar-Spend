@@ -452,7 +452,7 @@ export async function runReconciliationJob(
   return entry;
 }
 
-export async function aggregateRecordsByDay(
+async function aggregateRecordsByDay(
   stellarTxs: string[],
   baseTxs: string[],
   paycrestOrders: string[],
@@ -491,7 +491,7 @@ export async function fetchDailyRecords(): Promise<ReconciliationRecord[]> {
   }
 }
 
-export async function runDailyReconciliation(): Promise<any> {
+async function runDailyReconciliation(): Promise<any> {
   const records = await fetchDailyRecords();
   const entry = await runReconciliationJob(records);
   const history = await getReconciliationHistory();

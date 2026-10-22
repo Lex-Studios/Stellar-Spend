@@ -1,6 +1,6 @@
 import type { LimitTier } from './kyc-limits';
 
-export type BankFieldType = 'account' | 'routing' | 'iban';
+type BankFieldType = 'account' | 'routing' | 'iban';
 
 export interface CorridorValidator {
   fields: {
@@ -371,7 +371,7 @@ export function getCorridorConfig(currency: string): CorridorDefinition | undefi
   return CORRIDOR_CONFIG[currency.toUpperCase()];
 }
 
-export function getActiveCorridors(): CorridorDefinition[] {
+function getActiveCorridors(): CorridorDefinition[] {
   return Object.values(CORRIDOR_CONFIG).filter((c) => c.active);
 }
 
@@ -380,21 +380,21 @@ export function getCorridorInstitutions(currency: string): InstitutionInfo[] {
   return corridor?.institutions ?? [];
 }
 
-export function getCorridorValidators(currency: string): CorridorValidator | undefined {
+function getCorridorValidators(currency: string): CorridorValidator | undefined {
   return getCorridorConfig(currency)?.validators;
 }
 
-export function getCorridorKycDefaults(currency: string): CorridorKycDefaults | undefined {
+function getCorridorKycDefaults(currency: string): CorridorKycDefaults | undefined {
   return getCorridorConfig(currency)?.kycDefaults;
 }
 
-export function isCorridorProviderSupported(currency: string, provider: string): boolean {
+function isCorridorProviderSupported(currency: string, provider: string): boolean {
   const corridor = getCorridorConfig(currency);
   if (!corridor) return false;
   return corridor.providers.some((p) => p.name === provider && p.supported);
 }
 
-export function getCorridorProviderList(currency: string): ProviderSupport[] {
+function getCorridorProviderList(currency: string): ProviderSupport[] {
   return getCorridorConfig(currency)?.providers ?? [];
 }
 
@@ -455,7 +455,7 @@ export interface CorridorValidationSummary extends CorridorValidationResult {
   currency: string;
 }
 
-export function validateAllCorridors(): CorridorValidationSummary[] {
+function validateAllCorridors(): CorridorValidationSummary[] {
   return Object.keys(CORRIDOR_CONFIG).map((currency) => ({
     currency,
     ...validateCorridorConfig(currency),

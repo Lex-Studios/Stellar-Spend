@@ -13,7 +13,7 @@ export type WebhookEvent =
 
 export type SubscriptionStatus = 'active' | 'paused' | 'disabled';
 
-export interface WebhookSubscription {
+interface WebhookSubscription {
   id: string;
   endpointUrl: string;
   signingSecret: string;

@@ -25,7 +25,7 @@ export interface TokenInfo {
   chain: string;
 }
 
-export interface QuoteRequest {
+interface QuoteRequest {
   sourceToken: TokenInfo;
   destinationToken: TokenInfo;
   amount: string;
@@ -33,7 +33,7 @@ export interface QuoteRequest {
   currency: string;
 }
 
-export interface QuoteResponse {
+interface QuoteResponse {
   sourceAmount: string;
   destinationAmount: string;
   bridgeFee: string;
@@ -47,7 +47,7 @@ export interface QuoteResponse {
  * Client-side trade status with Date timestamps.
  * Differs from shared TradeStatus (which uses ISO string timestamps).
  */
-export interface TradeStatus {
+interface TradeStatus {
   tradeId: string;
   state: TradeState;
   sourceTxHash?: string;
@@ -62,7 +62,7 @@ export interface TradeStatus {
 }
 
 /** Client-side subset — shared version also includes createdAt. */
-export interface BridgeTransferResponse {
+interface BridgeTransferResponse {
   transferId: string;
   status: BridgeStatus;
   estimatedTime: number;
@@ -78,7 +78,7 @@ export interface PayoutOrderResponse {
   status: PayoutStatus;
 }
 
-export interface ApiError {
+interface ApiError {
   code: string;
   message: string;
   details?: unknown;

@@ -13,7 +13,7 @@ export class DeliveryLogError extends Error {
   }
 }
 
-export async function createTable(): Promise<void> {
+async function createTable(): Promise<void> {
   const sql = `
     CREATE TABLE IF NOT EXISTS webhook_delivery_logs (
       id TEXT PRIMARY KEY,
@@ -36,7 +36,7 @@ export async function createTable(): Promise<void> {
   }
 }
 
-export async function logDelivery(
+async function logDelivery(
   entry: Omit<WebhookDeliveryLog, 'id' | 'createdAt'>,
 ): Promise<WebhookDeliveryLog> {
   const id = randomUUID();
@@ -83,7 +83,7 @@ function rowToDeliveryLog(row: Record<string, unknown>): WebhookDeliveryLog {
   };
 }
 
-export async function getDeliveryLogs(
+async function getDeliveryLogs(
   subscriptionId?: string,
   limit = 50,
   offset = 0,
@@ -107,7 +107,7 @@ export async function getDeliveryLogs(
   }
 }
 
-export async function getDeliveryLogById(id: string): Promise<WebhookDeliveryLog | null> {
+async function getDeliveryLogById(id: string): Promise<WebhookDeliveryLog | null> {
   const sql = `SELECT * FROM webhook_delivery_logs WHERE id = $1`;
   try {
     const result = await pool.query(sql, [id]);

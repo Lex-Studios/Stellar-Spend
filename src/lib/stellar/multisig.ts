@@ -218,6 +218,6 @@ export function removeMultiSigTransaction(transactionId: string): void {
 }
 
 /** Exposed for testing only */
-export function _clearMultiSigStore(): void {
+function _clearMultiSigStore(): void {
   _store.clear();
 }

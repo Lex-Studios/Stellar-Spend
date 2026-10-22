@@ -13,7 +13,7 @@ export class DeliveryStoreError extends Error {
 }
 
 /** Creates the delivery_records table if it does not already exist. */
-export async function createTable(): Promise<void> {
+async function createTable(): Promise<void> {
   const sql = `
         CREATE TABLE IF NOT EXISTS delivery_records (
             id TEXT PRIMARY KEY,
@@ -77,7 +77,7 @@ export async function createRecord(
 }
 
 /** Retrieve a single DeliveryRecord by id. Returns null if not found. */
-export async function getRecord(id: string): Promise<DeliveryRecord | null> {
+async function getRecord(id: string): Promise<DeliveryRecord | null> {
   const sql = `SELECT * FROM delivery_records WHERE id = $1`;
   try {
     const result = await pool.query(sql, [id]);
@@ -131,7 +131,7 @@ export async function updateRecord(
  * Query records that are due for retry:
  * status = 'pending' AND next_attempt_at <= NOW()
  */
-export async function getDueRecords(): Promise<DeliveryRecord[]> {
+async function getDueRecords(): Promise<DeliveryRecord[]> {
   const sql = `
         SELECT * FROM delivery_records
         WHERE status = 'pending' AND next_attempt_at <= NOW()
@@ -146,7 +146,7 @@ export async function getDueRecords(): Promise<DeliveryRecord[]> {
 }
 
 /** List all records with a given status. */
-export async function getRecordsByStatus(status: DeliveryStatus): Promise<DeliveryRecord[]> {
+async function getRecordsByStatus(status: DeliveryStatus): Promise<DeliveryRecord[]> {
   const sql = `SELECT * FROM delivery_records WHERE status = $1 ORDER BY created_at DESC`;
   try {
     const result = await pool.query(sql, [status]);

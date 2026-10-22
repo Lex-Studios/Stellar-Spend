@@ -7,7 +7,7 @@ export interface VersionHeaderInjector {
   addSuccessorLink(response: NextResponse, legacyPath: string): NextResponse;
 }
 
-export const headerInjector: VersionHeaderInjector = {
+const headerInjector: VersionHeaderInjector = {
   addVersionHeader(response: NextResponse, version: string): NextResponse {
     // Strip the leading 'v' to get the numeric value, e.g. 'v1' → '1'
     const numericVersion = version.replace(/^v/, '');

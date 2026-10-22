@@ -336,6 +336,6 @@ export function getStellarWalletAdapter(): StellarWalletAdapter {
   return _adapter;
 }
 
-export function _resetAdapterSingleton(): void {
+function _resetAdapterSingleton(): void {
   _adapter = null;
 }

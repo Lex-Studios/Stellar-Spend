@@ -5,18 +5,18 @@ import type {
   WalletFlowState,
 } from '@stellar-spend/shared';
 
-export const RECENT_OFFRAMPS: ReadonlyArray<RecentOfframpRow> = [
+const RECENT_OFFRAMPS: ReadonlyArray<RecentOfframpRow> = [
   { txHash: '5f90...a1c4', usdc: '500.00', fiat: '₦799,000', currency: 'NGN', status: 'SETTLING' },
   { txHash: 'c2d7...9b3f', usdc: '250.00', fiat: '₦398,925', currency: 'NGN', status: 'COMPLETE' },
 ];
 
-export const SETTLEMENT_BREAKDOWN = [
+const SETTLEMENT_BREAKDOWN = [
   { label: 'FX Rate', value: '₦1,598' },
   { label: 'Network Fee', value: '2.50 USDC' },
   { label: 'Platform Fee', value: '0.35%' },
 ] as const;
 
-export const PAYOUT_TOTAL = '₦1,997,500';
+const PAYOUT_TOTAL = '₦1,997,500';
 
 export const STATE_VARIANTS: Readonly<Record<WalletFlowState, StateVariant>> = {
   pre_connect: {

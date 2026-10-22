@@ -8,7 +8,7 @@
  */
 
 /** Return the current UTC instant as an ISO-8601 string. */
-export function nowUtc(): string {
+function nowUtc(): string {
   return new Date().toISOString();
 }
 
@@ -70,7 +70,7 @@ export function formatDate(
  * Return the ISO-8601 date string (YYYY-MM-DD) in UTC for a given timestamp.
  * Useful for grouping records by calendar day without TZ drift.
  */
-export function toUtcDateString(iso: string): string {
+function toUtcDateString(iso: string): string {
   return parseUtc(iso).toISOString().slice(0, 10);
 }
 
@@ -80,12 +80,12 @@ export function diffMs(from: string, to: string): number {
 }
 
 /** Return true when `iso` is strictly before `referenceIso` (both UTC). */
-export function isBefore(iso: string, referenceIso: string): boolean {
+function isBefore(iso: string, referenceIso: string): boolean {
   return diffMs(iso, referenceIso) > 0;
 }
 
 /** Return true when `iso` is strictly after `referenceIso` (both UTC). */
-export function isAfter(iso: string, referenceIso: string): boolean {
+function isAfter(iso: string, referenceIso: string): boolean {
   return diffMs(iso, referenceIso) < 0;
 }
 
@@ -95,7 +95,7 @@ export function isAfter(iso: string, referenceIso: string): boolean {
  * @param iso     - base timestamp
  * @param delta   - object with optional ms/seconds/minutes/hours/days to add
  */
-export function addDuration(
+function addDuration(
   iso: string,
   delta: { ms?: number; seconds?: number; minutes?: number; hours?: number; days?: number },
 ): string {

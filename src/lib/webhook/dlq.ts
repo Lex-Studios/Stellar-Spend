@@ -15,7 +15,7 @@ export class DLQError extends Error {
 }
 
 /** Creates the dlq_entries table if it does not already exist. */
-export async function createTable(): Promise<void> {
+async function createTable(): Promise<void> {
   const sql = `
         CREATE TABLE IF NOT EXISTS dlq_entries (
             id TEXT PRIMARY KEY,
@@ -83,7 +83,7 @@ export async function write(record: DeliveryRecord): Promise<DLQEntry> {
 }
 
 /** Retrieve a DLQ entry by delivery ID. Returns null if not found. */
-export async function get(deliveryId: string): Promise<DLQEntry | null> {
+async function get(deliveryId: string): Promise<DLQEntry | null> {
   const sql = `SELECT * FROM dlq_entries WHERE delivery_id = $1`;
   try {
     const result = await pool.query(sql, [deliveryId]);

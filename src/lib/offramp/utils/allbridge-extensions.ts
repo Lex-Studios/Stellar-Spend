@@ -16,7 +16,7 @@ import type { AllbridgeCoreSdk, TokenWithChainDetails } from '@allbridge/bridge-
  * @param destinationToken - Destination chain token info
  * @returns Object with gasAmount and feeTokenAmount (unused fee is "0")
  */
-export async function getAllbridgeGasFee(
+async function getAllbridgeGasFee(
   sdk: AllbridgeCoreSdk,
   sourceToken: TokenWithChainDetails,
   destinationToken: TokenWithChainDetails,
@@ -56,7 +56,7 @@ export async function getAllbridgeGasFee(
  * @param destinationToken - Destination chain token info
  * @returns Object with both fee options in int and float formats
  */
-export async function getAllbridgeGasFeeOptions(
+async function getAllbridgeGasFeeOptions(
   sdk: AllbridgeCoreSdk,
   sourceToken: TokenWithChainDetails,
   destinationToken: TokenWithChainDetails,
@@ -109,7 +109,7 @@ export async function getAllbridgeGasFeeOptions(
  * @param method - Payment method: "native" or "stablecoin"
  * @returns Object with gasAmount and feeTokenAmount (unused fee is "0")
  */
-export function getBridgeFeeForMethod(
+function getBridgeFeeForMethod(
   feeOptions: {
     native: { int: string; float: string };
     stablecoin: { int: string; float: string };
@@ -138,7 +138,7 @@ export function getBridgeFeeForMethod(
  * @param txHash - Transaction hash to check status for
  * @returns Object with status, txHash, and optional receiveAmount
  */
-export async function getAllbridgeTransferStatus(
+async function getAllbridgeTransferStatus(
   sdk: AllbridgeCoreSdk,
   chainSymbol: string,
   txHash: string,

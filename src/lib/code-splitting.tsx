@@ -25,14 +25,14 @@ export function dynamicComponent<P extends object>(
 /**
  * Lazy load a module on demand.
  */
-export async function lazyLoadModule<T>(importFn: () => Promise<T>): Promise<T> {
+async function lazyLoadModule<T>(importFn: () => Promise<T>): Promise<T> {
   return importFn();
 }
 
 /**
  * Preload a module in the background.
  */
-export function preloadModule<T>(importFn: () => Promise<T>): void {
+function preloadModule<T>(importFn: () => Promise<T>): void {
   if (typeof window !== 'undefined') {
     // Use requestIdleCallback if available, otherwise use setTimeout
     if ('requestIdleCallback' in window) {
@@ -46,12 +46,12 @@ export function preloadModule<T>(importFn: () => Promise<T>): void {
 /**
  * Split code by route for better code splitting.
  */
-export const routeChunks = {} as const;
+const routeChunks = {} as const;
 
 /**
  * Split code by feature for better code splitting.
  */
-export const featureChunks = {
+const featureChunks = {
   walletModal: () => import('@/components/WalletModal').then((m) => m.WalletModal),
   insurance: () => import('@/components/InsuranceOption').then((m) => m.InsuranceOption),
 } as const;

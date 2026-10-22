@@ -5,7 +5,8 @@
     "src/lib/index.ts",
     "src/components/ui/index.ts",
     "src/components/design-system/index.ts",
-    "src/components/skeletons/index.ts"
+    "src/components/skeletons/index.ts",
+    "src/features/wallet/index.ts"
   ],
   "project": ["src/**/*.{ts,tsx}"],
   "ignore": [

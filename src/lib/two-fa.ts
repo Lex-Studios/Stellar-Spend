@@ -13,7 +13,7 @@ export interface TwoFAConfig {
   lastVerifiedAt?: number;
 }
 
-export interface TwoFAVerification {
+interface TwoFAVerification {
   userId: string;
   code: string;
   timestamp: number;

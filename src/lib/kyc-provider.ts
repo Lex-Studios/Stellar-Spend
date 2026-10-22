@@ -17,7 +17,7 @@ export interface VerificationResponse {
   metadata?: Record<string, unknown>;
 }
 
-export interface VerificationError {
+interface VerificationError {
   code: string;
   message: string;
   retryable: boolean;

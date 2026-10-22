@@ -75,7 +75,7 @@ async function insertEntry(
   }
 }
 
-export async function recordEntry(
+async function recordEntry(
   input: Omit<LedgerEntry, 'id' | 'entryHash' | 'createdAt'>,
 ): Promise<LedgerEntry> {
   return insertEntry(pool, input);
@@ -96,7 +96,7 @@ export async function recordDoubleEntry(
   });
 }
 
-export async function recordFeeCapture(
+async function recordFeeCapture(
   transactionId: string,
   feeAmount: string,
   feeCurrency: string,
@@ -127,7 +127,7 @@ export async function recordFeeCapture(
   );
 }
 
-export async function getEntriesByTransaction(transactionId: string): Promise<LedgerEntry[]> {
+async function getEntriesByTransaction(transactionId: string): Promise<LedgerEntry[]> {
   const sql = `SELECT * FROM ledger_entries WHERE transaction_id = $1 ORDER BY created_at ASC`;
   try {
     const result = await pool.query(sql, [transactionId]);
@@ -137,7 +137,7 @@ export async function getEntriesByTransaction(transactionId: string): Promise<Le
   }
 }
 
-export async function getEntriesByAccount(
+async function getEntriesByAccount(
   accountId: string,
   limit = 100,
   offset = 0,
@@ -173,7 +173,7 @@ export async function verifyBalances(
   }
 }
 
-export async function verifyAllAccountsBalanced(): Promise<{
+async function verifyAllAccountsBalanced(): Promise<{
   balanced: boolean;
   totalDebits: string;
   totalCredits: string;
@@ -202,7 +202,7 @@ export async function verifyAllAccountsBalanced(): Promise<{
   }
 }
 
-export async function seedStandardAccounts(): Promise<void> {
+async function seedStandardAccounts(): Promise<void> {
   const accounts = [
     {
       id: 'asset_cash',
