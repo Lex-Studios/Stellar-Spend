@@ -368,7 +368,11 @@ impl TreasuryContract {
         let mut selected_bps = 0u32;
         for (threshold, bps) in schedule.iter() {
             if amount >= threshold as i128 {
-                if selected_threshold.is_none() || threshold > selected_threshold.unwrap() {
+                let is_better = match selected_threshold {
+                    None => true,
+                    Some(prev) => threshold > prev,
+                };
+                if is_better {
                     selected_threshold = Some(threshold);
                     selected_bps = bps;
                 }

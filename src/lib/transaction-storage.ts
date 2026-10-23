@@ -138,7 +138,7 @@ export class TransactionStorage {
     this.update(id, { note: note.slice(0, 500) });
   }
 
-    return `tx_${Date.now()}_${randomHex(6)}`;
+  static generateId(): string {
     return `tx_${Date.now()}_${randomHex(6)}`;
   }
 
@@ -206,7 +206,7 @@ export class TransactionStorage {
     const tx = this.getById(id);
     if (!tx) return;
     const tagId = `tag_${Date.now()}_${randomHex(6)}`;
-    const tagId = `tag_${Date.now()}_${randomHex(6)}`;
+    const tags = [...(tx.tags ?? [])];
     tags.push({ id: tagId, name: tagName, color });
     this.update(id, { tags });
   }

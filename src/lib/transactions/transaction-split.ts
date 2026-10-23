@@ -128,7 +128,7 @@ export class SplitStorage {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   }
 
-    return `split_${Date.now()}_${randomHex(4)}`;
+  static generateId(): string {
     return `split_${Date.now()}_${randomHex(4)}`;
   }
 
