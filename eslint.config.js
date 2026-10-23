@@ -243,4 +243,19 @@ export default [
       'no-console': ['error', { allow: ['warn', 'error'] }],
     },
   },
+
+  // ---------------------------------------------------------------------------
+  // Explicitly enforce no-explicit-any as an error for src/lib (#1355).
+  // The rule is already set globally but this block makes the intent explicit
+  // for the lib layer: `any` defeats TypeScript's safety guarantees and must
+  // not appear in shared library code.  Use `unknown` + type-guards, precise
+  // union types, or targeted eslint-disable comments with a justification
+  // comment when interacting with untyped third-party APIs.
+  // ---------------------------------------------------------------------------
+  {
+    files: ['src/lib/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+    },
+  },
 ];
