@@ -19,3 +19,8 @@ testutils = ["soroban-sdk/testutils"]
 [[test]]
 name = "gas_regression"
 path = "tests/gas_regression.rs"
+
+[[test]]
+name = "auth_helpers"
+path = "tests/auth_helpers.rs"
+required-features = ["testutils"]

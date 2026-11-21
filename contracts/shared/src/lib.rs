@@ -4,6 +4,7 @@ pub mod auth;
 pub mod errors;
 pub mod events;
 pub mod policy;
+pub mod storage;
 pub mod validation;
 
 pub use auth::AuthError;

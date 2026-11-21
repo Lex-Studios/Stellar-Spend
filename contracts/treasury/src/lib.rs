@@ -77,6 +77,7 @@ use soroban_sdk::{
 use balance::BalanceManager;
 use stellar_spend_shared::{
     errors::ContractError,
+    events::{emit_treasury_withdraw, emit_treasury_withdraw_limit_set},
     validation::{
         basis_points_of, check_schema_version, require_basis_points,
         require_positive_amount,
@@ -120,6 +121,10 @@ pub enum DataKey {
     Schema,
     /// [`TreasuryState`] ledger maintained by `deposit`/`withdraw`/`reserve`.
     State,
+    /// Maximum amount that may be withdrawn in a single call.
+    ///
+    /// `None` (key absent) means no limit is enforced.
+    WithdrawLimit,
 }
 
 /// Balances held by the treasury ledger (issue #988).
@@ -207,12 +212,23 @@ impl TreasuryContract {
             .instance()
             .get(&String::from_str(&env, "state"))
             .ok_or(ContractError::NotInitialized)?;
+
+        // Enforce the per-call withdrawal limit if one is configured.
+        if let Some(limit) = env.storage().instance().get::<_, i128>(&DataKey::WithdrawLimit) {
+            if amount > limit {
+                return Err(ContractError::InvalidAmount);
+            }
+        }
+
         let new_total = BalanceManager::sub(state.total_balance, amount)?;
         let new_available = BalanceManager::sub(state.available, amount)?;
         state.total_balance = new_total;
         state.available = new_available;
         env.storage().instance().set(&String::from_str(&env, "state"), &state);
         Self::bump_instance_ttl(&env);
+
+        emit_treasury_withdraw(&env, amount, state.total_balance);
+
         Ok(state.total_balance)
     }
 
@@ -290,6 +306,31 @@ impl TreasuryContract {
         Self::bump_instance_ttl(&env);
 
         Ok(state.available)
+    }
+
+    /// Set a per-call withdrawal limit. Admin only.
+    ///
+    /// Pass `0` to remove the limit entirely.
+    pub fn set_withdraw_limit(env: Env, limit: i128) -> Result<(), ContractError> {
+        Self::require_current_schema(&env)?;
+        Self::require_admin(&env)?;
+        if limit < 0 {
+            return Err(ContractError::InvalidAmount);
+        }
+        if limit == 0 {
+            env.storage().instance().remove(&DataKey::WithdrawLimit);
+        } else {
+            env.storage().instance().set(&DataKey::WithdrawLimit, &limit);
+        }
+        Self::bump_instance_ttl(&env);
+        emit_treasury_withdraw_limit_set(&env, limit);
+        Ok(())
+    }
+
+    /// Get the current per-call withdrawal limit, or `None` if no limit is set.
+    pub fn get_withdraw_limit(env: Env) -> Result<Option<i128>, ContractError> {
+        Self::require_current_schema(&env)?;
+        Ok(env.storage().instance().get(&DataKey::WithdrawLimit))
     }
 
     /// Add or update a fee tier. Admin only.

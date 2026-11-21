@@ -683,3 +683,95 @@ fn collect_fee_and_collect_fee_batch_accumulate_total_correctly() {
         "total must be the sum of the single call and the batch"
     );
 }
+
+// ── Withdrawal limits (issue #1488) ──────────────────────────────────────────
+
+#[test]
+fn withdraw_emits_event_with_amount_and_remaining_balance() {
+    use soroban_sdk::symbol_short;
+
+    let t = TreasuryTest::setup();
+    t.client().deposit(&1_000);
+    t.client().withdraw(&400);
+
+    let all_events = t.env.events().all();
+    // Find the trsy_wdr event (last state-changing call).
+    let event = all_events.get(all_events.len() - 1).unwrap();
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("trsy_wdr"),
+        (400i128, 600i128, 0u64),
+    );
+}
+
+#[test]
+fn no_withdraw_limit_allows_any_amount() {
+    let t = TreasuryTest::setup();
+    t.client().deposit(&1_000_000);
+    // Without a limit set, large withdrawal succeeds.
+    assert!(t.client().try_withdraw(&1_000_000).is_ok());
+    assert_eq!(t.client().get_withdraw_limit(), None);
+}
+
+#[test]
+fn set_withdraw_limit_enforces_per_call_cap() {
+    let t = TreasuryTest::setup();
+    t.client().deposit(&1_000_000);
+    t.client().set_withdraw_limit(&500_000);
+
+    assert_eq!(t.client().get_withdraw_limit(), Some(500_000i128));
+
+    // Exactly at the limit: OK.
+    assert!(t.client().try_withdraw(&500_000).is_ok());
+
+    // Top up and try above the limit: rejected.
+    t.client().deposit(&1_000_000);
+    assert_eq!(
+        t.client().try_withdraw(&500_001),
+        Err(Ok(ContractError::InvalidAmount))
+    );
+}
+
+#[test]
+fn set_withdraw_limit_zero_removes_the_limit() {
+    let t = TreasuryTest::setup();
+    t.client().deposit(&1_000_000);
+    t.client().set_withdraw_limit(&100);
+    assert_eq!(t.client().get_withdraw_limit(), Some(100i128));
+
+    // Passing 0 clears the limit.
+    t.client().set_withdraw_limit(&0);
+    assert_eq!(t.client().get_withdraw_limit(), None);
+
+    // Large withdrawal now passes.
+    assert!(t.client().try_withdraw(&1_000_000).is_ok());
+}
+
+#[test]
+fn set_withdraw_limit_emits_event() {
+    use soroban_sdk::symbol_short;
+
+    let t = TreasuryTest::setup();
+    t.client().set_withdraw_limit(&250_000);
+
+    let all_events = t.env.events().all();
+    let event = all_events.get(0).unwrap();
+    assert_event(
+        event,
+        &t.contract_id,
+        &t.env,
+        symbol_short!("trsy_wlim"),
+        (250_000i128, 0u64),
+    );
+}
+
+#[test]
+fn set_withdraw_limit_rejects_negative_values() {
+    let t = TreasuryTest::setup();
+    assert_eq!(
+        t.client().try_set_withdraw_limit(&-1),
+        Err(Ok(ContractError::InvalidAmount))
+    );
+}

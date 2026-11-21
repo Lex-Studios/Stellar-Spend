@@ -193,6 +193,34 @@ pub fn emit_treasury_withdrawal(env: &Env, recipient: Address, amount: i128, ass
     );
 }
 
+/// Emit a treasury withdrawal limit updated event.
+///
+/// ## Topic
+/// `trsy_wlim` — treasury withdrawal limit changed.
+///
+/// ## Payload
+/// `(new_limit: i128, timestamp: u64)`
+pub fn emit_treasury_withdraw_limit_set(env: &Env, new_limit: i128) {
+    env.events().publish(
+        (symbol_short!("trsy_wlim"), "v1"),
+        (new_limit, env.ledger().timestamp()),
+    );
+}
+
+/// Emit a treasury withdraw event (no asset — used by the balance-ledger treasury).
+///
+/// ## Topic
+/// `trsy_wdr` — treasury withdraw executed.
+///
+/// ## Payload
+/// `(amount: i128, remaining_balance: i128, timestamp: u64)`
+pub fn emit_treasury_withdraw(env: &Env, amount: i128, remaining: i128) {
+    env.events().publish(
+        (symbol_short!("trsy_wdr"), "v1"),
+        (amount, remaining, env.ledger().timestamp()),
+    );
+}
+
 pub fn emit_contract_paused(env: &Env, caller: Address, reason: String) {
     env.events()
         .publish((symbol_short!("cntr_pau"), "v1"), (caller, reason, env.ledger().timestamp()));

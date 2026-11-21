@@ -91,3 +91,13 @@ fn an_outsider_authorisation_does_not_standin_for_the_admins() {
     assert!(t.client().try_update_treasury(&replacement).is_err());
     assert_eq!(t.client().get_treasury(), before);
 }
+
+#[test]
+fn set_withdraw_limit_is_rejected_without_the_admins_authorisation() {
+    let t = TreasuryTest::setup();
+
+    t.env.mock_auths(&[]);
+    assert!(t.client().try_set_withdraw_limit(&500_000).is_err());
+
+    assert_eq!(t.client().get_withdraw_limit(), None);
+}
