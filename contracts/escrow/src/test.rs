@@ -652,6 +652,56 @@ fn refunded_deposit_cannot_be_released_or_refunded() {
     );
 }
 
+#[test]
+fn deposit_in_disputed_state_blocks_release_and_refund() {
+    use crate::DataKey;
+    use crate::dispute::DisputeHandler;
+
+    let t = EscrowTest::setup();
+    let id = t.deposit(750);
+
+    // Put the deposit into Disputed state directly via DisputeHandler.
+    t.env.as_contract(&t.contract_id, || {
+        DisputeHandler::create_dispute(
+            &t.env,
+            id,
+            t.depositor.clone(),
+            t.bridge.clone(),
+            soroban_sdk::String::from_str(&t.env, "dispute reason"),
+            soroban_sdk::String::from_str(&t.env, "evidence"),
+        )
+        .expect("dispute creation should succeed");
+    });
+
+    let record = t.client().get_deposit(&id);
+    assert_eq!(
+        record.status,
+        EscrowStatus::Disputed,
+        "deposit must be Disputed after DisputeHandler::create_dispute"
+    );
+
+    // Release must be blocked on a Disputed deposit.
+    assert_eq!(
+        t.client().try_release(&id, &Address::generate(&t.env)),
+        Err(Ok(ContractError::AlreadyProcessed)),
+        "release must be rejected on a Disputed deposit"
+    );
+
+    // Refund must also be blocked on a Disputed deposit, even after the timeout.
+    t.advance_past_timeout();
+    assert_eq!(
+        t.client().try_refund(&id),
+        Err(Ok(ContractError::AlreadyProcessed)),
+        "refund must be rejected on a Disputed deposit"
+    );
+
+    // can_refund reports false for a Disputed deposit.
+    assert!(
+        !t.client().can_refund(&id),
+        "can_refund must return false for a Disputed deposit"
+    );
+}
+
 // ── Deployment / migration runbook acceptance checks (issue #1424) ───────────
 //
 // These tests back the acceptance checks documented in the deployment and

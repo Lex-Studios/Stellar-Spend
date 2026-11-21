@@ -80,7 +80,10 @@ pub fn set_timeout(env: &Env, timeout_ledgers: u32) -> Result<(), ContractError>
 pub fn can_refund(env: &Env, deposit_id: u64) -> Result<bool, ContractError> {
     let deposits = load_deposits(env)?;
     let deposit = deposits.get(deposit_id).ok_or(ContractError::NotFound)?;
-    if matches!(deposit.status, EscrowStatus::Resolved | EscrowStatus::Cancelled) {
+    if matches!(
+        deposit.status,
+        EscrowStatus::Resolved | EscrowStatus::Cancelled | EscrowStatus::Disputed
+    ) {
         return Ok(false);
     }
     Ok(env.ledger().sequence() >= deposit.timeout_ledger)
@@ -276,11 +279,6 @@ impl DisputeHandler {
         Ok(())
     }
 
-    // ================================================================
-    // Legacy code paths to be removed (dead code audit)
-    // These are confirmed unreachable and will be removed
-    // ================================================================
-
     fn update_escrow_status(env: &Env, escrow_id: u64, status: EscrowStatus) {
         let mut deposits: Map<u64, EscrowDeposit> = env
             .storage()
@@ -292,26 +290,5 @@ impl DisputeHandler {
             deposits.set(escrow_id, deposit);
             env.storage().instance().set(&DataKey::Deposits, &deposits);
         }
-    }
-
-    /// Legacy: This branch is never reached because disputes are created
-    /// with proper validation. Keeping this as a reference for the dead code audit.
-    #[allow(dead_code)]
-    fn legacy_invalid_dispute_creation() -> Result<(), DisputeError> {
-        Err(DisputeError::Unauthorized)
-    }
-
-    /// Legacy: This branch was used before the status tracking was added.
-    /// Now, all disputes have a status, making this branch unreachable.
-    #[allow(dead_code)]
-    fn legacy_status_check() -> Result<bool, DisputeError> {
-        Ok(false)
-    }
-
-    /// Legacy: This function was replaced by the more robust `resolve_for_buyer`
-    /// and `resolve_for_seller` functions.
-    #[allow(dead_code)]
-    fn legacy_resolve_old_way() -> Result<(), DisputeError> {
-        Err(DisputeError::AlreadyResolved)
     }
 }

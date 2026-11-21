@@ -30,7 +30,10 @@ pub fn refund(env: &Env, deposit_id: u64) -> Result<i128, ContractError> {
 
     deposit.depositor.require_auth();
 
-    if matches!(deposit.status, EscrowStatus::Resolved | EscrowStatus::Cancelled) {
+    if matches!(
+        deposit.status,
+        EscrowStatus::Resolved | EscrowStatus::Cancelled | EscrowStatus::Disputed
+    ) {
         release_lock(env);
         return Err(ContractError::AlreadyProcessed);
     }
