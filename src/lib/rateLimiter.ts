@@ -1,6 +1,9 @@
 /**
  * Centralized rate-limiter service — consolidated version
  *
+ * @deprecated (#1539) Import from `@/lib/rate-limiter` (kebab-case) instead.
+ * This camelCase filename is kept for backwards compatibility only.
+ *
  * This file combines functionality from:
  *   • src/lib/rate-limiting.ts (InMemoryRateLimitStore, endpoint-based configs)
  *   • src/lib/rateLimiter.ts (SlidingWindowRateLimiter, namespace-based configs)

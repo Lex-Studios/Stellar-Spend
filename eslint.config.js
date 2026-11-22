@@ -149,7 +149,16 @@ export default [
       // console leaks are still surfaced outside the strict application layer.
       'no-console': ['error', { allow: ['warn', 'error'] }],
 
-      // ── Error-handling lint rules (#1543) ──────────────────────────────────
+      // ── Naming conventions (#1539) ───────────────────────────────────────────
+      // Enforce camelCase for variables and functions; PascalCase for classes;
+      // UPPER_CASE for constants. This matches the conventions documented in
+      // CONTRIBUTING.md § Naming.
+      '@typescript-eslint/naming-convention': [
+        'warn',
+        { selector: 'variable', format: ['camelCase', 'UPPER_CASE', 'PascalCase'] },
+        { selector: 'function', format: ['camelCase', 'PascalCase'] },
+        { selector: 'typeLike', format: ['PascalCase'] },
+      ],
       // Floating promises (unawaited async calls) hide errors silently.
       // Prefix with `void` to explicitly opt out: `void somePromise()`.
       '@typescript-eslint/no-floating-promises': 'error',
