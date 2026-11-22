@@ -5,4 +5,5 @@ export * from './types/qrcode';
 export * from './types/sharing';
 export * from './types/stellaramp';
 export * from './types/api-responses';
+export * from './types/services';
 export * from './fee-constants';
