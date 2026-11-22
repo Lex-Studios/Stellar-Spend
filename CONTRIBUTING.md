@@ -19,8 +19,9 @@
 9. [Type Coverage](#type-coverage)
 10. [Dependency License Compliance](#dependency-license-compliance)
 11. [Security & Audits](#security--audits)
-12. [Getting Help](#getting-help)
-13. [Code of Conduct](#code-of-conduct)
+12. [Pre-commit Hooks & Bypass Policy](#pre-commit-hooks--bypass-policy)
+13. [Getting Help](#getting-help)
+14. [Code of Conduct](#code-of-conduct)
 
 ---
 
@@ -653,6 +654,26 @@ Review these exceptions every time the affected packages are upgraded.
    - A one-sentence rationale (why it is safe, what the linking model is)
 3. Re-run `npm run license:check` to confirm the check still passes.
 4. Note the exception in your PR description.
+
+---
+
+## Pre-commit Hooks & Bypass Policy
+
+### Overview
+
+The repo uses Husky + lint-staged (`.husky/pre-commit`):
+
+- **Secret scanning** — `gitleaks detect --source . --no-git --config .gitleaks.toml` runs on every commit and blocks the commit when secrets are detected. The pre-commit hook exits 1 if `gitleaks` is not installed; install it with `brew install gitleaks` (macOS), `apt-get install gitleaks` (Debian/Ubuntu), or `go install github.com/gitleaks/gitleaks/v8@latest`.
+- **lint-staged** — runs `eslint --fix --max-warnings 50` + `prettier --write` on staged `*.{js,jsx,ts,tsx,mjs,cjs}` files, and `prettier --write` on other staged files (`*.{json,md,css,scss,yml,yaml,html}`). Rules live under the `lint-staged` key of `package.json`.
+
+The hooks run via the `prepare` script on `npm install`.
+
+### Bypass policy
+
+- Bypass the hooks with `git commit --no-verify` (or `--no-hooks`).
+- Use the bypass only when you have explicitly accepted the risk: e.g. you are fixing the failures found by gitleaks/lint-staged yourself and are confident no secrets will be committed, and you are aware lint/format fixes would have been applied automatically.
+- The secret-scan bypass only skips the local scan; run `npx gitleaks detect` manually or rely on CI if you bypass.
+- Prefer not bypassing: fix the flagged issue (remove the secret, run `npx lint-staged`, or commit the files lint-staged flagged) instead of bypassing.
 
 ---
 
