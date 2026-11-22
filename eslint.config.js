@@ -158,6 +158,27 @@ export default [
       // Prefix the catch parameter with _ to suppress when intentional:
       //   catch (_e) { /* intentionally ignored */ }
       'no-empty': ['error', { allowEmptyCatch: false }],
+
+      // ── Function complexity & length rules (#1537) ──────────────────────────
+      // These rules surface overly complex or long functions that are hard to
+      // test and maintain. Set to 'warn' so the --max-warnings 50 budget is not
+      // exceeded; refactor flagged functions to bring the count down over time.
+      'complexity': ['warn', 15],
+      'max-lines-per-function': ['warn', { max: 120, skipComments: true, IIFEs: true }],
+      'max-depth': ['warn', 4],
+      'max-nested-callbacks': ['warn', 3],
+      'max-statements': ['warn', 40],
+
+      // ── No-warning-comments / stale TODO rules (#1538) ───────────────────────
+      // TODO/FIXME comments must reference a GitHub issue number to be tracked.
+      // Commented-out code blocks are prohibited in production source.
+      'no-warning-comments': [
+        'warn',
+        {
+          terms: ['todo', 'fixme', 'xxx'],
+          location: 'anywhere',
+        },
+      ],
     },
   },
 
