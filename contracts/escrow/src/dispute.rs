@@ -80,7 +80,10 @@ pub fn set_timeout(env: &Env, timeout_ledgers: u32) -> Result<(), ContractError>
 pub fn can_refund(env: &Env, deposit_id: u64) -> Result<bool, ContractError> {
     let deposits = load_deposits(env)?;
     let deposit = deposits.get(deposit_id).ok_or(ContractError::NotFound)?;
-    if matches!(deposit.status, EscrowStatus::Resolved | EscrowStatus::Cancelled) {
+    if matches!(
+        deposit.status,
+        EscrowStatus::Resolved | EscrowStatus::Cancelled | EscrowStatus::Disputed
+    ) {
         return Ok(false);
     }
     Ok(env.ledger().sequence() >= deposit.timeout_ledger)

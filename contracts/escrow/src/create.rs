@@ -69,9 +69,7 @@ pub fn deposit(
 
     storage.set(&DataKey::Deposits, &deposits);
     storage.set(&DataKey::NextId, &next_id);
-    env.storage()
-        .instance()
-        .extend_ttl(INSTANCE_TTL_THRESHOLD, INSTANCE_TTL_EXTEND_TO);
+    storage.extend_ttl(INSTANCE_TTL_THRESHOLD, INSTANCE_TTL_EXTEND_TO);
 
     // ── INTERACT ───────────────────────────────────────────────────────
     emit_escrow_deposit(env, id, depositor, amount, bridge_address);

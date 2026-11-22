@@ -28,7 +28,10 @@ pub fn release(env: &Env, deposit_id: u64, recipient: Address) -> Result<i128, C
         }
     };
 
-    if matches!(deposit.status, EscrowStatus::Resolved | EscrowStatus::Cancelled) {
+    if matches!(
+        deposit.status,
+        EscrowStatus::Resolved | EscrowStatus::Cancelled | EscrowStatus::Disputed
+    ) {
         release_lock(env);
         return Err(ContractError::AlreadyProcessed);
     }

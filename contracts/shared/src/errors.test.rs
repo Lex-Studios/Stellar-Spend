@@ -22,6 +22,8 @@ mod tests {
         assert_eq!(ContractError::SchemaVersionUnsupported as u32, 14);
         assert_eq!(ContractError::SchemaAlreadyCurrent as u32, 15);
         assert_eq!(ContractError::InvalidInput as u32, 16);
+        assert_eq!(ContractError::ArithmeticOverflow as u32, 17);
+        assert_eq!(ContractError::InsufficientBalance as u32, 18);
     }
 
     #[test]
