@@ -89,7 +89,10 @@ export class QRCodeService {
   }
 
   /**
-   * Generate downloadable QR code
+   * Generate downloadable QR code.
+   * Currently only SVG format is supported; PNG support requires a canvas
+   * library (tracked in #1364). Requesting 'png' throws to avoid silently
+   * returning an empty string that callers would treat as a valid result.
    */
   generateDownloadableQR(
     data: QRCodeData,
@@ -101,9 +104,9 @@ export class QRCodeService {
       return this.generateSVGPattern(qrData, size);
     }
 
-    // For PNG, would need canvas library
-    // This is a placeholder
-    return '';
+    throw new Error(
+      "PNG QR code generation is not yet implemented. Use 'svg' format instead (see #1364).",
+    );
   }
 
   /**

@@ -66,8 +66,9 @@ export function decodeTxResultXdr(errorResultXdr?: string): string | null {
       op_sell_not_AUTHORIZED: 'Sell not authorized',
     };
 
-    // Try to decode base64 XDR if present
-    // For now, return a generic message since full XDR decoding requires stellar-sdk
+    // Try to decode base64 XDR if present.
+    // Full XDR decoding requires stellar-sdk; for now we return a human-readable
+    // label when the payload is base64, and fall through to pattern matching below.
     if (errorResultXdr.length > 10) {
       // Check if it looks like base64 encoded
       const isBase64 = /^[A-Za-z0-9+/=]+$/.test(errorResultXdr);
