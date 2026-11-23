@@ -4,20 +4,10 @@
  */
 
 import type { PayoutStatus as CanonicalPayoutStatus } from '@/lib/transactions';
+import type { ServiceQuoteRequest, ServiceQuoteResponse } from '@stellar-spend/shared';
 
 export interface IQuoteService {
-  getQuote(request: {
-    amount: string;
-    currency: string;
-    feeMethod: 'USDC' | 'XLM' | 'stablecoin' | 'native';
-  }): Promise<{
-    destinationAmount: string;
-    rate: number;
-    currency: string;
-    bridgeFee: string;
-    payoutFee: string;
-    estimatedTime: number;
-  }>;
+  getQuote(request: ServiceQuoteRequest): Promise<ServiceQuoteResponse>;
 }
 
 export interface IBridgeService {

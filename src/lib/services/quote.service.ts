@@ -1,21 +1,11 @@
 import { validateAmount } from '@/lib/offramp';
 import { fetchPaycrestQuote, buildQuote, calculateBridgeAmount } from '@/lib/offramp';
 import { isSupportedCurrency } from '@/lib/currencies';
+import type { ServiceQuoteRequest, ServiceQuoteResponse } from '@stellar-spend/shared';
 
-export interface QuoteRequest {
-  amount: string;
-  currency: string;
-  feeMethod: 'USDC' | 'XLM' | 'stablecoin' | 'native';
-}
-
-export interface QuoteResponse {
-  destinationAmount: string;
-  rate: number;
-  currency: string;
-  bridgeFee: string;
-  payoutFee: string;
-  estimatedTime: number;
-}
+// Re-export so existing callers that import from this module continue to work.
+// New code should import directly from '@stellar-spend/shared'.
+export type { ServiceQuoteRequest as QuoteRequest, ServiceQuoteResponse as QuoteResponse };
 
 const STABLECOIN_FEE = '0.5';
 
@@ -27,7 +17,7 @@ const FEE_METHOD_MAP: Record<string, 'stablecoin' | 'native'> = {
 };
 
 export class QuoteService {
-  async getQuote(request: QuoteRequest): Promise<QuoteResponse> {
+  async getQuote(request: ServiceQuoteRequest): Promise<ServiceQuoteResponse> {
     this.validateRequest(request);
 
     const normalizedFee = FEE_METHOD_MAP[request.feeMethod];
@@ -44,7 +34,7 @@ export class QuoteService {
     return buildQuote(paycrestQuote, request.currency, normalizedFee);
   }
 
-  private validateRequest(request: QuoteRequest): void {
+  private validateRequest(request: ServiceQuoteRequest): void {
     if (!validateAmount(String(request.amount ?? ''))) {
       throw new Error('Invalid amount: must be a positive number');
     }

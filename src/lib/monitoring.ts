@@ -148,27 +148,3 @@ export async function shutdownTracing(sdk: NodeSDK): Promise<void> {
     logger.error('tracing.shutdown_failed', {}, error);
   }
 }
-
-// Note: TraceIdRatioBasedSampler needs to be imported
-// This is a placeholder - the actual import should be:
-// import { TraceIdRatioBasedSampler } from '@opentelemetry/sdk-trace-node';
-
-// For now, we'll use a simple wrapper
-class TraceIdRatioBasedSampler {
-  constructor(private ratio: number) {}
-  shouldSample(
-    context: any,
-    traceId: string,
-    spanName: string,
-    spanKind: any,
-    attributes: any,
-    links: any,
-  ) {
-    // Simple random sampling
-    const random = Math.random();
-    return {
-      decision: random < this.ratio ? 1 : 0, // 1 = RECORD_AND_SAMPLED, 0 = NOT_RECORD
-      attributes: {},
-    };
-  }
-}
