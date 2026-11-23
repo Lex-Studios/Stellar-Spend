@@ -32,6 +32,9 @@
 //! | `calc`  | [`FeeManagerContract::calculate_fee`], `calculate_default_fee`, pure arithmetic |
 
 #![no_std]
+// Closes #1493: deny warnings locally so `cargo build` catches lint regressions
+// without requiring the -D warnings flag that CI passes to clippy.
+#![deny(warnings)]
 
 use soroban_sdk::{contract, contractimpl, contractmeta, contracttype, Address, BytesN, Env, String};
 use stellar_spend_shared::errors::ContractError;

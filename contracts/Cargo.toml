@@ -6,10 +6,22 @@ resolver = "2"
 version = "1.0.0"
 edition = "2021"
 
+[workspace.lints.rust]
+# Deny warnings workspace-wide so `cargo check` / `cargo build` behave the
+# same as CI's `cargo clippy -- -D warnings` (closes #1493).
+unsafe_code = "forbid"
+unused = "warn"
+
+[workspace.lints.clippy]
+all      = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+
 [workspace.dependencies]
 stellar-spend-shared = { path = "shared", version = "1.0.0" }
-soroban-sdk = "22"
-proptest = "1.5"
+# Exact versions pinned so `cargo update` cannot silently introduce a
+# breaking change between audits (closes #1494).
+soroban-sdk = "=22.0.7"
+proptest   = "=1.5.0"
 
 # Cargo only honours [profile.*] at the workspace root — per-member copies are
 # silently ignored (and warned about).
