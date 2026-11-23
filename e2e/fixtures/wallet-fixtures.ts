@@ -1,370 +1,226 @@
 /**
- * Wallet E2E fixtures — Issues #1002 & #1003
- *
- * Provides deterministic mock wallet stubs and API route responses for
- * Playwright tests covering the wallet connect / disconnect lifecycle and
- * the full send-payment happy path.
- *
- * All wallet addresses and responses are fake test-only values.
- * No production secrets or live network calls are made.
+ * Wallet fixtures for E2E tests
+ * Provides mock wallet implementations and test data
  */
 
 import type { Page } from '@playwright/test';
 
-// ---------------------------------------------------------------------------
-// Wallet identities
-// ---------------------------------------------------------------------------
-
 export const WALLET_ADDRESSES = {
-  /** Primary test wallet — Freighter */
-  freighter: 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
-  /** Secondary test wallet — LOBSTR */
-  lobstr: 'GCEZWKCA5VLDNRLN3RPRJMRZOX3Z6G5CHCGZQ6O9CXJVKF7YIODIXQR',
-} as const;
-
-export type WalletName = 'freighter' | 'lobstr';
-
-// ---------------------------------------------------------------------------
-// Browser-side wallet stubs (injected via addInitScript)
-// ---------------------------------------------------------------------------
+  freighter: 'GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI',
+  albedo: 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN',
+  test1: 'GCZJM35NKGVK47BB4SPBDV25477PZYIYPVVG453LPYFNXLS3FGHDXOCM',
+  test2: 'GC2BKLYOOYPDEFJKLKY6FNNRQMGFLVHJKQRGNSSRRGSMPGF32LHCQVGF',
+};
 
 /**
- * Injects a working Freighter wallet stub into the browser page.
- * The stub auto-approves all signing requests.
+ * Inject Freighter wallet stub for testing
  */
-export async function injectFreighterStub(
-  page: Page,
-  address: string = WALLET_ADDRESSES.freighter,
-): Promise<void> {
-  await page.addInitScript((addr: string) => {
-    // Freighter legacy API shape
-    (window as Record<string, unknown>).freighter = {
+export async function injectFreighterStub(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    // Mock Freighter API
+    (window as any).freighterApi = {
       isConnected: async () => true,
-      getPublicKey: async () => addr,
-      getNetwork: async () => 'PUBLIC',
+      getPublicKey: async () => 'GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI',
+      signTransaction: async (xdr: string) => xdr,
+      signAuthEntry: async (xdr: string) => xdr,
+      getNetwork: async () => 'TESTNET',
       getNetworkDetails: async () => ({
-        network: 'PUBLIC',
-        networkPassphrase: 'Public Global Stellar Network ; September 2015',
+        network: 'TESTNET',
+        networkPassphrase: 'Test SDF Network ; September 2015',
+        networkUrl: 'https://horizon-testnet.stellar.org',
       }),
-      signTransaction: async (xdr: string) => xdr, // auto-approve
     };
-    // Freighter newer API shape (some app versions use this)
-    (window as Record<string, unknown>).freighterApi = {
-      isConnected: async () => ({ isConnected: true }),
-      getPublicKey: async () => ({ publicKey: addr }),
-      signTransaction: async (xdr: string) => ({ signedTransaction: xdr }),
-    };
-  }, address);
+
+    // Indicate Freighter is installed
+    (window as any).isFreighterInstalled = true;
+  });
 }
 
 /**
- * Injects a Freighter stub that rejects the connection request.
- * Used for testing the "connection rejected" error path.
+ * Inject Albedo wallet stub for testing
  */
-export async function injectFreighterRejectedStub(page: Page): Promise<void> {
+export async function injectAlbedoStub(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    (window as Record<string, unknown>).freighter = {
-      isConnected: async () => false,
-      getPublicKey: async () => {
-        throw new Error('User declined access');
-      },
-      getNetwork: async () => 'PUBLIC',
-      getNetworkDetails: async () => ({ network: 'PUBLIC', networkPassphrase: '' }),
-      signTransaction: async () => {
-        throw new Error('User rejected signing');
-      },
+    // Mock Albedo API
+    (window as any).albedo = {
+      publicKey: async () => ({
+        pubkey: 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN',
+        signed_message: '',
+      }),
+      tx: async ({ xdr }: { xdr: string }) => ({
+        xdr,
+        tx_hash: 'mock_tx_hash_' + Date.now(),
+        network: 'testnet',
+      }),
+      trust: async () => ({
+        result: 'success',
+      }),
     };
   });
 }
 
 /**
- * Injects a LOBSTR wallet stub into the browser page.
- */
-export async function injectLobstrStub(
-  page: Page,
-  address: string = WALLET_ADDRESSES.lobstr,
-): Promise<void> {
-  await page.addInitScript((addr: string) => {
-    // LOBSTR uses a similar shape to Freighter but under a different key
-    (window as Record<string, unknown>).lobstr = {
-      isConnected: async () => true,
-      getPublicKey: async () => addr,
-      signTransaction: async (xdr: string) => xdr,
-    };
-  }, address);
-}
-
-// ---------------------------------------------------------------------------
-// Horizon / API network mocks
-// ---------------------------------------------------------------------------
-
-/**
- * Mocks the Stellar Horizon account endpoint so balance fetches succeed.
+ * Mock Horizon account data
  */
 export async function mockHorizonAccount(
   page: Page,
   address: string = WALLET_ADDRESSES.freighter,
-  usdcBalance = '1000.0000000',
-  xlmBalance = '50.0000000',
+  options: {
+    balance?: string;
+    sequenceNumber?: string;
+  } = {}
 ): Promise<void> {
-  await page.route(`**/accounts/${address}`, (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        id: address,
-        account_id: address,
-        balances: [
-          {
-            asset_code: 'USDC',
-            asset_issuer: 'GBUQWP3BOUZX34ULNQG23RQ6F4YUSXHTQSXUSMIQ75XABZEYYWRB6HP',
-            balance: usdcBalance,
-          },
-          {
-            asset_type: 'native',
-            balance: xlmBalance,
-          },
-        ],
-      }),
-    }),
-  );
+  const { balance = '10000', sequenceNumber = '123456789' } = options;
 
-  // Also match the wildcard form used by some Horizon clients
-  await page.route('**/accounts/**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        balances: [
-          {
-            asset_code: 'USDC',
-            asset_issuer: 'GBUQWP3BOUZX34ULNQG23RQ6F4YUSXHTQSXUSMIQ75XABZEYYWRB6HP',
-            balance: usdcBalance,
+  await page.route('**/horizon/**/accounts/**', async (route) => {
+    if (route.request().url().includes(address)) {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          id: address,
+          account_id: address,
+          sequence: sequenceNumber,
+          balances: [
+            {
+              balance: balance,
+              asset_type: 'native',
+            },
+            {
+              balance: '5000.0000000',
+              asset_type: 'credit_alphanum4',
+              asset_code: 'USDC',
+              asset_issuer: 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
+            },
+          ],
+          subentry_count: 0,
+          thresholds: {
+            low_threshold: 0,
+            med_threshold: 0,
+            high_threshold: 0,
           },
-          { asset_type: 'native', balance: xlmBalance },
-        ],
-      }),
-    }),
-  );
+          flags: {
+            auth_required: false,
+            auth_revocable: false,
+            auth_immutable: false,
+          },
+          signers: [
+            {
+              weight: 1,
+              key: address,
+              type: 'ed25519_public_key',
+            },
+          ],
+        }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
 }
 
-// ---------------------------------------------------------------------------
-// Offramp API mocks (used in send-payment tests)
-// ---------------------------------------------------------------------------
-
-export const MOCK_PAYMENT = {
-  amount: '100',
-  currency: 'NGN',
-  feeMethod: 'USDC',
-  recipient: {
-    institution: 'ACCESS',
-    accountIdentifier: '0123456789',
-    accountName: 'Jane Doe',
-  },
-} as const;
-
-export const MOCK_QUOTE = {
-  destinationAmount: '158200.00',
-  rate: 1582,
-  currency: 'NGN',
-  bridgeFee: '0.50',
-  payoutFee: '0',
-  estimatedTime: 300,
-  expiresIn: 300,
-} as const;
-
-export const MOCK_BUILD_TX = {
-  xdr: 'AAAAAgAAAABBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5...',
-  sourceToken: { symbol: 'USDC', decimals: 7, chain: 'STELLAR' },
-  destinationToken: { symbol: 'USDC', decimals: 6, chain: 'BASE' },
-} as const;
-
-export const MOCK_SUBMIT_RESULT = {
-  txHash: 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-  status: 'submitted',
-} as const;
-
-export const MOCK_PAYOUT_ORDER = {
-  orderId: 'pay_test_order_001',
-  status: 'pending',
-  receiveAddress: '0xpaycrest_deposit_addr_test',
-} as const;
-
 /**
- * Registers mock handlers for all offramp API routes used in the payment flow.
- * All responses are deterministic and match the OpenAPI spec shapes.
+ * Mock Horizon transaction submission
  */
-export async function mockOfframpApis(page: Page): Promise<void> {
-  await page.route('**/api/health**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ status: 'ok', timestamp: new Date().toISOString() }),
-    }),
-  );
+export async function mockHorizonSubmit(
+  page: Page,
+  options: {
+    success?: boolean;
+    txHash?: string;
+  } = {}
+): Promise<void> {
+  const { success = true, txHash = 'mock_tx_' + Date.now() } = options;
 
-  await page.route('**/api/offramp/currencies**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: [
-          { code: 'NGN', name: 'Nigerian Naira', symbol: '₦' },
-          { code: 'KES', name: 'Kenyan Shilling', symbol: 'KSh' },
-        ],
-      }),
-    }),
-  );
-
-  await page.route('**/api/offramp/rate**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ rate: 1582, currency: 'NGN' }),
-    }),
-  );
-
-  await page.route('**/api/offramp/quote**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_QUOTE),
-    }),
-  );
-
-  await page.route('**/api/offramp/verify-account**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ accountName: MOCK_PAYMENT.recipient.accountName }),
-    }),
-  );
-
-  await page.route('**/api/offramp/bridge/gas-fee-options**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        feeOptions: {
-          stablecoin: { int: '500000', float: '0.50' },
-          native: { int: '1000000', float: '1.00' },
-        },
-      }),
-    }),
-  );
-
-  await page.route('**/api/offramp/institutions/**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([
-        { code: 'ACCESS', name: 'Access Bank' },
-        { code: 'GTB', name: 'GTBank' },
-      ]),
-    }),
-  );
-
-  await page.route('**/api/offramp/bridge/build-tx**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_BUILD_TX),
-    }),
-  );
-
-  await page.route('**/api/offramp/bridge/submit-soroban**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_SUBMIT_RESULT),
-    }),
-  );
-
-  await page.route('**/api/offramp/bridge/status/**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ status: 'completed', receiveAmount: '99.5' }),
-    }),
-  );
-
-  await page.route('**/api/offramp/bridge/tx-status/**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ status: 'SUCCESS', hash: MOCK_SUBMIT_RESULT.txHash }),
-    }),
-  );
-
-  await page.route('**/api/offramp/paycrest/order**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_PAYOUT_ORDER),
-    }),
-  );
-
-  await page.route('**/api/offramp/execute-payout**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ success: true }),
-    }),
-  );
-
-  await page.route('**/api/offramp/status/**', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ status: 'settled', orderId: MOCK_PAYOUT_ORDER.orderId }),
-    }),
-  );
+  await page.route('**/horizon/**/transactions', async (route) => {
+    if (route.request().method() === 'POST') {
+      if (success) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            hash: txHash,
+            ledger: 123456,
+            envelope_xdr: 'mock_envelope_xdr',
+            result_xdr: 'mock_result_xdr',
+            result_meta_xdr: 'mock_meta_xdr',
+          }),
+        });
+      } else {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            type: 'transaction_failed',
+            title: 'Transaction Failed',
+            status: 400,
+            detail: 'Mock transaction failure for testing',
+          }),
+        });
+      }
+    } else {
+      await route.continue();
+    }
+  });
 }
 
-// ---------------------------------------------------------------------------
-// UI interaction helpers
-// ---------------------------------------------------------------------------
-
 /**
- * Clicks "Connect Wallet" and selects the Freighter option from the modal.
- * Tolerates both modal-based and direct-connect flows.
+ * Setup complete wallet environment (Freighter + Horizon)
  */
-export async function connectFreighterViaUI(page: Page): Promise<void> {
-  const connectBtn = page.getByRole('button', { name: /connect wallet/i });
-  await connectBtn.waitFor({ state: 'visible', timeout: 10_000 });
-  await connectBtn.click();
+export async function setupWalletEnvironment(
+  page: Page,
+  options: {
+    walletType?: 'freighter' | 'albedo';
+    balance?: string;
+    mockSubmit?: boolean;
+  } = {}
+): Promise<void> {
+  const { walletType = 'freighter', balance = '10000', mockSubmit = false } = options;
 
-  // Small wait for modal animation
-  await page.waitForTimeout(300);
+  if (walletType === 'freighter') {
+    await injectFreighterStub(page);
+  } else {
+    await injectAlbedoStub(page);
+  }
 
-  // Select Freighter from the wallet picker (if a modal appears)
-  const freighterBtn = page.getByRole('button', { name: /freighter/i });
-  if (await freighterBtn.isVisible({ timeout: 2_000 }).catch(() => false)) {
-    await freighterBtn.click();
-    await page.waitForTimeout(400);
+  const address = walletType === 'freighter' ? WALLET_ADDRESSES.freighter : WALLET_ADDRESSES.albedo;
+  await mockHorizonAccount(page, address, { balance });
+
+  if (mockSubmit) {
+    await mockHorizonSubmit(page);
   }
 }
 
 /**
- * Seeds localStorage with one pre-existing settled transaction so that
- * history page tests have something to assert against.
+ * Wait for wallet connection to complete
  */
-export async function seedTransactionHistory(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const tx = {
-      id: 'seed_tx_wallet_fixture_001',
-      amount: '50',
-      currency: 'NGN',
-      destinationAmount: '79100.00',
-      status: 'settled',
-      txHash: 'seed000000000000000000000000000000000000000000000000000000000001',
-      createdAt: new Date(Date.now() - 86_400_000).toISOString(),
-      recipient: {
-        institution: 'GTB',
-        accountIdentifier: '9876543210',
-        accountName: 'John Recipient',
-      },
-    };
-    localStorage.setItem('stellar_spend_transactions', JSON.stringify([tx]));
-  });
+export async function waitForWalletConnection(page: Page, timeout = 10000): Promise<void> {
+  await page.waitForSelector('[data-testid="wallet-button"]', { timeout });
+}
+
+/**
+ * Connect wallet via UI
+ */
+export async function connectWallet(
+  page: Page,
+  walletType: 'freighter' | 'albedo' = 'freighter'
+): Promise<void> {
+  await page.click('[data-testid="connect-wallet-button"]');
+  await page.waitForSelector('[data-testid="wallet-modal"]', { timeout: 5000 });
+  
+  const walletOption = page.locator(`[data-testid="wallet-option-${walletType}"]`);
+  await walletOption.click();
+  
+  await waitForWalletConnection(page);
+}
+
+/**
+ * Disconnect wallet via UI
+ */
+export async function disconnectWallet(page: Page): Promise<void> {
+  await page.click('[data-testid="wallet-button"]');
+  
+  const disconnectButton = page.locator('[data-testid="disconnect-wallet-button"], button:has-text("Disconnect")');
+  await disconnectButton.click();
+  
+  await page.waitForSelector('[data-testid="connect-wallet-button"]', { timeout: 5000 });
 }

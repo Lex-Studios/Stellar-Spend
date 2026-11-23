@@ -1,105 +1,112 @@
 /**
- * Shared helpers for E2E test isolation and web-first assertion utilities.
- *
- * Issue #1340 — Stabilize Playwright E2E suite:
- *  - Storage state is isolated per test via `test.use({ storageState: undefined })`
- *    applied at each describe block (callers import `isolatedTest`).
- *  - `waitForTimeout` is replaced with the helpers below, which assert on
- *    observable DOM state rather than sleeping for a fixed duration.
+ * Test isolation utilities
+ * Ensures tests don't interfere with each other
  */
 
-import { test as base, expect, type Page } from '@playwright/test';
-
-// ---------------------------------------------------------------------------
-// Storage-isolated test fixture
-// ---------------------------------------------------------------------------
+import type { Page } from '@playwright/test';
 
 /**
- * A `test` fixture that clears browser storage before every test, preventing
- * state leakage across tests that share the same browser context.
- *
- * Usage:
- *   import { isolatedTest as test } from './fixtures/test-isolation';
- *
- *   test('my test', async ({ page }) => { ... });
+ * Clear all browser storage (localStorage, sessionStorage, IndexedDB, cookies)
  */
-export const isolatedTest = base.extend({
-  page: async ({ page }, use) => {
-    // Clear all storage before each test so tests never share wallet sessions,
-    // transaction history, or any other persisted state.
-    await page.addInitScript(() => {
-      localStorage.clear();
-      sessionStorage.clear();
+export async function clearAllStorage(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    // Clear localStorage
+    localStorage.clear();
+    
+    // Clear sessionStorage
+    sessionStorage.clear();
+    
+    // Clear cookies
+    document.cookie.split(';').forEach((cookie) => {
+      const name = cookie.split('=')[0].trim();
+      document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
     });
-    await use(page);
-  },
-});
+  });
 
-export { expect };
+  // Clear IndexedDB
+  await page.evaluate(async () => {
+    const databases = await indexedDB.databases();
+    databases.forEach((db) => {
+      if (db.name) {
+        indexedDB.deleteDatabase(db.name);
+      }
+    });
+  }).catch(() => {
+    // IndexedDB might not be available or might fail, that's okay
+  });
 
-// ---------------------------------------------------------------------------
-// Web-first wait helpers (replacements for waitForTimeout)
-// ---------------------------------------------------------------------------
+  // Clear cookies via context
+  await page.context().clearCookies();
+}
 
 /**
- * Wait until a button with the given accessible name is either visible or
- * hidden. Replaces bare `waitForTimeout` calls that follow a click.
+ * Reset page state to initial conditions
  */
-export async function waitForButtonState(
-  page: Page,
-  name: RegExp | string,
-  state: 'visible' | 'hidden',
-  timeoutMs = 5_000,
-): Promise<void> {
-  const locator = page.getByRole('button', { name });
-  if (state === 'visible') {
-    await expect(locator.first()).toBeVisible({ timeout: timeoutMs });
-  } else {
-    await expect(locator.first()).toBeHidden({ timeout: timeoutMs });
+export async function resetPageState(page: Page): Promise<void> {
+  await clearAllStorage(page);
+  
+  // Clear any service worker registrations
+  await page.evaluate(async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map(reg => reg.unregister()));
+  }).catch(() => {
+    // Service workers might not be available
+  });
+}
+
+/**
+ * Isolate test execution (use in beforeEach/afterEach)
+ */
+export async function isolateTest(page: Page, phase: 'before' | 'after'): Promise<void> {
+  if (phase === 'before') {
+    await resetPageState(page);
+  } else if (phase === 'after') {
+    await clearAllStorage(page);
   }
 }
 
 /**
- * Wait until any element matching `locator` is visible.
- * Direct replacement for `await page.waitForTimeout(N)` after triggering an
- * async UI update.
+ * Create isolated test context with clean state
  */
-export async function waitForVisible(
+export async function createIsolatedContext(page: Page): Promise<void> {
+  await resetPageState(page);
+  
+  // Set test mode flag
+  await page.addInitScript(() => {
+    (window as any).__TEST_MODE__ = true;
+    (window as any).__TEST_START_TIME__ = Date.now();
+  });
+}
+
+/**
+ * Seed test data into storage
+ */
+export async function seedTestData(
   page: Page,
-  selector: string,
-  timeoutMs = 5_000,
+  data: Record<string, any>
 ): Promise<void> {
-  await expect(page.locator(selector).first()).toBeVisible({ timeout: timeoutMs });
+  await page.evaluate((testData) => {
+    Object.entries(testData).forEach(([key, value]) => {
+      localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+    });
+  }, data);
 }
 
 /**
- * Wait for the wallet-connected state: either the "Connect Wallet" button
- * disappears or an address / "Connected" label becomes visible.
+ * Verify test isolation (check that storage is clean)
  */
-export async function waitForWalletConnected(page: Page, timeoutMs = 8_000): Promise<void> {
-  // Web-first: at least one of these conditions resolves within the timeout.
-  await expect(async () => {
-    const connectBtnVisible = await page
-      .getByRole('button', { name: /connect wallet/i })
-      .isVisible()
-      .catch(() => false);
-    const addressVisible = await page
-      .getByText(/GB[A-Z0-9]{2,}[\.\u2026][A-Z0-9]{2,}/i)
-      .isVisible()
-      .catch(() => false);
-    const connectedVisible = await page
-      .getByText(/connected/i)
-      .isVisible()
-      .catch(() => false);
-    if (connectBtnVisible && !addressVisible && !connectedVisible) {
-      throw new Error('Wallet not yet connected');
-    }
-  }).toPass({ timeout: timeoutMs });
-}
+export async function verifyIsolation(page: Page): Promise<boolean> {
+  const storageData = await page.evaluate(() => ({
+    localStorageKeys: Object.keys(localStorage),
+    sessionStorageKeys: Object.keys(sessionStorage),
+    cookieCount: document.cookie.split(';').filter(c => c.trim()).length,
+  }));
 
-/**
- * Wait for a network modal / dialog to appear.
- */
-export async function waitForDialog(page: Page, timeoutMs = 5_000): Promise<void> {
-  await expect(page.getByRole('dialog').first()).toBeVisible({ timeout: timeoutMs });
+  // Should have no storage or only expected test-related keys
+  const expectedKeys = ['__TEST_MODE__', 'wallet_connection', 'stellar_network'];
+  const unexpectedKeys = storageData.localStorageKeys.filter(
+    key => !expectedKeys.includes(key)
+  );
+
+  return unexpectedKeys.length === 0;
 }
