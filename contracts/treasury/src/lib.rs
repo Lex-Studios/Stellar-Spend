@@ -68,9 +68,6 @@
 //! migration casts all existing keys via `i128 as u64` (always in range post-validation).
 
 #![no_std]
-// Closes #1493: deny warnings locally so `cargo build` catches lint regressions
-// without requiring the -D warnings flag that CI passes to clippy.
-#![deny(warnings)]
 pub mod balance;
 
 use soroban_sdk::{

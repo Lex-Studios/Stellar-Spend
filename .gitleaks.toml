@@ -36,14 +36,6 @@ paths = [
   '''^README\.md$''',
   '''^CONTRIBUTING\.md$''',
   '''^SECURITY\.md$''',
-  # API reference docs contain only example/placeholder keys (msk_live_abc123,
-  # ssp_live_a1b2c3…, order-abc123) — none are real credentials.
-  '''^docs/api-reference-v1\.md$''',
-  '''^docs/api\.md$''',
-  '''^docs/rate-limiting\.md$''',
-  # E2E fixtures use all-zero or sequential seed bytes for deterministic tests.
-  '''^e2e/fixtures/wallet-fixtures\.ts$''',
-  '''^e2e/payment-flow\.spec\.ts$''',
   # Lockfile contains integrity hashes, not secrets.
   '''^package-lock\.json$''',
   # Rust build output under contracts/ is generated, never committed secrets.

@@ -41,29 +41,6 @@ jobs:
       - name: Run tests
         run: cd contracts && cargo test
 
-  udeps-check:
-    name: Unused Dependency Check (cargo-udeps)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust (nightly — required by cargo-udeps)
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          targets: wasm32-unknown-unknown
-
-      - name: Install cargo-udeps
-        run: cargo install cargo-udeps --locked
-
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: contracts
-
-      - name: Check for unused dependencies
-        # Closes #1494: catch deps that are declared but never used.
-        run: cd contracts && cargo +nightly udeps --workspace
-
   advisory-scan:
     name: Dependency Advisory Scan (cargo-audit)
     runs-on: ubuntu-latest

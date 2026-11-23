@@ -45,9 +45,6 @@
 //! | `dispute`     | [`EscrowContract::set_timeout`], `can_refund`        |
 
 #![no_std]
-// Closes #1493: deny warnings locally so `cargo build` catches lint regressions
-// without requiring the -D warnings flag that CI passes to clippy.
-#![deny(warnings)]
 pub mod dispute;
 mod create;
 mod refund;

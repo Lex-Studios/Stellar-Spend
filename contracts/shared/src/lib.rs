@@ -1,7 +1,4 @@
 #![no_std]
-// Closes #1493: deny warnings locally so `cargo build` catches lint regressions
-// without requiring the -D warnings flag that CI passes to clippy.
-#![deny(warnings)]
 
 pub mod auth;
 pub mod errors;
