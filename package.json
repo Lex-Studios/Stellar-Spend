@@ -39,7 +39,8 @@
     "license:check": "node scripts/check-licenses.js",
     "license:report": "node scripts/check-licenses.js --report",
     "type:coverage": "type-coverage",
-    "type:coverage:detail": "type-coverage --detail"
+    "type:coverage:detail": "type-coverage --detail",
+    "generate:bindings": "ts-node --project tsconfig.json scripts/generate-contract-bindings.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,mjs,cjs}": [
